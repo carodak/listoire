@@ -117,7 +117,7 @@ test("unifies language selection while preserving each localized save", async ({
   await expect(page.locator(".prose")).toContainText(/Au dos/);
   await chooseLanguage(page, "en");
   await expect(page.locator(".prose")).toContainText(/On the back/);
-  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(250, 249, 246)");
   await expect(page.locator("html")).toHaveCSS("background-color", "rgb(245, 245, 245)");
 });
 
@@ -181,7 +181,7 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await enterStory(page);
-  await expect(page.locator(".eyebrow")).toHaveText("Chapter One");
+  await expect(page.locator(".eyebrow")).toHaveText("The House That Remembered · Chapter One");
   await expect(page.locator(".reader-shell .site-header")).toBeVisible();
   const shell = await page.locator(".reader-shell").boundingBox();
   const header = await page.locator(".site-header").boundingBox();
@@ -190,7 +190,7 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   expect(header!.y).toBeGreaterThan(shell!.y);
   expect(heading!.y).toBeLessThan(155);
   const canvas = await page.locator(".reader").boundingBox();
-  const prose = await page.locator(".prose").boundingBox();
+  const prose = await page.locator(".prose > p").first().boundingBox();
   expect(canvas!.width / 1440).toBeGreaterThanOrEqual(0.9);
   expect(canvas!.width / 1440).toBeLessThanOrEqual(0.95);
   expect(prose!.width).toBeCloseTo(800, 0);

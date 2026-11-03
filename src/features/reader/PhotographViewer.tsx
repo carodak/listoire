@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import { MagnifiedImage } from "../presentation/MagnifiedImage.tsx";
+import { HandwrittenText } from "../presentation/HandwrittenText.tsx";
 
 function PhotographViewer({
   bundle,
@@ -22,6 +23,7 @@ function PhotographViewer({
   const [reset, setReset] = useState(0);
   const [turned, setTurned] = useState(false);
   const [detail, setDetail] = useState(0);
+  const zoomLabel = t(zoom ? "zoomOut" : "zoomIn");
   const examination = bundle.examination!;
   const asset = bundle.assets?.find((entry) => entry.id === examination.image);
   useEffect(() => {
@@ -39,18 +41,20 @@ function PhotographViewer({
     >
       <div className="dialog-heading">
         <h2 id="photo-title">{examination.title}</h2>
-        <button onClick={() => dialog.current?.close()}>{t("close")}</button>
+        <button aria-label={t("close")} title={t("close")} onClick={() => dialog.current?.close()}>
+          <span aria-hidden="true">✕</span>
+        </button>
       </div>
       <div className="photo-window">
         {turned ? (
-          <p className="photo-reverse">{examination.reverse}</p>
+          <HandwrittenText text={examination.reverse} />
         ) : (
           asset && (
             <MagnifiedImage
               key={reset}
               src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`}
               alt={asset.alt}
-              active={zoom}
+              zoom={zoom ? 1.5 : 1}
               instructions={t("magnifierHelp")}
             >
               {canDiscover && (
@@ -68,37 +72,55 @@ function PhotographViewer({
           )
         )}
       </div>
-      <p aria-live="polite">{turned ? examination.reverse : examination.descriptions[detail]}</p>
+      <p className="photo-caption" aria-live="polite">
+        {examination.descriptions[detail]}
+      </p>
       <div className="photo-controls">
-        <button disabled={turned} onClick={() => setZoom(!zoom)}>
-          {t(zoom ? "zoomOut" : "zoomIn")}
-        </button>
-        <button
-          onClick={() => {
-            setTurned(!turned);
-            setZoom(false);
-            setReset((value) => value + 1);
-          }}
-        >
-          {t("turnPhoto")}
-        </button>
-        <button
-          disabled={turned}
-          onClick={() => setDetail((detail + 1) % examination.descriptions.length)}
-        >
-          {t("nextDetail")}
-        </button>
-        <button
-          onClick={() => {
-            setTurned(false);
-            setDetail(0);
-            setZoom(false);
-            setReset((value) => value + 1);
-          }}
-        >
-          {t("resetView")}
-        </button>
+        <div className="photo-controls-group">
+          <button
+            disabled={turned}
+            aria-label={zoomLabel}
+            title={zoomLabel}
+            onClick={() => setZoom(!zoom)}
+          >
+            <span aria-hidden="true">{zoom ? "−" : "+"}</span>
+          </button>
+          <button
+            aria-label={t("resetView")}
+            title={t("resetView")}
+            onClick={() => {
+              setTurned(false);
+              setDetail(0);
+              setZoom(false);
+              setReset((value) => value + 1);
+            }}
+          >
+            <span aria-hidden="true">↺</span>
+          </button>
+        </div>
+        <div className="photo-controls-group">
+          <button
+            disabled={turned}
+            aria-label={t("nextDetail")}
+            title={t("nextDetail")}
+            onClick={() => setDetail((detail + 1) % examination.descriptions.length)}
+          >
+            <span aria-hidden="true">⌕</span>
+          </button>
+          <button
+            aria-label={t("turnPhoto")}
+            title={t("turnPhoto")}
+            onClick={() => {
+              setTurned(!turned);
+              setZoom(false);
+              setReset((value) => value + 1);
+            }}
+          >
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
       </div>
+      {asset?.credit && <small className="photo-credit">{asset.credit}</small>}
     </dialog>
   );
 }

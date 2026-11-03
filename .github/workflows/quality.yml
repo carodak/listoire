@@ -17,8 +17,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: python3 -m unittest discover -s tools -p test_asset_library.py
+      - run: python3 -m unittest discover -s tools -p test_narration.py
       - run: npm run check
       - run: npm run build
+      - run: python3 tools/verify-assets.py --published-only
       - run: npm run quality
       - name: Changed-code audit
         if: github.event_name == 'pull_request'

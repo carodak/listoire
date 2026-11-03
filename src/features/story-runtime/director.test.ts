@@ -18,6 +18,26 @@ beforeEach(async () => {
 });
 
 describe("director and atomic browser checkpoints", () => {
+  it("replays presentation without advancing Ink and restores an earlier checkpoint on back", async () => {
+    const engine = new InkNarrativeEngine(bundle);
+    const advance = vi.spyOn(engine, "advance");
+    const presentation = { start: vi.fn(), cancel: vi.fn(), dispose: vi.fn() };
+    const director = new StoryDirector(bundle, engine, saves, undefined, presentation);
+    await director.load();
+    const first = director.getSnapshot().frame;
+    await director.choose("listen", director.getSnapshot().occurrenceId!);
+    const current = await saves.backup(bundle);
+    const calls = advance.mock.calls.length;
+    await director.replay();
+    expect(advance).toHaveBeenCalledTimes(calls);
+    expect(await saves.backup(bundle)).toBe(current);
+    expect(presentation.start.mock.calls.at(-1)?.[2]).toBe(false);
+    await director.back();
+    expect(director.getSnapshot().frame).toEqual(first);
+    expect(advance).toHaveBeenCalledTimes(calls);
+    expect((await saves.read(bundle))!.frame).toEqual(first);
+    director.dispose();
+  });
   it("starts presentation only after commit and tolerates a failed media port", async () => {
     const presentation = {
       start: vi.fn(() => {

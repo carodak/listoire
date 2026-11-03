@@ -1,0 +1,4 @@
+# Isolated Python environment only; never install these into the browser application.
+chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox.git@5de7a54aa4e5e2baadb0182dde554908b48b85c2
+torch==2.11.0
+torchaudio==2.11.0

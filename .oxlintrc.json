@@ -4,7 +4,11 @@
   "categories": {
     "correctness": "error"
   },
-  "ignorePatterns": ["public/stories/**", "src/features/presentation/react-bits/vendor/**"],
+  "ignorePatterns": [
+    "public/stories/**",
+    "src/features/presentation/react-bits/vendor/**",
+    "public/editor/vendor/**"
+  ],
   "overrides": [
     {
       "files": ["src/contracts/**", "src/features/story-runtime/**", "src/persistence/**"],

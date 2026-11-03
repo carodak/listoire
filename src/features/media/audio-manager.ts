@@ -28,6 +28,7 @@ export class AudioManager {
   private muted = false;
   private ducked = false;
   private paused = false;
+  private narrationRate: number | null = null;
   private speech: Playback | null = null;
   private utterance: SpeechSynthesisUtterance | null = null;
   private readonly factory: (url: string) => HTMLAudioElement;
@@ -60,9 +61,9 @@ export class AudioManager {
     this.applyVolumes();
   }
   setRate(rate: number) {
+    this.narrationRate = Math.max(0.5, Math.min(2, rate));
     for (const track of this.tracks)
-      if (track.channel === "narration")
-        track.audio.playbackRate = Math.max(0.5, Math.min(2, rate));
+      if (track.channel === "narration") track.audio.playbackRate = this.narrationRate;
   }
 
   play({
@@ -75,6 +76,7 @@ export class AudioManager {
     replace = true,
     maxMs = 120000,
     gain = 1,
+    fadeMs = 0,
   }: {
     url: string;
     channel: AudioChannel;
@@ -85,6 +87,7 @@ export class AudioManager {
     replace?: boolean;
     maxMs?: number;
     gain?: number;
+    fadeMs?: number;
   }): Playback {
     if (replace && channel !== "sfx") this.stopChannel(channel);
     const existing = [...this.tracks].filter((track) => track.channel === channel);
@@ -106,6 +109,7 @@ export class AudioManager {
       settled = true;
       clearTimeout(startTimer);
       clearTimeout(deadline);
+      clearInterval(envelope);
       audio.pause();
       signal.removeEventListener("abort", abort);
       audio.removeEventListener("ended", ended);
@@ -119,6 +123,7 @@ export class AudioManager {
       startTimer = setTimeout(() => finish("timeout"), 4000);
       if (!loop)
         deadline = setTimeout(() => finish("timeout"), Math.max(1000, Math.min(180000, maxMs)));
+      if (fadeMs) envelope = setInterval(updateGain, 32);
       void audio
         .play()
         .then(() => {
@@ -131,16 +136,26 @@ export class AudioManager {
     const ended = () => finish("ended");
     const error = () => finish("error");
     const time = () => onTime?.(audio.currentTime);
+    const updateGain = () => {
+      const remaining =
+        Number.isFinite(audio.duration) && !loop
+          ? Math.max(0, audio.duration - audio.currentTime)
+          : Infinity;
+      track.gain =
+        gain * Math.min(1, (audio.currentTime * 1000) / fadeMs, (remaining * 1000) / fadeMs);
+      this.applyVolumes();
+    };
     const track: Track = {
       channel,
       audio,
-      gain,
+      gain: fadeMs ? 0 : gain,
       paused: this.paused,
       stop: abort,
       pause: () => {
         track.paused = true;
         clearTimeout(startTimer);
         clearTimeout(deadline);
+        clearInterval(envelope);
         audio.pause();
       },
       resume: () => {
@@ -150,8 +165,12 @@ export class AudioManager {
     };
     let startTimer: ReturnType<typeof setTimeout> | undefined;
     let deadline: ReturnType<typeof setTimeout> | undefined;
+    let envelope: ReturnType<typeof setInterval> | undefined;
     audio.loop = loop;
-    audio.playbackRate = Math.max(0.5, Math.min(2, rate));
+    audio.playbackRate = Math.max(
+      0.5,
+      Math.min(2, channel === "narration" ? (this.narrationRate ?? rate) : rate),
+    );
     this.tracks.add(track);
     this.applyVolumes();
     audio.addEventListener("ended", ended);
@@ -236,7 +255,7 @@ export class AudioManager {
     utterance.volume = this.muted ? 0 : this.volumes.narration;
     utterance.voice = voice;
     utterance.lang = locale;
-    utterance.rate = Math.max(0.5, Math.min(2, rate));
+    utterance.rate = this.narrationRate ?? Math.max(0.5, Math.min(2, rate));
     let resolve!: (result: PlaybackResult) => void;
     let settled = false;
     const finished = new Promise<PlaybackResult>((done) => {

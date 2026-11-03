@@ -3,6 +3,13 @@ test("voice playback, pause and voice-off leave the committed passage unchanged"
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.route("**/api/narration", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    bundle.narration = [];
+    await route.fulfill({ json: bundle });
+  });
   await page.addInitScript(() => {
     const state = { calls: 0, cancels: 0, pauses: 0, resumes: 0, utterance: null as unknown };
     Object.assign(window, { voiceTest: state });
@@ -88,7 +95,10 @@ test("a declarative cinematic can be skipped without changing its story result",
   await page.getByRole("button", { name: "Continue reading", exact: true }).click();
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await page.getByRole("button", { name: "Ask about the locked room", exact: true }).click();
-  await page.getByRole("button", { name: "Skip cinematic", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Skip cinematic", exact: true })
+    .click();
   await expect(page.getByRole("button", { name: "Skip cinematic", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await expect(page.locator(".prose")).toContainText("twenty-nine years");

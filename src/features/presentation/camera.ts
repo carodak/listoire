@@ -13,3 +13,12 @@ export function imagePoint(
     y: clamp((clientY - bounds.top) / Math.max(1, bounds.height)),
   };
 }
+export function boundedCameraOffset(
+  point: { x: number; y: number },
+  size: { width: number; height: number },
+  scale: number,
+) {
+  const x = (size.width * Math.max(0, scale - 1)) / 2;
+  const y = (size.height * Math.max(0, scale - 1)) / 2;
+  return { x: Math.max(-x, Math.min(x, point.x)), y: Math.max(-y, Math.min(y, point.y)) };
+}

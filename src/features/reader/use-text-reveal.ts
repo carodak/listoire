@@ -52,15 +52,17 @@ export function useTextReveal(
       document.removeEventListener("visibilitychange", hide);
     };
   }, [instant, paused, total]);
-  const wanted = transport?.synchronized
-    ? segments.reduce(
-        (sum, segment) =>
-          sum +
-          segment.letters.filter((letter) => letter.end <= (transport.progress[segment.id] ?? 0))
-            .length,
-        0,
-      )
-    : count;
+  const wanted = paused
+    ? floor
+    : transport?.synchronized
+      ? segments.reduce(
+          (sum, segment) =>
+            sum +
+            segment.letters.filter((letter) => letter.end <= (transport.progress[segment.id] ?? 0))
+              .length,
+          0,
+        )
+      : count;
   const visibleCount = Math.max(floor, wanted);
   if (visibleCount > floor) setFloor(visibleCount);
   const paragraphs = segments.map((segment, index) => {

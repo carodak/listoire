@@ -10,6 +10,10 @@ abilities, unused in narrative checks. No RPG combat/check executor, editor, AI 
 or Capacitor implementation. Future mobile compatibility remains required.
 Do not reuse/extract embedded HTML illustrations. All house imagery must come from
 the downloaded assets/images library. The HTML remains a story/layout reference.
+The latest authorized scope includes ordered narrative blocks/full-screen cinematics
+and actual local Chatterbox narration: Nano EN / Multilingual V3 FR, on-demand preview,
+caching and optimized published clips. Use informational Investigation/Intuition at
+Rank 1. Generated clips remain previews until human listening review.
 
 ## Architecture
 

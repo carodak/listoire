@@ -111654,6 +111654,6564 @@
         "officialStoryUse": "unverified",
         "thirdPartyResourceUse": "unverified"
       }
+    },
+    {
+      "id": "images.d13edd4241f69e84aabd",
+      "originalPath": "assets/images/TCP/license.txt",
+      "optimizedPath": null,
+      "mediaType": "document",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "txt",
+        "bytes": 273
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.51a3ff6b22234c74b105",
+      "originalPath": "assets/images/TCP/readme.txt",
+      "optimizedPath": null,
+      "mediaType": "document",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "txt",
+        "bytes": 441
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.53d0f5a76f69cbfcf2cc",
+      "originalPath": "assets/images/TCP/TCP Armored 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 213651,
+        "width": 958,
+        "height": 1050,
+        "aspectRatio": 0.91238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.05590562278e989e2387",
+      "originalPath": "assets/images/TCP/TCP Armored 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 236662,
+        "width": 846,
+        "height": 1050,
+        "aspectRatio": 0.80571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.dc00895907fe9d87013b",
+      "originalPath": "assets/images/TCP/TCP Armored 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 186756,
+        "width": 785,
+        "height": 1050,
+        "aspectRatio": 0.74762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.4f13e48fe077d10d9e06",
+      "originalPath": "assets/images/TCP/TCP Armored 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 231137,
+        "width": 763,
+        "height": 1050,
+        "aspectRatio": 0.72667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a6087bde9414bc608b55",
+      "originalPath": "assets/images/TCP/TCP Armored 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 440957,
+        "width": 817,
+        "height": 1050,
+        "aspectRatio": 0.7781,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9e3ada655f01f5f76d93",
+      "originalPath": "assets/images/TCP/TCP Armored 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 411101,
+        "width": 1085,
+        "height": 1050,
+        "aspectRatio": 1.03333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.7816befda0ce8489895c",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 296727,
+        "width": 832,
+        "height": 1050,
+        "aspectRatio": 0.79238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.efb0452fa6f774eb6da2",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 316462,
+        "width": 880,
+        "height": 1050,
+        "aspectRatio": 0.8381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d735b81141b8b36464cc",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 219788,
+        "width": 758,
+        "height": 1050,
+        "aspectRatio": 0.7219,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.8d014fc1abd4efe3f14b",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 136000,
+        "width": 701,
+        "height": 1050,
+        "aspectRatio": 0.66762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.57a8f1d5da281a182888",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 152829,
+        "width": 721,
+        "height": 1050,
+        "aspectRatio": 0.68667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.386c4d3d9722fc12eff5",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 186418,
+        "width": 835,
+        "height": 1050,
+        "aspectRatio": 0.79524,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.44e183ffc264685bd4cc",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 293227,
+        "width": 817,
+        "height": 1050,
+        "aspectRatio": 0.7781,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.3f632f767482584a4878",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 178444,
+        "width": 821,
+        "height": 1050,
+        "aspectRatio": 0.7819,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.3b61a46afe84ecb69ee1",
+      "originalPath": "assets/images/TCP/TCP Cyberpunk 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 193680,
+        "width": 805,
+        "height": 1050,
+        "aspectRatio": 0.76667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a3d7cbdf103e91a3e676",
+      "originalPath": "assets/images/TCP/TCP Dwarf 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 273927,
+        "width": 965,
+        "height": 1050,
+        "aspectRatio": 0.91905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.c8c72632fc953779a001",
+      "originalPath": "assets/images/TCP/TCP Dwarf 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 225678,
+        "width": 1204,
+        "height": 1050,
+        "aspectRatio": 1.14667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.82694bd08bef3e2f072c",
+      "originalPath": "assets/images/TCP/TCP Dwarf 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 235715,
+        "width": 911,
+        "height": 1050,
+        "aspectRatio": 0.86762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f60d021bfe0267514a2e",
+      "originalPath": "assets/images/TCP/TCP Dwarf 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 154744,
+        "width": 719,
+        "height": 1050,
+        "aspectRatio": 0.68476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.47b95262e57153025793",
+      "originalPath": "assets/images/TCP/TCP Dwarf 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 177131,
+        "width": 790,
+        "height": 1050,
+        "aspectRatio": 0.75238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.2e9806e4b5a70d385405",
+      "originalPath": "assets/images/TCP/TCP Dwarf 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 170247,
+        "width": 889,
+        "height": 1050,
+        "aspectRatio": 0.84667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6671d83f698d5b01efce",
+      "originalPath": "assets/images/TCP/TCP Elf 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 191547,
+        "width": 783,
+        "height": 1050,
+        "aspectRatio": 0.74571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cbb93193187b51d0a89b",
+      "originalPath": "assets/images/TCP/TCP Elf 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 303088,
+        "width": 906,
+        "height": 1050,
+        "aspectRatio": 0.86286,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.dbf184597a01f0fcc34c",
+      "originalPath": "assets/images/TCP/TCP Elf 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 142610,
+        "width": 782,
+        "height": 1050,
+        "aspectRatio": 0.74476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.95a4e5e3291d0f487924",
+      "originalPath": "assets/images/TCP/TCP Elf 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 177654,
+        "width": 720,
+        "height": 1050,
+        "aspectRatio": 0.68571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.8dd5a94c4582cbe2e83d",
+      "originalPath": "assets/images/TCP/TCP Elf 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 147539,
+        "width": 813,
+        "height": 1050,
+        "aspectRatio": 0.77429,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f7d52b0d3b05cdd16b0c",
+      "originalPath": "assets/images/TCP/TCP Elf 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 258246,
+        "width": 967,
+        "height": 1050,
+        "aspectRatio": 0.92095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d5b2894931de9f085d76",
+      "originalPath": "assets/images/TCP/TCP Elf 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 195634,
+        "width": 842,
+        "height": 1050,
+        "aspectRatio": 0.8019,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f2760a97de79f365fe95",
+      "originalPath": "assets/images/TCP/TCP Elf 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 146435,
+        "width": 936,
+        "height": 1050,
+        "aspectRatio": 0.89143,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.4a25177057c943009019",
+      "originalPath": "assets/images/TCP/TCP Elf 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 159419,
+        "width": 904,
+        "height": 1050,
+        "aspectRatio": 0.86095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.327b5937519f8b1f9aa9",
+      "originalPath": "assets/images/TCP/TCP Gnome 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 188357,
+        "width": 844,
+        "height": 1050,
+        "aspectRatio": 0.80381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ab52caacc3826fe5f0c8",
+      "originalPath": "assets/images/TCP/TCP Gnome 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 187302,
+        "width": 767,
+        "height": 1050,
+        "aspectRatio": 0.73048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a36952921c2e8b14c801",
+      "originalPath": "assets/images/TCP/TCP Hero 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 183983,
+        "width": 923,
+        "height": 1050,
+        "aspectRatio": 0.87905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1d7498fcac5f55f8b331",
+      "originalPath": "assets/images/TCP/TCP Hero 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 150574,
+        "width": 902,
+        "height": 1050,
+        "aspectRatio": 0.85905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f2760836a0a186676578",
+      "originalPath": "assets/images/TCP/TCP Hero 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 159038,
+        "width": 873,
+        "height": 1050,
+        "aspectRatio": 0.83143,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1d13219a9a4ec842a04d",
+      "originalPath": "assets/images/TCP/TCP Human 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 160481,
+        "width": 881,
+        "height": 1050,
+        "aspectRatio": 0.83905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ccc849464172e907dda8",
+      "originalPath": "assets/images/TCP/TCP Human 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 190189,
+        "width": 811,
+        "height": 1050,
+        "aspectRatio": 0.77238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.90696c825f93c0625b12",
+      "originalPath": "assets/images/TCP/TCP Human 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 150059,
+        "width": 846,
+        "height": 1050,
+        "aspectRatio": 0.80571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f5791904d50c792bfb99",
+      "originalPath": "assets/images/TCP/TCP Human 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 154027,
+        "width": 926,
+        "height": 1050,
+        "aspectRatio": 0.8819,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.4673a140147d55423a81",
+      "originalPath": "assets/images/TCP/TCP Human 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 242046,
+        "width": 830,
+        "height": 1050,
+        "aspectRatio": 0.79048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b80aca67b16d050cceb2",
+      "originalPath": "assets/images/TCP/TCP Human 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 182980,
+        "width": 767,
+        "height": 1050,
+        "aspectRatio": 0.73048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.457becb226b1a58e5d17",
+      "originalPath": "assets/images/TCP/TCP Human 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 284369,
+        "width": 842,
+        "height": 1050,
+        "aspectRatio": 0.8019,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.002683cbb9c454f11a90",
+      "originalPath": "assets/images/TCP/TCP Human 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 192803,
+        "width": 864,
+        "height": 1050,
+        "aspectRatio": 0.82286,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.617a70e6f335bdf319e1",
+      "originalPath": "assets/images/TCP/TCP Human 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 262593,
+        "width": 833,
+        "height": 1050,
+        "aspectRatio": 0.79333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.478b21e0be3c81bb3d3b",
+      "originalPath": "assets/images/TCP/TCP Ithilid 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 356542,
+        "width": 906,
+        "height": 1050,
+        "aspectRatio": 0.86286,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.37c3edf5561e86642877",
+      "originalPath": "assets/images/TCP/TCP Mad Scientist 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 220905,
+        "width": 841,
+        "height": 1050,
+        "aspectRatio": 0.80095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ca499dc73e4a71177167",
+      "originalPath": "assets/images/TCP/TCP Mad Scientist 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 243916,
+        "width": 889,
+        "height": 1050,
+        "aspectRatio": 0.84667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b479d9f82e0cf261bf46",
+      "originalPath": "assets/images/TCP/TCP Manimal 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 442502,
+        "width": 909,
+        "height": 1050,
+        "aspectRatio": 0.86571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a37f3c6f9ee2d1a76466",
+      "originalPath": "assets/images/TCP/TCP Manimal 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 149322,
+        "width": 748,
+        "height": 1050,
+        "aspectRatio": 0.71238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0c13af69db37762db73a",
+      "originalPath": "assets/images/TCP/TCP Manimal 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 261983,
+        "width": 833,
+        "height": 1050,
+        "aspectRatio": 0.79333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9935f36bfc3af6ab9f48",
+      "originalPath": "assets/images/TCP/TCP Manimal 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 179182,
+        "width": 836,
+        "height": 1050,
+        "aspectRatio": 0.79619,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1d7bb033bd4871ed3998",
+      "originalPath": "assets/images/TCP/TCP Manimal 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 324794,
+        "width": 830,
+        "height": 1050,
+        "aspectRatio": 0.79048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e2a04e9c7b4df86eb5cc",
+      "originalPath": "assets/images/TCP/TCP Manimal 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 191471,
+        "width": 786,
+        "height": 1050,
+        "aspectRatio": 0.74857,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.06a40f8b9ee6bd0e450f",
+      "originalPath": "assets/images/TCP/TCP Manimal 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 226558,
+        "width": 950,
+        "height": 1050,
+        "aspectRatio": 0.90476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1de8bb3b565573707c04",
+      "originalPath": "assets/images/TCP/TCP Manimal 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 303350,
+        "width": 799,
+        "height": 1050,
+        "aspectRatio": 0.76095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d50368545335c66c7729",
+      "originalPath": "assets/images/TCP/TCP Manimal 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 369052,
+        "width": 873,
+        "height": 1050,
+        "aspectRatio": 0.83143,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.22f0312000352b4ff654",
+      "originalPath": "assets/images/TCP/TCP Pirate 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 136675,
+        "width": 867,
+        "height": 1050,
+        "aspectRatio": 0.82571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d830db1e8332ba1ed7ac",
+      "originalPath": "assets/images/TCP/TCP Pirate 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 199341,
+        "width": 923,
+        "height": 1050,
+        "aspectRatio": 0.87905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.141f56bd2ae04855b2d9",
+      "originalPath": "assets/images/TCP/TCP Pirate 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 263855,
+        "width": 987,
+        "height": 1050,
+        "aspectRatio": 0.94,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.426b9e51ebad270659d0",
+      "originalPath": "assets/images/TCP/TCP Pirate 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 223487,
+        "width": 994,
+        "height": 1050,
+        "aspectRatio": 0.94667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.8aba9d629b6044163684",
+      "originalPath": "assets/images/TCP/TCP Pirate 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 139417,
+        "width": 914,
+        "height": 1050,
+        "aspectRatio": 0.87048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.80ce4fdc1790beeafc63",
+      "originalPath": "assets/images/TCP/TCP Pirate 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 251619,
+        "width": 1050,
+        "height": 958,
+        "aspectRatio": 1.09603,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1ed119fbfca1a5c9b5d6",
+      "originalPath": "assets/images/TCP/TCP Pirate 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 279176,
+        "width": 1036,
+        "height": 1050,
+        "aspectRatio": 0.98667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.20277389fc8f89630562",
+      "originalPath": "assets/images/TCP/TCP Robot 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 213552,
+        "width": 908,
+        "height": 1050,
+        "aspectRatio": 0.86476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9f09a0dd9e4c271bf9db",
+      "originalPath": "assets/images/TCP/TCP Robot 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 137143,
+        "width": 764,
+        "height": 1050,
+        "aspectRatio": 0.72762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.58f52883aa1bfb83521a",
+      "originalPath": "assets/images/TCP/TCP Robot 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 182224,
+        "width": 952,
+        "height": 1050,
+        "aspectRatio": 0.90667,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1dca6a737493f46a85f9",
+      "originalPath": "assets/images/TCP/TCP Robot 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 277117,
+        "width": 1074,
+        "height": 1050,
+        "aspectRatio": 1.02286,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.382e23569b4fc2695882",
+      "originalPath": "assets/images/TCP/TCP Robot 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 212227,
+        "width": 1021,
+        "height": 1050,
+        "aspectRatio": 0.97238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5fbd25112db39c53fad7",
+      "originalPath": "assets/images/TCP/TCP Robot 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 225979,
+        "width": 833,
+        "height": 1050,
+        "aspectRatio": 0.79333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.7a972ec44da29e1841d3",
+      "originalPath": "assets/images/TCP/TCP Robot 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 172415,
+        "width": 1049,
+        "height": 1050,
+        "aspectRatio": 0.99905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.932140c22f9eb09592d6",
+      "originalPath": "assets/images/TCP/TCP Robot 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 148847,
+        "width": 614,
+        "height": 1050,
+        "aspectRatio": 0.58476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.2d9b4858d7aecb365ca0",
+      "originalPath": "assets/images/TCP/TCP Robot 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 227417,
+        "width": 851,
+        "height": 1050,
+        "aspectRatio": 0.81048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.25525cc58c0cb14286bd",
+      "originalPath": "assets/images/TCP/TCP Scary 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 216735,
+        "width": 896,
+        "height": 1050,
+        "aspectRatio": 0.85333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.afbad343a2b598529da9",
+      "originalPath": "assets/images/TCP/TCP Scary 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 296041,
+        "width": 961,
+        "height": 1050,
+        "aspectRatio": 0.91524,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5f0b35f8ca9206963eac",
+      "originalPath": "assets/images/TCP/TCP Scary 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 146001,
+        "width": 820,
+        "height": 1050,
+        "aspectRatio": 0.78095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.047086fc8f13ec967de7",
+      "originalPath": "assets/images/TCP/TCP Scary 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 310543,
+        "width": 911,
+        "height": 1050,
+        "aspectRatio": 0.86762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.1c3b07980da6c0a041cd",
+      "originalPath": "assets/images/TCP/TCP Scary 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 253545,
+        "width": 845,
+        "height": 1050,
+        "aspectRatio": 0.80476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.81fe5f1b00bb06cc10ad",
+      "originalPath": "assets/images/TCP/TCP Scary 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 246631,
+        "width": 943,
+        "height": 1050,
+        "aspectRatio": 0.8981,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d8079294aee11e57d470",
+      "originalPath": "assets/images/TCP/TCP Scary 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 200899,
+        "width": 866,
+        "height": 1050,
+        "aspectRatio": 0.82476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.4a29a0856058189c37d4",
+      "originalPath": "assets/images/TCP/TCP Steampunk 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 286777,
+        "width": 1094,
+        "height": 1050,
+        "aspectRatio": 1.0419,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.acd67d615f2fecf93427",
+      "originalPath": "assets/images/TCP/TCP Steampunk 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 227673,
+        "width": 724,
+        "height": 1050,
+        "aspectRatio": 0.68952,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.c4fc5466844b5fa53ce7",
+      "originalPath": "assets/images/TCP/TCP Steampunk 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 283863,
+        "width": 950,
+        "height": 1050,
+        "aspectRatio": 0.90476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.bbc566dd1aa20a2a5130",
+      "originalPath": "assets/images/TCP/TCP Steampunk 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 193131,
+        "width": 871,
+        "height": 1050,
+        "aspectRatio": 0.82952,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ab044f1ee95282eea306",
+      "originalPath": "assets/images/TCP/TCP Steampunk 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 232824,
+        "width": 1034,
+        "height": 1050,
+        "aspectRatio": 0.98476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.fa75db3188addc2472d3",
+      "originalPath": "assets/images/TCP/TCP Steampunk 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 164705,
+        "width": 655,
+        "height": 1050,
+        "aspectRatio": 0.62381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0b7cc3157b3302b811c4",
+      "originalPath": "assets/images/TCP/TCP Steampunk 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 257248,
+        "width": 959,
+        "height": 1050,
+        "aspectRatio": 0.91333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d5b8d35fdf893c9ce64e",
+      "originalPath": "assets/images/TCP/TCP Toon 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 232463,
+        "width": 845,
+        "height": 1050,
+        "aspectRatio": 0.80476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.abe62caa40602da936c8",
+      "originalPath": "assets/images/TCP/TCP Troll 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 220234,
+        "width": 893,
+        "height": 1050,
+        "aspectRatio": 0.85048,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d431939c33eedac4c767",
+      "originalPath": "assets/images/TCP/TCP Troll 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 266798,
+        "width": 835,
+        "height": 1050,
+        "aspectRatio": 0.79524,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.363ab36c99efb4b6460a",
+      "originalPath": "assets/images/TCP/TCP Troll 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 242047,
+        "width": 824,
+        "height": 1050,
+        "aspectRatio": 0.78476,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.dc298918a7a4e1935e5f",
+      "originalPath": "assets/images/TCP/TCP Troll 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 229287,
+        "width": 1072,
+        "height": 1050,
+        "aspectRatio": 1.02095,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.7b3ceeab04318c3124a2",
+      "originalPath": "assets/images/TCP/TCP Troll 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 174094,
+        "width": 770,
+        "height": 1050,
+        "aspectRatio": 0.73333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.87528e60884464254e75",
+      "originalPath": "assets/images/TCP/TCP Troll 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 155957,
+        "width": 802,
+        "height": 1050,
+        "aspectRatio": 0.76381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.00ff747b34f57982fa1f",
+      "originalPath": "assets/images/TCP/TCP Troll 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 205462,
+        "width": 890,
+        "height": 1050,
+        "aspectRatio": 0.84762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.51474251446f46f8b579",
+      "originalPath": "assets/images/TCP/TCP Troll 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 223680,
+        "width": 1006,
+        "height": 1050,
+        "aspectRatio": 0.9581,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ad42d169a2a402f4d4e2",
+      "originalPath": "assets/images/TCP/TCP Troll 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 230368,
+        "width": 1098,
+        "height": 1050,
+        "aspectRatio": 1.04571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.30c3628d6a8fd0482e4f",
+      "originalPath": "assets/images/TCP/TCP Vampire 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 140899,
+        "width": 713,
+        "height": 1050,
+        "aspectRatio": 0.67905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9a7b5e253ac678ad34a4",
+      "originalPath": "assets/images/TCP/TCP Vampire 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 257165,
+        "width": 989,
+        "height": 1050,
+        "aspectRatio": 0.9419,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9fef9ce6b19950d7c4bf",
+      "originalPath": "assets/images/TCP/TCP Vampire 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 160105,
+        "width": 777,
+        "height": 1050,
+        "aspectRatio": 0.74,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.fb3ee84de4799a87f305",
+      "originalPath": "assets/images/TCP/TCP Vampire 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 225907,
+        "width": 1050,
+        "height": 856,
+        "aspectRatio": 1.22664,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.992b3e44fffbfd64650a",
+      "originalPath": "assets/images/TCP/TCP Vampire 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 141475,
+        "width": 832,
+        "height": 1050,
+        "aspectRatio": 0.79238,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.18ac1dd59e10c0fb33d3",
+      "originalPath": "assets/images/TCP/TCP Zombie 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 215438,
+        "width": 844,
+        "height": 1050,
+        "aspectRatio": 0.80381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b90e13ed2a9ee796af01",
+      "originalPath": "assets/images/TCP/TCP Zombie 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 176597,
+        "width": 688,
+        "height": 1050,
+        "aspectRatio": 0.65524,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0c1033a8fde335813585",
+      "originalPath": "assets/images/TCP/TCP Zombie 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 157472,
+        "width": 670,
+        "height": 1050,
+        "aspectRatio": 0.6381,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d4e69d2badece1cb8f95",
+      "originalPath": "assets/images/TCP/TCP Zombie 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 173914,
+        "width": 806,
+        "height": 1050,
+        "aspectRatio": 0.76762,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0f4c0c27addf3d14d8fc",
+      "originalPath": "assets/images/TCP/TCP Zombie 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 226593,
+        "width": 762,
+        "height": 1050,
+        "aspectRatio": 0.72571,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e68ba703e12e2047d585",
+      "originalPath": "assets/images/TCP/TCP Zombie 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 216088,
+        "width": 797,
+        "height": 1050,
+        "aspectRatio": 0.75905,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d598454f5c9727a6e626",
+      "originalPath": "assets/images/TCP/TCP Zombie 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 213257,
+        "width": 773,
+        "height": 1050,
+        "aspectRatio": 0.73619,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.732d17be691390f9432d",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30185,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.30a511fab47b5d344909",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35207,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6b768aefa79a98ec376d",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30333,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0a96871f5164396f7e58",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34126,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.4ebb22c06f3d87d02e99",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 40629,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9adfec46c9101a76468a",
+      "originalPath": "assets/images/TCP/thumbs/TCP Armored 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 39495,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.022c012f878f40b26ed7",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36499,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.078ebbbfcc64fcf064dc",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33444,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cfbc6c1fc3db634958e3",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26135,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.de047979a2c6b8cb309c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26499,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.40166ce8403783bfcea6",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 24923,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6568f95f65482c343e31",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30305,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6d930299efc9623b8baa",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36678,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.398f889d78fbe16349bb",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31350,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a9ef17e250bcb3d698d8",
+      "originalPath": "assets/images/TCP/thumbs/TCP Cyberpunk 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34266,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.21c506d48a8cebca605b",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35251,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b9d90fb93220a3c5459b",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33638,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.40aaed21829c0ebc6c02",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32684,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6ab92f7999999d1af6b3",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 27291,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.19c6a946ae3400451c83",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30842,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.33f989bc73d7256df482",
+      "originalPath": "assets/images/TCP/thumbs/TCP Dwarf 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26524,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.61740e46482dda3c4c2a",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33517,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.24f451dd639a3b5ad3df",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35141,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.16dbe2e86009ceed46c5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26042,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6436831adf95ed44d7df",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 23922,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.76c093aae1712cc33d8e",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26200,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ab9370e14e2176335c45",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30110,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e547cea62b402c82b33c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28979,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.012d4f0ca0bfd8b89383",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28557,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.59af1d0eca52105767ec",
+      "originalPath": "assets/images/TCP/thumbs/TCP Elf 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 27475,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.75ab8ade3556416839fa",
+      "originalPath": "assets/images/TCP/thumbs/TCP Gnome 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26771,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cc82344a5f51ec5693fd",
+      "originalPath": "assets/images/TCP/thumbs/TCP Gnome 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28670,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9e41901ddd86df95ec20",
+      "originalPath": "assets/images/TCP/thumbs/TCP Hero 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29650,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f9ba3a27b7db022919e2",
+      "originalPath": "assets/images/TCP/thumbs/TCP Hero 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 25792,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.235eb7e7aae947a47cf5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Hero 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29193,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.547f1773b9c07e2e5fc1",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28286,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.07ab2c89ff149e81f5ab",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30037,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f56cc36e0a83aae09c14",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 24494,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5e240790a700576c8e85",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26165,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.75bb16c666b76599df0f",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30853,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.fd4516acdf32a9fe09f2",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 25307,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.beec1a498cd3e1a3415a",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 38038,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.f823b9d3e983885b4f5c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28948,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.46ae435c922cb0494e60",
+      "originalPath": "assets/images/TCP/thumbs/TCP Human 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 37234,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.3ff8e9c8a456eee38a76",
+      "originalPath": "assets/images/TCP/thumbs/TCP Ithilid 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 38243,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9738a1d06055c40ee012",
+      "originalPath": "assets/images/TCP/thumbs/TCP Mad Scientist 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32728,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b4d138886f6cea466c41",
+      "originalPath": "assets/images/TCP/thumbs/TCP Mad Scientist 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36414,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5bd39db7fb26ed3aaa3f",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 44563,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.fb905440cd4d67ebd402",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 23893,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.53aebfef8abb2e4b8d35",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36094,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.81a66009da91fb820718",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 23567,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0d51a7dd262008941e37",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 39141,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.74c4702de9dc1f0ab3a5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32284,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.43450e4b1f20bf198280",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34196,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.7a8d75706acd3e2bd00c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36649,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d3508d96659db8511f57",
+      "originalPath": "assets/images/TCP/thumbs/TCP Manimal 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 41663,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.29f62be1e70cf99de0b5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 25823,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d2f76d6554fbee754d77",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29290,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ed21045e663f34543c40",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34764,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.48e31f93697dc965cc3f",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31894,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.173dd32f1b69e0a9994e",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26100,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.02651ecd1ed3ba3b42e2",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35957,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.422873e7f5684641d764",
+      "originalPath": "assets/images/TCP/thumbs/TCP Pirate 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34088,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.075901ed61c1d056c755",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34795,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b403add484a6c63f6cce",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26152,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.debb95ded709fc8070f9",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29342,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.0d275909f088660d9a94",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35393,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.fa18fb6993ae83e83d45",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31733,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cc7f573e5c8795d80c7d",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35704,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5b42e66000dbd2cbdc80",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 25910,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.54a6a5de122c793e8bd2",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 24408,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.07630b5259ef286f6430",
+      "originalPath": "assets/images/TCP/thumbs/TCP Robot 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35391,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.35d8e16d10197ae6a9c3",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31309,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e2f5719cab7e861fee92",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32865,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.c3aad31f0089fed109ec",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 23593,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.735b616df5e8f30436da",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36928,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ccc5ab631dde2d05ede4",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36781,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.b8e29484d0a10a96471c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30467,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.99fc411e934c4828e3c5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Scary 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32033,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.2223ebea86a79b02d922",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35255,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9fe3e6e4570ade92a543",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29452,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e300939d8dac006a6d8d",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33857,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.391f6812074d697f2782",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 27215,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.2811542560813ff933c0",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31559,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.bed58beda5d9f151b488",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26196,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cdd03135875f0a58f7dc",
+      "originalPath": "assets/images/TCP/thumbs/TCP Steampunk 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 34830,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.40b6bd55b913fcfdf1e1",
+      "originalPath": "assets/images/TCP/thumbs/TCP Toon 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 32542,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.58424d998bebe0687690",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31080,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e90bc2994a5212ad8e50",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 36706,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.76cb6c406863d3018696",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35160,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.e61b7e635f59acd91226",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33539,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.af9a6a5f4478c46e39d5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28235,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.d8ac6270dd3dc0ea8b68",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28166,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.068a94d9ec9c5d70457c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31164,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.282304a18cd77a0452fb",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 8.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35783,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.66e00ccc92ffcedca3bd",
+      "originalPath": "assets/images/TCP/thumbs/TCP Troll 9.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33259,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.ad7cc4c789f7bf68c767",
+      "originalPath": "assets/images/TCP/thumbs/TCP Vampire 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 24667,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a28239f5e6f27959098d",
+      "originalPath": "assets/images/TCP/thumbs/TCP Vampire 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 35413,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.63e2e0df693b9d8abb7e",
+      "originalPath": "assets/images/TCP/thumbs/TCP Vampire 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 25976,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.87588fea7319f09af3ca",
+      "originalPath": "assets/images/TCP/thumbs/TCP Vampire 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 27399,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.5e45f662c51b177b40c5",
+      "originalPath": "assets/images/TCP/thumbs/TCP Vampire 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 26311,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.cbc5d846409c0a29852c",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 1.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30622,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.c62e0456d23d58c0f6e7",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 2.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 29421,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.6837813ba7ad0da96515",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 3.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28186,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.a493be94678e66ae9672",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 4.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 30974,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.376919105b8b367ef8a1",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 5.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 33169,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.67ce1901fee134064bc6",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 6.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 31289,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.afac9dbfb5a9fde57c58",
+      "originalPath": "assets/images/TCP/thumbs/TCP Zombie 7.jpg",
+      "optimizedPath": null,
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 28776,
+        "width": 160,
+        "height": 120,
+        "aspectRatio": 1.33333,
+        "colorMode": "RGB"
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
+    },
+    {
+      "id": "images.9f7ed8beb298f89fcf65",
+      "originalPath": "assets/images/TCP/thumbs.html",
+      "optimizedPath": null,
+      "mediaType": "document",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "html",
+        "bytes": 7836
+      },
+      "verified": {
+        "provenance": "local-file",
+        "classification": "unreviewed",
+        "license": "unverified"
+      },
+      "suggested": {
+        "roles": [],
+        "themes": [],
+        "moods": [],
+        "tags": []
+      },
+      "rights": {
+        "officialStoryUse": "unverified",
+        "thirdPartyResourceUse": "unverified"
+      }
     }
   ],
   "technicalErrors": []

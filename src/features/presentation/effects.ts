@@ -1,5 +1,4 @@
 import type { NativeEffect } from "../../contracts/effects.ts";
-import { cameraTransform } from "./camera.ts";
 export interface EffectTargets {
   canvas: HTMLElement;
   image?: HTMLElement;
@@ -12,7 +11,7 @@ export interface EffectPlayback {
   resume: () => void;
 }
 
-function keyframes(effect: NativeEffect): Keyframe[] {
+function keyframes(effect: NativeEffect, target: HTMLElement): Keyframe[] {
   switch (effect.id) {
     case "fade-in":
       return [{ opacity: 0 }, { opacity: 1 }];
@@ -22,12 +21,12 @@ function keyframes(effect: NativeEffect): Keyframe[] {
       return [{ opacity: 0 }, { opacity: 1 }];
     case "camera-zoom":
     case "slow-zoom":
-      return [{ transform: cameraTransform(1) }, { transform: cameraTransform(effect.scale) }];
+      return [{ scale: getComputedStyle(target).scale }, { scale: effect.scale }];
     case "camera-pan":
     case "parallax":
       return [
-        { transform: cameraTransform(1) },
-        { transform: cameraTransform(1, `${effect.x}%`, `${effect.y}%`) },
+        { translate: getComputedStyle(target).translate },
+        { translate: `${effect.x}% ${effect.y}%` },
       ];
     case "screen-shake": {
       const offset = (effect.intensity ?? 0.5) * 6;
@@ -78,9 +77,43 @@ function effectSurface(effect: NativeEffect, targets: EffectTargets) {
   }
   return { target, overlay };
 }
+function holdFinalState(effect: NativeEffect, target: HTMLElement, previous?: HTMLElement) {
+  switch (effect.id) {
+    case "crossfade":
+      if (previous) previous.style.opacity = "0";
+      target.style.opacity = "1";
+      break;
+    case "fade-in":
+      target.style.opacity = "1";
+      break;
+    case "fade-out":
+      target.style.opacity = "0";
+      break;
+    case "slow-zoom":
+    case "camera-zoom":
+      target.style.scale = String(effect.scale);
+      break;
+    case "camera-pan":
+    case "parallax":
+      target.style.translate = `${effect.x}% ${effect.y}%`;
+      break;
+  }
+}
 
 export class EffectsEngine {
   private readonly running = new Set<EffectPlayback>();
+  private readonly heldStyles = new Map<
+    HTMLElement,
+    { scale: string; translate: string; opacity: string }
+  >();
+  private rememberStyle(target: HTMLElement) {
+    if (!this.heldStyles.has(target))
+      this.heldStyles.set(target, {
+        scale: target.style.scale,
+        translate: target.style.translate,
+        opacity: target.style.opacity,
+      });
+  }
   play(
     effect: NativeEffect,
     targets: EffectTargets,
@@ -95,6 +128,18 @@ export class EffectsEngine {
         resume() {},
       };
     const { target, overlay } = effectSurface(effect, targets);
+    const persistent = [
+      "slow-zoom",
+      "camera-zoom",
+      "camera-pan",
+      "parallax",
+      "fade-in",
+      "fade-out",
+      "crossfade",
+    ].includes(effect.id);
+    if (persistent) this.rememberStyle(target);
+    if (effect.id === "crossfade" && targets.previousImage)
+      this.rememberStyle(targets.previousImage);
     let resolve!: (value: "ended" | "aborted" | "unavailable" | "timeout") => void;
     const finished = new Promise<"ended" | "aborted" | "unavailable" | "timeout">((done) => {
       resolve = done;
@@ -109,6 +154,7 @@ export class EffectsEngine {
       settled = true;
       clearTimeout(deadline);
       signal.removeEventListener("abort", stop);
+      if (result === "ended") holdFinalState(effect, target, targets.previousImage);
       animations.forEach((animation) => animation.cancel());
       overlay?.remove();
       this.running.delete(playback);
@@ -140,28 +186,29 @@ export class EffectsEngine {
     this.running.add(playback);
     signal.addEventListener("abort", stop, { once: true });
     try {
-      if (!target.animate) finish("unavailable");
-      else {
+      if (!target.animate) {
+        finish("unavailable");
+        return playback;
+      }
+      animations.push(
+        target.animate(keyframes(effect, target), {
+          duration: effect.duration,
+          delay: effect.delay ?? 0,
+          easing: "ease-in-out",
+          fill: "forwards",
+        }),
+      );
+      if (effect.id === "crossfade" && targets.previousImage?.animate)
         animations.push(
-          target.animate(keyframes(effect), {
+          targets.previousImage.animate([{ opacity: 1 }, { opacity: 0 }], {
             duration: effect.duration,
-            delay: effect.delay ?? 0,
-            easing: "ease-in-out",
             fill: "none",
           }),
         );
-        if (effect.id === "crossfade" && targets.previousImage?.animate)
-          animations.push(
-            targets.previousImage.animate([{ opacity: 1 }, { opacity: 0 }], {
-              duration: effect.duration,
-              fill: "none",
-            }),
-          );
-        void Promise.all(animations.map((animation) => animation.finished)).then(
-          () => finish("ended"),
-          () => finish("aborted"),
-        );
-      }
+      void Promise.all(animations.map((animation) => animation.finished)).then(
+        () => finish("ended"),
+        () => finish("aborted"),
+      );
     } catch {
       finish("unavailable");
     }
@@ -175,6 +222,12 @@ export class EffectsEngine {
   }
   stop() {
     for (const playback of [...this.running]) playback.stop();
+    for (const [target, style] of this.heldStyles) {
+      target.style.scale = style.scale;
+      target.style.translate = style.translate;
+      target.style.opacity = style.opacity;
+    }
+    this.heldStyles.clear();
   }
 }
 

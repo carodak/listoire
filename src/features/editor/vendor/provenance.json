@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/dtsykunov/inky-web",
+  "commit": "1adefe9493f56a9cc9aaa93efcb5267147469284",
+  "reused": [
+    "Ace 1.2.6 editor and UndoManager",
+    "Ace Ink mode",
+    "complete web-snippets.js menu and all 24 longer Ink snippets",
+    "Ace insertion and find/replace commands"
+  ],
+  "adaptations": [
+    "CommonJS menu serialized to JSON with upstream build semantics",
+    "Ink mode exports window.ListoireInkMode for lazy loading",
+    "Search extension adds a visible close glyph and an explicit advanced replacement toggle"
+  ],
+  "licenses": ["/licenses/inky-web-MIT.txt", "/licenses/ace-BSD.txt"]
+}

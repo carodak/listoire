@@ -1,0 +1,96 @@
+export interface AcePosition {
+  row: number;
+  column: number;
+}
+export interface AceRange {
+  start: AcePosition;
+  end: AcePosition;
+}
+export interface AceEditor {
+  getValue(): string;
+  setValue(value: string, cursor?: number): void;
+  insert(value: string): void;
+  focus(): void;
+  destroy(): void;
+  resize(): void;
+  scrollToLine(line: number, center: boolean, animate: boolean): void;
+  gotoLine(line: number, column?: number): void;
+  getCursorPosition(): AcePosition;
+  getSelectedText(): string;
+  getSelectionRange(): AceRange;
+  execCommand(name: string): void;
+  find(text: string): void;
+  searchBox?: { show: (query: string, replace: boolean) => void; searchInput: HTMLInputElement };
+  highlight(line: number | null): void;
+  setOptions(options: Record<string, unknown>): void;
+  on(event: string, callback: () => void): void;
+  selection: { setRange(range: AceRange): void };
+  session: {
+    setMode(mode: unknown): void;
+    getLine(row: number): string;
+    setUndoManager(manager: unknown): void;
+    setAnnotations(
+      annotations: { row: number; column: number; text: string; type: string }[],
+    ): void;
+    addMarker(range: AceRange, css: string, type: string): number;
+    removeMarker(id: number): void;
+  };
+}
+
+export interface ProjectDelta {
+  group: string;
+  deltas: { lines: string[] }[];
+}
+export interface AceUndoManager {
+  $undoStack: unknown[];
+  execute(options: { args: [ProjectDelta[], unknown]; merge?: boolean }): void;
+  undo(): void;
+  redo(): void;
+  hasUndo(): boolean;
+  hasRedo(): boolean;
+}
+interface Ace {
+  require(name: "ace/range"): {
+    Range: new (startRow: number, startCol: number, endRow: number, endCol: number) => AceRange;
+  };
+  edit(element: HTMLElement): AceEditor;
+  UndoManager: new () => AceUndoManager;
+  config: { set(key: string, value: string): void };
+}
+declare global {
+  interface Window {
+    ace: Ace;
+    ListoireInkMode: new () => unknown;
+  }
+}
+let loading: Promise<Ace> | undefined;
+function script(file: string) {
+  return new Promise<void>((resolve, reject) => {
+    const element = document.createElement("script");
+    element.src = `/editor/vendor/${file}`;
+    element.onload = () => resolve();
+    element.onerror = () => {
+      element.remove();
+      reject(new Error(`Could not load ${file}. Reload Story Editor.`));
+    };
+    document.head.append(element);
+  });
+}
+export function loadAce() {
+  loading ??= script("ace.js")
+    .then(() => script("ink-mode.js"))
+    .then(() => script("ext-searchbox.js"))
+    .then(() => {
+      window.ace.config.set("basePath", "/editor/vendor");
+      const theme = document.createElement("link");
+      theme.rel = "stylesheet";
+      theme.href = "/editor/vendor/ink-theme.css";
+      document.head.append(theme);
+      return window.ace;
+    })
+    .catch((error) => {
+      loading = undefined;
+      throw error;
+    });
+  return loading;
+}

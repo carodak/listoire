@@ -1,32 +1,30 @@
 .character-panel {
-  position: absolute;
-  right: 0;
-  top: 72px;
-  width: 225px;
-  z-index: 2;
+  position: relative;
+  flex-shrink: 0;
   font:
-    13px/1.5 system-ui,
+    12px/1.5 system-ui,
     sans-serif;
 }
 .character-tab {
-  display: block;
-  margin-left: auto;
-  min-height: 46px;
-  padding: 12px 18px;
-  background: var(--paper);
-  color: var(--foreground);
-  border: 1px solid var(--border);
-  border-right: 0;
-  border-radius: 8px 0 0 8px;
+  min-height: 34px;
+  padding: 8px 0;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  font: inherit;
 }
 .character-tab span {
-  margin-right: 8px;
-  font-size: 20px;
+  margin-right: 4px;
 }
 #character-content {
   padding: 16px;
+  position: relative;
   margin-top: 8px;
-  border-left: 1px solid var(--border);
+  width: min(250px, 80vw);
+  max-height: 55svh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  box-shadow: 0 5px 22px var(--shadow);
   background: var(--paper);
 }
 .character-portrait {
@@ -114,28 +112,4 @@
 .encounter-card:focus-within .encounter-description,
 .encounter-card[data-open="true"] .encounter-description {
   display: block;
-}
-@media (min-width: 1100px) {
-  .reader.character-open {
-    padding-right: 270px;
-  }
-}
-@media (max-width: 1099px) {
-  .character-panel {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: 100%;
-    margin: 0 auto 18px;
-  }
-  #character-content {
-    border: 1px solid var(--border);
-  }
-  .character-tab {
-    border-right: 1px solid var(--border);
-    border-radius: 6px;
-  }
-  .character-portrait {
-    height: 120px;
-  }
 }

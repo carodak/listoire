@@ -74,6 +74,7 @@ export function App({ saves, initialSettings }: Props) {
             locale={settings.language}
             saves={saves}
             preferences={settings.reading ?? defaultReadingPreferences}
+            hasPreferences={Boolean(settings.reading)}
             onPreferencesChange={(reading) => {
               void changeSettings({ reading });
             }}

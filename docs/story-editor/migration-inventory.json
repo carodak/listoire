@@ -1,0 +1,303 @@
+{
+  "sourceFiles": [
+    {
+      "path": "stories/house/en.ink",
+      "sha256": "0ee48469c5d0a3ddf349cf6c533e51f825980afb5c26317ce51958265b891f13"
+    },
+    {
+      "path": "stories/house/fr.ink",
+      "sha256": "dff7b7b2c27724f97f4b8cae6813969cf6bf5b42fe93cfd907270954e8824a00"
+    },
+    {
+      "path": "stories/house/metadata.json",
+      "sha256": "f34ad6f4d96218a7f93bb21689495be67792d1586b18849985174adcdffa8c31"
+    },
+    {
+      "path": "stories/house/narration.json",
+      "sha256": "45298de4b9fb08ffbfa02f8b6974e1e5cd4b92177359b62cedf6d8bb8c0d52c0"
+    }
+  ],
+  "passages": [
+    "intro",
+    "call",
+    "room",
+    "song",
+    "arrival",
+    "break",
+    "light",
+    "last",
+    "window",
+    "photo",
+    "end"
+  ],
+  "paths": 16,
+  "notes": "Eight combinations of the three binary branches, with and without the optional photograph examination, per language.",
+  "media": [
+    {
+      "id": "narration.03269413fafa8389f6610af60f97fdae9a32edebeb383ed15e69b0faa65b8521",
+      "path": "media/narration.03269413fafa8389f6610af60f97fdae9a32edebeb383ed15e69b0faa65b8521.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.c75b89dff887fe717f864763f5b6ab8eeedd3c2d9c510f60f5d228d9b511653f",
+      "path": "media/narration.c75b89dff887fe717f864763f5b6ab8eeedd3c2d9c510f60f5d228d9b511653f.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.089e97b4d6fb3759a8dd0f7cc41e349e3567ab9ad912e6bd9c39e9b0d351be20",
+      "path": "media/narration.089e97b4d6fb3759a8dd0f7cc41e349e3567ab9ad912e6bd9c39e9b0d351be20.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.ea8302c4941deefafe141ddb121ff722078d8e865aa6b28826e4ccab366a720e",
+      "path": "media/narration.ea8302c4941deefafe141ddb121ff722078d8e865aa6b28826e4ccab366a720e.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.6cb926319998ac0b605f9180c9f660530280dea6e72ddec847e064e7730e09f7",
+      "path": "media/narration.6cb926319998ac0b605f9180c9f660530280dea6e72ddec847e064e7730e09f7.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.810cb894a7eaf8f7d6f8698b101089bdb59bfefce38b73d4961419ad38bef876",
+      "path": "media/narration.810cb894a7eaf8f7d6f8698b101089bdb59bfefce38b73d4961419ad38bef876.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.c84a5d02b4c65ddb41467e240b71df735bed9f68ef126c70ef0d2f6cb1cdb138",
+      "path": "media/narration.c84a5d02b4c65ddb41467e240b71df735bed9f68ef126c70ef0d2f6cb1cdb138.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.85044f9bc54bb4de211392089ff6b4605a6faca94c38f0653298a32b4b2586b8",
+      "path": "media/narration.85044f9bc54bb4de211392089ff6b4605a6faca94c38f0653298a32b4b2586b8.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.86a9579f076a885bd9939071fffc1f7d3a4bd8bb462252180dd9fe4bf717d14d",
+      "path": "media/narration.86a9579f076a885bd9939071fffc1f7d3a4bd8bb462252180dd9fe4bf717d14d.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.f80af332406be80547a85eec17626d3360a6e17fe1839e95f3e5f76cd1aa887a",
+      "path": "media/narration.f80af332406be80547a85eec17626d3360a6e17fe1839e95f3e5f76cd1aa887a.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.53b7f1d0a36e1f470222fcab3dd03541393e8e50267193364211738ad71fa635",
+      "path": "media/narration.53b7f1d0a36e1f470222fcab3dd03541393e8e50267193364211738ad71fa635.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.cf1e9bdab3653e0d234391e77a8af8a97e20957d5d09f258f6e8e9441a84533e",
+      "path": "media/narration.cf1e9bdab3653e0d234391e77a8af8a97e20957d5d09f258f6e8e9441a84533e.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.907cd99216b3be753d0e3a002e302487e561afcd5e20e184476f938ad5ad58fc",
+      "path": "media/narration.907cd99216b3be753d0e3a002e302487e561afcd5e20e184476f938ad5ad58fc.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.69972285df94515ef4337606ce0a4b4f7eb852ffc507e540ea2a635d7f01e379",
+      "path": "media/narration.69972285df94515ef4337606ce0a4b4f7eb852ffc507e540ea2a635d7f01e379.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.c439f1eb9ec44ecd75a33bd86540315a48db5ea4207d005a714deffca99d6ec8",
+      "path": "media/narration.c439f1eb9ec44ecd75a33bd86540315a48db5ea4207d005a714deffca99d6ec8.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.2fbec7a6408488974c146f583347209fcd7a3d6a3607bf41f494e0e59abbff60",
+      "path": "media/narration.2fbec7a6408488974c146f583347209fcd7a3d6a3607bf41f494e0e59abbff60.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.971f73ec71f10d2cf0dbb5eeb29519d14ee4ce44e3c9625b2f13585109f47a76",
+      "path": "media/narration.971f73ec71f10d2cf0dbb5eeb29519d14ee4ce44e3c9625b2f13585109f47a76.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.e0e293d0671ae76438d2d51d1bf0be0b08cfff0fdfee053593c24b4d19e27704",
+      "path": "media/narration.e0e293d0671ae76438d2d51d1bf0be0b08cfff0fdfee053593c24b4d19e27704.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.b95569995035ee8787e22b7dcc57282755ea346aeb2db4cfeb5dc99a739460b6",
+      "path": "media/narration.b95569995035ee8787e22b7dcc57282755ea346aeb2db4cfeb5dc99a739460b6.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.85d89181106e33d953c6d6968adcb106d433bfeba258019d4b39ac79ace3ab21",
+      "path": "media/narration.85d89181106e33d953c6d6968adcb106d433bfeba258019d4b39ac79ace3ab21.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.0af52ef650f75be2665bd626f3f064dcb874ac8fb0f5a1a70fe0a750c9a4845c",
+      "path": "media/narration.0af52ef650f75be2665bd626f3f064dcb874ac8fb0f5a1a70fe0a750c9a4845c.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.d70231c2fede4fc740b526955ddde966f2d71596c630a1aecc1e7b352b4b2d9b",
+      "path": "media/narration.d70231c2fede4fc740b526955ddde966f2d71596c630a1aecc1e7b352b4b2d9b.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.825c883c12bf0c29daf5cce6dac470ff780cb4e335f44df6a520719045666356",
+      "path": "media/narration.825c883c12bf0c29daf5cce6dac470ff780cb4e335f44df6a520719045666356.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.51eb6f62c61a96badde333b0734f25f7ef89ff10841ac237f0526eda76efbc0b",
+      "path": "media/narration.51eb6f62c61a96badde333b0734f25f7ef89ff10841ac237f0526eda76efbc0b.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.d9ad150e32b5c1040e6c93761b8f4b2eb7727fccc806394ba43321a90fa449c9",
+      "path": "media/narration.d9ad150e32b5c1040e6c93761b8f4b2eb7727fccc806394ba43321a90fa449c9.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.28c2d6c65f94bb6572e08dcc62a62c3731c8bd6f93b8bed58efc1ec1157c98f0",
+      "path": "media/narration.28c2d6c65f94bb6572e08dcc62a62c3731c8bd6f93b8bed58efc1ec1157c98f0.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.076335ac25ebfb0e43f2485a4afcf113e355b4305abcab0602bd4ed976fcd078",
+      "path": "media/narration.076335ac25ebfb0e43f2485a4afcf113e355b4305abcab0602bd4ed976fcd078.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.0b5d747c888664f355e72e620ecac1e685e7687ce7ce1485ab6bf0cfbdfdaf83",
+      "path": "media/narration.0b5d747c888664f355e72e620ecac1e685e7687ce7ce1485ab6bf0cfbdfdaf83.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.91c6ba107bf53426d57cbef2c02d9d8004d353380c74e97c7111ce8cf2982f23",
+      "path": "media/narration.91c6ba107bf53426d57cbef2c02d9d8004d353380c74e97c7111ce8cf2982f23.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.9a7d074e48bc46b6e4bb33df44235e1da05c830113f3aa6370add9c15e02905f",
+      "path": "media/narration.9a7d074e48bc46b6e4bb33df44235e1da05c830113f3aa6370add9c15e02905f.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.3e09ea4849449c434c119ad9142d41654f1cebc4b9e0e179057ee345eb2469bd",
+      "path": "media/narration.3e09ea4849449c434c119ad9142d41654f1cebc4b9e0e179057ee345eb2469bd.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.237d3133cebfcba161533692def0156bc1706e194672154813eabcb99a07a1ba",
+      "path": "media/narration.237d3133cebfcba161533692def0156bc1706e194672154813eabcb99a07a1ba.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.e2f59f9c738af965ac1abe6745627e52d1f573f9caceb9ee89fccb3943e2fe81",
+      "path": "media/narration.e2f59f9c738af965ac1abe6745627e52d1f573f9caceb9ee89fccb3943e2fe81.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.3bf92c3a224391a1146550beda69d994681f60aa2d7504867207ce78e39ad94c",
+      "path": "media/narration.3bf92c3a224391a1146550beda69d994681f60aa2d7504867207ce78e39ad94c.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.29dadd5bc10559bf590ed3300fb202029301194e3040279b3eff691a2ed9b884",
+      "path": "media/narration.29dadd5bc10559bf590ed3300fb202029301194e3040279b3eff691a2ed9b884.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "narration.c5f832458f06c8e144a348cafe1c2713fa8ac81ac799cc7ae74752ac79381971",
+      "path": "media/narration.c5f832458f06c8e144a348cafe1c2713fa8ac81ac799cc7ae74752ac79381971.mp3",
+      "type": "audio",
+      "alt": ""
+    },
+    {
+      "id": "tcp.human5",
+      "path": "media/tcp.human5.webp",
+      "type": "image",
+      "alt": "Black-and-white line portrait of a young woman looking over her shoulder.",
+      "credit": "TCP Human 5 — Jeff Preston / Terrible Character Portraits, coordinated by Duane O’Brien. CC BY 3.0: https://creativecommons.org/licenses/by/3.0/ · Source: http://team-preston.com · Converted to WebP."
+    },
+    {
+      "id": "heritage.bird",
+      "path": "media/heritage.bird.webp",
+      "type": "image",
+      "alt": "Vintage engraving of a flying bird"
+    },
+    {
+      "id": "heritage.key",
+      "path": "media/heritage.key.webp",
+      "type": "image",
+      "alt": "Vintage engraving of a key"
+    },
+    {
+      "id": "heritage.handprint",
+      "path": "media/heritage.handprint.webp",
+      "type": "image",
+      "alt": "Vintage line drawing of an open hand"
+    },
+    {
+      "id": "sonniss.telephone",
+      "path": "media/sonniss.telephone.mp3",
+      "type": "audio",
+      "alt": "Antique telephone receiver"
+    },
+    {
+      "id": "sonniss.music-box",
+      "path": "media/sonniss.music-box.mp3",
+      "type": "audio",
+      "alt": "Music-box recollection"
+    },
+    {
+      "id": "sonniss.wind",
+      "path": "media/sonniss.wind.mp3",
+      "type": "audio",
+      "alt": "Chimney wind"
+    },
+    {
+      "id": "sonniss.impact",
+      "path": "media/sonniss.impact.mp3",
+      "type": "audio",
+      "alt": "Metal impact accent"
+    }
+  ],
+  "backup": "docs/story-editor/original-project.json"
+}

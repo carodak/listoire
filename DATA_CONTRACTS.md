@@ -1,5 +1,24 @@
 # Proposed content and runtime contracts
 
+The Story Editor adds executable `StoryProjectSchema`, `StoryConfigurationSchema`,
+`PublishedProjectSchema` and `PreviewStateSchema` in `src/contracts/editor-project.ts`.
+Project schema 1 stores localized Ink, metadata, defaults, missing-translation flags,
+optional library facets and embedded recordings under the stable `house` ID.
+Compiled bundles remain derived data, validated with `BundleSchema` before publication.
+Bundle additions cover authored Ink, narration modes/voice selection, reading defaults,
+embedded audio and image placement/timing. Strict speech settings include bounded pitch,
+temperature, guidance, expressiveness and seed. Optional named voice profiles embed
+permission-attested MP3/WAV references (at most 2 MB, duration checked at 6–30 seconds by
+the local service); projects retain their aggregate 8 MB cap. Generated clips may carry
+a settings digest so old settings cannot silently reuse a different voice preview.
+Events may declare `phase: exit` for a bounded page fade-out on scene departure.
+The same scene/effect contracts validate
+authoring forms, imported projects and normal playback. Story locales accept two-letter
+language codes with an optional two-letter region; the interface supports English and French.
+Editor records use a separate `listoire-editor/projects` database, optimistic revisions
+and at most 30 version checkpoints. Reader gameplay saves and settings retain their
+existing schema and database. See [the editor report](docs/story-editor/implementation.md).
+
 Status: the implemented subset is defined by executable schemas in `src/contracts`; larger examples below remain illustrative TypeScript, **not a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.
 
 ## Implemented Phase 1 subset
@@ -481,28 +500,32 @@ A future AI proposal uses these same schemas and semantic validators, adds its b
 
 Executable Zod schemas live in `src/contracts/story.ts`, `character.ts`, `presentation.ts`,
 `effects.ts` and `media.ts`. Infer types from these files rather than copying the broader
-design sketches above. House release is `0.3.0`, mode `rpg-no-combat`; this denotes the
+design sketches above. House release is `0.3.1`, mode `rpg-no-combat`; this denotes the
 initial character profile only. Bundle/save mode must match. Save schema 1 remains
 compatible with narrative-only foundation fixtures; RPG-profile mode requires character.
 
 - Character health starts at 6/6. STR/DEX/WIL contain initial/current values and three
-  validated dice results, with initial equal to their sum. Two ability IDs have Rank 1.
+  validated dice results, with initial equal to their sum. Investigation and Intuition have Rank 1.
   Profile generation occurs once before the initial atomic checkpoint; restore retains it.
 - Frame facts/actions are evaluated from declared Ink variables; restoration compares
   the full serialized Ink boundary. Inventory/encounter metadata filters by these facts.
   Removed Observation/Knowledge/Courage are not replaced by narrative attribute checks.
 - Scenes declare image/progress/title and up to 30 events. Each stable event ID has a
-  passage or segment trigger and bounded delay; action is allowlisted effect/audio/stop.
+  passage, segment or block trigger and bounded delay; action is allowlisted effect/audio/stop.
+  Ordered blocks declare text IDs, media IDs/layouts and final choices. Semantic validation
+  checks order, references, bounded full-screen sequences and artistic color constraints.
   Supported effect props are strict bounded subsets of upstream APIs. No executable
   code or arbitrary asset URLs may be supplied by metadata.
 - Character portrait, scene event images/audio, examination and narration assets are
-  included in the build allowlist. All five house image sources are downloaded Heritage
-  files. Embedded prototype imagery is explicitly rejected by the publication tool.
-- Approved narration clips declare segment/locale/voice, NFC text and audio SHA-256,
-  finite duration, monotonic timing marks and human approval/rights reference. Playback
+  included in the build allowlist. Four images come from downloaded TCP/Heritage
+  files; TCP Human 5 carries a published attribution. Embedded prototype imagery is explicitly rejected by the publication tool.
+- Narration clips declare segment/locale/voice, NFC text and audio SHA-256, finite
+  duration, monotonic timing marks and rights/review evidence. Status distinguishes
+  human-approved production recordings from generated previews. The 72 demonstration
+  clips are previews, with successful waveform/decode/hash checks and listening pending. Playback
   requires exact text/locale/hash identity. Missing/bad clips may use an enabled device
   voice of matching language, otherwise silent reading remains available.
-- Settings schema 2 adds optional narration/deviceVoice/rate and four channel volumes,
+- Settings schema 2 adds optional narration/deviceVoice/rate/narratorVoice and four channel volumes,
   alongside typography/reveal/sound. Settings remain independent of story saves.
 - No media handles, animation timers, lens positions or transient receipts enter saves.
   Reload presents complete saved text and silent media; explicit replay is available.

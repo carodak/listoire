@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CharacterDefinitionSchema, CharacterSchema } from "./character.ts";
-import { NarrationClipSchema } from "./media.ts";
+import { NarrationClipSchema, SpeechSettingsSchema, VoiceProfileSchema } from "./media.ts";
+import { validateScenePresentation } from "./presentation-validation.ts";
 import {
   ExaminationSchema,
   PanelSchema,
@@ -10,7 +11,7 @@ import {
 } from "./presentation.ts";
 
 const id = z.string().regex(/^[a-z][a-z0-9.-]*$/);
-export const LocaleSchema = z.enum(["en", "fr"]);
+export const LocaleSchema = z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/);
 export type Locale = z.infer<typeof LocaleSchema>;
 
 const SegmentSchema = z.object({ id, text: z.string().min(1).max(10_000) }).strict();
@@ -37,17 +38,72 @@ export const BundleSchema = z
     chapter: z.string().min(1),
     inkDigest: z.string().regex(/^[a-f0-9]{64}$/),
     inkjsVersion: z.string().min(1),
+    authored: z.boolean().optional(),
+    narrationMode: z.enum(["ai-live", "ai-pregenerated", "human", "disabled"]).optional(),
+    readingDefaults: ReadingPreferencesSchema.optional(),
+    narratorVoiceSelection: z.array(z.string()).max(8).optional(),
+    speechSettings: SpeechSettingsSchema.optional(),
+    voiceProfiles: z.array(VoiceProfileSchema).max(8).optional(),
+    embeddedAudio: z
+      .record(
+        z.string(),
+        z
+          .string()
+          .max(7_000_000)
+          .regex(/^data:audio\/mpeg;base64,[A-Za-z0-9+/]+=*$/),
+      )
+      .optional(),
     passages: z.record(id, z.array(id).min(1)),
     ink: z.record(z.string(), z.unknown()),
     variables: z.array(id).max(30).optional(),
     scenes: z.record(id, SceneSchema).optional(),
-    assets: z.array(RuntimeAssetSchema).max(30).optional(),
+    assets: z.array(RuntimeAssetSchema).max(500).optional(),
     panels: z.array(PanelSchema).max(5).optional(),
     examination: ExaminationSchema.optional(),
     character: CharacterDefinitionSchema.optional(),
     narration: z.array(NarrationClipSchema).max(500).optional(),
+    narratorVoices: z
+      .array(z.object({ id: z.string(), label: z.string() }).strict())
+      .max(8)
+      .optional(),
+    artDirection: z
+      .object({
+        style: z.string(),
+        colorMode: z.literal("grayscale"),
+        palette: z
+          .array(z.string().regex(/^#[a-fA-F0-9]{6}$/))
+          .min(2)
+          .max(8),
+        complexity: z.string(),
+      })
+      .strict()
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((bundle, context) => {
+    const invalid = (message: string) => context.addIssue({ code: "custom", message });
+    const assets = new Map(bundle.assets?.map((asset) => [asset.id, asset]));
+    if (assets.size !== (bundle.assets?.length ?? 0)) invalid("Duplicate asset ID");
+    for (const [passageId, scene] of Object.entries(bundle.scenes ?? {})) {
+      if (!bundle.passages[passageId]) invalid("Unknown scene passage");
+      validateScenePresentation(
+        scene,
+        (bundle.passages[passageId] ?? []).filter(
+          (segment) => !bundle.authored || segment !== "text",
+        ),
+        assets,
+        bundle.artDirection?.palette,
+        invalid,
+      );
+    }
+    for (const clip of bundle.narration ?? [])
+      if (
+        !Object.values(bundle.passages).some((segments) => segments.includes(clip.segmentId)) ||
+        assets.get(clip.assetId)?.type !== "audio" ||
+        clip.locale !== bundle.locale
+      )
+        invalid("Invalid narration reference");
+  });
 export type StoryBundle = z.infer<typeof BundleSchema>;
 
 export const StoryManifestSchema = z
@@ -55,7 +111,7 @@ export const StoryManifestSchema = z
     schemaVersion: z.literal(1),
     storyId: id,
     defaultLocale: LocaleSchema,
-    locales: z.array(LocaleSchema).min(1).max(2),
+    locales: z.array(LocaleSchema).min(1).max(32),
   })
   .strict()
   .refine(
@@ -88,7 +144,7 @@ export type SaveData = z.infer<typeof SaveSchema>;
 export const SettingsSchema = z
   .object({
     schemaVersion: z.literal(2),
-    language: LocaleSchema,
+    language: z.enum(["en", "fr"]),
     welcomeSound: z.boolean(),
     reading: ReadingPreferencesSchema.optional(),
   })

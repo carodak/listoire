@@ -25,7 +25,7 @@ test("photograph supports keyboard, shared zoom/pan, turning, clue discovery and
   await page.getByRole("button", { name: "Turn over", exact: true }).click();
   await expect(viewer.locator(".photo-reverse")).toContainText("do not tell her your name");
   await page.getByRole("button", { name: "Reset view", exact: true }).click();
-  await page.getByRole("button", { name: "Next detail", exact: true }).click();
+  await page.getByRole("button", { name: "Examine details", exact: true }).click();
   await expect(viewer).toContainText("looks exactly like you");
   await page.keyboard.press("Escape");
   await expect(viewer).toBeHidden();
@@ -33,7 +33,7 @@ test("photograph supports keyboard, shared zoom/pan, turning, clue discovery and
     page.getByRole("button", { name: "Examine the photograph", exact: true }),
   ).toBeFocused();
   await page.getByRole("button", { name: "Examine the photograph", exact: true }).click();
-  await page.getByRole("button", { name: "Notice the upstairs window", exact: true }).click();
+  await page.getByRole("button", { name: "Inspect the photograph detail", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".prose")).toContainText("upstairs window in the photograph is open");
   await page.reload();
@@ -46,7 +46,7 @@ test("photograph supports keyboard, shared zoom/pan, turning, clue discovery and
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Examine the photograph", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Notice the upstairs window", exact: true }),
+    page.getByRole("button", { name: "Inspect the photograph detail", exact: true }),
   ).toHaveCount(0);
 });
 
@@ -99,7 +99,7 @@ test("progressive text can be revealed immediately and preferences persist", asy
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await enter(page);
   const next = page.getByRole("button", { name: "Continue reading", exact: true });
-  await expect(next).toBeDisabled();
+  await expect(next).toHaveCount(0);
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await expect(next).toBeEnabled();
   await page.getByText("Reading preferences", { exact: true }).click();
@@ -176,6 +176,6 @@ test("initial reader requests only its scene resources and no source catalogs", 
     ),
   ).toBe(false);
   expect(requested.filter((path) => path.includes("/stories/house/media/"))).toEqual([
-    "/stories/house/media/heritage.photograph.webp",
+    "/stories/house/media/tcp.human5.webp",
   ]);
 });

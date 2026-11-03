@@ -2,6 +2,22 @@
   position: relative;
   isolation: isolate;
 }
+@font-face {
+  font-family: "Listoire Handwriting";
+  src: url("./handwriting.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400 700;
+}
+.photo-reverse {
+  width: min(600px, 95%);
+}
+.photo-reverse svg {
+  display: block;
+  width: 100%;
+  font:
+    48px "Listoire Handwriting",
+    cursive;
+}
 .cinematic-overlay {
   position: absolute;
   inset: 0;
@@ -36,6 +52,61 @@
 .cinematic-stage img {
   position: relative;
   z-index: 1;
+}
+.cinematic-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100svh;
+  max-height: none;
+  border: 0;
+  padding: clamp(24px, 5vw, 80px);
+  background: #1d1d1c;
+  color: #faf9f6;
+}
+.cinematic-dialog[open] {
+  display: grid;
+  align-content: center;
+  gap: 24px;
+}
+.cinematic-dialog::backdrop {
+  background: #1d1d1c;
+}
+.cinematic-dialog .scene-illustration {
+  margin: 0;
+}
+.cinematic-dialog .scene-illustration > img {
+  max-height: 68svh;
+  max-width: 100%;
+  filter: grayscale(1);
+}
+.cinematic-caption {
+  text-align: center;
+  font:
+    italic clamp(22px, 3vw, 34px)/1.4 Georgia,
+    serif;
+  margin: 0;
+}
+.cinematic-skip {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  padding: 10px 16px;
+  border: 1px solid #777;
+  background: #292929;
+  color: #fff;
+  z-index: 4;
+}
+.cinematic-transport {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  padding: 10px 16px;
+  border: 1px solid #777;
+  background: #292929;
+  color: #fff;
+  z-index: 4;
 }
 @media (prefers-reduced-motion: reduce) {
   .cinematic-overlay,

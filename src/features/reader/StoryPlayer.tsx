@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import type { FailureCode, Frame, StoryBundle } from "../../contracts/story.ts";
 import type { StoryDirector } from "../story-runtime/director.ts";
 import { PassageText } from "./PassageText.tsx";
 import { CheckpointControls } from "./CheckpointControls.tsx";
 import { ReadingControls } from "./ReadingControls.tsx";
-import { PhotographExamination } from "./PhotographViewer.tsx";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
-import { SceneIllustration } from "../presentation/SceneIllustration.tsx";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
 import { CharacterPanel } from "../character/CharacterPanel.tsx";
+import { ReactBitsLayer } from "../presentation/react-bits/ReactBitsLayer.tsx";
 import "./reader.css";
 
 interface Props {
@@ -101,7 +100,13 @@ function ReaderPassage({
     photograph: false,
     notice: undefined,
   };
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const page = useRef<HTMLElement>(null);
+  useLayoutEffect(
+    () => (page.current ? presentation.bindPage(page.current) : undefined),
+    [presentation],
+  );
   const interactionDisabled = state.busy || Boolean(failure);
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const instant = preferences.reveal === "instant" || state.restored;
@@ -115,47 +120,60 @@ function ReaderPassage({
   }, [state.occurrenceId]);
 
   return (
-    <main id="story" className={className} lang={bundle.locale} aria-busy={state.busy}>
+    <main
+      ref={page}
+      id="story"
+      className={className}
+      lang={bundle.locale}
+      aria-busy={state.busy}
+      style={{ visibility: media.departed ? "hidden" : undefined }}
+    >
       <div className="reader-toolbar">
+        {bundle.authored && <PageNavigation director={director} state={state} />}
         <ReadingControls
-        preferences={preferences}
-        onChange={onPreferencesChange}
-        presentation={presentation}
-      />
+          preferences={preferences}
+          onChange={onPreferencesChange}
+          presentation={presentation}
+          voices={presentation.voices}
+          open={preferencesOpen}
+          onOpenChange={(open) => {
+            setPreferencesOpen(open);
+            if (open && characterOpen) onCharacterToggle();
+          }}
+        />
         <CharacterPanel
-        bundle={bundle}
-        frame={state.frame}
-        profile={state.character}
-        open={characterOpen}
-        onToggle={onCharacterToggle}
-      />
+          bundle={bundle}
+          frame={state.frame}
+          profile={state.character}
+          open={characterOpen}
+          onToggle={() => {
+            setPreferencesOpen(false);
+            onCharacterToggle();
+          }}
+        />
       </div>
-      <p className="eyebrow">{t("chapterOne", { lng: bundle.locale })}</p>
+      <p className="eyebrow">
+        {bundle.title} · {bundle.chapter}
+      </p>
       <h1 ref={heading} tabIndex={-1}>
         {scene.title}
       </h1>
-      <SceneIllustration
-        bundle={bundle}
-        passageId={state.frame.passageId}
-        presentation={presentation}
-      />
-      <PhotographExamination
-        bundle={bundle}
-        frame={state.frame}
-        enabled={Boolean(scene.photograph)}
-        disabled={interactionDisabled}
-        onDiscover={choose}
-      />
       <PassageText
+        bundle={bundle}
+        presentation={presentation}
         frame={state.frame}
-        locale={bundle.locale}
         instant={instant}
         media={media}
-        onSegmentRevealed={presentation.segmentRevealed}
         disabled={choicesDisabled}
-        notice={scene.notice}
         onChoose={choose}
       />
+      {media.layers
+        .filter((layer) => layer.blockId === "page" || layer.blockId === "scene")
+        .map((layer) => (
+          <div key={layer.id} className="page-effect">
+            <ReactBitsLayer effect={layer.effect} />
+          </div>
+        ))}
       <progress
         className="story-progress"
         value={scene.progress}
@@ -171,5 +189,35 @@ function ReaderPassage({
         backup={backup}
       />
     </main>
+  );
+}
+
+function PageNavigation({
+  director,
+  state,
+}: {
+  director: StoryDirector;
+  state: ReturnType<StoryDirector["getSnapshot"]>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="page-navigation">
+      <button
+        disabled={state.busy || !state.canGoBack}
+        onClick={() => {
+          void director.back();
+        }}
+      >
+        {t("previousPage")}
+      </button>
+      <button
+        disabled={state.busy}
+        onClick={() => {
+          void director.replay();
+        }}
+      >
+        {t("replayPage")}
+      </button>
+    </div>
   );
 }

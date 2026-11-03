@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import type { Locale } from "../contracts/story.ts";
+import type { Locale, ReaderSettings } from "../contracts/story.ts";
 
 function Flag({ language }: { language: Locale }) {
   return (
@@ -27,14 +27,14 @@ function Flag({ language }: { language: Locale }) {
 interface Props {
   language: Locale;
   busy: boolean;
-  onChange: (language: Locale) => void;
+  onChange: (language: ReaderSettings["language"]) => void;
 }
 
 export function LanguageSetting({ language, busy, onChange }: Props) {
   const { t } = useTranslation();
   const details = useRef<HTMLDetailsElement>(null);
   const summary = useRef<HTMLElement>(null);
-  const names = { en: "English", fr: "Français" };
+  const names: Record<string, string> = { en: "English", fr: "Français" };
   return (
     <div className="language-controls">
       <details

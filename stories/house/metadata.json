@@ -1,6 +1,6 @@
 {
   "storyId": "house",
-  "release": "0.3.0",
+  "release": "0.3.1",
   "defaultLocale": "en",
   "variables": [
     "brasskey",
@@ -32,13 +32,14 @@
       "intro": {
         "title": "The Girl in the Photograph",
         "progress": 0.0,
-        "image": "heritage.photograph",
+        "image": "tcp.human5",
         "photograph": true,
         "events": [
           {
             "id": "intro.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "intro.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -48,12 +49,14 @@
                 "id": "fade-in",
                 "duration": 650
               }
-            }
+            },
+            "blockId": "intro.illustration"
           },
           {
             "id": "intro.grain",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "intro.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -67,7 +70,40 @@
                   "fps": 12
                 }
               }
-            }
+            },
+            "blockId": "intro.illustration"
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "intro.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p2"
+          },
+          {
+            "kind": "media",
+            "id": "intro.illustration",
+            "image": "tcp.human5",
+            "layout": "inline",
+            "photograph": true
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p3"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p4"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.clue"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -104,6 +140,27 @@
               "fadeMs": 600
             }
           }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "call.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p3"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p4"
+          },
+          {
+            "kind": "choices"
+          }
         ]
       },
       "room": {
@@ -113,7 +170,8 @@
           {
             "id": "room.revelation",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "room.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -124,7 +182,8 @@
                 "duration": 1800,
                 "scale": 1.06
               }
-            }
+            },
+            "blockId": "room.illustration"
           },
           {
             "id": "room.wind",
@@ -139,9 +198,68 @@
               "loop": true,
               "fadeMs": 600
             }
+          },
+          {
+            "id": "room.film-hold",
+            "blockId": "room.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "room.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "room.film-exit",
+            "blockId": "room.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "room.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
           }
         ],
-        "image": "heritage.photograph"
+        "image": "tcp.human5",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "room.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "room.p2"
+          },
+          {
+            "kind": "media",
+            "id": "room.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "The room was opened last night."
+          },
+          {
+            "kind": "text",
+            "segmentId": "room.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "song": {
         "title": "The Girl in the Photograph",
@@ -150,25 +268,28 @@
           {
             "id": "song.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "song.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
                 "id": "fade-in",
                 "duration": 700
               }
-            }
+            },
+            "blockId": "song.illustration"
           },
           {
             "id": "song.veil",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "song.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -180,10 +301,70 @@
                   "brightness": 0.1
                 }
               }
+            },
+            "blockId": "song.illustration"
+          },
+          {
+            "id": "song.film-hold",
+            "blockId": "song.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "song.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "song.film-exit",
+            "blockId": "song.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "song.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.portrait"
+        "image": "tcp.human5",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "song.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "song.p2"
+          },
+          {
+            "kind": "media",
+            "id": "song.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "She can hear us."
+          },
+          {
+            "kind": "text",
+            "segmentId": "song.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "arrival": {
         "title": "The Girl in the Photograph",
@@ -193,7 +374,8 @@
           {
             "id": "arrival.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "arrival.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -203,7 +385,31 @@
                 "id": "fade-in",
                 "duration": 600
               }
-            }
+            },
+            "blockId": "arrival.illustration"
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "arrival.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "arrival.p2"
+          },
+          {
+            "kind": "media",
+            "id": "arrival.illustration",
+            "image": "heritage.bird",
+            "layout": "wide"
+          },
+          {
+            "kind": "text",
+            "segmentId": "arrival.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -216,7 +422,8 @@
           {
             "id": "break.reveal",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "break.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -226,15 +433,17 @@
                 "id": "crossfade",
                 "duration": 900
               }
-            }
+            },
+            "blockId": "break.illustration"
           },
           {
             "id": "break.zoom",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "break.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -242,7 +451,67 @@
                 "scale": 1.08,
                 "duration": 1800
               }
+            },
+            "blockId": "break.illustration"
+          },
+          {
+            "id": "break.film-hold",
+            "blockId": "break.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "break.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
             }
+          },
+          {
+            "id": "break.film-exit",
+            "blockId": "break.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "break.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "break.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "break.p2"
+          },
+          {
+            "kind": "media",
+            "id": "break.illustration",
+            "image": "heritage.key",
+            "layout": "fullscreen",
+            "caption": "There were two of you."
+          },
+          {
+            "kind": "text",
+            "segmentId": "break.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -254,10 +523,11 @@
           {
             "id": "light.reveal",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "light.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -265,15 +535,17 @@
                 "duration": 900,
                 "intensity": 0.25
               }
-            }
+            },
+            "blockId": "light.illustration"
           },
           {
             "id": "light.pan",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "light.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -282,10 +554,70 @@
                 "y": -1,
                 "duration": 1800
               }
+            },
+            "blockId": "light.illustration"
+          },
+          {
+            "id": "light.film-hold",
+            "blockId": "light.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "light.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "light.film-exit",
+            "blockId": "light.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "light.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.bird"
+        "image": "heritage.bird",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "light.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "light.p2"
+          },
+          {
+            "kind": "media",
+            "id": "light.illustration",
+            "image": "heritage.bird",
+            "layout": "fullscreen",
+            "caption": "A second message appears."
+          },
+          {
+            "kind": "text",
+            "segmentId": "light.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "last": {
         "title": "The Girl in the Photograph",
@@ -305,6 +637,23 @@
               "loop": false
             }
           }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "last.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "last.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "last.p3"
+          },
+          {
+            "kind": "choices"
+          }
         ]
       },
       "window": {
@@ -314,7 +663,8 @@
           {
             "id": "window.impact",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "window.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -326,39 +676,102 @@
                 "intensity": 0.4,
                 "duration": 450
               }
-            }
+            },
+            "blockId": "window.illustration"
           },
           {
             "id": "window.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "window.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
                 "id": "fade-in",
                 "duration": 700
               }
+            },
+            "blockId": "window.illustration"
+          },
+          {
+            "id": "window.film-hold",
+            "blockId": "window.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "window.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "window.film-exit",
+            "blockId": "window.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "window.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.handprint"
+        "image": "heritage.handprint",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "window.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "window.p2"
+          },
+          {
+            "kind": "media",
+            "id": "window.illustration",
+            "image": "heritage.handprint",
+            "layout": "fullscreen",
+            "caption": "Three knocks. Fifth floor."
+          },
+          {
+            "kind": "text",
+            "segmentId": "window.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "photo": {
         "title": "The Girl in the Photograph",
         "progress": 0.8571428571428571,
-        "image": "heritage.photograph",
+        "image": "tcp.human5",
         "photograph": true,
         "events": [
           {
             "id": "photo.zoom",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "photo.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -366,16 +779,17 @@
                 "scale": 1.07,
                 "duration": 1800
               }
-            }
+            },
+            "blockId": "photo.illustration"
           },
           {
             "id": "photo.light",
             "trigger": {
-              "kind": "segment",
-              "segmentId": "photo.p2"
+              "kind": "block",
+              "blockId": "photo.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -383,26 +797,102 @@
                 "duration": 700,
                 "intensity": 0.18
               }
+            },
+            "blockId": "photo.illustration"
+          },
+          {
+            "id": "photo.film-hold",
+            "blockId": "photo.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "photo.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
             }
+          },
+          {
+            "id": "photo.film-exit",
+            "blockId": "photo.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "photo.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "photo.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "photo.p2"
+          },
+          {
+            "kind": "media",
+            "id": "photo.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "The photograph has changed."
+          },
+          {
+            "kind": "text",
+            "segmentId": "photo.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
       "end": {
         "title": "The House Is Waiting",
         "progress": 1.0,
-        "events": []
+        "events": [],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "end.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "end.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "end.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       }
     },
     "assetAlt": {
       "heritage.key": "Vintage engraving of a key",
-      "heritage.photograph": "Vintage line engraving of a woman and a girl beside a curtained window",
-      "heritage.portrait": "Vintage engraving of a young woman reading",
       "heritage.bird": "Vintage engraving of a flying bird",
       "heritage.handprint": "Vintage line drawing of an open hand",
-      "sonniss.music-box": "Music-box recollection"
+      "sonniss.music-box": "Music-box recollection",
+      "tcp.human5": "Black-and-white line portrait of a young woman looking over her shoulder."
     },
     "examination": {
-      "image": "heritage.photograph",
+      "image": "tcp.human5",
       "title": "The photograph",
       "descriptions": [
         "The photograph is dated June 14th, 1987.",
@@ -412,23 +902,23 @@
       "reverse": "If she comes looking for you, do not tell her your name.",
       "actionId": "examine-photo",
       "hotspot": {
-        "x": 12,
-        "y": 42,
-        "label": "Notice the upstairs window"
+        "x": 82,
+        "y": 84,
+        "label": "Inspect the photograph detail"
       }
     },
     "character": {
-      "portrait": "heritage.portrait",
+      "portrait": "tcp.human5",
       "abilities": [
         {
-          "id": "close-reading",
-          "name": "Close reading",
-          "description": "Notice details in letters and old photographs. Not yet used in narrative checks."
+          "id": "investigation",
+          "name": "Investigation",
+          "description": "Examine objects and connect clues. Rank 1; informational only."
         },
         {
-          "id": "composure",
-          "name": "Composure",
-          "description": "Keep a clear mind when familiar places become unsettling. Not yet used in narrative checks."
+          "id": "intuition",
+          "name": "Intuition",
+          "description": "Sense a discrepancy in familiar places. Rank 1; informational only."
         }
       ],
       "inventory": [
@@ -480,13 +970,14 @@
       "intro": {
         "title": "La jeune fille sur la photographie",
         "progress": 0.0,
-        "image": "heritage.photograph",
+        "image": "tcp.human5",
         "photograph": true,
         "events": [
           {
             "id": "intro.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "intro.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -496,12 +987,14 @@
                 "id": "fade-in",
                 "duration": 650
               }
-            }
+            },
+            "blockId": "intro.illustration"
           },
           {
             "id": "intro.grain",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "intro.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -515,7 +1008,40 @@
                   "fps": 12
                 }
               }
-            }
+            },
+            "blockId": "intro.illustration"
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "intro.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p2"
+          },
+          {
+            "kind": "media",
+            "id": "intro.illustration",
+            "image": "tcp.human5",
+            "layout": "inline",
+            "photograph": true
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p3"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.p4"
+          },
+          {
+            "kind": "text",
+            "segmentId": "intro.clue"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -552,6 +1078,27 @@
               "fadeMs": 600
             }
           }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "call.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p3"
+          },
+          {
+            "kind": "text",
+            "segmentId": "call.p4"
+          },
+          {
+            "kind": "choices"
+          }
         ]
       },
       "room": {
@@ -561,7 +1108,8 @@
           {
             "id": "room.revelation",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "room.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -572,7 +1120,8 @@
                 "duration": 1800,
                 "scale": 1.06
               }
-            }
+            },
+            "blockId": "room.illustration"
           },
           {
             "id": "room.wind",
@@ -587,9 +1136,68 @@
               "loop": true,
               "fadeMs": 600
             }
+          },
+          {
+            "id": "room.film-hold",
+            "blockId": "room.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "room.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "room.film-exit",
+            "blockId": "room.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "room.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
           }
         ],
-        "image": "heritage.photograph"
+        "image": "tcp.human5",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "room.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "room.p2"
+          },
+          {
+            "kind": "media",
+            "id": "room.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "La chambre a été ouverte la nuit dernière."
+          },
+          {
+            "kind": "text",
+            "segmentId": "room.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "song": {
         "title": "La jeune fille sur la photographie",
@@ -598,25 +1206,28 @@
           {
             "id": "song.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "song.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
                 "id": "fade-in",
                 "duration": 700
               }
-            }
+            },
+            "blockId": "song.illustration"
           },
           {
             "id": "song.veil",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "song.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -628,10 +1239,70 @@
                   "brightness": 0.1
                 }
               }
+            },
+            "blockId": "song.illustration"
+          },
+          {
+            "id": "song.film-hold",
+            "blockId": "song.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "song.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "song.film-exit",
+            "blockId": "song.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "song.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.portrait"
+        "image": "tcp.human5",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "song.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "song.p2"
+          },
+          {
+            "kind": "media",
+            "id": "song.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "Elle peut nous entendre."
+          },
+          {
+            "kind": "text",
+            "segmentId": "song.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "arrival": {
         "title": "La jeune fille sur la photographie",
@@ -641,7 +1312,8 @@
           {
             "id": "arrival.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "arrival.illustration"
             },
             "delayMs": 0,
             "blocking": false,
@@ -651,7 +1323,31 @@
                 "id": "fade-in",
                 "duration": 600
               }
-            }
+            },
+            "blockId": "arrival.illustration"
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "arrival.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "arrival.p2"
+          },
+          {
+            "kind": "media",
+            "id": "arrival.illustration",
+            "image": "heritage.bird",
+            "layout": "wide"
+          },
+          {
+            "kind": "text",
+            "segmentId": "arrival.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -664,7 +1360,8 @@
           {
             "id": "break.reveal",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "break.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -674,15 +1371,17 @@
                 "id": "crossfade",
                 "duration": 900
               }
-            }
+            },
+            "blockId": "break.illustration"
           },
           {
             "id": "break.zoom",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "break.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -690,7 +1389,67 @@
                 "scale": 1.08,
                 "duration": 1800
               }
+            },
+            "blockId": "break.illustration"
+          },
+          {
+            "id": "break.film-hold",
+            "blockId": "break.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "break.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
             }
+          },
+          {
+            "id": "break.film-exit",
+            "blockId": "break.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "break.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "break.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "break.p2"
+          },
+          {
+            "kind": "media",
+            "id": "break.illustration",
+            "image": "heritage.key",
+            "layout": "fullscreen",
+            "caption": "Vous étiez deux."
+          },
+          {
+            "kind": "text",
+            "segmentId": "break.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
@@ -702,10 +1461,11 @@
           {
             "id": "light.reveal",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "light.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -713,15 +1473,17 @@
                 "duration": 900,
                 "intensity": 0.25
               }
-            }
+            },
+            "blockId": "light.illustration"
           },
           {
             "id": "light.pan",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "light.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -730,10 +1492,70 @@
                 "y": -1,
                 "duration": 1800
               }
+            },
+            "blockId": "light.illustration"
+          },
+          {
+            "id": "light.film-hold",
+            "blockId": "light.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "light.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "light.film-exit",
+            "blockId": "light.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "light.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.bird"
+        "image": "heritage.bird",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "light.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "light.p2"
+          },
+          {
+            "kind": "media",
+            "id": "light.illustration",
+            "image": "heritage.bird",
+            "layout": "fullscreen",
+            "caption": "Un second message apparaît."
+          },
+          {
+            "kind": "text",
+            "segmentId": "light.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "last": {
         "title": "La jeune fille sur la photographie",
@@ -753,6 +1575,23 @@
               "loop": false
             }
           }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "last.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "last.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "last.p3"
+          },
+          {
+            "kind": "choices"
+          }
         ]
       },
       "window": {
@@ -762,7 +1601,8 @@
           {
             "id": "window.impact",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "window.illustration"
             },
             "delayMs": 0,
             "blocking": true,
@@ -774,39 +1614,102 @@
                 "intensity": 0.4,
                 "duration": 450
               }
-            }
+            },
+            "blockId": "window.illustration"
           },
           {
             "id": "window.fade",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "window.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
                 "id": "fade-in",
                 "duration": 700
               }
+            },
+            "blockId": "window.illustration"
+          },
+          {
+            "id": "window.film-hold",
+            "blockId": "window.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "window.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
+            }
+          },
+          {
+            "id": "window.film-exit",
+            "blockId": "window.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "window.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
             }
           }
         ],
-        "image": "heritage.handprint"
+        "image": "heritage.handprint",
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "window.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "window.p2"
+          },
+          {
+            "kind": "media",
+            "id": "window.illustration",
+            "image": "heritage.handprint",
+            "layout": "fullscreen",
+            "caption": "Trois coups. Cinquième étage."
+          },
+          {
+            "kind": "text",
+            "segmentId": "window.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       },
       "photo": {
         "title": "La jeune fille sur la photographie",
         "progress": 0.8571428571428571,
-        "image": "heritage.photograph",
+        "image": "tcp.human5",
         "photograph": true,
         "events": [
           {
             "id": "photo.zoom",
             "trigger": {
-              "kind": "passage"
+              "kind": "block",
+              "blockId": "photo.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -814,16 +1717,17 @@
                 "scale": 1.07,
                 "duration": 1800
               }
-            }
+            },
+            "blockId": "photo.illustration"
           },
           {
             "id": "photo.light",
             "trigger": {
-              "kind": "segment",
-              "segmentId": "photo.p2"
+              "kind": "block",
+              "blockId": "photo.illustration"
             },
             "delayMs": 0,
-            "blocking": false,
+            "blocking": true,
             "action": {
               "kind": "effect",
               "effect": {
@@ -831,14 +1735,91 @@
                 "duration": 700,
                 "intensity": 0.18
               }
+            },
+            "blockId": "photo.illustration"
+          },
+          {
+            "id": "photo.film-hold",
+            "blockId": "photo.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "photo.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 2600,
+                "scale": 1.08
+              }
             }
+          },
+          {
+            "id": "photo.film-exit",
+            "blockId": "photo.illustration",
+            "trigger": {
+              "kind": "block",
+              "blockId": "photo.illustration"
+            },
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-out",
+                "target": "canvas",
+                "duration": 220,
+                "delay": 2380
+              }
+            }
+          }
+        ],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "photo.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "photo.p2"
+          },
+          {
+            "kind": "media",
+            "id": "photo.illustration",
+            "image": "tcp.human5",
+            "layout": "fullscreen",
+            "caption": "La photographie a changé."
+          },
+          {
+            "kind": "text",
+            "segmentId": "photo.p3"
+          },
+          {
+            "kind": "choices"
           }
         ]
       },
       "end": {
         "title": "La maison vous attend",
         "progress": 1.0,
-        "events": []
+        "events": [],
+        "blocks": [
+          {
+            "kind": "text",
+            "segmentId": "end.p1"
+          },
+          {
+            "kind": "text",
+            "segmentId": "end.p2"
+          },
+          {
+            "kind": "text",
+            "segmentId": "end.p3"
+          },
+          {
+            "kind": "choices"
+          }
+        ]
       }
     },
     "assetAlt": {
@@ -846,14 +1827,13 @@
       "sonniss.telephone": "Combiné de téléphone ancien",
       "sonniss.wind": "Vent dans une cheminée",
       "sonniss.impact": "Accent sonore métallique",
-      "heritage.photograph": "Gravure ancienne d’une femme et d’une jeune fille près d’une fenêtre à rideaux",
-      "heritage.portrait": "Gravure ancienne d’une jeune femme lisant",
       "heritage.bird": "Gravure ancienne d’un oiseau en vol",
       "heritage.handprint": "Dessin ancien d’une main ouverte",
-      "sonniss.music-box": "Souvenir de boîte à musique"
+      "sonniss.music-box": "Souvenir de boîte à musique",
+      "tcp.human5": "Portrait au trait noir et blanc d’une jeune femme regardant par-dessus son épaule."
     },
     "examination": {
-      "image": "heritage.photograph",
+      "image": "tcp.human5",
       "title": "La photographie",
       "descriptions": [
         "La photographie est datée du 14 juin 1987.",
@@ -863,23 +1843,23 @@
       "reverse": "Si elle vient te chercher, ne lui dis pas ton nom.",
       "actionId": "examine-photo",
       "hotspot": {
-        "x": 12,
-        "y": 42,
-        "label": "Remarquer la fenêtre à l’étage"
+        "x": 82,
+        "y": 84,
+        "label": "Examiner le détail de la photographie"
       }
     },
     "character": {
-      "portrait": "heritage.portrait",
+      "portrait": "tcp.human5",
       "abilities": [
         {
-          "id": "close-reading",
-          "name": "Lecture attentive",
-          "description": "Repérer les détails des lettres et des photographies anciennes. Aucun test narratif pour le moment."
+          "id": "investigation",
+          "name": "Investigation",
+          "description": "Examiner les objets et relier les indices. Rang 1 ; information uniquement."
         },
         {
-          "id": "composure",
-          "name": "Sang-froid",
-          "description": "Garder l’esprit clair lorsque les lieux familiers deviennent inquiétants. Aucun test narratif pour le moment."
+          "id": "intuition",
+          "name": "Intuition",
+          "description": "Percevoir un détail inhabituel dans un lieu familier. Rang 1 ; information uniquement."
         }
       ],
       "inventory": [
@@ -924,5 +1904,11 @@
       ]
     }
   },
-  "mode": "rpg-no-combat"
+  "mode": "rpg-no-combat",
+  "artDirection": {
+    "style": "minimalist line illustration and restrained vintage engraving",
+    "colorMode": "grayscale",
+    "palette": ["#faf9f6", "#292929", "#777777", "#ffffff"],
+    "complexity": "restrained"
+  }
 }

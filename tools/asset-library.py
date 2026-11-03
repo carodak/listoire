@@ -125,7 +125,7 @@ def inventory():
                     technical.update(duration=float(probe["format"]["duration"]), sampleRate=int(stream["sample_rate"]), channels=stream["channels"], bitsPerSample=int(stream.get("bits_per_raw_sample") or 32))
                 except Exception as fallback:
                     errors.append({"path": relative, "error": str(error), "fallbackError": str(fallback)})
-            collection = path.relative_to(folder).parts[0]
+            collection = path.relative_to(LIBRARY if kind == "images" and path.is_relative_to(LIBRARY) else folder).parts[0]
             entries.append({"id": f"{kind}." + hashlib.sha256(relative.encode()).hexdigest()[:20], "originalPath": relative, "optimizedPath": None, "mediaType": media_type, "sourceCollection": collection, "technical": technical, "verified": {"provenance": "local-file", "classification": "unreviewed", "license": "unverified"}, "suggested": {"roles": [], "themes": [], "moods": [], "tags": []}, "rights": {"officialStoryUse": "unverified", "thirdPartyResourceUse": "unverified"}})
         write_json(CATALOG / f"{kind}.json", {"schemaVersion": 1, "entries": entries, "technicalErrors": errors})
         print(f"{kind}: {len(entries)} files, {len(errors)} technical errors", flush=True)

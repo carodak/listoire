@@ -7,6 +7,7 @@
     "Listoire.code-workspace",
     "package-lock.json",
     "AGENTS.md",
-    "src/features/presentation/react-bits/vendor/**"
+    "src/features/presentation/react-bits/vendor/**",
+    "public/editor/vendor/**"
   ]
 }

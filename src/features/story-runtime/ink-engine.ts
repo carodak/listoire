@@ -2,8 +2,9 @@ import { Story } from "inkjs";
 import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
 import type { Frame, NarrativeEngine, StoryBundle } from "../../contracts/story.ts";
 
-function tag(tags: string[], prefix: string): string {
+function tag(tags: string[], prefix: string, fallback?: string): string {
   const values = tags.filter((value) => value.startsWith(`${prefix}:`));
+  if (!values.length && fallback !== undefined) return fallback;
   if (values.length !== 1) throw new ReaderFailure("content");
   return values[0]!.slice(prefix.length + 1).trim();
 }
@@ -12,13 +13,23 @@ export class InkNarrativeEngine implements NarrativeEngine {
   private readonly story: Story;
   private readonly bundle: StoryBundle;
 
-  constructor(bundle: StoryBundle) {
+  constructor(
+    bundle: StoryBundle,
+    startKnot?: string,
+    testVariables?: Record<string, string | number | boolean>,
+  ) {
     this.bundle = bundle;
     try {
       this.story = new Story(JSON.stringify(bundle.ink));
       this.story.onError = () => {
         throw new ReaderFailure("content");
       };
+      for (const [name, value] of Object.entries(testVariables ?? {})) {
+        if (!this.story.variablesState.GlobalVariableExistsWithName(name))
+          throw new Error(`Unknown Ink test variable: ${name}`);
+        this.story.variablesState[name] = value;
+      }
+      if (startKnot) this.story.ChoosePathString(startKnot);
     } catch {
       throw new ReaderFailure("content");
     }
@@ -28,16 +39,32 @@ export class InkNarrativeEngine implements NarrativeEngine {
     return this.story.currentChoices
       .filter((choice) => (choice.tags ?? []).includes("interaction") === actions)
       .map((choice) => ({
-        id: tag(choice.tags ?? [], "choice"),
+        id: tag(
+          choice.tags ?? [],
+          "choice",
+          this.bundle.authored ? `option-${choice.index}` : undefined,
+        ),
         text: choice.text,
       }));
+  }
+  private passageId(tags: string[], previous: string, path: string) {
+    const fallback = this.bundle.authored
+      ? path
+          .split(".")[0]!
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, "-")
+          .replace(/^[^a-z]+/, "") || "start"
+      : "";
+    const next = tag(tags, "passage", previous || fallback);
+    if (previous && previous !== next && !this.bundle.authored) throw new ReaderFailure("content");
+    return previous || next;
   }
 
   private validateFrame(frame: Frame): Frame {
     const allowed = this.bundle.passages[frame.passageId];
     if (
-      !allowed ||
-      frame.segments.some((segment) => !allowed.includes(segment.id)) ||
+      (!this.bundle.authored &&
+        (!allowed || frame.segments.some((segment) => !allowed.includes(segment.id)))) ||
       new Set(frame.segments.map((segment) => segment.id)).size !== frame.segments.length ||
       new Set(frame.choices.map((choice) => choice.id)).size !== frame.choices.length
     ) {
@@ -52,15 +79,17 @@ export class InkNarrativeEngine implements NarrativeEngine {
     let steps = 0;
     while (this.story.canContinue) {
       if (++steps > 200) throw new ReaderFailure("content");
-      const text = this.story.Continue()?.trim();
+      const path = this.story.state.currentPathString ?? "start";
+      const text = this.continueLine()?.trim();
       if (!text) continue;
       const tags = this.story.currentTags ?? [];
-      if (tags.some((value) => value.startsWith("passage:"))) {
-        const nextPassage = tag(tags, "passage");
-        if (passageId && passageId !== nextPassage) throw new ReaderFailure("content");
-        passageId = nextPassage;
-      }
-      segments.push({ id: tag(tags, "segment"), text });
+      passageId = this.passageId(tags, passageId, path);
+      const segmentId = tag(
+        tags,
+        "segment",
+        this.bundle.authored ? `${passageId}.line-${steps}` : undefined,
+      );
+      segments.push({ id: segmentId, text });
     }
     const facts = Object.fromEntries(
       (this.bundle.variables ?? []).map((name) => [name, this.story.variablesState[name]]),
@@ -74,10 +103,21 @@ export class InkNarrativeEngine implements NarrativeEngine {
     if (!parsed.success) throw new ReaderFailure("content");
     return this.validateFrame(parsed.data);
   }
+  private continueLine() {
+    if (!this.bundle.authored) return this.story.Continue();
+    this.story.ContinueAsync(50);
+    if (!this.story.asyncContinueComplete) throw new ReaderFailure("content");
+    return this.story.currentText;
+  }
 
   choose(choiceId: string): void {
     const index = this.story.currentChoices.findIndex(
-      (choice) => tag(choice.tags ?? [], "choice") === choiceId,
+      (choice) =>
+        tag(
+          choice.tags ?? [],
+          "choice",
+          this.bundle.authored ? `option-${choice.index}` : undefined,
+        ) === choiceId,
     );
     if (index < 0) throw new ReaderFailure("content");
     this.story.ChooseChoiceIndex(index);

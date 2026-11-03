@@ -1,6 +1,6 @@
 # Phase 2 — completion record
 
-Reviewed 2026-11-02. Phase 2 is implemented; Phase 3 is not started.
+Historical checkpoint from 2026-11-02, superseded by [the combined report](phases2-3-report.md). Counts and descriptions below reflect that earlier state.
 
 ## Playable story and reader
 

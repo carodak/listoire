@@ -1,6 +1,10 @@
 import i18next from "i18next";
 
 const en = {
+  previousPage: "Previous page",
+  replayPage: "Replay page",
+  narratorVoice: "Narrator",
+  voiceNextSegment: "A new voice starts at the next paragraph or on Replay.",
   language: "Language",
   chapterOne: "Chapter One",
   pause: "Pause",
@@ -33,7 +37,7 @@ const en = {
   panLeft: "Pan left",
   panRight: "Pan right",
   turnPhoto: "Turn over",
-  nextDetail: "Next detail",
+  nextDetail: "Examine details",
   resetView: "Reset view",
   readingPreferences: "Reading preferences",
   storyNotes: "Story notes",
@@ -92,6 +96,10 @@ const en = {
   },
 };
 const fr: typeof en = {
+  previousPage: "Page précédente",
+  replayPage: "Rejouer la page",
+  narratorVoice: "Narrateur",
+  voiceNextSegment: "La nouvelle voix commence au prochain paragraphe ou à la relecture.",
   language: "Langue",
   chapterOne: "Chapitre un",
   pause: "Pause",
@@ -124,7 +132,7 @@ const fr: typeof en = {
   panLeft: "Déplacer vers la gauche",
   panRight: "Déplacer vers la droite",
   turnPhoto: "Retourner",
-  nextDetail: "Détail suivant",
+  nextDetail: "Examiner les détails",
   resetView: "Réinitialiser la vue",
   readingPreferences: "Préférences de lecture",
   storyNotes: "Notes du récit",

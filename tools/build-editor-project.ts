@@ -1,0 +1,157 @@
+import { createHash } from "node:crypto";
+import { copyFile, mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
+import type { StoryBundle } from "../src/contracts/story.ts";
+import { StoryProjectSchema } from "../src/contracts/editor-project.ts";
+import { compileProject } from "../src/features/editor/compiler.ts";
+import { BundleSchema } from "../src/contracts/story.ts";
+
+interface CuratedAsset {
+  id: string;
+  optimizedPath: string;
+  runtimeSha256: string;
+  originalPath: string;
+  mediaType: string;
+  rights: { officialStoryUse: string };
+}
+function assetSource(
+  asset: NonNullable<StoryBundle["assets"]>[number],
+  bundle: StoryBundle,
+  entries: CuratedAsset[],
+) {
+  const entry = entries.find((entry) => entry.id === asset.id);
+  if (entry) {
+    if (entry.rights.officialStoryUse !== "allowed")
+      throw new Error(`Unlicensed editor asset ${asset.id}`);
+    if (entry.mediaType !== asset.type) throw new Error(`Asset type mismatch: ${asset.id}`);
+    if (
+      asset.type === "image" &&
+      (!entry.originalPath.startsWith("assets/images/") ||
+        entry.originalPath.startsWith("assets/images/reference-house/"))
+    )
+      throw new Error(`House image is not from the downloaded library: ${asset.id}`);
+    if (entry.optimizedPath !== `stories/house/${asset.path}`)
+      throw new Error(`Asset path mismatch: ${asset.id}`);
+    return { source: entry.optimizedPath, expected: entry.runtimeSha256 };
+  }
+  const clip = bundle.narration?.find((clip) => clip.assetId === asset.id);
+  if (
+    !clip ||
+    !/^narration\.[a-f0-9]{64}$/.test(asset.id) ||
+    asset.path !== `media/${asset.id}.mp3`
+  )
+    throw new Error(`Unverified editor asset ${asset.id}`);
+  return { source: `stories/house/${asset.path}`, expected: clip.audioDigest };
+}
+
+export async function buildEditorProject(root: URL) {
+  const project = StoryProjectSchema.parse(
+    JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),
+  );
+  const curated = JSON.parse(await readFile(new URL("assets/catalog/curated.json", root), "utf8"));
+  project.mediaLibrary ??= curated.entries.map(
+    (entry: {
+      id: string;
+      title: string;
+      sourceCollection: string;
+      suggested: { themes: string[]; roles: string[] };
+    }) => ({
+      id: entry.id,
+      title: entry.title,
+      category: entry.sourceCollection,
+      themes: entry.suggested.themes,
+      usage: entry.suggested.roles,
+    }),
+  );
+  const bundles = await compileProject(project);
+  const publication = await readFile(new URL("stories/house/narration.json", root), "utf8")
+    .then(JSON.parse)
+    .catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+      return null;
+    });
+  const output = new URL("public/stories/house/", root);
+  await mkdir(new URL("media/", output), { recursive: true });
+  const copied = new Map<string, string>();
+  const referenced = new Set<string>();
+  for (const [locale, original] of Object.entries(bundles)) {
+    const bundle =
+      publication?.inkDigests[locale] === original.inkDigest
+        ? mergeGeneratedClips(original, publication.clips)
+        : original;
+    project.languages[locale]!.configuration.narration = bundle.narration;
+    project.languages[locale]!.configuration.assets = bundle.assets;
+    await copyAssets(bundle, root, output, curated.entries, copied, referenced);
+    await writeFile(new URL(`${locale}.json`, output), JSON.stringify(bundle) + "\n");
+    console.log(`Built editor-managed house/${locale}: ${bundle.inkDigest.slice(0, 12)}`);
+  }
+  await writeFile(new URL("project.json", output), JSON.stringify(project) + "\n");
+  await writeFile(
+    new URL("manifest.json", output),
+    JSON.stringify({
+      schemaVersion: 1,
+      storyId: project.storyId,
+      defaultLocale: project.defaultLocale,
+      locales: Object.keys(project.languages),
+    }) + "\n",
+  );
+  for (const file of await readdir(new URL("media/", output)))
+    if (/^[a-z0-9.-]+\.(webp|mp3)$/.test(file) && !referenced.has(file))
+      await rm(new URL(`media/${file}`, output));
+}
+
+function mergeGeneratedClips(
+  bundle: StoryBundle,
+  entries: { clip: NonNullable<StoryBundle["narration"]>[number] }[],
+) {
+  const narration = new Map(
+    bundle.narration?.map((clip) => [`${clip.segmentId}:${clip.voiceId}`, clip]),
+  );
+  const oldIds = new Set(bundle.narration?.map((clip) => clip.assetId));
+  const assets = new Map(bundle.assets?.map((asset) => [asset.id, asset]));
+  for (const { clip } of entries.filter((entry) => entry.clip.locale === bundle.locale)) {
+    const key = `${clip.segmentId}:${clip.voiceId}`;
+    const current = narration.get(key);
+    if (
+      current?.approval.status === "approved" ||
+      (current && bundle.embeddedAudio?.[current.assetId])
+    )
+      continue;
+    if (current?.audioDigest === clip.audioDigest && current.assetId === clip.assetId) continue;
+    narration.set(key, clip);
+    assets.set(clip.assetId, {
+      id: clip.assetId,
+      path: `media/${clip.assetId}.mp3`,
+      type: "audio",
+      alt: "",
+    });
+  }
+  const retained = new Set([...narration.values()].map((clip) => clip.assetId));
+  return BundleSchema.parse({
+    ...bundle,
+    narration: [...narration.values()],
+    assets: [...assets.values()].filter((asset) => !oldIds.has(asset.id) || retained.has(asset.id)),
+  });
+}
+
+async function copyAssets(
+  bundle: StoryBundle,
+  root: URL,
+  output: URL,
+  entries: CuratedAsset[],
+  copied: Map<string, string>,
+  referenced: Set<string>,
+) {
+  for (const asset of bundle.assets ?? []) {
+    if (bundle.embeddedAudio?.[asset.id]) continue;
+    const { source, expected } = assetSource(asset, bundle, entries);
+    const signature = `${asset.path}:${expected}`;
+    if (copied.get(asset.id) === signature) continue;
+    if (copied.has(asset.id)) throw new Error(`Localized asset identity mismatch: ${asset.id}`);
+    const bytes = await readFile(new URL(source, root));
+    if (createHash("sha256").update(bytes).digest("hex") !== expected)
+      throw new Error(`Stale editor asset ${asset.id}`);
+    await copyFile(new URL(source, root), new URL(asset.path, output));
+    copied.set(asset.id, signature);
+    referenced.add(asset.path.slice("media/".length));
+  }
+}

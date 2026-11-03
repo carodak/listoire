@@ -39,12 +39,15 @@ test("the original welcome reveals its subtitle and offers stories within three 
   await expect(page.locator(".subtitle-reveal")).toHaveText(
     "A new audiovisual way to experience novels, where your choices shape the story.",
   );
-  await expect(page.getByRole("button", { name: /Create your own scenario/ })).toBeDisabled();
-  await expect(page.getByText("Coming soon", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Story Editor", exact: true })).toHaveAttribute(
+    "href",
+    "/editor",
+  );
   if (["chromium", "mobile"].includes(info.project.name)) {
     await page.screenshot({ path: info.outputPath("welcome.png"), fullPage: true });
   }
   await play.click();
+  await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
 });
 
@@ -105,6 +108,7 @@ test("blocked audio leaves the visual intro and story access working", async ({ 
   await page.goto("/");
   await page.getByRole("heading", { name: "Step inside the story." }).click();
   await page.getByRole("button", { name: "Play an existing story" }).click();
+  await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -1,6 +1,9 @@
 # Listoire architecture
 
 Status: **combined Phases 2 and 3 implemented**. Reviewed 2026-11-03.
+The subsequent Story Editor request authorizes authoring at `/editor`; its current
+implementation and limits are recorded in [the editor report](docs/story-editor/implementation.md).
+Earlier editor deferrals below are historical. A game executor remains unimplemented.
 The executable subset below supersedes historical phase-specific descriptions.
 See [the combined report](docs/phases2-3-report.md) for verification and production limits.
 
@@ -13,12 +16,13 @@ StoryDirector injects a React-independent NarrativePresentationPort. Only after 
 checkpoint commits does it start PresentationSession; cancellation never changes Ink
 or grants rewards. The session owns event receipts per occurrence, pauseable timing,
 DOM target bindings, native EffectsEngine and lazy React Bits layers. AudioManager
-owns all four playback channels; NarrationManager selects exact approved clips or
-explicit matching-language device voices and reports text progress. Restore displays
+owns all four playback channels. NarrationManager selects exact generated/approved
+clips, requests local generation during development, and supports optional device voices.
+Generated demonstration recordings are explicitly marked preview. Restore displays
 the saved resolved frame, without replaying transient effects or narration.
 
-All house illustrations come from the downloaded Heritage library. Nine selected
-derivatives (five images/four audio excerpts) are hash/rights checked at build time;
+All illustrations come from the downloaded TCP and Heritage libraries. Eight selected
+illustration/sound derivatives and 72 narration MP3s are hash/rights checked at build time;
 source inventories stay offline. Scene events, character portraits, examination and
 narration references all participate in publication allowlisting. Source libraries
 stay under assets; only selected story derivatives are copied to public output.
@@ -26,6 +30,29 @@ Old foundation saves remain separate. Previous house builds are preserved as
 incompatible and exportable, with an explicit restart rather than a silent migration.
 
 Read this document for decisions; [MODULES.md](MODULES.md) for responsibilities and RPG rules; [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for contract examples; [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for delivery and acceptance checks.
+
+## Current presentation and narration
+
+Scene metadata defines ordered text/media/choices blocks. Text IDs preserve Ink's
+declared order; optional segments absent from the resolved frame are skipped.
+Media may be inline, wide, full-screen or photographic. Passage/segment/block
+triggers address bounded events and DOM targets. Native modal cinematics preserve
+the original six narrative moments with pause/resume/skip, entry/exit fades and
+focus restoration without forced scrolling. Whole-page entry/exit transitions keep
+incoming text from appearing beneath outgoing visuals. Zoom, translation and opacity
+retain final values until scoped cleanup, without competing transforms.
+
+The sticky toolbar groups Reading Preferences and My Character. Expanded panels
+occupy layout space; Show All Text is a stable transport command. Choices stay absent
+until preceding content is reached. Instant/show-all finishes remaining visual gates.
+Reload reveals the committed frame silently, without replaying narrative actions.
+
+Local Chatterbox Nano/V3 generation, per-segment caching and an optional loopback
+preview service live in tools. Models/raw WAVs stay in assets. Production uses only
+selected optimized MP3s and requires no Python service. Segment boundaries are used
+until actual alignment exists; no word timestamps are fabricated.
+See [local narration](docs/narration.md). Combat, editor, AI planner and Capacitor
+implementation remain deferred.
 
 ## Recommendation
 

@@ -1,5 +1,11 @@
 # Combined Phases 2 and 3 completion
 
+The subsequent Story Editor specification authorizes an Ink authoring surface at
+`/editor`. Its delivered work, checks and explicit limits are recorded in
+[the Story Editor report](docs/story-editor/implementation.md). Earlier authoring
+deferrals in this historical plan no longer describe the current editor scope.
+The application still has no inventory/check/XP/combat executor to expose.
+
 Authorized together, including the latest character and photograph requirements.
 See [the combined implementation report](docs/phases2-3-report.md) for final checks
 and limits. The earlier Phase 2 report is a historical checkpoint, superseded here.
@@ -22,9 +28,9 @@ the next integration milestone. No combat, visual editor or AI planner was start
 - Native effects pause/resume, cancel on navigation and offer cinematic skip. Heavy
   effects use static fallbacks for constrained devices, reduced motion and hidden views.
 - Narration matches exact text/language/audio hashes and drives progressive reveal.
-  Published approved recordings have not been supplied; explicit device voice fallback
-  is usable where a matching browser/OS voice exists. Offline voice generation remains
-  later work, with a human listening gate before premium narration is claimed.
+  The demo includes 36 English Nano and 36 French V3 clips with exact text/audio hashes.
+  A local service generates cache misses during reading; production uses selected MP3s.
+  Device speech is secondary. Human listening remains the production quality gate.
 - The visual target remains a premium cinematic digital book: coherent engraving
   palette, restrained shot direction, polished transitions and synchronized sound/text.
   Technical acceptance is covered by the report; physical-device profiling and human

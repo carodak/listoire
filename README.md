@@ -80,12 +80,15 @@ stay outside features because both welcome/preferences and reader use them.
 
 ## Edit the story
 
-The authoritative narrative sources are [English Ink](stories/house/en.ink) and
-[French Ink](stories/house/fr.ink). Keep passage, segment, choice and interaction
+Open **Story Editor** at **`/editor`**. The authoritative editable source is
+[project.json](stories/house/project.json), containing both complete Ink scripts,
+localized metadata and audiovisual direction. The previous English/French `.ink`
+files and `metadata.json` are retained as migration references and are no longer
+the active house build inputs. Keep passage, segment, choice and interaction
 IDs identical across translations. Ink owns variables and rewards. The optional
 photograph action is a tagged Ink choice; presentation callbacks never grant items.
 
-[metadata.json](stories/house/metadata.json) supplies translated scene titles,
+Each project's localized `configuration` supplies translated scene titles,
 progress milestones, panel labels, photograph descriptions, asset IDs and bounded
 effects. `assetAlt` contains localized illustration descriptions. Add schema-approved
 metadata rather than executable React or generated code. Recompile with:
@@ -94,7 +97,11 @@ metadata rather than executable React or generated code. Recompile with:
 npm run stories:build
 ```
 
-Restart the dev server after authoring changes; there is no source-file watcher.
+Story Editor autosaves local drafts independently of reader progress. Valid saves
+update this browser's reader; invalid Ink retains the last working publication.
+Export a complete project backup to replace `stories/house/project.json` when
+preparing a build for other browsers or devices. Browser saves do not write to the
+repository. Restart the dev server after replacing the source project.
 Generated `public/stories/house/**` and `dist/**` must not be edited. The old
 foundation source is retained for deterministic regression tests, compiled into
 ignored `.fallow/fixtures`, and excluded from production. Its existing save slots
@@ -102,7 +109,10 @@ are untouched; the full story uses separate `house` EN/FR slots.
 
 To add another story, author a source directory with matching Ink/metadata and an
 explicit licensed resource list, then wire the compiler and active loader to that
-story. A folder alone does not register a story. A library picker/editor is deferred.
+story. A folder alone does not register a story. Multi-story publishing remains deferred.
+
+See [the Story Editor report](docs/story-editor/implementation.md) for controls,
+migration evidence, third-party notices, storage boundaries and remaining limits.
 
 ## Local source assets and catalogs
 
@@ -152,7 +162,8 @@ Read [contributions.md](contributions.md) for permissions and restrictions. Thes
 local libraries are not a redistribution resource for third-party authors. All published images now come from the downloaded Heritage library; the original
 HTML is used only as a story/layout/interaction reference.
 
-The reader uses a 94% white canvas with an 800px text column. Preferences persist
+The reader uses a 94% off-white canvas and an 800px centered text column, with
+Georgia proportions from the final prototype CSS and a light neutral-gray surround. Preferences persist
 separately from story checkpoints. Reduced motion displays complete text and static
 images; **Show all text** is available during reveal. Reload restores the evaluated
 frame, complete text and paused audio without reapplying Ink actions. Sound effects
@@ -166,8 +177,17 @@ and Capacitor remain deferred. Initial profile: 6/6 HP, saved 3d6 STR/DEX/WIL, t
 Rank 1 abilities without narrative checks. Previous house saves remain exportable
 but need an explicit restart after this Ink/profile change.
 
-Read aloud selects approved exact-text clips when authored. No production recordings
-are supplied yet; enable device voice fallback to use a matching browser/OS voice.
-It may be unavailable on a device; voice failure never blocks reading. The engine
-already supports validated recordings, timing marks, ducking, pause/resume and replay.
-Offline narration generation and human voice production are later work.
+Read aloud uses 72 generated preview recordings (English Nano / French V3).
+Production plays selected MP3s directly. The optional local service generates new
+exact-text/voice variants during reading in development and caches the result.
+Start it alongside Vite:
+
+```powershell
+./.fallow/tts-venv/Scripts/python.exe tools/narration.py serve
+```
+
+See [narration preparation](docs/narration.md) for setup, export, generation and checks.
+No paid cloud service or browser ML dependency is required. Narrator selection, rate,
+volume, pause/resume, replay and ducking use the existing transport. Device speech
+is an optional fallback. No word timestamps are invented. Human listening and physical
+mobile performance review remain before production artistic approval.

@@ -1,0 +1,27 @@
+{
+  "voices": [
+    {
+      "id": "nano-default",
+      "label": "Chatterbox Nano",
+      "model": "nano",
+      "locales": ["en"],
+      "reference": null
+    },
+    {
+      "id": "multilingual-default",
+      "label": "Chatterbox Multilingual V3",
+      "model": "multilingual-v3",
+      "locales": ["en", "fr"],
+      "reference": null
+    }
+  ],
+  "settings": {
+    "seed": 4812,
+    "exaggeration": 0.4,
+    "cfg_weight": 0.4,
+    "temperature": 0.7,
+    "nanoTemperature": 0.8,
+    "mp3Kbps": 80
+  },
+  "sourceRevision": "5de7a54aa4e5e2baadb0182dde554908b48b85c2"
+}

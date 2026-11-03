@@ -20,6 +20,7 @@ interface ReaderSnapshot {
   failure: FailureCode | null;
   restored: boolean;
   character: CharacterProfile | null;
+  canGoBack: boolean;
 }
 
 export class StoryDirector {
@@ -28,6 +29,7 @@ export class StoryDirector {
   private readonly saves: Saves;
   private readonly listeners = new Set<() => void>();
   private saved: SaveData | null = null;
+  private readonly previousPages: SaveData[] = [];
   private disposed = false;
   private readonly initialState: string;
   private readonly createCharacter?: () => CharacterProfile;
@@ -39,6 +41,7 @@ export class StoryDirector {
     failure: null,
     restored: false,
     character: null,
+    canGoBack: false,
   };
 
   constructor(
@@ -74,6 +77,7 @@ export class StoryDirector {
     if (this.disposed || this.snapshot.busy) return;
     this.publish({ busy: true, failure: null });
     try {
+      await this.presentation?.leave?.();
       this.presentation?.cancel();
     } catch {
       /* Reading remains available without media. */
@@ -81,6 +85,7 @@ export class StoryDirector {
     try {
       await operation();
     } catch (error) {
+      if (this.snapshot.frame) this.present(this.snapshot.frame, this.snapshot.occurrenceId!, true);
       this.publish({ failure: error instanceof ReaderFailure ? error.code : "storage" });
     } finally {
       this.publish({ busy: false });
@@ -146,6 +151,9 @@ export class StoryDirector {
       try {
         this.engine.choose(choiceId);
         await this.commitFrame(before);
+        this.previousPages.push(before);
+        if (this.previousPages.length > 100) this.previousPages.shift();
+        this.publish({ canGoBack: true });
       } catch (error) {
         this.engine.restore(before.inkStateJson, before.frame);
         throw error;
@@ -159,6 +167,8 @@ export class StoryDirector {
       try {
         this.engine.restore(this.initialState);
         await this.commitFrame(undefined);
+        this.previousPages.length = 0;
+        this.publish({ canGoBack: false });
       } catch (error) {
         this.engine.restore(before?.inkStateJson ?? this.initialState, before?.frame);
         throw error;
@@ -174,6 +184,46 @@ export class StoryDirector {
     }
     this.disposed = true;
     this.listeners.clear();
+  }
+  async replay(): Promise<void> {
+    if (!this.saved) return;
+    await this.run(async () => {
+      const save = this.saved!;
+      const occurrenceId = `${save.runId}:${save.revision}:replay:${crypto.randomUUID()}`;
+      this.present(save.frame, occurrenceId, false);
+      this.publish({ frame: save.frame, occurrenceId, restored: false });
+    });
+  }
+  async back(): Promise<void> {
+    if (!this.saved || !this.previousPages.length) return;
+    await this.run(async () => {
+      const before = this.saved!;
+      const previous = this.previousPages.at(-1)!;
+      const save = {
+        ...previous,
+        runId: before.runId,
+        revision: before.revision + 1,
+        updatedAt: new Date().toISOString(),
+      };
+      try {
+        this.engine.restore(previous.inkStateJson, previous.frame);
+        await this.saves.commit(this.bundle, save, before);
+      } catch (error) {
+        this.engine.restore(before.inkStateJson, before.frame);
+        throw error;
+      }
+      this.previousPages.pop();
+      this.saved = save;
+      const occurrenceId = `${save.runId}:${save.revision}`;
+      this.present(save.frame, occurrenceId, false);
+      this.publish({
+        frame: save.frame,
+        occurrenceId,
+        restored: false,
+        character: save.character ?? null,
+        canGoBack: this.previousPages.length > 0,
+      });
+    });
   }
   private present(frame: Frame, occurrenceId: string, restored: boolean) {
     try {

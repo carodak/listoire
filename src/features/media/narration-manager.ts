@@ -2,6 +2,14 @@ import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { NarrationClip, NarrationProgress } from "../../contracts/media.ts";
 import { AudioManager } from "./audio-manager.ts";
 import type { PlaybackResult } from "./audio-manager.ts";
+import { requestLocalNarration } from "./local-narration.ts";
+import { speechOptions } from "./speech-options.ts";
+interface NarrationOptions {
+  rate: number;
+  deviceVoice: boolean;
+  beforeSegment?: (id: string, signal: AbortSignal) => Promise<void>;
+  settings?: () => { rate: number; voiceId: string };
+}
 
 export async function textDigest(text: string) {
   const digest = await crypto.subtle.digest(
@@ -27,7 +35,7 @@ export class NarrationManager {
   async play(
     frame: Frame,
     bundle: StoryBundle,
-    options: { rate: number; deviceVoice: boolean },
+    options: NarrationOptions,
     signal: AbortSignal,
     onProgress: (progress: NarrationProgress) => void,
   ): Promise<PlaybackResult> {
@@ -40,43 +48,9 @@ export class NarrationManager {
     this.audio.setDucking(true);
     try {
       for (const segment of frame.segments) {
+        await options.beforeSegment?.(segment.id, scope.signal);
         if (scope.signal.aborted) return "aborted";
-        const digest = await textDigest(segment.text);
-        const clip = bundle.narration?.find(
-          (clip) =>
-            clip.segmentId === segment.id &&
-            clip.locale === bundle.locale &&
-            clip.spokenTextDigest === digest,
-        );
-        let result: PlaybackResult = "unavailable";
-        if (clip)
-          result = await this.recorded(
-            clip,
-            segment.text,
-            bundle,
-            options.rate,
-            scope.signal,
-            onProgress,
-          );
-        if (
-          result !== "ended" &&
-          result !== "aborted" &&
-          options.deviceVoice &&
-          !scope.signal.aborted
-        ) {
-          const playback = this.audio.speak(
-            segment.text,
-            bundle.locale,
-            options.rate,
-            scope.signal,
-            (index, length) => {
-              let end = index + length;
-              while (end < segment.text.length && !/\s/.test(segment.text[end]!)) end++;
-              onProgress({ segmentId: segment.id, characters: end, done: false });
-            },
-          );
-          result = await playback.finished;
-        }
+        const result = await this.playSegment(segment, bundle, options, scope.signal, onProgress);
         if (scope.signal.aborted) return "aborted";
         onProgress({ segmentId: segment.id, characters: segment.text.length, done: true });
         if (result !== "ended") return result;
@@ -90,28 +64,115 @@ export class NarrationManager {
       }
     }
   }
+  private async playSegment(
+    segment: Frame["segments"][number],
+    bundle: StoryBundle,
+    options: NarrationOptions,
+    signal: AbortSignal,
+    onProgress: (progress: NarrationProgress) => void,
+  ): Promise<PlaybackResult> {
+    const settings = options.settings?.() ?? { rate: options.rate, voiceId: "" };
+    let result: PlaybackResult = "unavailable";
+    for (const source of await this.recordings(segment, bundle, settings.voiceId, signal)) {
+      result = await this.recorded(
+        source.clip,
+        segment.text,
+        source.audioUrl,
+        settings.rate,
+        signal,
+        onProgress,
+      );
+      if (result === "ended" || result === "aborted") return result;
+    }
+    if (
+      bundle.narrationMode !== "disabled" &&
+      bundle.narrationMode !== "human" &&
+      bundle.narrationMode !== "ai-pregenerated" &&
+      options.deviceVoice &&
+      !signal.aborted
+    )
+      return this.speak(segment, bundle.locale, settings.rate, signal, onProgress);
+    return result;
+  }
+  private async recordings(
+    segment: Frame["segments"][number],
+    bundle: StoryBundle,
+    voiceId: string,
+    signal: AbortSignal,
+  ) {
+    const digest = await textDigest(segment.text);
+    const options = await speechOptions(voiceId, bundle.voiceProfiles, bundle.speechSettings);
+    const sources: { clip: NarrationClip; audioUrl: string }[] = [];
+    if (bundle.narrationMode === "disabled") return sources;
+    const clip = bundle.narration?.find(
+      (clip) =>
+        clip.segmentId === segment.id &&
+        clip.locale === bundle.locale &&
+        clip.spokenTextDigest === digest &&
+        (!options.settingsKey ||
+          clip.assetId.startsWith("recording.") ||
+          clip.settingsKey === options.settingsKey) &&
+        (!voiceId || clip.voiceId === voiceId) &&
+        (bundle.narratorVoiceSelection === undefined ||
+          bundle.narratorVoiceSelection.includes(clip.voiceId)),
+    );
+    const asset = bundle.assets?.find(
+      (asset) => asset.id === clip?.assetId && asset.type === "audio",
+    );
+    if (clip && asset)
+      sources.push({
+        clip,
+        audioUrl:
+          bundle.embeddedAudio?.[asset.id] ??
+          `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+      });
+    const local =
+      !sources.length && voiceId && (!bundle.narrationMode || bundle.narrationMode === "ai-live")
+        ? await requestLocalNarration(
+            {
+              storyId: bundle.storyId,
+              locale: bundle.locale,
+              segmentId: segment.id,
+              text: segment.text,
+              voiceId,
+              ...options,
+            },
+            signal,
+            Boolean(bundle.authored),
+          )
+        : null;
+    if (local && local.clip.spokenTextDigest === digest) sources.push(local);
+    return sources;
+  }
+  private speak(
+    segment: Frame["segments"][number],
+    locale: string,
+    rate: number,
+    signal: AbortSignal,
+    onProgress: (progress: NarrationProgress) => void,
+  ) {
+    return this.audio.speak(segment.text, locale, rate, signal, (index, length) => {
+      let end = index + length;
+      while (end < segment.text.length && !/\s/.test(segment.text[end]!)) end++;
+      onProgress({ segmentId: segment.id, characters: end, done: false });
+    }).finished;
+  }
   private async recorded(
     clip: NarrationClip,
     text: string,
-    bundle: StoryBundle,
+    audioUrl: string,
     rate: number,
     signal: AbortSignal,
     onProgress: (progress: NarrationProgress) => void,
   ): Promise<PlaybackResult> {
-    const asset = bundle.assets?.find(
-      (asset) => asset.id === clip.assetId && asset.type === "audio",
-    );
-    if (!asset || clip.marks.some((mark) => mark.character > text.length)) return "unavailable";
+    if (clip.marks.some((mark) => mark.character > text.length)) return "unavailable";
     let url: string | undefined;
     try {
-      const response = await fetch(
-        `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
-        {
-          signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
-          redirect: "error",
-          credentials: "same-origin",
-        },
-      );
+      const response = await fetch(audioUrl, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
+        redirect: "error",
+        credentials: "same-origin",
+      });
       if (!response.ok || Number(response.headers.get("content-length")) > 10000000) return "error";
       const bytes = await response.arrayBuffer();
       if (bytes.byteLength > 10000000) return "error";

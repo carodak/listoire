@@ -1,0 +1,8 @@
+{
+  "name": "Caveat",
+  "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/caveat/Caveat%5Bwght%5D.ttf",
+  "license": "SIL Open Font License 1.1",
+  "originalPath": "assets/fonts/Caveat[wght].ttf",
+  "optimizedPath": "src/features/presentation/handwriting.woff2",
+  "sourceSha256": "0bdb6b660482d31531b3945849fba5916b3ef8695da7024a9e6b9ee3c4157988"
+}

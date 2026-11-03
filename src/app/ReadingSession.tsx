@@ -8,18 +8,28 @@ import type { StoryDirector } from "../features/story-runtime/director.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
 import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
+import { readEditorRecord } from "../persistence/editor-store.ts";
 
 interface Props {
   locale: Locale;
   saves: SaveManager;
   retry: () => void;
   preferences: ReadingPreferences;
+  hasPreferences: boolean;
   onPreferencesChange: (preferences: ReadingPreferences) => void;
 }
 
-export function ReadingSession({ locale, saves, retry, preferences, onPreferencesChange }: Props) {
+export function ReadingSession({
+  locale,
+  saves,
+  retry,
+  preferences,
+  hasPreferences,
+  onPreferencesChange,
+}: Props) {
   const { t } = useTranslation();
   const initialPreferences = useRef(preferences);
+  const initialHasPreferences = useRef(hasPreferences);
   const [failed, setFailed] = useState(false);
   const [player, setPlayer] = useState<{
     bundle: StoryBundle;
@@ -30,16 +40,32 @@ export function ReadingSession({ locale, saves, retry, preferences, onPreference
   useEffect(() => {
     const scope = new AbortController();
     let director: StoryDirector | undefined;
-    void loadManifest(scope.signal)
-      .then((manifest) =>
-        loadBundle(
+    void readEditorRecord()
+      .catch(() => null)
+      .then(async (record) => {
+        if (record?.published) {
+          const published = record.published;
+          return (
+            published.bundles[locale] ??
+            published.bundles[record.draft.defaultLocale] ??
+            Object.values(published.bundles)[0]!
+          );
+        }
+        const manifest = await loadManifest(scope.signal);
+        return loadBundle(
           manifest.locales.includes(locale) ? locale : manifest.defaultLocale,
           scope.signal,
-        ),
-      )
+        );
+      })
       .then(async (bundle) => {
         if (scope.signal.aborted) return;
-        const player = await createPlayer(bundle, saves, initialPreferences.current);
+        const player = await createPlayer(
+          bundle,
+          saves,
+          initialHasPreferences.current
+            ? initialPreferences.current
+            : (bundle.readingDefaults ?? initialPreferences.current),
+        );
         director = player.director;
         if (scope.signal.aborted) {
           director.dispose();
@@ -85,7 +111,7 @@ export function ReadingSession({ locale, saves, retry, preferences, onPreference
       <StoryPlayer
         {...player}
         backup={backup}
-        preferences={preferences}
+        preferences={hasPreferences ? preferences : (player.bundle.readingDefaults ?? preferences)}
         onPreferencesChange={onPreferencesChange}
       />
     </>

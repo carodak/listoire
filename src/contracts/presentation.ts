@@ -12,6 +12,35 @@ export const RuntimeAssetSchema = z
   })
   .strict();
 
+const PresentationBlockSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("text"), segmentId: z.string() }).strict(),
+  z
+    .object({
+      kind: z.literal("media"),
+      id: z.string(),
+      image: z.string(),
+      layout: z.enum(["inline", "wide", "fullscreen", "background"]),
+      widthPercent: z.number().min(10).max(100).optional(),
+      align: z.enum(["left", "center", "right"]).optional(),
+      fit: z.enum(["contain", "cover"]).optional(),
+      show: z
+        .object({
+          kind: z.enum(["page", "segment", "delay"]),
+          segmentId: z.string().optional(),
+          delayMs: z.number().min(0).max(10000).optional(),
+        })
+        .strict()
+        .refine((show) => show.kind !== "segment" || Boolean(show.segmentId))
+        .optional(),
+      durationMs: z.number().min(1).max(180000).optional(),
+      photograph: z.boolean().optional(),
+      caption: z.string().max(500).optional(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("choices") }).strict(),
+]);
+export type PresentationBlock = z.infer<typeof PresentationBlockSchema>;
+
 export const SceneSchema = z
   .object({
     title: z.string().min(1),
@@ -20,6 +49,7 @@ export const SceneSchema = z
     sound: z.string().optional(),
     effect: NativeEffectSchema.optional(),
     events: z.array(NarrativeEventSchema).max(30).optional(),
+    blocks: z.array(PresentationBlockSchema).min(1).max(120).optional(),
     photograph: z.boolean().optional(),
     notice: z.string().optional(),
   })
@@ -67,6 +97,7 @@ export const ReadingPreferencesSchema = z
     narration: z.boolean().optional(),
     deviceVoice: z.boolean().optional(),
     narrationRate: z.number().min(0.5).max(2).optional(),
+    narratorVoice: z.string().max(80).optional(),
     volumes: z
       .object({
         sfx: z.number().min(0).max(1),

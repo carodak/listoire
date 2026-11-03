@@ -26,10 +26,9 @@ export function WelcomeScreen({ onPlay }: Props) {
         <button className="welcome-play" disabled={!intro.complete} onClick={onPlay}>
           {t("welcome.play")}
         </button>
-        <button className="welcome-create" disabled aria-describedby="coming-soon">
-          {t("welcome.create")}
-          <small id="coming-soon">{t("welcome.soon")}</small>
-        </button>
+        <a className="welcome-create" href="/editor">
+          Story Editor
+        </a>
       </div>
     </main>
   );

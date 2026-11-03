@@ -28,6 +28,8 @@ test("all eleven native effects settle, cancel, pause and respect reduced motion
     ];
     const engine = new EffectsEngine();
     const states = [];
+    let composed = { scale: "", translate: "" };
+    const fades: string[] = [];
     for (const effect of effects) {
       const scope = new AbortController();
       const playback = engine.play(
@@ -37,6 +39,9 @@ test("all eleven native effects settle, cancel, pause and respect reduced motion
         false,
       );
       states.push(await playback.finished);
+      if (["fade-in", "fade-out", "crossfade"].includes(effect.id)) fades.push(image.style.opacity);
+      if (effect.id === "camera-pan")
+        composed = { scale: image.style.scale, translate: image.style.translate };
     }
     const scope = new AbortController();
     const active = engine.play(
@@ -58,11 +63,28 @@ test("all eleven native effects settle, cancel, pause and respect reduced motion
     states.push(await reduced.finished);
     const overlays = root.querySelectorAll(".cinematic-overlay").length;
     const animations = root.getAnimations({ subtree: true }).length;
+    const fadedPrevious = old.style.opacity;
+    engine.stop();
+    const reset = { scale: image.style.scale, translate: image.style.translate };
     root.remove();
-    return { states, overlays, animations };
+    return {
+      states,
+      overlays,
+      animations,
+      composed,
+      reset,
+      fades,
+      fadedPrevious,
+      oldOpacity: old.style.opacity,
+    };
   }, "/src/features/presentation/effects.ts");
   expect(results.states.slice(0, 11)).toEqual(Array(11).fill("ended"));
   expect(results.states.slice(11)).toEqual(["aborted", "ended"]);
   expect(results.overlays).toBe(0);
   expect(results.animations).toBe(0);
+  expect(results.composed).toEqual({ scale: "1.1", translate: "2% 1%" });
+  expect(results.reset).toEqual({ scale: "", translate: "" });
+  expect(results.fades).toEqual(["1", "0", "1"]);
+  expect(results.fadedPrevious).toBe("0");
+  expect(results.oldOpacity).toBe("");
 });

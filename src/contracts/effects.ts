@@ -143,11 +143,17 @@ export type ReactBitsId = ReactBitsEffect["id"];
 export const NarrativeEventSchema = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
+    phase: z.enum(["enter", "exit"]).optional(),
     trigger: z
-      .object({ kind: z.enum(["passage", "segment"]), segmentId: z.string().optional() })
+      .object({
+        kind: z.enum(["passage", "segment", "block"]),
+        segmentId: z.string().optional(),
+        blockId: z.string().optional(),
+      })
       .strict(),
     delayMs: z.number().min(0).max(10000).optional(),
     blocking: z.boolean().optional(),
+    blockId: z.string().optional(),
     action: z.union([
       z
         .object({
@@ -171,5 +177,9 @@ export const NarrativeEventSchema = z
     ]),
   })
   .strict()
-  .refine((event) => event.trigger.kind !== "segment" || Boolean(event.trigger.segmentId));
+  .refine(
+    (event) =>
+      (event.trigger.kind !== "segment" || Boolean(event.trigger.segmentId)) &&
+      (event.trigger.kind !== "block" || Boolean(event.trigger.blockId)),
+  );
 export type NarrativeEvent = z.infer<typeof NarrativeEventSchema>;

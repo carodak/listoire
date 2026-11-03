@@ -7,32 +7,45 @@ export function ReadingControls({
   preferences,
   onChange,
   presentation,
+  voices,
+  open,
+  onOpenChange,
 }: {
   preferences: ReadingPreferences;
   onChange: (preferences: ReadingPreferences) => void;
   presentation: PresentationSession;
+  voices: { id: string; label: string }[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   return (
     <aside className="reading-controls">
-      <button
-        className="transport-button"
-        onClick={media.paused ? presentation.resume : presentation.pause}
-      >
-        {t(media.paused ? "resume" : "pause")}
-      </button>
-      {preferences.narration && (
-        <button className="transport-button" onClick={presentation.replayNarration}>
-          {t("replayVoice")}
+      <div className="reading-transport">
+        {!media.revealAll && !media.textComplete && (
+          <button className="transport-button" onClick={presentation.revealRemaining}>
+            {t("revealAll")}
+          </button>
+        )}
+        <button
+          className="transport-button"
+          onClick={media.paused ? presentation.resume : presentation.pause}
+        >
+          {t(media.paused ? "resume" : "pause")}
         </button>
-      )}
-      {media.blocking && (
-        <button className="transport-button" onClick={presentation.skipCinematic}>
-          {t("skipCinematic")}
-        </button>
-      )}
-      <details>
+        {preferences.narration && (
+          <button className="transport-button" onClick={presentation.replayNarration}>
+            {t("replayVoice")}
+          </button>
+        )}
+        {media.blocking && (
+          <button className="transport-button" onClick={presentation.skipCinematic}>
+            {t("skipCinematic")}
+          </button>
+        )}
+      </div>
+      <details open={open} onToggle={(event) => onOpenChange(event.currentTarget.open)}>
         <summary>{t("readingPreferences")}</summary>
         <div className="reading-popover">
           <label>
@@ -120,6 +133,27 @@ export function ReadingControls({
           </label>
           {preferences.narration && (
             <>
+              <label>
+                {t("narratorVoice")}
+                <select
+                  aria-label={t("narratorVoice")}
+                  title={t("voiceNextSegment")}
+                  value={
+                    voices.find((voice) => voice.id === preferences.narratorVoice)?.id ??
+                    voices[0]?.id ??
+                    ""
+                  }
+                  onChange={(event) =>
+                    onChange({ ...preferences, narratorVoice: event.target.value })
+                  }
+                >
+                  {voices.map((voice) => (
+                    <option key={voice.id} value={voice.id}>
+                      {voice.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <label>
                 {t("deviceVoice")}
                 <input

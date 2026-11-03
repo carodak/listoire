@@ -9,7 +9,10 @@ it("uses shared zoom/pan effects, cancels handles and tolerates reduced motion",
       reject = rejectFn;
     }),
   };
-  const target = { animate: vi.fn(() => animation) } as unknown as HTMLElement;
+  const target = {
+    style: { scale: "", translate: "" },
+    animate: vi.fn(() => animation),
+  } as unknown as HTMLElement;
   vi.stubGlobal("getComputedStyle", () => ({ scale: "none", translate: "none" }));
   const scope = new AbortController();
   runEffect(target, { id: "camera-zoom", scale: 2, duration: 350 }, scope.signal, false);

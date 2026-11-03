@@ -4,12 +4,16 @@
   "boundaries": {
     "coverage": {
       "requireAllFiles": true,
-      "allowUnmatched": ["tools/**", "*.config.ts"]
+      "allowUnmatched": ["tools/**", "*.config.ts", "public/editor/vendor/**"]
     },
     "zones": [
       {
         "name": "tests",
         "patterns": ["src/**/*.test.ts", "src/test-fixtures.ts", "tests/**"]
+      },
+      {
+        "name": "editor",
+        "patterns": ["src/features/editor/**"]
       },
       {
         "name": "landing",
@@ -75,7 +79,8 @@
           "landing",
           "presentation",
           "character",
-          "media"
+          "media",
+          "editor"
         ]
       },
       {
@@ -120,8 +125,13 @@
           "landing",
           "character",
           "media",
-          "presentation"
+          "presentation",
+          "editor"
         ]
+      },
+      {
+        "from": "editor",
+        "allow": ["contracts", "persistence", "media"]
       },
       {
         "from": "landing",
@@ -141,11 +151,11 @@
       }
     ]
   },
-  "ignoreFindings": ["src/features/presentation/react-bits/vendor/**"],
+  "ignoreFindings": ["src/features/presentation/react-bits/vendor/**", "public/editor/vendor/**"],
   "health": {
-    "ignore": ["src/features/presentation/react-bits/vendor/**"]
+    "ignore": ["src/features/presentation/react-bits/vendor/**", "public/editor/vendor/**"]
   },
   "duplicates": {
-    "ignore": ["src/features/presentation/react-bits/vendor/**"]
+    "ignore": ["src/features/presentation/react-bits/vendor/**", "public/editor/vendor/**"]
   }
 }

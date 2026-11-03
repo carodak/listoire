@@ -1,10 +1,13 @@
 import { SaveSchema, ReaderFailure, SettingsSchema } from "../contracts/story.ts";
 import type { ReaderSettings, SaveData, StoryBundle } from "../contracts/story.ts";
 import { z } from "zod";
-import { LocaleSchema } from "../contracts/story.ts";
 
 const LegacySettings = z
-  .object({ schemaVersion: z.literal(1), interfaceLocale: LocaleSchema, storyLocale: LocaleSchema })
+  .object({
+    schemaVersion: z.literal(1),
+    interfaceLocale: SettingsSchema.shape.language,
+    storyLocale: SettingsSchema.shape.language,
+  })
   .strict();
 
 export interface SaveStore {
