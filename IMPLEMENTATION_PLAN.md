@@ -1,3 +1,41 @@
+# Combined Phases 2 and 3 completion
+
+Authorized together, including the latest character and photograph requirements.
+See [the combined implementation report](docs/phases2-3-report.md) for final checks
+and limits. The earlier Phase 2 report is a historical checkpoint, superseded here.
+
+The delivery sequence was incremental: (1) complete bilingual Ink and asset inventories;
+(2) source-library illustration selection and saved initial character profile;
+(3) shared camera geometry and accessible magnifier; (4) AudioManager and narration
+transport; (5) eleven native effects and cancellation clock; (6) fourteen official
+React Bits lazy integrations; (7) declarative director/reader integration; (8) complete
+browser, publication and Fallow checks. Each subsystem received targeted checks before
+the next integration milestone. No combat, visual editor or AI planner was started.
+
+## Phase 3 acceptance and remaining production review
+
+- Actual reusable AudioManager, NarrationManager, EffectsEngine and PresentationSession
+  run the reader; no story-specific replacement animation layer is needed.
+- Eleven native primitives and fourteen locally vendored lazy React Bits components
+  are supported by bounded declarative schemas, cancellation and cleanup. Only suitable
+  effects are authored into this book; the complete catalog stays available offline.
+- Native effects pause/resume, cancel on navigation and offer cinematic skip. Heavy
+  effects use static fallbacks for constrained devices, reduced motion and hidden views.
+- Narration matches exact text/language/audio hashes and drives progressive reveal.
+  Published approved recordings have not been supplied; explicit device voice fallback
+  is usable where a matching browser/OS voice exists. Offline voice generation remains
+  later work, with a human listening gate before premium narration is claimed.
+- The visual target remains a premium cinematic digital book: coherent engraving
+  palette, restrained shot direction, polished transitions and synchronized sound/text.
+  Technical acceptance is covered by the report; physical-device profiling and human
+  artistic/listening review remain necessary before public production sign-off.
+
+## Historical staged plan
+
+The original staged plan and Phase 1 record remain in Git history. Current source
+ownership and executable contracts are documented in ARCHITECTURE.md, MODULES.md
+and DATA_CONTRACTS.md. New phases require separate authorization.
+
 # Incremental implementation plan
 
 Status: **architecture approved; Phase 1 complete**. Read [ARCHITECTURE.md](ARCHITECTURE.md), [MODULES.md](MODULES.md) and [DATA_CONTRACTS.md](DATA_CONTRACTS.md) together. Later phases require separate authorization.

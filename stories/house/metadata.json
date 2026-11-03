@@ -1,0 +1,928 @@
+{
+  "storyId": "house",
+  "release": "0.3.0",
+  "defaultLocale": "en",
+  "variables": [
+    "brasskey",
+    "caller",
+    "girl",
+    "examined",
+    "hiddenclue",
+    "metgrandmother",
+    "metcaller",
+    "metgirl"
+  ],
+  "passages": {
+    "intro": ["intro.p1", "intro.p2", "intro.p3", "intro.p4", "intro.clue"],
+    "call": ["call.p1", "call.p2", "call.p3", "call.p4"],
+    "room": ["room.p1", "room.p2", "room.p3"],
+    "song": ["song.p1", "song.p2", "song.p3"],
+    "arrival": ["arrival.p1", "arrival.p2", "arrival.p3"],
+    "break": ["break.p1", "break.p2", "break.p3"],
+    "light": ["light.p1", "light.p2", "light.p3"],
+    "last": ["last.p1", "last.p2", "last.p3"],
+    "window": ["window.p1", "window.p2", "window.p3"],
+    "photo": ["photo.p1", "photo.p2", "photo.p3"],
+    "end": ["end.p1", "end.p2", "end.p3"]
+  },
+  "en": {
+    "title": "The House That Remembered",
+    "chapter": "Chapter One",
+    "scenes": {
+      "intro": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.0,
+        "image": "heritage.photograph",
+        "photograph": true,
+        "events": [
+          {
+            "id": "intro.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 650
+              }
+            }
+          },
+          {
+            "id": "intro.grain",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "react-bits.noise",
+                "duration": 1800,
+                "props": {
+                  "opacity": 0.025,
+                  "fps": 12
+                }
+              }
+            }
+          }
+        ]
+      },
+      "call": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.14285714285714285,
+        "events": [
+          {
+            "id": "call.receiver",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "call.p2"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.telephone",
+              "channel": "sfx",
+              "volume": 0.7,
+              "loop": false
+            }
+          },
+          {
+            "id": "call.lullaby",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "call.p4"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.music-box",
+              "channel": "music",
+              "volume": 0.35,
+              "loop": true,
+              "fadeMs": 600
+            }
+          }
+        ]
+      },
+      "room": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.2857142857142857,
+        "events": [
+          {
+            "id": "room.revelation",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 1800,
+                "scale": 1.06
+              }
+            }
+          },
+          {
+            "id": "room.wind",
+            "trigger": {
+              "kind": "passage"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.wind",
+              "channel": "ambience",
+              "volume": 0.4,
+              "loop": true,
+              "fadeMs": 600
+            }
+          }
+        ],
+        "image": "heritage.photograph"
+      },
+      "song": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.2857142857142857,
+        "events": [
+          {
+            "id": "song.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 700
+              }
+            }
+          },
+          {
+            "id": "song.veil",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "react-bits.dark-veil",
+                "duration": 1800,
+                "props": {
+                  "color": "#777777",
+                  "speed": 0.15,
+                  "brightness": 0.1
+                }
+              }
+            }
+          }
+        ],
+        "image": "heritage.portrait"
+      },
+      "arrival": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.42857142857142855,
+        "image": "heritage.bird",
+        "events": [
+          {
+            "id": "arrival.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 600
+              }
+            }
+          }
+        ]
+      },
+      "break": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.5714285714285714,
+        "image": "heritage.key",
+        "notice": "Brass key acquired",
+        "events": [
+          {
+            "id": "break.reveal",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "crossfade",
+                "duration": 900
+              }
+            }
+          },
+          {
+            "id": "break.zoom",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "scale": 1.08,
+                "duration": 1800
+              }
+            }
+          }
+        ]
+      },
+      "light": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.5714285714285714,
+        "notice": "Hidden clue discovered",
+        "events": [
+          {
+            "id": "light.reveal",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "light-flicker",
+                "duration": 900,
+                "intensity": 0.25
+              }
+            }
+          },
+          {
+            "id": "light.pan",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "camera-pan",
+                "x": 2,
+                "y": -1,
+                "duration": 1800
+              }
+            }
+          }
+        ],
+        "image": "heritage.bird"
+      },
+      "last": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.7142857142857143,
+        "events": [
+          {
+            "id": "last.knocks",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "last.p2"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.impact",
+              "channel": "sfx",
+              "volume": 0.35,
+              "loop": false
+            }
+          }
+        ]
+      },
+      "window": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.8571428571428571,
+        "events": [
+          {
+            "id": "window.impact",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "screen-shake",
+                "target": "canvas",
+                "intensity": 0.4,
+                "duration": 450
+              }
+            }
+          },
+          {
+            "id": "window.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 700
+              }
+            }
+          }
+        ],
+        "image": "heritage.handprint"
+      },
+      "photo": {
+        "title": "The Girl in the Photograph",
+        "progress": 0.8571428571428571,
+        "image": "heritage.photograph",
+        "photograph": true,
+        "events": [
+          {
+            "id": "photo.zoom",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "scale": 1.07,
+                "duration": 1800
+              }
+            }
+          },
+          {
+            "id": "photo.light",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "photo.p2"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "light-flicker",
+                "duration": 700,
+                "intensity": 0.18
+              }
+            }
+          }
+        ]
+      },
+      "end": {
+        "title": "The House Is Waiting",
+        "progress": 1.0,
+        "events": []
+      }
+    },
+    "assetAlt": {
+      "heritage.key": "Vintage engraving of a key",
+      "heritage.photograph": "Vintage line engraving of a woman and a girl beside a curtained window",
+      "heritage.portrait": "Vintage engraving of a young woman reading",
+      "heritage.bird": "Vintage engraving of a flying bird",
+      "heritage.handprint": "Vintage line drawing of an open hand",
+      "sonniss.music-box": "Music-box recollection"
+    },
+    "examination": {
+      "image": "heritage.photograph",
+      "title": "The photograph",
+      "descriptions": [
+        "The photograph is dated June 14th, 1987.",
+        "There is a figure in the photograph who looks exactly like you.",
+        "The background is strangely familiar. The upstairs window is open."
+      ],
+      "reverse": "If she comes looking for you, do not tell her your name.",
+      "actionId": "examine-photo",
+      "hotspot": {
+        "x": 12,
+        "y": 42,
+        "label": "Notice the upstairs window"
+      }
+    },
+    "character": {
+      "portrait": "heritage.portrait",
+      "abilities": [
+        {
+          "id": "close-reading",
+          "name": "Close reading",
+          "description": "Notice details in letters and old photographs. Not yet used in narrative checks."
+        },
+        {
+          "id": "composure",
+          "name": "Composure",
+          "description": "Keep a clear mind when familiar places become unsettling. Not yet used in narrative checks."
+        }
+      ],
+      "inventory": [
+        {
+          "id": "brasskey",
+          "fact": "brasskey",
+          "name": "Brass key",
+          "description": "A tiny key taped inside your grandmother’s letter."
+        },
+        {
+          "id": "hiddenclue",
+          "fact": "hiddenclue",
+          "name": "Hidden letter message",
+          "description": "She is what the house kept."
+        },
+        {
+          "id": "examined",
+          "fact": "examined",
+          "name": "Photograph clue",
+          "description": "The upstairs window is open."
+        }
+      ],
+      "encounters": [
+        {
+          "id": "grandmother",
+          "fact": "metgrandmother",
+          "name": "Grandmother",
+          "description": "Your late grandmother, whose photograph and warning started the mystery."
+        },
+        {
+          "id": "girl",
+          "fact": "metgirl",
+          "name": "The girl in the photograph",
+          "description": "A familiar figure first encountered in the old photograph."
+        },
+        {
+          "id": "caller",
+          "fact": "metcaller",
+          "name": "Unknown caller",
+          "description": "A woman who asks whether the upstairs room has been opened."
+        }
+      ]
+    }
+  },
+  "fr": {
+    "title": "La maison qui se souvenait",
+    "chapter": "Chapitre un",
+    "scenes": {
+      "intro": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.0,
+        "image": "heritage.photograph",
+        "photograph": true,
+        "events": [
+          {
+            "id": "intro.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 650
+              }
+            }
+          },
+          {
+            "id": "intro.grain",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "react-bits.noise",
+                "duration": 1800,
+                "props": {
+                  "opacity": 0.025,
+                  "fps": 12
+                }
+              }
+            }
+          }
+        ]
+      },
+      "call": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.14285714285714285,
+        "events": [
+          {
+            "id": "call.receiver",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "call.p2"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.telephone",
+              "channel": "sfx",
+              "volume": 0.7,
+              "loop": false
+            }
+          },
+          {
+            "id": "call.lullaby",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "call.p4"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.music-box",
+              "channel": "music",
+              "volume": 0.35,
+              "loop": true,
+              "fadeMs": 600
+            }
+          }
+        ]
+      },
+      "room": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.2857142857142857,
+        "events": [
+          {
+            "id": "room.revelation",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "duration": 1800,
+                "scale": 1.06
+              }
+            }
+          },
+          {
+            "id": "room.wind",
+            "trigger": {
+              "kind": "passage"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.wind",
+              "channel": "ambience",
+              "volume": 0.4,
+              "loop": true,
+              "fadeMs": 600
+            }
+          }
+        ],
+        "image": "heritage.photograph"
+      },
+      "song": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.2857142857142857,
+        "events": [
+          {
+            "id": "song.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 700
+              }
+            }
+          },
+          {
+            "id": "song.veil",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "react-bits.dark-veil",
+                "duration": 1800,
+                "props": {
+                  "color": "#777777",
+                  "speed": 0.15,
+                  "brightness": 0.1
+                }
+              }
+            }
+          }
+        ],
+        "image": "heritage.portrait"
+      },
+      "arrival": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.42857142857142855,
+        "image": "heritage.bird",
+        "events": [
+          {
+            "id": "arrival.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 600
+              }
+            }
+          }
+        ]
+      },
+      "break": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.5714285714285714,
+        "image": "heritage.key",
+        "notice": "Clé en laiton obtenue",
+        "events": [
+          {
+            "id": "break.reveal",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "crossfade",
+                "duration": 900
+              }
+            }
+          },
+          {
+            "id": "break.zoom",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "scale": 1.08,
+                "duration": 1800
+              }
+            }
+          }
+        ]
+      },
+      "light": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.5714285714285714,
+        "notice": "Indice caché découvert",
+        "events": [
+          {
+            "id": "light.reveal",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "light-flicker",
+                "duration": 900,
+                "intensity": 0.25
+              }
+            }
+          },
+          {
+            "id": "light.pan",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "camera-pan",
+                "x": 2,
+                "y": -1,
+                "duration": 1800
+              }
+            }
+          }
+        ],
+        "image": "heritage.bird"
+      },
+      "last": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.7142857142857143,
+        "events": [
+          {
+            "id": "last.knocks",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "last.p2"
+            },
+            "action": {
+              "kind": "audio",
+              "assetId": "sonniss.impact",
+              "channel": "sfx",
+              "volume": 0.35,
+              "loop": false
+            }
+          }
+        ]
+      },
+      "window": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.8571428571428571,
+        "events": [
+          {
+            "id": "window.impact",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": true,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "screen-shake",
+                "target": "canvas",
+                "intensity": 0.4,
+                "duration": 450
+              }
+            }
+          },
+          {
+            "id": "window.fade",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "fade-in",
+                "duration": 700
+              }
+            }
+          }
+        ],
+        "image": "heritage.handprint"
+      },
+      "photo": {
+        "title": "La jeune fille sur la photographie",
+        "progress": 0.8571428571428571,
+        "image": "heritage.photograph",
+        "photograph": true,
+        "events": [
+          {
+            "id": "photo.zoom",
+            "trigger": {
+              "kind": "passage"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "slow-zoom",
+                "scale": 1.07,
+                "duration": 1800
+              }
+            }
+          },
+          {
+            "id": "photo.light",
+            "trigger": {
+              "kind": "segment",
+              "segmentId": "photo.p2"
+            },
+            "delayMs": 0,
+            "blocking": false,
+            "action": {
+              "kind": "effect",
+              "effect": {
+                "id": "light-flicker",
+                "duration": 700,
+                "intensity": 0.18
+              }
+            }
+          }
+        ]
+      },
+      "end": {
+        "title": "La maison vous attend",
+        "progress": 1.0,
+        "events": []
+      }
+    },
+    "assetAlt": {
+      "heritage.key": "Gravure ancienne d’une clé",
+      "sonniss.telephone": "Combiné de téléphone ancien",
+      "sonniss.wind": "Vent dans une cheminée",
+      "sonniss.impact": "Accent sonore métallique",
+      "heritage.photograph": "Gravure ancienne d’une femme et d’une jeune fille près d’une fenêtre à rideaux",
+      "heritage.portrait": "Gravure ancienne d’une jeune femme lisant",
+      "heritage.bird": "Gravure ancienne d’un oiseau en vol",
+      "heritage.handprint": "Dessin ancien d’une main ouverte",
+      "sonniss.music-box": "Souvenir de boîte à musique"
+    },
+    "examination": {
+      "image": "heritage.photograph",
+      "title": "La photographie",
+      "descriptions": [
+        "La photographie est datée du 14 juin 1987.",
+        "Une personne sur la photographie vous ressemble trait pour trait.",
+        "L’arrière-plan est étrangement familier. La fenêtre à l’étage est ouverte."
+      ],
+      "reverse": "Si elle vient te chercher, ne lui dis pas ton nom.",
+      "actionId": "examine-photo",
+      "hotspot": {
+        "x": 12,
+        "y": 42,
+        "label": "Remarquer la fenêtre à l’étage"
+      }
+    },
+    "character": {
+      "portrait": "heritage.portrait",
+      "abilities": [
+        {
+          "id": "close-reading",
+          "name": "Lecture attentive",
+          "description": "Repérer les détails des lettres et des photographies anciennes. Aucun test narratif pour le moment."
+        },
+        {
+          "id": "composure",
+          "name": "Sang-froid",
+          "description": "Garder l’esprit clair lorsque les lieux familiers deviennent inquiétants. Aucun test narratif pour le moment."
+        }
+      ],
+      "inventory": [
+        {
+          "id": "brasskey",
+          "fact": "brasskey",
+          "name": "Clé en laiton",
+          "description": "Une petite clé fixée dans la lettre de votre grand-mère."
+        },
+        {
+          "id": "hiddenclue",
+          "fact": "hiddenclue",
+          "name": "Message caché",
+          "description": "Elle est ce que la maison a gardé."
+        },
+        {
+          "id": "examined",
+          "fact": "examined",
+          "name": "Indice photographique",
+          "description": "La fenêtre à l’étage est ouverte."
+        }
+      ],
+      "encounters": [
+        {
+          "id": "grandmother",
+          "fact": "metgrandmother",
+          "name": "Grand-mère",
+          "description": "Votre grand-mère disparue, dont la photographie et l’avertissement ont fait naître le mystère."
+        },
+        {
+          "id": "girl",
+          "fact": "metgirl",
+          "name": "La jeune fille sur la photographie",
+          "description": "Une silhouette familière découverte sur la vieille photographie."
+        },
+        {
+          "id": "caller",
+          "fact": "metcaller",
+          "name": "Inconnue au téléphone",
+          "description": "Une femme qui demande si la pièce à l’étage a été ouverte."
+        }
+      ]
+    }
+  },
+  "mode": "rpg-no-combat"
+}

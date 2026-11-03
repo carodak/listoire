@@ -1,6 +1,6 @@
 # Proposed content and runtime contracts
 
-Status: illustrative TypeScript, **not application code or a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.
+Status: the implemented subset is defined by executable schemas in `src/contracts`; larger examples below remain illustrative TypeScript, **not a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.
 
 ## Implemented Phase 1 subset
 
@@ -476,3 +476,38 @@ At runtime, validate fetched bundles and saves before use; allow only relative b
 | Storage unavailable / incompatible save                       | Not a publishing concern                                           | Preserve data; explain retry/export/restart choices; no silent overwrite        |
 
 A future AI proposal uses these same schemas and semantic validators, adds its base source revision and diagnostics, and requires author review before publishing. Validation is a capability allowlist, not a mechanism for executing arbitrary generated behavior.
+
+## Implemented Phases 2 and 3 contracts
+
+Executable Zod schemas live in `src/contracts/story.ts`, `character.ts`, `presentation.ts`,
+`effects.ts` and `media.ts`. Infer types from these files rather than copying the broader
+design sketches above. House release is `0.3.0`, mode `rpg-no-combat`; this denotes the
+initial character profile only. Bundle/save mode must match. Save schema 1 remains
+compatible with narrative-only foundation fixtures; RPG-profile mode requires character.
+
+- Character health starts at 6/6. STR/DEX/WIL contain initial/current values and three
+  validated dice results, with initial equal to their sum. Two ability IDs have Rank 1.
+  Profile generation occurs once before the initial atomic checkpoint; restore retains it.
+- Frame facts/actions are evaluated from declared Ink variables; restoration compares
+  the full serialized Ink boundary. Inventory/encounter metadata filters by these facts.
+  Removed Observation/Knowledge/Courage are not replaced by narrative attribute checks.
+- Scenes declare image/progress/title and up to 30 events. Each stable event ID has a
+  passage or segment trigger and bounded delay; action is allowlisted effect/audio/stop.
+  Supported effect props are strict bounded subsets of upstream APIs. No executable
+  code or arbitrary asset URLs may be supplied by metadata.
+- Character portrait, scene event images/audio, examination and narration assets are
+  included in the build allowlist. All five house image sources are downloaded Heritage
+  files. Embedded prototype imagery is explicitly rejected by the publication tool.
+- Approved narration clips declare segment/locale/voice, NFC text and audio SHA-256,
+  finite duration, monotonic timing marks and human approval/rights reference. Playback
+  requires exact text/locale/hash identity. Missing/bad clips may use an enabled device
+  voice of matching language, otherwise silent reading remains available.
+- Settings schema 2 adds optional narration/deviceVoice/rate and four channel volumes,
+  alongside typography/reveal/sound. Settings remain independent of story saves.
+- No media handles, animation timers, lens positions or transient receipts enter saves.
+  Reload presents complete saved text and silent media; explicit replay is available.
+
+Technical inventory evidence and editorial suggestions stay distinct. Curated resources
+record original/optimized paths, hashes, excerpts and project-use rights. Unverified or
+raw-library resources are never exposed in the publication. Old house saves are retained
+as incompatible/exportable after Ink/mode changes; no automatic migration is claimed.

@@ -1,6 +1,6 @@
 # Modules and rule ownership
 
-Status: approved boundaries; Phase 1 complete. See [ARCHITECTURE.md](ARCHITECTURE.md) for decisions and [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for the implemented subset and later contract sketches. Implemented features are landing, reader and story-runtime, with shared app composition, persistence, contracts, localization and the compiler; optional engines remain deferred.
+Status: combined Phases 2 and 3 implemented; the future RPG executor/editor/AI remain deferred. See [ARCHITECTURE.md](ARCHITECTURE.md) for decisions and [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for the implemented subset and later contract sketches. Implemented features are landing, reader and story-runtime, with shared app composition, persistence, contracts, localization and the compiler; optional engines remain deferred.
 
 ## Responsibilities
 
@@ -181,3 +181,43 @@ they are not scaffolded now. Shared schemas and directly importable engine modul
 let the future author preview use the same runtime without importing reader React UI.
 
 Extract packages only after actual consumers exist. Publishing/editor code must not enlarge the reader bundle; build tools and future authoring routes are separate entry points with lazy loading where appropriate.
+
+## Implemented Phases 2 and 3 modules
+
+`features/story-runtime` remains independent of React and all concrete media modules.
+The director receives a shared NarrativePresentationPort; it commits Ink/frame/character
+state before presentation starts. Media failures cannot roll back a committed story.
+Ink owns discoveries, inventory facts and encounter facts. Profile generation is pure
+in `features/character/create-character.ts`; application composition supplies unbiased
+cryptographic dice. No optional future RPG executor directory is scaffolded.
+
+`features/character` owns the saved initial profile factory and CharacterPanel. The
+panel is initially collapsed and displays health/STR/DEX/WIL, fact-filtered inventory
+and encounters, plus Rank 1 abilities. Encounter descriptions support hover/focus/tap.
+It imports contracts only; no UI callback rolls dice or advances a narrative check.
+
+`features/reader` owns PassageText, ReadingControls, PhotographExamination and checkpoint
+controls. It composes presentation and character UI without owning their engines.
+`features/presentation` owns EffectsEngine, PresentationClock, PresentationSession,
+SceneIllustration, MagnifiedImage and shared camera geometry. Magnification samples
+the precise normalized point on the actual image bounds, with touch capture and
+keyboard movement. No story-specific camera component is needed.
+
+`features/media` owns AudioManager and NarrationManager. AudioManager alone owns
+HTMLAudio/speech transport, mixing/ducking and cleanup. NarrationManager validates exact
+text/audio identity and drives segment progress. It does not generate voices or branch Ink.
+
+`features/presentation/react-bits/registry.ts` has fourteen explicit lazy imports of
+pinned official JSX components. Scoped declaration files form the integration boundary;
+application TypeScript remains strict. Vendor-only formatting, complexity and duplication
+exclusions preserve upstream bytes; dependency/cycle/boundary analysis still includes
+the vendor graph. `ogl` is the sole added runtime dependency, required by RippleDistortion.
+
+Fallow enforces reader → presentation/character/contracts, presentation → media/contracts,
+media/character → contracts, and runtime → shared presentation-port contracts. There is
+no reciprocal runtime/media import. No barrel exports or feature wrappers are added.
+
+`tools/asset-library.py` safely extracts/inventories source libraries. `prepare-assets.py`
+creates selected derivatives; `build-story.ts` validates and publishes referenced media.
+`catalog-effects.py` records all 25 implemented/integrated effects; `vendor-react-bits.py`
+reproduces the pinned official files; `verify-assets.py` checks hashes and exact output.

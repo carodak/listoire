@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "sonniss.telephone",
+      "originalPath": "assets/audio/se/Sonniss.com-GDC2026-GameAudioBundle1of5/344 Audio - Antique Telephone/COMTelph_Antique Telephone Pick Up & Drop Ear Piece_344 Audio_Antiques - Telephone_05.wav",
+      "optimizedPath": "stories/house/media/sonniss.telephone.mp3",
+      "mediaType": "audio",
+      "sourceCollection": "se",
+      "technical": {
+        "format": "wav",
+        "bytes": 1864884,
+        "duration": 3.216552083333333,
+        "sampleRate": 96000,
+        "channels": 2,
+        "bitsPerSample": 24
+      },
+      "verified": {
+        "provenance": "local-file",
+        "license": "bundled-license-and-official-GDC-EULA",
+        "evidence": [
+          "assets",
+          "audio",
+          "se",
+          "Sonniss.com-GDC2026-GameAudioBundle1of5",
+          "https://sonniss.com/gdc-bundle-license/"
+        ]
+      },
+      "suggested": {
+        "roles": ["foley"],
+        "themes": ["house"],
+        "moods": ["uneasy"],
+        "tags": ["filename-based-selection-not-listened"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "aiTraining": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Antique telephone receiver",
+      "creator": "344 Audio",
+      "excerptSeconds": 2.5,
+      "usage": "House scene cue only; no reusable sound library",
+      "sourceSha256": "a3e5f79197dbf52d2f0ab3cb99bcedea8fef445a3530ffe4debc81f17feb613e",
+      "runtimeSha256": "90eccc70fbca0f5637c6661398d69714964fa1999d7d53fe118ab89b129daaee",
+      "runtimeBytes": 26067
+    },
+    {
+      "id": "sonniss.wind",
+      "originalPath": "assets/audio/se/Sonniss.com-GDC2026-GameAudioBundle3of5/InMotionAudio - Chimney Wind/WINDInt_ChimneyWind05_InMotionAudio_ChimneyWind.wav",
+      "optimizedPath": "stories/house/media/sonniss.wind.mp3",
+      "mediaType": "audio",
+      "sourceCollection": "se",
+      "technical": {
+        "format": "wav",
+        "bytes": 66756950,
+        "duration": 115.28344791666666,
+        "sampleRate": 96000,
+        "channels": 2,
+        "bitsPerSample": 24
+      },
+      "verified": {
+        "provenance": "local-file",
+        "license": "bundled-license-and-official-GDC-EULA",
+        "evidence": [
+          "assets",
+          "audio",
+          "se",
+          "Sonniss.com-GDC2026-GameAudioBundle3of5",
+          "https://sonniss.com/gdc-bundle-license/"
+        ]
+      },
+      "suggested": {
+        "roles": ["ambience"],
+        "themes": ["house"],
+        "moods": ["uneasy"],
+        "tags": ["filename-based-selection-not-listened"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "aiTraining": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Chimney wind",
+      "creator": "InMotionAudio",
+      "excerptSeconds": 7,
+      "usage": "House scene cue only; no reusable sound library",
+      "sourceSha256": "de71c402bcbc62b185b3f963d514aec61c561cda9b3c2ad15d5ab8fca57b7c68",
+      "runtimeSha256": "08c11aa6d5aed6f1a2f88f0203996b867d28667da3caa7e864798e7607b02f96",
+      "runtimeBytes": 71032
+    },
+    {
+      "id": "sonniss.impact",
+      "originalPath": "assets/audio/se/Sonniss.com-GDC2026-GameAudioBundle1of5/344 Audio - Haunting Ambiences Vol. 3/METLImpt_Metal Bangs, Metal Hits, Banging On Doors_344 Audio_Haunting Ambiences Vol 3.wav",
+      "optimizedPath": "stories/house/media/sonniss.impact.mp3",
+      "mediaType": "audio",
+      "sourceCollection": "se",
+      "technical": {
+        "format": "wav",
+        "bytes": 208667740,
+        "duration": 180.18,
+        "sampleRate": 192000,
+        "channels": 2,
+        "bitsPerSample": 24
+      },
+      "verified": {
+        "provenance": "local-file",
+        "license": "bundled-license-and-official-GDC-EULA",
+        "evidence": [
+          "assets",
+          "audio",
+          "se",
+          "Sonniss.com-GDC2026-GameAudioBundle1of5",
+          "https://sonniss.com/gdc-bundle-license/"
+        ]
+      },
+      "suggested": {
+        "roles": ["impact"],
+        "themes": ["house"],
+        "moods": ["uneasy"],
+        "tags": ["filename-based-selection-not-listened"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "aiTraining": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Metal impact accent",
+      "creator": "344 Audio",
+      "excerptSeconds": 1.5,
+      "usage": "House scene cue only; no reusable sound library",
+      "sourceSha256": "33ebb8ff8434b68c4b7b1bff4a6859cd2a4ce205654947ea70cbf240cdc061d9",
+      "runtimeSha256": "e9bd2ba44d68ccf49f878018b97a1979a7aa1a0ee389e78d3ee1b4a850cfdce8",
+      "runtimeBytes": 16205
+    },
+    {
+      "id": "heritage.key",
+      "originalPath": "assets/images/heritage-library/free-key-illustrations/Keeper of Keys/PNG/HTC_Heritage Library_Keeper of KeysElement 1.png",
+      "optimizedPath": "stories/house/media/heritage.key.webp",
+      "mediaType": "image",
+      "sourceCollection": "free-key-illustrations",
+      "technical": {
+        "format": "png",
+        "bytes": 301562,
+        "width": 3000,
+        "height": 1323,
+        "aspectRatio": 2.26757,
+        "colorMode": "RGBA"
+      },
+      "verified": {
+        "provenance": "local-file-and-visual-inspection",
+        "license": "Heritage Library included license",
+        "evidence": "assets/images/heritage-library/free-key-illustrations/Keeper of Keys/License_HeritageLibrary.pdf"
+      },
+      "suggested": {
+        "roles": ["objects-and-clues"],
+        "themes": ["key"],
+        "moods": ["mysterious"],
+        "tags": ["line-art"],
+        "visualComplexity": "low",
+        "lineArtSuitability": "high",
+        "palette": "black/white",
+        "composition": "single isolated key",
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Keeper of Keys — Element 1",
+      "creator": "HTC Heritage Type GmbH; historical artist not identified",
+      "usage": "Illustrates the brass key found inside the letter",
+      "sourceSha256": "8e5758104ccc945a3250ee85a6730beecec89a1542c075343fa33d33e31c5a4d",
+      "runtimeSha256": "8e64025aee32a55b37fe20929e5c8b09c1348628cd86b3e392462766107f6f01",
+      "runtimeBytes": 86562
+    },
+    {
+      "id": "heritage.photograph",
+      "originalPath": "assets/images/heritage-library/loving-moms-free-illustrations/Loving Moms/PNG/HTC_Heritage Library_Loving MomsElement 1.png",
+      "optimizedPath": "stories/house/media/heritage.photograph.webp",
+      "mediaType": "image",
+      "sourceCollection": "loving-moms-free-illustrations",
+      "technical": {
+        "format": "png",
+        "bytes": 964185,
+        "width": 3000,
+        "height": 3568,
+        "aspectRatio": 0.84081,
+        "colorMode": "RGBA"
+      },
+      "verified": {
+        "provenance": "downloaded-library-and-visual-inspection",
+        "license": "Heritage Library included license",
+        "evidence": "assets/images/heritage-library/loving-moms-free-illustrations/Loving Moms/License_HeritageLibrary.pdf",
+        "licenseSha256": "79d8635c1e24caa86c8643c7a1091b8f936270dc2c1c0e95a3d1ce5c42e228b4"
+      },
+      "suggested": {
+        "roles": ["interactive-illustration"],
+        "themes": ["memory"],
+        "moods": ["quiet", "mysterious"],
+        "tags": ["black-and-white", "vintage-engraving"],
+        "visualComplexity": "medium",
+        "lineArtSuitability": "high",
+        "palette": "black/white",
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.6
+        }
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Loving Moms — Element 1",
+      "creator": "HTC Heritage Type GmbH; historical artist not identified",
+      "usage": "Family photograph illustration and magnifier",
+      "sourceSha256": "302567490b29a1c7a18211600456699496d0eac0aff4dffc2ad6ee0fa8679549",
+      "runtimeSha256": "3d9470f9d5f91d57f1a87a6eeb206f692d15b9e2261e4c652d4ec8da990ede5f",
+      "runtimeBytes": 467300,
+      "maxDimensions": [1800, 2200]
+    },
+    {
+      "id": "heritage.portrait",
+      "originalPath": "assets/images/heritage-library/free-book-2-illustrations/ABC Library 02/PNG/HTC_Heritage Library_ABC Library 02Element 5.png",
+      "optimizedPath": "stories/house/media/heritage.portrait.webp",
+      "mediaType": "image",
+      "sourceCollection": "free-book-2-illustrations",
+      "technical": {
+        "format": "png",
+        "bytes": 633299,
+        "width": 3000,
+        "height": 4512,
+        "aspectRatio": 0.66489,
+        "colorMode": "RGBA"
+      },
+      "verified": {
+        "provenance": "downloaded-library-and-visual-inspection",
+        "license": "Heritage Library included license",
+        "evidence": "assets/images/heritage-library/free-book-2-illustrations/ABC Library 02/License_HeritageLibrary.pdf",
+        "licenseSha256": "79d8635c1e24caa86c8643c7a1091b8f936270dc2c1c0e95a3d1ce5c42e228b4"
+      },
+      "suggested": {
+        "roles": ["character-portrait"],
+        "themes": ["memory"],
+        "moods": ["quiet", "mysterious"],
+        "tags": ["black-and-white", "vintage-engraving"],
+        "visualComplexity": "medium",
+        "lineArtSuitability": "high",
+        "palette": "black/white",
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.6
+        }
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "ABC Library 02 — Element 5",
+      "creator": "HTC Heritage Type GmbH; historical artist not identified",
+      "usage": "Reader character portrait",
+      "sourceSha256": "9f5992124942eb347838a4f4a9343a0dcd86ccc80e3914fea604a6358b07f37b",
+      "runtimeSha256": "6384c27d097801a0d54692afe768109b139ba049faf982bf61edf6e4bbf342ce",
+      "runtimeBytes": 59386
+    },
+    {
+      "id": "heritage.bird",
+      "originalPath": "assets/images/heritage-library/free-spiritual-and-mythical-illustrations/Spirit _ Myth/PNG/HTC_Heritage Library_Spirit _ MythElement 5.png",
+      "optimizedPath": "stories/house/media/heritage.bird.webp",
+      "mediaType": "image",
+      "sourceCollection": "free-spiritual-and-mythical-illustrations",
+      "technical": {
+        "format": "png",
+        "bytes": 326516,
+        "width": 3000,
+        "height": 2543,
+        "aspectRatio": 1.17971,
+        "colorMode": "RGBA"
+      },
+      "verified": {
+        "provenance": "downloaded-library-and-visual-inspection",
+        "license": "Heritage Library included license",
+        "evidence": "assets/images/heritage-library/free-spiritual-and-mythical-illustrations/Spirit _ Myth/License_HeritageLibrary.pdf",
+        "licenseSha256": "79d8635c1e24caa86c8643c7a1091b8f936270dc2c1c0e95a3d1ce5c42e228b4"
+      },
+      "suggested": {
+        "roles": ["objects-and-clues"],
+        "themes": ["memory"],
+        "moods": ["quiet", "mysterious"],
+        "tags": ["black-and-white", "vintage-engraving"],
+        "visualComplexity": "medium",
+        "lineArtSuitability": "high",
+        "palette": "black/white",
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.6
+        }
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Spirit & Myth — Element 5",
+      "creator": "HTC Heritage Type GmbH; historical artist not identified",
+      "usage": "Bird emblem associated with the letter seal",
+      "sourceSha256": "731f535daf73e325d7cf83088b0062e8a04a91645270597f060ebb0b77df68d4",
+      "runtimeSha256": "83d7b6cc02dfa93fa5ea8a6cce36ce8e5a3719d19c4eb465e6c48171e17ee0e5",
+      "runtimeBytes": 57868
+    },
+    {
+      "id": "sonniss.music-box",
+      "originalPath": "assets/audio/se/Sonniss.com-GDC2026-GameAudioBundle4of5/Sonic Bat - Music Boxes/SBmb_Music Box A 013.wav",
+      "optimizedPath": "stories/house/media/sonniss.music-box.mp3",
+      "mediaType": "audio",
+      "sourceCollection": "se",
+      "technical": {
+        "format": "wav",
+        "bytes": 2178748,
+        "duration": 2.835078,
+        "sampleRate": 192000,
+        "channels": 1,
+        "bitsPerSample": 32
+      },
+      "verified": {
+        "provenance": "local-file",
+        "license": "bundled-Sonniss-GDC-license",
+        "evidence": "https://sonniss.com/gdc-bundle-license/"
+      },
+      "suggested": {
+        "roles": ["music"],
+        "themes": ["childhood", "memory"],
+        "moods": ["uneasy"],
+        "tags": ["filename-based-selection-not-listened"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "aiTraining": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Music Box A 013",
+      "creator": "Sonic Bat",
+      "excerptSeconds": 10,
+      "usage": "Quiet music-box recollection during the telephone lullaby; not presented as literal humming",
+      "sourceSha256": "18fca8bffc680194363e308a83d88b007231dec4217ed180061f929f57b839fe",
+      "runtimeSha256": "e32c9dfab29f3c8f78419972756bc428d29267eb31c7044dcfa8ddcfa78e8e69",
+      "runtimeBytes": 29347
+    },
+    {
+      "id": "heritage.handprint",
+      "originalPath": "assets/images/heritage-library/childhood-memories-02/Childhood Memories 02/PNG/HTC_Heritage Library_Childhood Memories 02Element 11.png",
+      "optimizedPath": "stories/house/media/heritage.handprint.webp",
+      "mediaType": "image",
+      "sourceCollection": "childhood-memories-02",
+      "technical": {
+        "format": "png",
+        "bytes": 173662,
+        "width": 3000,
+        "height": 3192,
+        "aspectRatio": 0.93985,
+        "colorMode": "RGBA"
+      },
+      "verified": {
+        "provenance": "local-file-and-visual-inspection",
+        "license": "Heritage Library included license",
+        "evidence": "assets/images/heritage-library/childhood-memories-02/Childhood Memories 02/License_HeritageLibrary.pdf"
+      },
+      "suggested": {
+        "roles": ["objects-and-clues"],
+        "themes": ["window"],
+        "moods": ["uneasy"],
+        "tags": ["hand-outline", "black-and-white"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false
+      },
+      "title": "Childhood Memories 02 — Element 3",
+      "creator": "HTC Heritage Type GmbH; historical artist not identified",
+      "usage": "Restrained hand outline at the window revelation",
+      "sourceSha256": "c1df7ccaba21712232a5080e182d6015198247805fe7e2402b0de90b14d778b7",
+      "runtimeSha256": "db4e34cd7a503fbdb06e366ea42eb1b1d99bbe02b6107783ba2752db897b908f",
+      "runtimeBytes": 18946
+    }
+  ]
+}

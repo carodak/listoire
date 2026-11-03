@@ -2,13 +2,14 @@
 
 ## Current scope
 
-The overall architecture is approved. The user authorizes Phase 1 only: the minimal
-React Web reader, InkJS integration, basic EN/FR flow, save/load and quality tooling.
-Phase 1 is complete; do not begin Phase 2 without further user authorization.
-The current authorized follow-up finishes Phase 1: welcome, neutral palette,
-unified language setting, feature organization, critical findings review and docs.
-Later phases require authorization. Keep responsive Web first and preserve future
-Capacitor compatibility; do not install Capacitor, RPG, an editor or AI features now.
+Phases 2 and 3 are authorized together: complete bilingual house story, source-library
+assets, character panel, precise photograph magnifier, reusable audio/narration/effects
+engines and declarative direction. Preserve the approved landing and wide reader.
+Initial character: 6/6 HP, STR/DEX/WIL each 3d6, retained in the checkpoint; two Rank 1
+abilities, unused in narrative checks. No RPG combat/check executor, editor, AI planner
+or Capacitor implementation. Future mobile compatibility remains required.
+Do not reuse/extract embedded HTML illustrations. All house imagery must come from
+the downloaded assets/images library. The HTML remains a story/layout reference.
 
 ## Architecture
 
@@ -28,6 +29,9 @@ Capacitor compatibility; do not install Capacitor, RPG, an editor or AI features
 - Use the same validated contracts for manual stories, future authoring and AI.
 - Separate UI/story localization, story saves/settings and TTS generation/playback.
 - Favor one static modular application; do not build future editor/AI infrastructure.
+- Source libraries in `assets/` remain local and unchanged; only explicitly referenced,
+  licensed optimized story files may be published. Never expose catalogs as an asset
+  redistribution service. Record provider-verified and user-attested rights separately.
 
 ## Engineering and verification
 

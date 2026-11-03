@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ReaderSettings } from "../contracts/story.ts";
 import type { SaveManager } from "../persistence/save-manager.ts";
 import { WelcomeScreen } from "../features/landing/WelcomeScreen.tsx";
 import { ReadingSession } from "./ReadingSession.tsx";
+import { defaultReadingPreferences } from "../contracts/presentation.ts";
 import { LanguageSetting } from "./LanguageSetting.tsx";
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 export function App({ saves, initialSettings }: Props) {
   const { t, i18n } = useTranslation();
   const [settings, setSettings] = useState(initialSettings);
+  const latestSettings = useRef(initialSettings);
+  const settingsWrites = useRef<Promise<void>>(Promise.resolve());
   const [settingsBusy, setSettingsBusy] = useState(false);
   const [settingsFailed, setSettingsFailed] = useState(false);
   const [reload, setReload] = useState(0);
@@ -25,17 +28,20 @@ export function App({ saves, initialSettings }: Props) {
   }, [settings.language, i18n]);
 
   async function changeSettings(change: Partial<ReaderSettings>) {
-    if (settingsBusy) return;
-    const next = { ...settings, ...change };
+    const next = { ...latestSettings.current, ...change };
+    latestSettings.current = next;
     setSettings(next);
     setSettingsBusy(true);
     setSettingsFailed(false);
+    const write = settingsWrites.current.catch(() => {}).then(() => saves.saveSettings(next));
+    settingsWrites.current = write;
     try {
-      await saves.saveSettings(next);
+      await write;
+      if (settingsWrites.current === write) setSettingsFailed(false);
     } catch {
-      setSettingsFailed(true);
+      if (settingsWrites.current === write) setSettingsFailed(true);
     } finally {
-      setSettingsBusy(false);
+      if (settingsWrites.current === write) setSettingsBusy(false);
     }
   }
 
@@ -67,6 +73,10 @@ export function App({ saves, initialSettings }: Props) {
             key={`${settings.language}:${reload}`}
             locale={settings.language}
             saves={saves}
+            preferences={settings.reading ?? defaultReadingPreferences}
+            onPreferencesChange={(reading) => {
+              void changeSettings({ reading });
+            }}
             retry={() => setReload((value) => value + 1)}
           />
         </>

@@ -1,0 +1,2527 @@
+{
+  "archives": [
+    {
+      "archive": "free-owl-illustrations/Follow The Fish.zip",
+      "status": "already-extracted",
+      "files": 10,
+      "expandedBytes": 39050050
+    },
+    {
+      "archive": "vases-and-flower-pots-02-free-illustrations/olives-and-figs-03-free-illustrations.zip",
+      "status": "already-extracted",
+      "files": 7,
+      "expandedBytes": 20114768
+    },
+    {
+      "archive": "01-horseback-riding.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7200148,
+        "mtimeNs": 1793669517221301400
+      }
+    },
+    {
+      "archive": "02-nature-symphony.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13833599,
+        "mtimeNs": 1793669509979335800
+      }
+    },
+    {
+      "archive": "03-people-silhouettes.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3259206,
+        "mtimeNs": 1793669501271196400
+      }
+    },
+    {
+      "archive": "04-fantastic-birds.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 60807994,
+        "mtimeNs": 1793669495041127700
+      }
+    },
+    {
+      "archive": "05-skeleton-samba.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5100242,
+        "mtimeNs": 1793669474181064900
+      }
+    },
+    {
+      "archive": "06-nature-symphony-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 20433872,
+        "mtimeNs": 1793669467767547600
+      }
+    },
+    {
+      "archive": "07-animal-skeletons.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10387704,
+        "mtimeNs": 1793669457327961400
+      }
+    },
+    {
+      "archive": "08-jungle-animals.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 57532736,
+        "mtimeNs": 1793669448706995600
+      }
+    },
+    {
+      "archive": "09-truly-royal.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13756522,
+        "mtimeNs": 1793669428802321500
+      }
+    },
+    {
+      "archive": "10-flower-bouquet.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 90395212,
+        "mtimeNs": 1793669419500341000
+      }
+    },
+    {
+      "archive": "11-winding-snakes.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 55412129,
+        "mtimeNs": 1793669389595937700
+      }
+    },
+    {
+      "archive": "12-nature-symphony-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 14767618,
+        "mtimeNs": 1793669369798559000
+      }
+    },
+    {
+      "archive": "13-bicycle-race.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12144767,
+        "mtimeNs": 1793669360840705800
+      }
+    },
+    {
+      "archive": "14-buzzing-beetles.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 45449662,
+        "mtimeNs": 1793669352379913300
+      }
+    },
+    {
+      "archive": "15-nature-symphony-04.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11819483,
+        "mtimeNs": 1793669335821564600
+      }
+    },
+    {
+      "archive": "16-farm-animals.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29907951,
+        "mtimeNs": 1793669327974490100
+      }
+    },
+    {
+      "archive": "17-nature-symphony-05.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9450100,
+        "mtimeNs": 1793669315130878000
+      }
+    },
+    {
+      "archive": "18-deadly-skulls.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9726601,
+        "mtimeNs": 1793669307653011900
+      }
+    },
+    {
+      "archive": "19-octopus-ocean.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 66218519,
+        "mtimeNs": 1793669298629658200
+      }
+    },
+    {
+      "archive": "20-blooming-beauty.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29934572,
+        "mtimeNs": 1793669276363652500
+      }
+    },
+    {
+      "archive": "21-classic-car-rally.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5376744,
+        "mtimeNs": 1793669263028868000
+      }
+    },
+    {
+      "archive": "22-fresh-fruits.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 77829295,
+        "mtimeNs": 1793669256132570500
+      }
+    },
+    {
+      "archive": "23-baseball-buddies.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5181929,
+        "mtimeNs": 1793669231499633800
+      }
+    },
+    {
+      "archive": "24-nature-symphony-06.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 19957229,
+        "mtimeNs": 1793669225061050800
+      }
+    },
+    {
+      "archive": "acorn-and-oak-2-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 47213271,
+        "mtimeNs": 1793666578426418500
+      }
+    },
+    {
+      "archive": "acorn-and-oak-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 30984880,
+        "mtimeNs": 1793667168251730100
+      }
+    },
+    {
+      "archive": "alphonse-mucha-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 39341058,
+        "mtimeNs": 1793668180969366400
+      }
+    },
+    {
+      "archive": "alphonse-mucha-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 40442750,
+        "mtimeNs": 1793668325317562500
+      }
+    },
+    {
+      "archive": "an-apple-a-day-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 40689749,
+        "mtimeNs": 1793668206770059800
+      }
+    },
+    {
+      "archive": "ancient-egypt-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13768217,
+        "mtimeNs": 1793667056844562200
+      }
+    },
+    {
+      "archive": "ancient-egypt-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13972057,
+        "mtimeNs": 1793666648127429700
+      }
+    },
+    {
+      "archive": "ancient-egypt-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 17815454,
+        "mtimeNs": 1793667420405155400
+      }
+    },
+    {
+      "archive": "angels-and-fairies-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9646925,
+        "mtimeNs": 1793666809553339100
+      }
+    },
+    {
+      "archive": "angels-and-fairies-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6269696,
+        "mtimeNs": 1793667704286271800
+      }
+    },
+    {
+      "archive": "animal-murals-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4930295,
+        "mtimeNs": 1793667155275488800
+      }
+    },
+    {
+      "archive": "animal-murals-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4811143,
+        "mtimeNs": 1793666696340115000
+      }
+    },
+    {
+      "archive": "animal-murals-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5516087,
+        "mtimeNs": 1793667389983634400
+      }
+    },
+    {
+      "archive": "animal-people-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 23382308,
+        "mtimeNs": 1793666517760032300
+      }
+    },
+    {
+      "archive": "animals-as-people-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 26989303,
+        "mtimeNs": 1793667252291291900
+      }
+    },
+    {
+      "archive": "animals-as-people-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 26985788,
+        "mtimeNs": 1793667560724503300
+      }
+    },
+    {
+      "archive": "ball-sports-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5415066,
+        "mtimeNs": 1793666550687169000
+      }
+    },
+    {
+      "archive": "beard-buddies.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7387331,
+        "mtimeNs": 1793668142306970800
+      }
+    },
+    {
+      "archive": "beautiful-nature-by-merian-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 43014361,
+        "mtimeNs": 1793667617935592900
+      }
+    },
+    {
+      "archive": "beautiful-plant-ornaments-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4442908,
+        "mtimeNs": 1793667240566145400
+      }
+    },
+    {
+      "archive": "berry-boost-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33715740,
+        "mtimeNs": 1793666823611347300
+      }
+    },
+    {
+      "archive": "bicycle-race-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9789483,
+        "mtimeNs": 1793667490574915900
+      }
+    },
+    {
+      "archive": "bicycle-race-04-free-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7960658,
+        "mtimeNs": 1793667105003064300
+      }
+    },
+    {
+      "archive": "bicycle-race-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6812191,
+        "mtimeNs": 1793667025115474000
+      }
+    },
+    {
+      "archive": "bird-sketches-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8881244,
+        "mtimeNs": 1793666847354160300
+      }
+    },
+    {
+      "archive": "birds-flying-high-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3163192,
+        "mtimeNs": 1793667262067975700
+      }
+    },
+    {
+      "archive": "childhood-memories-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6138520,
+        "mtimeNs": 1793668787907067100
+      }
+    },
+    {
+      "archive": "childhood-memories-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7795000,
+        "mtimeNs": 1793668607104968100
+      }
+    },
+    {
+      "archive": "childhood-memories-04.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6141822,
+        "mtimeNs": 1793668353749215700
+      }
+    },
+    {
+      "archive": "children-vintage-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7182722,
+        "mtimeNs": 1793669132441663600
+      }
+    },
+    {
+      "archive": "christmas-04.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 63063359,
+        "mtimeNs": 1793668301967351200
+      }
+    },
+    {
+      "archive": "christmas-05.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9989402,
+        "mtimeNs": 1793668280067522400
+      }
+    },
+    {
+      "archive": "christmas-06.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29016501,
+        "mtimeNs": 1793668272507205700
+      }
+    },
+    {
+      "archive": "circus-sensation.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8416354,
+        "mtimeNs": 1793669201653389600
+      }
+    },
+    {
+      "archive": "citrus-club-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 42732824,
+        "mtimeNs": 1793667040958451200
+      }
+    },
+    {
+      "archive": "citrus-fruits-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 43016054,
+        "mtimeNs": 1793666801955405900
+      }
+    },
+    {
+      "archive": "citrus-fruits-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 23958870,
+        "mtimeNs": 1793666396800782500
+      }
+    },
+    {
+      "archive": "colorful-nature-by-merian-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 45877904,
+        "mtimeNs": 1793667329728865200
+      }
+    },
+    {
+      "archive": "combat-sports-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6060863,
+        "mtimeNs": 1793667810751384400
+      }
+    },
+    {
+      "archive": "combat-sports-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6217503,
+        "mtimeNs": 1793667976126313100
+      }
+    },
+    {
+      "archive": "coniferous-forest-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29382585,
+        "mtimeNs": 1793666500009431600
+      }
+    },
+    {
+      "archive": "coniferous-forest-free-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 36944181,
+        "mtimeNs": 1793667097988568900
+      }
+    },
+    {
+      "archive": "dogs-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11723970,
+        "mtimeNs": 1793666785248005600
+      }
+    },
+    {
+      "archive": "double-trouble-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3996483,
+        "mtimeNs": 1793667335849944900
+      }
+    },
+    {
+      "archive": "edward-penfield-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 31902334,
+        "mtimeNs": 1793667457625772200
+      }
+    },
+    {
+      "archive": "edward-penfield-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 75504027,
+        "mtimeNs": 1793667146459878000
+      }
+    },
+    {
+      "archive": "edward-penfield-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 37093049,
+        "mtimeNs": 1793666711209667900
+      }
+    },
+    {
+      "archive": "edward-penfield-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 40862257,
+        "mtimeNs": 1793667670868306700
+      }
+    },
+    {
+      "archive": "fantastic-birds-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 30230947,
+        "mtimeNs": 1793669214754552200
+      }
+    },
+    {
+      "archive": "farm-life-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6414613,
+        "mtimeNs": 1793667548871155400
+      }
+    },
+    {
+      "archive": "farm-life-07-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5985335,
+        "mtimeNs": 1793666457911265900
+      }
+    },
+    {
+      "archive": "fashion-by-barbier-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33364664,
+        "mtimeNs": 1793667403425028100
+      }
+    },
+    {
+      "archive": "fashion-by-barbier-03-free-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 20398264,
+        "mtimeNs": 1793667115222322200
+      }
+    },
+    {
+      "archive": "fashion-by-barbier-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33652503,
+        "mtimeNs": 1793666861078149800
+      }
+    },
+    {
+      "archive": "fashion-by-barbier-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 32964074,
+        "mtimeNs": 1793666538600784300
+      }
+    },
+    {
+      "archive": "fashion-by-barbier-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 26750051,
+        "mtimeNs": 1793667594659813200
+      }
+    },
+    {
+      "archive": "fashion-glasses-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3415017,
+        "mtimeNs": 1793667062744386000
+      }
+    },
+    {
+      "archive": "fashion-shoes-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4434979,
+        "mtimeNs": 1793667289336865400
+      }
+    },
+    {
+      "archive": "fashion-shoes-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5247757,
+        "mtimeNs": 1793666954589328200
+      }
+    },
+    {
+      "archive": "fashion-shoes-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6794895,
+        "mtimeNs": 1793666717927039100
+      }
+    },
+    {
+      "archive": "fashion-shoes-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6630872,
+        "mtimeNs": 1793667444419659000
+      }
+    },
+    {
+      "archive": "fasion-shoes-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7343773,
+        "mtimeNs": 1793666486010165600
+      }
+    },
+    {
+      "archive": "flamingos-and-friends-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33562275,
+        "mtimeNs": 1793667803994287500
+      }
+    },
+    {
+      "archive": "flip-a-coin-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7236595,
+        "mtimeNs": 1793666363758111600
+      }
+    },
+    {
+      "archive": "flip-a-coin-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7222558,
+        "mtimeNs": 1793666655148734400
+      }
+    },
+    {
+      "archive": "follow-the-fish-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 42901480,
+        "mtimeNs": 1793668542372591000
+      }
+    },
+    {
+      "archive": "forest-animals-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 34751947,
+        "mtimeNs": 1793667283173155900
+      }
+    },
+    {
+      "archive": "forest-animals-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 37569837,
+        "mtimeNs": 1793666917965939100
+      }
+    },
+    {
+      "archive": "forest-animals-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 47011491,
+        "mtimeNs": 1793666332979351700
+      }
+    },
+    {
+      "archive": "free-an-apple-a-day-04-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 44005940,
+        "mtimeNs": 1793667920293460600
+      }
+    },
+    {
+      "archive": "free-angels-and-fairies-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4578666,
+        "mtimeNs": 1793667513235513100
+      }
+    },
+    {
+      "archive": "free-angels-and-fairies-03-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7613440,
+        "mtimeNs": 1793667218860311800
+      }
+    },
+    {
+      "archive": "free-animal-sketches-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5045298,
+        "mtimeNs": 1793668190736781200
+      }
+    },
+    {
+      "archive": "free-apple-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 39562556,
+        "mtimeNs": 1793668253094970800
+      }
+    },
+    {
+      "archive": "free-beach-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6533839,
+        "mtimeNs": 1793666293050805100
+      }
+    },
+    {
+      "archive": "free-beard-buddies-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9207900,
+        "mtimeNs": 1793668070714119800
+      }
+    },
+    {
+      "archive": "free-berry-boost-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 41270157,
+        "mtimeNs": 1793667211933385700
+      }
+    },
+    {
+      "archive": "free-bird-illustrations-nature-symphony-14.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11751145,
+        "mtimeNs": 1793668062809478900
+      }
+    },
+    {
+      "archive": "free-book-2-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6365949,
+        "mtimeNs": 1793666316013582300
+      }
+    },
+    {
+      "archive": "free-book-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7269186,
+        "mtimeNs": 1793668806317452100
+      }
+    },
+    {
+      "archive": "free-bunny-rabbit-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5841577,
+        "mtimeNs": 1793667903490346000
+      }
+    },
+    {
+      "archive": "free-butterfly-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 71754830,
+        "mtimeNs": 1793669059821627000
+      }
+    },
+    {
+      "archive": "free-camping-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6415002,
+        "mtimeNs": 1793668847479147600
+      }
+    },
+    {
+      "archive": "free-cat-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5533939,
+        "mtimeNs": 1793667761581834300
+      }
+    },
+    {
+      "archive": "free-caterpillar-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10922193,
+        "mtimeNs": 1793668937877537900
+      }
+    },
+    {
+      "archive": "free-celebration-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3707077,
+        "mtimeNs": 1793668237824082600
+      }
+    },
+    {
+      "archive": "free-cherry-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 64714352,
+        "mtimeNs": 1793668870255008800
+      }
+    },
+    {
+      "archive": "free-christmas-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 26736631,
+        "mtimeNs": 1793666751668145300
+      }
+    },
+    {
+      "archive": "free-christmas-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8216666,
+        "mtimeNs": 1793666758622977100
+      }
+    },
+    {
+      "archive": "free-christmas-illustrations-01.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3597582,
+        "mtimeNs": 1793668473042462900
+      }
+    },
+    {
+      "archive": "free-christmas-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 25796710,
+        "mtimeNs": 1793668466561694800
+      }
+    },
+    {
+      "archive": "free-christmas-illustrations-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8089199,
+        "mtimeNs": 1793668454926498100
+      }
+    },
+    {
+      "archive": "free-citrus-fruit-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 53600231,
+        "mtimeNs": 1793667381218335100
+      }
+    },
+    {
+      "archive": "free-colorful-fish-05-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 42111137,
+        "mtimeNs": 1793667506425453400
+      }
+    },
+    {
+      "archive": "free-colorful-inspiring-insects-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29728782,
+        "mtimeNs": 1793668028369628000
+      }
+    },
+    {
+      "archive": "free-crab-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 61570870,
+        "mtimeNs": 1793668839580568300
+      }
+    },
+    {
+      "archive": "free-dinosaur-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9712468,
+        "mtimeNs": 1793668917379951700
+      }
+    },
+    {
+      "archive": "free-dinosaur-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9158260,
+        "mtimeNs": 1793668719916959000
+      }
+    },
+    {
+      "archive": "free-easter-parade-illustrations-01.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7387110,
+        "mtimeNs": 1793667947713655600
+      }
+    },
+    {
+      "archive": "free-easter-parade-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5521285,
+        "mtimeNs": 1793667940819414200
+      }
+    },
+    {
+      "archive": "free-easter-parade-illustrations-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5887007,
+        "mtimeNs": 1793667934379796500
+      }
+    },
+    {
+      "archive": "free-egyptian-columns-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10888970,
+        "mtimeNs": 1793667541818855100
+      }
+    },
+    {
+      "archive": "free-farm-life-04-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7374095,
+        "mtimeNs": 1793667362414770400
+      }
+    },
+    {
+      "archive": "free-farm-life-05-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7544299,
+        "mtimeNs": 1793667083468753600
+      }
+    },
+    {
+      "archive": "free-farm-life-06-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10428570,
+        "mtimeNs": 1793666739770921100
+      }
+    },
+    {
+      "archive": "free-fashion-glasses-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 1249922,
+        "mtimeNs": 1793667533649075100
+      }
+    },
+    {
+      "archive": "free-fish-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 38940767,
+        "mtimeNs": 1793668735409725300
+      }
+    },
+    {
+      "archive": "free-flamingo-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 32721994,
+        "mtimeNs": 1793668990228121200
+      }
+    },
+    {
+      "archive": "free-forest-animals-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 45261623,
+        "mtimeNs": 1793667482840709400
+      }
+    },
+    {
+      "archive": "free-green-garden-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5698058,
+        "mtimeNs": 1793667865482758200
+      }
+    },
+    {
+      "archive": "free-green-garden-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7512467,
+        "mtimeNs": 1793667954920663500
+      }
+    },
+    {
+      "archive": "free-halloween-illustrations-01.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10163902,
+        "mtimeNs": 1793668633529488400
+      }
+    },
+    {
+      "archive": "free-halloween-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8618499,
+        "mtimeNs": 1793668621988070800
+      }
+    },
+    {
+      "archive": "free-halloween-illustrations-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7808847,
+        "mtimeNs": 1793668614741087100
+      }
+    },
+    {
+      "archive": "free-healthcare-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7365645,
+        "mtimeNs": 1793668165970348200
+      }
+    },
+    {
+      "archive": "free-horse-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13107734,
+        "mtimeNs": 1793668525477260700
+      }
+    },
+    {
+      "archive": "free-illustrations-alphonsemucha-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 41553363,
+        "mtimeNs": 1793667993456769000
+      }
+    },
+    {
+      "archive": "free-illustrations-colorful-bird-paintings.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12975806,
+        "mtimeNs": 1793667837020234900
+      }
+    },
+    {
+      "archive": "free-illustrations-colorful-bird-paintings-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 14148810,
+        "mtimeNs": 1793667437722719900
+      }
+    },
+    {
+      "archive": "free-illustrations-farm-life-01.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8331501,
+        "mtimeNs": 1793667885334475400
+      }
+    },
+    {
+      "archive": "free-illustrations-farm-life-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7706662,
+        "mtimeNs": 1793667790398586700
+      }
+    },
+    {
+      "archive": "free-illustrations-follow-the-fish-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 34642399,
+        "mtimeNs": 1793667968771001900
+      }
+    },
+    {
+      "archive": "free-illustrations-follow-the-fish-04.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 40256493,
+        "mtimeNs": 1793667859125580000
+      }
+    },
+    {
+      "archive": "free-illustrations-hands-holding-stuff.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5196097,
+        "mtimeNs": 1793667828728531500
+      }
+    },
+    {
+      "archive": "free-illustrations-healthcare-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5914652,
+        "mtimeNs": 1793668000642523600
+      }
+    },
+    {
+      "archive": "free-illustrations-nature-symphony-13.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 17190355,
+        "mtimeNs": 1793668080285903400
+      }
+    },
+    {
+      "archive": "free-illustrations-shades-of-color-04.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29976950,
+        "mtimeNs": 1793668048177466500
+      }
+    },
+    {
+      "archive": "free-illustrations-shades-of-color-05.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29107376,
+        "mtimeNs": 1793667877926548500
+      }
+    },
+    {
+      "archive": "free-illustrations-shades-of-color-06.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 42388525,
+        "mtimeNs": 1793667755042646200
+      }
+    },
+    {
+      "archive": "free-illustrations-shades-of-colors-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 43011106,
+        "mtimeNs": 1793668158603185300
+      }
+    },
+    {
+      "archive": "free-illustrations-snowflakes-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4270532,
+        "mtimeNs": 1793668054355248300
+      }
+    },
+    {
+      "archive": "free-insect-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 26993293,
+        "mtimeNs": 1793668447333267600
+      }
+    },
+    {
+      "archive": "free-iris-flower-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 23889586,
+        "mtimeNs": 1793668817807189800
+      }
+    },
+    {
+      "archive": "free-key-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4844986,
+        "mtimeNs": 1793666889486714000
+      }
+    },
+    {
+      "archive": "free-key-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6970321,
+        "mtimeNs": 1793667410336488500
+      }
+    },
+    {
+      "archive": "free-leaf-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 81316222,
+        "mtimeNs": 1793669017073493900
+      }
+    },
+    {
+      "archive": "free-mushroom-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 118529357,
+        "mtimeNs": 1793669103857819500
+      }
+    },
+    {
+      "archive": "free-mushroom-illustrations-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8985779,
+        "mtimeNs": 1793668309309740500
+      }
+    },
+    {
+      "archive": "free-mushroom-illustrations-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9211527,
+        "mtimeNs": 1793667927825602600
+      }
+    },
+    {
+      "archive": "free-north-point-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6180090,
+        "mtimeNs": 1793668434651221700
+      }
+    },
+    {
+      "archive": "free-owl-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 120113727,
+        "mtimeNs": 1793668780870321900
+      }
+    },
+    {
+      "archive": "free-parrot-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 90396712,
+        "mtimeNs": 1793668909085640200
+      }
+    },
+    {
+      "archive": "free-skull-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13008329,
+        "mtimeNs": 1793668743867402800
+      }
+    },
+    {
+      "archive": "free-snake-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 31707487,
+        "mtimeNs": 1793668684746321700
+      }
+    },
+    {
+      "archive": "free-snowflake-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4711640,
+        "mtimeNs": 1793668259567283200
+      }
+    },
+    {
+      "archive": "free-snowflakes-illustrations-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4485899,
+        "mtimeNs": 1793668034571131300
+      }
+    },
+    {
+      "archive": "free-spiritual-and-mythical-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12941608,
+        "mtimeNs": 1793669035114043200
+      }
+    },
+    {
+      "archive": "free-squid-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29889378,
+        "mtimeNs": 1793668591521094600
+      }
+    },
+    {
+      "archive": "free-sun-moon-star-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6127000,
+        "mtimeNs": 1793668662473970000
+      }
+    },
+    {
+      "archive": "free-sweet-soul-music-04-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6351913,
+        "mtimeNs": 1793667843802033100
+      }
+    },
+    {
+      "archive": "free-tropical-fruit-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 84096486,
+        "mtimeNs": 1793668711981605600
+      }
+    },
+    {
+      "archive": "free-valentines-day-01-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13049838,
+        "mtimeNs": 1793668110337335700
+      }
+    },
+    {
+      "archive": "free-valentines-day-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5122813,
+        "mtimeNs": 1793668101555539100
+      }
+    },
+    {
+      "archive": "free-valentines-day-03-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6364538,
+        "mtimeNs": 1793668094906771400
+      }
+    },
+    {
+      "archive": "free-vineyard-and-grapes-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 77627290,
+        "mtimeNs": 1793668135078717300
+      }
+    },
+    {
+      "archive": "free-vintage-anchor-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4368111,
+        "mtimeNs": 1793668944338867700
+      }
+    },
+    {
+      "archive": "free-vintage-animal-sketches.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5542312,
+        "mtimeNs": 1793668411370270700
+      }
+    },
+    {
+      "archive": "free-vintage-apple-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 41446520,
+        "mtimeNs": 1793668427461289300
+      }
+    },
+    {
+      "archive": "free-vintage-butterfly-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 71764044,
+        "mtimeNs": 1793668968263977800
+      }
+    },
+    {
+      "archive": "free-vintage-cherry-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 62408004,
+        "mtimeNs": 1793668655301191600
+      }
+    },
+    {
+      "archive": "free-vintage-diamond-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5103978,
+        "mtimeNs": 1793668332072089400
+      }
+    },
+    {
+      "archive": "free-vintage-fruit-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8335436,
+        "mtimeNs": 1793668975993749400
+      }
+    },
+    {
+      "archive": "free-vintage-grape-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 75020049,
+        "mtimeNs": 1793668404572026600
+      }
+    },
+    {
+      "archive": "free-vintage-illustrations-craftsman-tools.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10168567,
+        "mtimeNs": 1793669115942225000
+      }
+    },
+    {
+      "archive": "free-vintage-parrot-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 28046976,
+        "mtimeNs": 1793668561590664600
+      }
+    },
+    {
+      "archive": "free-vintage-rose-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 45994392,
+        "mtimeNs": 1793668516246723900
+      }
+    },
+    {
+      "archive": "free-vintage-skeleton-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4565729,
+        "mtimeNs": 1793668548999391300
+      }
+    },
+    {
+      "archive": "free-vintage-skull-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7172949,
+        "mtimeNs": 1793668569146506400
+      }
+    },
+    {
+      "archive": "free-vintage-sports-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3686759,
+        "mtimeNs": 1793668492727775300
+      }
+    },
+    {
+      "archive": "free-watch-and-clock-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10605063,
+        "mtimeNs": 1793669067824002400
+      }
+    },
+    {
+      "archive": "free-whale-watching-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3915313,
+        "mtimeNs": 1793668015085880400
+      }
+    },
+    {
+      "archive": "free-yellow-flowers-02-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 27857846,
+        "mtimeNs": 1793666470269341700
+      }
+    },
+    {
+      "archive": "green-garden-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7655369,
+        "mtimeNs": 1793667601593388200
+      }
+    },
+    {
+      "archive": "halloween-trick-or-treat-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11945386,
+        "mtimeNs": 1793666975776701600
+      }
+    },
+    {
+      "archive": "hands-holding-stuff-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4731798,
+        "mtimeNs": 1793667465941067200
+      }
+    },
+    {
+      "archive": "hands-holding-stuff-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7967911,
+        "mtimeNs": 1793666999165075300
+      }
+    },
+    {
+      "archive": "hands-holding-stuffs-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7416426,
+        "mtimeNs": 1793667633997172600
+      }
+    },
+    {
+      "archive": "hasegawa-flowers-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 56783817,
+        "mtimeNs": 1793667355418363200
+      }
+    },
+    {
+      "archive": "hasegawa-flowers-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 52696926,
+        "mtimeNs": 1793667018203208200
+      }
+    },
+    {
+      "archive": "hasegawa-flowers-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 50423835,
+        "mtimeNs": 1793666423536659500
+      }
+    },
+    {
+      "archive": "hasegawa-flowers-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 60742176,
+        "mtimeNs": 1793667697702089600
+      }
+    },
+    {
+      "archive": "healthcare-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4083772,
+        "mtimeNs": 1793667677025320900
+      }
+    },
+    {
+      "archive": "horse-heads-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8799694,
+        "mtimeNs": 1793666925386169900
+      }
+    },
+    {
+      "archive": "horse-heads-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7487564,
+        "mtimeNs": 1793666639459263300
+      }
+    },
+    {
+      "archive": "horse-heads-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10351072,
+        "mtimeNs": 1793667312475592700
+      }
+    },
+    {
+      "archive": "inspiring-insects-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6637647,
+        "mtimeNs": 1793667174955478600
+      }
+    },
+    {
+      "archive": "inspiring-insects-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10726683,
+        "mtimeNs": 1793666831780625700
+      }
+    },
+    {
+      "archive": "inspiring-insects-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8306366,
+        "mtimeNs": 1793666615074029300
+      }
+    },
+    {
+      "archive": "inspiring-insects-06-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7609487,
+        "mtimeNs": 1793666432493374900
+      }
+    },
+    {
+      "archive": "iris-flower-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10307182,
+        "mtimeNs": 1793668599544029400
+      }
+    },
+    {
+      "archive": "lovely-orange-flowers-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 37716578,
+        "mtimeNs": 1793666607982192600
+      }
+    },
+    {
+      "archive": "loving-moms-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 17417512,
+        "mtimeNs": 1793667738709705800
+      }
+    },
+    {
+      "archive": "mothers-day-01-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10098519,
+        "mtimeNs": 1793667783249089300
+      }
+    },
+    {
+      "archive": "mothers-day-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6468481,
+        "mtimeNs": 1793667775588214500
+      }
+    },
+    {
+      "archive": "mothers-day-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7999003,
+        "mtimeNs": 1793667768683005100
+      }
+    },
+    {
+      "archive": "nature-by-merian-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 38997379,
+        "mtimeNs": 1793667528303717200
+      }
+    },
+    {
+      "archive": "nature-by-merian-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 39357272,
+        "mtimeNs": 1793667190004339900
+      }
+    },
+    {
+      "archive": "nature-by-merian-05-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 41534181,
+        "mtimeNs": 1793666992050046300
+      }
+    },
+    {
+      "archive": "nature-by-merian-06-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 51989453,
+        "mtimeNs": 1793666777136422700
+      }
+    },
+    {
+      "archive": "nature-by-merian-07-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 46971512,
+        "mtimeNs": 1793666309529486400
+      }
+    },
+    {
+      "archive": "nature-symphony-07.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10963205,
+        "mtimeNs": 1793669125195458900
+      }
+    },
+    {
+      "archive": "nature-symphony-08.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12738250,
+        "mtimeNs": 1793669025826527100
+      }
+    },
+    {
+      "archive": "nature-symphony-09.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13990909,
+        "mtimeNs": 1793668926287815400
+      }
+    },
+    {
+      "archive": "nature-symphony-10.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 23775260,
+        "mtimeNs": 1793668799031179100
+      }
+    },
+    {
+      "archive": "nature-symphony-11.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11403544,
+        "mtimeNs": 1793668670915336000
+      }
+    },
+    {
+      "archive": "nature-symphony-12.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 14504459,
+        "mtimeNs": 1793668578421884500
+      }
+    },
+    {
+      "archive": "nature-symphony-15-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13888426,
+        "mtimeNs": 1793668009015328100
+      }
+    },
+    {
+      "archive": "nature-symphony-16-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12972228,
+        "mtimeNs": 1793667893569554100
+      }
+    },
+    {
+      "archive": "nature-symphony-17-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 17473972,
+        "mtimeNs": 1793667822434694600
+      }
+    },
+    {
+      "archive": "nature-symphony-18-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 13596327,
+        "mtimeNs": 1793667575235451400
+      }
+    },
+    {
+      "archive": "nature-symphony-19-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12194983,
+        "mtimeNs": 1793666840119314700
+      }
+    },
+    {
+      "archive": "nautical-nation-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 11151293,
+        "mtimeNs": 1793667428828524000
+      }
+    },
+    {
+      "archive": "nautical-nation-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9372381,
+        "mtimeNs": 1793667048431815700
+      }
+    },
+    {
+      "archive": "nautical-nation-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8526518,
+        "mtimeNs": 1793666676232445000
+      }
+    },
+    {
+      "archive": "nautical-nation-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9999357,
+        "mtimeNs": 1793667582887873600
+      }
+    },
+    {
+      "archive": "olives-and-figs-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 34223912,
+        "mtimeNs": 1793667076380768600
+      }
+    },
+    {
+      "archive": "olives-and-figs-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 19732700,
+        "mtimeNs": 1793666356624941400
+      }
+    },
+    {
+      "archive": "olives-and-figs-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 40451113,
+        "mtimeNs": 1793667304820851800
+      }
+    },
+    {
+      "archive": "parrot-party-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 27155368,
+        "mtimeNs": 1793668343971539300
+      }
+    },
+    {
+      "archive": "peaches-fruit-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 48842252,
+        "mtimeNs": 1793666632596163400
+      }
+    },
+    {
+      "archive": "peaches-fruit-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 46613364,
+        "mtimeNs": 1793666150639563800
+      }
+    },
+    {
+      "archive": "peaches-fruit-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 30838171,
+        "mtimeNs": 1793666967629693700
+      }
+    },
+    {
+      "archive": "pigeon-bird-park-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 9008384,
+        "mtimeNs": 1793666133894320300
+      }
+    },
+    {
+      "archive": "plum-power-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 43807471,
+        "mtimeNs": 1793666451077162300
+      }
+    },
+    {
+      "archive": "plum-power-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 69186033,
+        "mtimeNs": 1793666948015604500
+      }
+    },
+    {
+      "archive": "purple-flowers-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 39884490,
+        "mtimeNs": 1793666126514901900
+      }
+    },
+    {
+      "archive": "purple-flowers-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33463800,
+        "mtimeNs": 1793666668877120100
+      }
+    },
+    {
+      "archive": "red-flowers-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 34923324,
+        "mtimeNs": 1793666731886473200
+      }
+    },
+    {
+      "archive": "red-flowers-free-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 41689084,
+        "mtimeNs": 1793667234414268100
+      }
+    },
+    {
+      "archive": "sandy-seashells.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 61756511,
+        "mtimeNs": 1793669194053062900
+      }
+    },
+    {
+      "archive": "sea-animals-free-illustration.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6282752,
+        "mtimeNs": 1793667122087293000
+      }
+    },
+    {
+      "archive": "sea-animals-under-the-sea-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6536701,
+        "mtimeNs": 1793666867931709500
+      }
+    },
+    {
+      "archive": "shades-of-color-01.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 30609399,
+        "mtimeNs": 1793668486360865400
+      }
+    },
+    {
+      "archive": "shades-of-color-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 52646431,
+        "mtimeNs": 1793668372559459900
+      }
+    },
+    {
+      "archive": "shakespeare-garden-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 78497987,
+        "mtimeNs": 1793667729097749300
+      }
+    },
+    {
+      "archive": "spring-vibes-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5446396,
+        "mtimeNs": 1793666506438204400
+      }
+    },
+    {
+      "archive": "sweet-apricots-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 33831752,
+        "mtimeNs": 1793666689916349700
+      }
+    },
+    {
+      "archive": "sweet-soul-music.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4975770,
+        "mtimeNs": 1793668877124505200
+      }
+    },
+    {
+      "archive": "sweet-soul-music-02.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7919085,
+        "mtimeNs": 1793668379899787400
+      }
+    },
+    {
+      "archive": "sweet-soul-music-03.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7974413,
+        "mtimeNs": 1793668214797816700
+      }
+    },
+    {
+      "archive": "triple-trouble-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 3897267,
+        "mtimeNs": 1793667196370532600
+      }
+    },
+    {
+      "archive": "under-the-sea-03-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5975029,
+        "mtimeNs": 1793666592742363200
+      }
+    },
+    {
+      "archive": "under-the-sea-04-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 6700992,
+        "mtimeNs": 1793666385489646300
+      }
+    },
+    {
+      "archive": "vases-and-flower-pots-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 25570496,
+        "mtimeNs": 1793666577404522900
+      }
+    },
+    {
+      "archive": "vases-and-flower-pots-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 5892515,
+        "mtimeNs": 1793666524921121500
+      }
+    },
+    {
+      "archive": "vintage-bicycle-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 8318632,
+        "mtimeNs": 1793667655459552000
+      }
+    },
+    {
+      "archive": "vintage-rose-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 95052671,
+        "mtimeNs": 1793669162031212700
+      }
+    },
+    {
+      "archive": "vintage-rustic-florals.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 7272928,
+        "mtimeNs": 1793669172670871400
+      }
+    },
+    {
+      "archive": "wedding-bells-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 12450412,
+        "mtimeNs": 1793666405147621900
+      }
+    },
+    {
+      "archive": "whale-watching-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 4030454,
+        "mtimeNs": 1793667566701544700
+      }
+    },
+    {
+      "archive": "white-flowers-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 38551603,
+        "mtimeNs": 1793666378688465600
+      }
+    },
+    {
+      "archive": "wild-forest-animals-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 29606530,
+        "mtimeNs": 1793667647719154800
+      }
+    },
+    {
+      "archive": "winter-wonderland.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 44566247,
+        "mtimeNs": 1793668231466653400
+      }
+    },
+    {
+      "archive": "winter-wonderland-02-free-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 10425858,
+        "mtimeNs": 1793668088224094000
+      }
+    },
+    {
+      "archive": "yellow-flowers-illustrations.zip",
+      "status": "extracted-source-removed",
+      "evidence": "completed extraction marker; original archive subsequently removed by user",
+      "sourceSignature": {
+        "size": 37442372,
+        "mtimeNs": 1793666882443663100
+      }
+    }
+  ]
+}

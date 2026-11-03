@@ -9,7 +9,7 @@ import packageInfo from "../../../package.json";
 
 async function fetchStoryFile(file: "manifest" | Locale, signal: AbortSignal): Promise<unknown> {
   const base = new URL(import.meta.env.BASE_URL, window.location.href);
-  const url = new URL(`stories/foundation/${file}.json`, base);
+  const url = new URL(`stories/house/${file}.json`, base);
   if (
     !["http:", "https:"].includes(url.protocol) ||
     url.origin !== window.location.origin ||
@@ -29,7 +29,7 @@ async function fetchStoryFile(file: "manifest" | Locale, signal: AbortSignal): P
 export async function loadManifest(signal: AbortSignal): Promise<StoryManifest> {
   try {
     const manifest = StoryManifestSchema.parse(await fetchStoryFile("manifest", signal));
-    if (manifest.storyId !== "foundation") throw new ReaderFailure("content");
+    if (manifest.storyId !== "house") throw new ReaderFailure("content");
     return manifest;
   } catch (error) {
     if (signal.aborted) throw error;
@@ -48,7 +48,7 @@ export async function loadBundle(locale: Locale, signal: AbortSignal): Promise<S
     ).join("");
     if (
       bundle.locale !== language ||
-      bundle.storyId !== "foundation" ||
+      bundle.storyId !== "house" ||
       bundle.inkDigest !== hex ||
       bundle.inkjsVersion !== packageInfo.dependencies.inkjs
     ) {

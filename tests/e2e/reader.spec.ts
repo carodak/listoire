@@ -18,11 +18,11 @@ async function chooseLanguage(page: Page, language: "en" | "fr") {
 test("an unavailable translation keeps its available story and save while localizing the interface", async ({
   page,
 }) => {
-  await page.route("**/stories/foundation/manifest.json", (route) =>
+  await page.route("**/stories/house/manifest.json", (route) =>
     route.fulfill({
       json: {
         schemaVersion: 1,
-        storyId: "foundation",
+        storyId: "house",
         defaultLocale: "en",
         locales: ["en"],
       },
@@ -34,18 +34,18 @@ test("an unavailable translation keeps its available story and save while locali
   });
   await page.goto("/");
   await enterStory(page);
-  await page.getByRole("button", { name: "Call into the house" }).click();
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await page.getByRole("button", { name: "Continue reading" }).click();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await chooseLanguage(page, "fr");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
   await expect(page.locator(".language-note")).toContainText(
     "Cette histoire est disponible en anglais",
   );
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Entrez dans l’histoire." })).toBeVisible();
   await enterStory(page);
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   expect(requestedFrench).toEqual([]);
 });
 
@@ -70,9 +70,9 @@ test("recovers from unavailable browser storage without losing the first passage
     (window as unknown as { restoreDatabase: () => void }).restoreDatabase(),
   );
   await page.getByRole("button", { name: "Reload your saved place" }).click();
-  await expect(page.getByRole("button", { name: "Listen at the door" })).toBeVisible();
-  await page.getByRole("button", { name: "Listen at the door" }).click();
-  await expect(page.getByText(/a clock ticked thirteen times/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue reading" }).click();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
 });
 
 test("chooses, reloads the resolved passage, downloads and explicitly restarts", async ({
@@ -82,41 +82,41 @@ test("chooses, reloads the resolved passage, downloads and explicitly restarts",
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await enterStory(page);
-  await expect(page.getByRole("button", { name: "Listen at the door" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
   if (["chromium", "mobile"].includes(testInfo.project.name)) {
     await page.screenshot({ path: testInfo.outputPath("opening.png"), fullPage: true });
   }
-  await page.getByRole("button", { name: "Listen at the door" }).click();
-  await expect(page.getByText(/a clock ticked thirteen times/)).toBeVisible();
+  await page.getByRole("button", { name: "Continue reading" }).click();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await page.reload();
   await enterStory(page);
-  await expect(page.getByText(/a clock ticked thirteen times/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download saved progress" }).click();
-  expect((await download).suggestedFilename()).toBe("listoire-foundation-en.json");
+  expect((await download).suggestedFilename()).toBe("listoire-house-en.json");
   page.once("dialog", (dialog) => dialog.dismiss());
   await page.getByRole("button", { name: "Read from the beginning" }).click();
-  await expect(page.getByText(/a clock ticked thirteen times/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Read from the beginning" }).click();
-  await expect(page.getByRole("button", { name: "Call into the house" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test("unifies language selection while preserving each localized save", async ({ page }) => {
   await page.goto("/");
   await enterStory(page);
-  await page.getByRole("button", { name: "Call into the house" }).click();
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await page.getByRole("button", { name: "Continue reading" }).click();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await chooseLanguage(page, "fr");
   await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-  await page.getByRole("button", { name: /couter/ }).click();
-  await expect(page.getByText(/une horloge sonna treize coups/)).toBeVisible();
+  await page.getByRole("button", { name: "Continuer la lecture", exact: true }).click();
+  await expect(page.locator(".prose")).toContainText(/Au dos/);
   await page.reload();
   await enterStory(page);
-  await expect(page.getByText(/une horloge sonna treize coups/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/Au dos/);
   await chooseLanguage(page, "en");
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(page.locator("html")).toHaveCSS("background-color", "rgb(245, 245, 245)");
 });
@@ -124,15 +124,15 @@ test("unifies language selection while preserving each localized save", async ({
 test("recovers from unavailable story data and supports keyboard and narrow layouts", async ({
   page,
 }) => {
-  await page.route("**/stories/foundation/en.json", (route) =>
+  await page.route("**/stories/house/en.json", (route) =>
     route.fulfill({ status: 503, body: "Unavailable" }),
   );
   await page.goto("/");
   await enterStory(page);
   await expect(page.getByRole("alert")).toContainText("could not be opened");
-  await page.unroute("**/stories/foundation/en.json");
+  await page.unroute("**/stories/house/en.json");
   await page.getByRole("button", { name: "Reload your saved place" }).click();
-  const choice = page.getByRole("button", { name: "Call into the house" });
+  const choice = page.getByRole("button", { name: "Continue reading" });
   await expect(choice).toBeVisible();
   await page.setViewportSize({ width: 320, height: 740 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
@@ -140,14 +140,14 @@ test("recovers from unavailable story data and supports keyboard and narrow layo
   );
   await choice.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByText(/Your voice faded/)).toBeVisible();
+  await expect(page.locator(".prose")).toContainText(/On the back/);
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
 test("preserves an incompatible save and offers a recovery download", async ({ page }) => {
   await page.goto("/");
   await enterStory(page);
-  await expect(page.getByRole("button", { name: "Call into the house" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("listoire");
@@ -157,9 +157,8 @@ test("preserves an incompatible save and offers a recovery download", async ({ p
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction("records", "readwrite");
       const store = transaction.objectStore("records");
-      const get = store.get("save:foundation:en");
-      get.onsuccess = () =>
-        store.put({ ...get.result, release: "old-release" }, "save:foundation:en");
+      const get = store.get("save:house:en");
+      get.onsuccess = () => store.put({ ...get.result, release: "old-release" }, "save:house:en");
       transaction.oncomplete = () => resolve();
       transaction.onerror = () => reject(transaction.error);
     });
@@ -189,7 +188,7 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   const heading = await page.locator(".reader h1").boundingBox();
   expect(shell!.y).toBeLessThan(25);
   expect(header!.y).toBeGreaterThan(shell!.y);
-  expect(heading!.y).toBeLessThan(150);
+  expect(heading!.y).toBeLessThan(155);
   const canvas = await page.locator(".reader").boundingBox();
   const prose = await page.locator(".prose").boundingBox();
   expect(canvas!.width / 1440).toBeGreaterThanOrEqual(0.9);

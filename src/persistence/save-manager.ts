@@ -31,6 +31,7 @@ export class SaveManager {
     const save = result.data;
     if (
       save.storyId !== bundle.storyId ||
+      save.mode !== bundle.mode ||
       save.locale !== bundle.locale ||
       save.release !== bundle.release ||
       save.inkDigest !== bundle.inkDigest ||

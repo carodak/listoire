@@ -1,0 +1,111 @@
+{
+  "intro": {
+    "title": "The Girl in the Photograph",
+    "art": "portrait",
+    "p": [
+      "The first time you saw the girl in the photograph, she was standing beside your grandmother.",
+      "The second time, she was standing alone.",
+      "You discovered the difference three weeks after the funeral. The picture had been hidden between the pages of an old cookbook.",
+      "The photograph was dated June 14th, 1987. Your grandmother was twenty-six. The girl beside her looked exactly like you."
+    ],
+    "next": "call"
+  },
+  "call": {
+    "p": [
+      "On the back, your grandmother had written: If she comes looking for you, do not tell her your name.",
+      "At that exact moment, the telephone rang.",
+      "“I am calling about the house,” a woman said. “Has anyone opened the upstairs room?”",
+      "Behind her voice, someone was humming a lullaby you remembered from childhood."
+    ],
+    "choices": [
+      ["Ask about the locked room", "room"],
+      ["Ask about the singing", "song"]
+    ]
+  },
+  "room": {
+    "p": [
+      "“Why the upstairs room?”",
+      "The woman hesitated. “Because it was sealed twenty-nine years ago. And someone opened it last night.”",
+      "The call ended."
+    ],
+    "gain": "Knowledge +1",
+    "next": "arrival"
+  },
+  "song": {
+    "p": [
+      "“Who is singing?”",
+      "The melody stopped. A second voice whispered into the receiver: “She can hear us.”",
+      "The call ended."
+    ],
+    "gain": "Observation +1",
+    "next": "arrival"
+  },
+  "arrival": {
+    "p": [
+      "Something slid beneath your apartment door.",
+      "A cream-coloured envelope. No footsteps followed it. Across the front, in your grandmother’s handwriting: FOR THE ONE WHO STAYED.",
+      "The wax seal showed a small bird surrounded by seven stars."
+    ],
+    "art": "seal",
+    "choices": [
+      ["Break the wax seal", "break"],
+      ["Hold the envelope against the lamp", "light"]
+    ]
+  },
+  "break": {
+    "p": [
+      "The wax cracked beneath your thumb.",
+      "Inside, a letter: “There were two of you that summer. But only one came home.”",
+      "A tiny brass key was taped beneath the final line."
+    ],
+    "gain": "Brass key acquired",
+    "next": "last"
+  },
+  "light": {
+    "p": [
+      "You held the envelope close to the lamp. The paper slowly turned translucent.",
+      "A hidden sentence emerged: “She is not your sister. She is what the house kept.”",
+      "You lowered the letter. The words were gone."
+    ],
+    "gain": "Observation +1 · Hidden clue discovered",
+    "next": "last"
+  },
+  "last": {
+    "p": [
+      "The photograph lay on your desk.",
+      "Three quiet knocks sounded at the window. You lived on the fifth floor.",
+      "The girl in the photograph was no longer looking at your grandmother. She was looking at you."
+    ],
+    "choices": [
+      ["Look out of the window", "window"],
+      ["Turn the photograph over", "photo"]
+    ]
+  },
+  "window": {
+    "p": [
+      "Beyond the glass, the night was empty.",
+      "Then a handprint appeared on the outside of the window. Five perfectly ordinary fingers.",
+      "Underneath, a word formed in the condensation: COME."
+    ],
+    "gain": "Courage +1",
+    "next": "end"
+  },
+  "photo": {
+    "p": [
+      "You turned the photograph over.",
+      "The warning was gone. A new message had appeared in the same handwriting: “You remember me, don’t you?”",
+      "The paper felt warm against your palm."
+    ],
+    "gain": "Observation +1",
+    "next": "end"
+  },
+  "end": {
+    "title": "The House Is Waiting",
+    "p": [
+      "By morning, you knew you would return to the house.",
+      "Your grandmother had not been trying to keep you away from it.",
+      "She had been trying to keep something inside."
+    ],
+    "choices": [["Read again", "restart"]]
+  }
+}

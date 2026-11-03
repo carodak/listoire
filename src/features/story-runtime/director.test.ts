@@ -18,6 +18,30 @@ beforeEach(async () => {
 });
 
 describe("director and atomic browser checkpoints", () => {
+  it("starts presentation only after commit and tolerates a failed media port", async () => {
+    const presentation = {
+      start: vi.fn(() => {
+        throw new Error("media");
+      }),
+      cancel: vi.fn(),
+      dispose: vi.fn(),
+    };
+    const director = new StoryDirector(
+      bundle,
+      new InkNarrativeEngine(bundle),
+      saves,
+      undefined,
+      presentation,
+    );
+    await director.load();
+    expect(director.getSnapshot().failure).toBeNull();
+    expect(await saves.read(bundle)).not.toBeNull();
+    await director.choose("listen", director.getSnapshot().occurrenceId!);
+    expect(director.getSnapshot().frame?.passageId).toBe("landing");
+    expect(presentation.start).toHaveBeenCalledTimes(2);
+    director.dispose();
+    expect(presentation.dispose).toHaveBeenCalledOnce();
+  });
   it("commits a choice once, reloads resolved text, restarts and ignores an old occurrence", async () => {
     const director = player();
     await director.load();

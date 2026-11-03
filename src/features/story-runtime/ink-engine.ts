@@ -24,11 +24,13 @@ export class InkNarrativeEngine implements NarrativeEngine {
     }
   }
 
-  private choices() {
-    return this.story.currentChoices.map((choice) => ({
-      id: tag(choice.tags ?? [], "choice"),
-      text: choice.text,
-    }));
+  private choices(actions = false) {
+    return this.story.currentChoices
+      .filter((choice) => (choice.tags ?? []).includes("interaction") === actions)
+      .map((choice) => ({
+        id: tag(choice.tags ?? [], "choice"),
+        text: choice.text,
+      }));
   }
 
   private validateFrame(frame: Frame): Frame {
@@ -60,13 +62,23 @@ export class InkNarrativeEngine implements NarrativeEngine {
       }
       segments.push({ id: tag(tags, "segment"), text });
     }
-    const parsed = FrameSchema.safeParse({ passageId, segments, choices: this.choices() });
+    const facts = Object.fromEntries(
+      (this.bundle.variables ?? []).map((name) => [name, this.story.variablesState[name]]),
+    );
+    const parsed = FrameSchema.safeParse({
+      passageId,
+      segments,
+      choices: this.choices(),
+      ...(this.bundle.variables ? { facts, actions: this.choices(true) } : {}),
+    });
     if (!parsed.success) throw new ReaderFailure("content");
     return this.validateFrame(parsed.data);
   }
 
   choose(choiceId: string): void {
-    const index = this.choices().findIndex((choice) => choice.id === choiceId);
+    const index = this.story.currentChoices.findIndex(
+      (choice) => tag(choice.tags ?? [], "choice") === choiceId,
+    );
     if (index < 0) throw new ReaderFailure("content");
     this.story.ChooseChoiceIndex(index);
   }
@@ -84,6 +96,15 @@ export class InkNarrativeEngine implements NarrativeEngine {
         (this.story.canContinue || JSON.stringify(this.choices()) !== JSON.stringify(frame.choices))
       ) {
         throw new Error("Save is not at its evaluated boundary");
+      }
+      if (
+        frame &&
+        (JSON.stringify(this.choices(true)) !== JSON.stringify(frame.actions ?? []) ||
+          (this.bundle.variables ?? []).some(
+            (name) => this.story.variablesState[name] !== frame.facts?.[name],
+          ))
+      ) {
+        throw new Error("Saved facts or interactions disagree with Ink state");
       }
     } catch {
       throw new ReaderFailure("save-invalid");

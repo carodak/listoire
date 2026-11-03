@@ -46,6 +46,18 @@
       {
         "name": "app",
         "patterns": ["src/app/**", "src/main.tsx", "index.html"]
+      },
+      {
+        "name": "presentation",
+        "patterns": ["src/features/presentation/**"]
+      },
+      {
+        "name": "character",
+        "patterns": ["src/features/character/**"]
+      },
+      {
+        "name": "media",
+        "patterns": ["src/features/media/**"]
       }
     ],
     "rules": [
@@ -60,7 +72,10 @@
           "reader",
           "i18n",
           "app",
-          "landing"
+          "landing",
+          "presentation",
+          "character",
+          "media"
         ]
       },
       {
@@ -85,7 +100,7 @@
       },
       {
         "from": "reader",
-        "allow": ["contracts"],
+        "allow": ["contracts", "presentation", "character"],
         "allowTypeOnly": ["runtime"]
       },
       {
@@ -102,13 +117,35 @@
           "content",
           "reader",
           "i18n",
-          "landing"
+          "landing",
+          "character",
+          "media",
+          "presentation"
         ]
       },
       {
         "from": "landing",
         "allow": ["contracts"]
+      },
+      {
+        "from": "presentation",
+        "allow": ["contracts", "media"]
+      },
+      {
+        "from": "character",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "media",
+        "allow": ["contracts"]
       }
     ]
+  },
+  "ignoreFindings": ["src/features/presentation/react-bits/vendor/**"],
+  "health": {
+    "ignore": ["src/features/presentation/react-bits/vendor/**"]
+  },
+  "duplicates": {
+    "ignore": ["src/features/presentation/react-bits/vendor/**"]
   }
 }

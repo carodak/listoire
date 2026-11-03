@@ -6,6 +6,7 @@
     "skills-lock.json",
     "Listoire.code-workspace",
     "package-lock.json",
-    "AGENTS.md"
+    "AGENTS.md",
+    "src/features/presentation/react-bits/vendor/**"
   ]
 }

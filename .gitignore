@@ -12,3 +12,14 @@ coverage/
 !.env.example
 changes.txt
 assets/
+
+# Large local source libraries; only catalog metadata belongs in Git.
+!assets/
+assets/*
+!assets/catalog/
+!assets/catalog/**
+
+
+# Python tool caches
+__pycache__/
+*.py[cod]

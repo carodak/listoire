@@ -1,0 +1,45 @@
+.cinematic-stage {
+  position: relative;
+  isolation: isolate;
+}
+.cinematic-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.rain-overlay {
+  background-image: repeating-linear-gradient(
+    105deg,
+    transparent 0 30px,
+    #8886 31px 32px,
+    transparent 33px 80px
+  );
+}
+.fog-overlay {
+  background:
+    radial-gradient(ellipse at 25% 70%, #7778, transparent 65%),
+    radial-gradient(ellipse at 75% 30%, #aaa9, transparent 60%);
+  filter: blur(14px);
+}
+.react-bits-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.react-bits-layer > div {
+  width: 100%;
+  height: 100%;
+}
+.cinematic-stage img {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-overlay,
+  .react-bits-layer {
+    display: none;
+  }
+}

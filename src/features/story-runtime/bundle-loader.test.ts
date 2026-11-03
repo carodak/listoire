@@ -20,12 +20,12 @@ function setup(value: unknown, status = 200) {
 
 describe("published bundle validation", () => {
   it("loads the exact digest/runtime and resolves assets under the application base", async () => {
-    setup(fixtureBundle());
+    setup({ ...fixtureBundle(), storyId: "house" });
     vi.stubEnv("BASE_URL", "./");
     const signal = new AbortController().signal;
     expect((await loadBundle("en", signal)).locale).toBe("en");
     const requested = vi.mocked(fetch).mock.calls[0]![0] as URL;
-    expect(requested.pathname).toBe("/books/stories/foundation/en.json");
+    expect(requested.pathname).toBe("/books/stories/house/en.json");
   });
 
   it.each([
@@ -60,7 +60,7 @@ describe("published bundle validation", () => {
   it("accepts a declared single-language story and validates its default language", async () => {
     const manifest = {
       schemaVersion: 1,
-      storyId: "foundation",
+      storyId: "house",
       defaultLocale: "en",
       locales: ["en"],
     };
@@ -77,14 +77,14 @@ describe("published bundle validation", () => {
     "javascript:alert(1)",
     "https://user:password@example.test/books/",
   ])("refuses untrusted application bases %s", async (base) => {
-    setup(fixtureBundle());
+    setup({ ...fixtureBundle(), storyId: "house" });
     vi.stubEnv("BASE_URL", base);
     await expect(loadBundle("en", new AbortController().signal)).rejects.toThrow("content");
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it("rejects locale traversal before fetch, ignores an HTML base and disallows redirects", async () => {
-    setup(fixtureBundle());
+    setup({ ...fixtureBundle(), storyId: "house" });
     vi.stubGlobal("document", { baseURI: "https://other.test/" });
     await expect(loadBundle("../../other" as "en", new AbortController().signal)).rejects.toThrow(
       "content",
@@ -92,7 +92,7 @@ describe("published bundle validation", () => {
     expect(fetch).not.toHaveBeenCalled();
     await loadBundle("en", new AbortController().signal);
     expect(vi.mocked(fetch).mock.calls[0]![0]).toEqual(
-      new URL("https://example.test/books/stories/foundation/en.json"),
+      new URL("https://example.test/books/stories/house/en.json"),
     );
     expect(vi.mocked(fetch).mock.calls[0]![1]).toMatchObject({
       redirect: "error",

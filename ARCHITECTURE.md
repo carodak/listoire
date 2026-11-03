@@ -1,6 +1,29 @@
 # Listoire architecture
 
-Status: **architecture approved; Phase 1 complete**. Reviewed 2026-11-02. Later phases require separate authorization.
+Status: **combined Phases 2 and 3 implemented**. Reviewed 2026-11-03.
+The executable subset below supersedes historical phase-specific descriptions.
+See [the combined report](docs/phases2-3-report.md) for verification and production limits.
+
+The full EN/FR house story uses saved Ink facts and tagged photograph actions.
+The reader adds progressive text, typography and a collapsed character panel.
+The initial profile (6/6 HP, saved 3d6 STR/DEX/WIL and two Rank 1 abilities) is
+host-owned domain state; no combat or narrative attribute checks are implemented.
+
+StoryDirector injects a React-independent NarrativePresentationPort. Only after a
+checkpoint commits does it start PresentationSession; cancellation never changes Ink
+or grants rewards. The session owns event receipts per occurrence, pauseable timing,
+DOM target bindings, native EffectsEngine and lazy React Bits layers. AudioManager
+owns all four playback channels; NarrationManager selects exact approved clips or
+explicit matching-language device voices and reports text progress. Restore displays
+the saved resolved frame, without replaying transient effects or narration.
+
+All house illustrations come from the downloaded Heritage library. Nine selected
+derivatives (five images/four audio excerpts) are hash/rights checked at build time;
+source inventories stay offline. Scene events, character portraits, examination and
+narration references all participate in publication allowlisting. Source libraries
+stay under assets; only selected story derivatives are copied to public output.
+Old foundation saves remain separate. Previous house builds are preserved as
+incompatible and exportable, with an explicit restart rather than a silent migration.
 
 Read this document for decisions; [MODULES.md](MODULES.md) for responsibilities and RPG rules; [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for contract examples; [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for delivery and acceptance checks.
 
@@ -63,7 +86,7 @@ DOCX  eab03c52ba9d02d852f03ebe0dbc1a030d6627f263988ce94177a914211f6dd9
 | Restart and capped `1 / 7` indicator                                                | Preserve restart, replace the hardcoded total with chapter/milestone progress. Branches make a universal page total misleading.                                       |
 | Welcome and a creation placeholder                                                  | A small landing/library entry is enough; defer the editor and avoid presenting an unfinished creation flow as functional.                                             |
 
-The demo has no durable save/load, French content, official RPG implementation or production narration pipeline. It mixes global state, DOM updates, story logic, media and many accumulated CSS overrides. Reuse narrative/assets where rights allow, not that structure. Its sequence guard for stale text callbacks is useful, but cancellation must also cover film timers, individual sound effects, requests and listeners.
+The demo has no durable save/load, French content, official RPG implementation or production narration pipeline. It mixes global state, DOM updates, story logic, media and many accumulated CSS overrides. Reuse the narrative and interaction reference; all published imagery comes from the downloaded library, not embedded HTML assets. Its sequence guard for stale text callbacks is useful, but cancellation must also cover film timers, individual sound effects, requests and listeners.
 
 ## Runtime architecture
 
@@ -184,6 +207,6 @@ Future editor and AI tools submit versioned proposals against a source revision,
 
 ## Decisions to resolve or postpone
 
-The overall design and Phase 1 are approved. The user confirmed the enemy-generation formula and corrected only its example to 15 HP (approximately 74.1% victory); preserve all other RPG rules. Resolve the remaining undefined mechanics in MODULES.md before their implementation. Before narration publishing, choose tested voices, French pronunciation/region expectations and acceptable generation hardware/quality. Later phases require separate authorization.
+The overall design and combined Phases 2 and 3 are approved. The user confirmed the enemy-generation formula and corrected only its example to 15 HP (approximately 74.1% victory); preserve all other RPG rules. Resolve the remaining undefined mechanics in MODULES.md before their implementation. Before narration publishing, choose tested voices, French pronunciation/region expectations and acceptable generation hardware/quality. Later phases require separate authorization.
 
 Safely postpone accounts/cloud saves, seamless cross-language state migration, EPUB import/export, offline/PWA installation, arbitrary voice switching, live TTS hosting, advanced animation libraries, graph editing, AI planning, embeddings, runtime plugins and microservices. Set asset/bundle performance budgets after measuring the first real story on a slower mobile device.

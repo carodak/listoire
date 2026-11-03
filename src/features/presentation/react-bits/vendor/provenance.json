@@ -1,0 +1,145 @@
+{
+  "revision": "4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4",
+  "files": [
+    {
+      "file": "LightRays.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/LightRays/LightRays.jsx",
+      "sha256": "3fb621e0af06c4964b14d11fc583ab273d7b76fdc9f0ade41916a37e1c564c1c"
+    },
+    {
+      "file": "LightRays.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/LightRays/LightRays.css",
+      "sha256": "745fa51da4964776a2a0166857f94bcaa2b131bd6bf92fa46796226cc5ce58e3"
+    },
+    {
+      "file": "Lightning.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Lightning/Lightning.jsx",
+      "sha256": "c721c821fcc9709452e860278e371e52f3516b53ca2815c3dd6acab8024b7fa7"
+    },
+    {
+      "file": "Lightning.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Lightning/Lightning.css",
+      "sha256": "f2cd99f5a8ce288a1178b7fdf9cd0811e3095c5bcc792ff27b72bb56c54cedab"
+    },
+    {
+      "file": "Particles.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Particles/Particles.jsx",
+      "sha256": "e7854d178e283b25fb537b6ba0c75f0f935665e7cf7c98ee3f98f79dc4428ef5"
+    },
+    {
+      "file": "Particles.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Particles/Particles.css",
+      "sha256": "13108261d7541ade64a60fb850f901a80cc81329b98d1b6c07b5861dc8fa2401"
+    },
+    {
+      "file": "DarkVeil.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/DarkVeil/DarkVeil.jsx",
+      "sha256": "7b3c0152d4bf406e1b5f58e39607b343662fb37c7630f230a8d837889092b82d"
+    },
+    {
+      "file": "DarkVeil.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/DarkVeil/DarkVeil.css",
+      "sha256": "222eb48619680a858be5b6553d451a7630cd12b65e98bc24a025fc367df6d769"
+    },
+    {
+      "file": "MagicRings.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/MagicRings/MagicRings.jsx",
+      "sha256": "960c7b61da905155078dcea6a9ddef0d9d146c0cf61c6eebb2165943a747b7d2"
+    },
+    {
+      "file": "MagicRings.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/MagicRings/MagicRings.css",
+      "sha256": "15d697f2684c9546671649fae007cc9338e76cca1b37a6ed6222b8a90643e399"
+    },
+    {
+      "file": "Noise.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/Noise/Noise.jsx",
+      "sha256": "960f064b059c7dd7ee96c0289008e0f263444015d23a4034407f505b575d9617"
+    },
+    {
+      "file": "Noise.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/Noise/Noise.css",
+      "sha256": "6152752fff23854636b48d893ee74463229b1092f0183b8f3d62b584538fcddc"
+    },
+    {
+      "file": "RippleDistortion.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/RippleDistortion/RippleDistortion.jsx",
+      "sha256": "d4dfc4f541df1ac0911edfbe9659c2930102f1b90113b125aaea90344b58bf08"
+    },
+    {
+      "file": "RippleDistortion.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/RippleDistortion/RippleDistortion.css",
+      "sha256": "3a7ecc6d99d604a7ee29f8a6ff3f84aece179a5cdc85d981b81179532170c852"
+    },
+    {
+      "file": "Aurora.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Aurora/Aurora.jsx",
+      "sha256": "2586a8883696655f944ae9e5535351a7000b194feee1f38a476fb518e4e1a371"
+    },
+    {
+      "file": "Aurora.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/Aurora/Aurora.css",
+      "sha256": "a27157d447e395fed72a20a35149f0afb8addae074e0a20503bea2cc90f3e7fd"
+    },
+    {
+      "file": "SideRays.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/SideRays/SideRays.jsx",
+      "sha256": "7af7f37f58c643a4d8f3134f7955e20e2c6f9bd8039cf528b6586adb6bfb8f4f"
+    },
+    {
+      "file": "SideRays.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/SideRays/SideRays.css",
+      "sha256": "a5db4e2cb32d4b27841b1fb585e8d546767d2632ca97864f077d960c3982c3eb"
+    },
+    {
+      "file": "LightPillar.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/LightPillar/LightPillar.jsx",
+      "sha256": "238391050ee0b2f16ac1474e0d4020f58ca6622010c6adf059348efa44ae5618"
+    },
+    {
+      "file": "LightPillar.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/LightPillar/LightPillar.css",
+      "sha256": "c6f435bd2b9fa553a879310fe27f2dc31dd21ea16f68ea0250ba4db78b7847de"
+    },
+    {
+      "file": "SplashCursor.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/SplashCursor/SplashCursor.jsx",
+      "sha256": "98d42b703b3242f362f221901381d0bec9d4229ea0dfdfc4ae893c6ef97109c7"
+    },
+    {
+      "file": "SplashCursor.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Animations/SplashCursor/SplashCursor.css",
+      "sha256": "e57bcaa45168069fc2e0ba2e639890275d3cfadb6aee1aa4c1523152cda8dba9"
+    },
+    {
+      "file": "GridDistortion.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/GridDistortion/GridDistortion.jsx",
+      "sha256": "fa1fe06baeec8f74e7a21565088d4c2447c2a62d22efc937aae6c960fa8684a9"
+    },
+    {
+      "file": "GridDistortion.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/GridDistortion/GridDistortion.css",
+      "sha256": "85c5caa7ea96ffb23f2ae35053accbe8c44e348b0bb5110b736814ce72a3f982"
+    },
+    {
+      "file": "PrismaticBurst.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/PrismaticBurst/PrismaticBurst.jsx",
+      "sha256": "622c64026c480ed50f855646340c96473c4df724af6265d2308f63e5a0278d39"
+    },
+    {
+      "file": "PrismaticBurst.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/PrismaticBurst/PrismaticBurst.css",
+      "sha256": "f4f06d108a3c1df27d0482982fbc4f71f43702886b229f1fad3e936d270fcb1f"
+    },
+    {
+      "file": "GhostFibers.jsx",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/GhostFibers/GhostFibers.jsx",
+      "sha256": "16ee785d97cdb51428dbe282918685f39ad3365e3d54afb53c92ebc8b30e9c57"
+    },
+    {
+      "file": "GhostFibers.css",
+      "source": "https://raw.githubusercontent.com/DavidHDev/react-bits/4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4/src/content/Backgrounds/GhostFibers/GhostFibers.css",
+      "sha256": "7df10fe8eeaa2554b8b4f99ab776ff0ba2e6825fe048631939d0cff52015931d"
+    }
+  ]
+}

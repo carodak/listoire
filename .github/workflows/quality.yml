@@ -16,6 +16,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: python3 -m unittest discover -s tools -p test_asset_library.py
       - run: npm run check
       - run: npm run build
       - run: npm run quality
