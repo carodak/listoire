@@ -1,0 +1,115 @@
+.reader {
+  width: 100%;
+  min-height: 610px;
+  margin: 0;
+  padding: 24px 32px 28px;
+  background: var(--paper);
+}
+.reader > * {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.eyebrow {
+  margin: 0 auto;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+.reader h1 {
+  font:
+    normal clamp(29px, 4vw, 39px)/1.2 Georgia,
+    serif;
+  text-align: center;
+  margin: 12px auto 26px;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.reader h1:focus {
+  outline: none;
+}
+.prose {
+  font:
+    19px/1.85 Georgia,
+    "Times New Roman",
+    serif;
+}
+.prose p {
+  margin: 0 0 20px;
+}
+.choices {
+  display: grid;
+  gap: 10px;
+  margin: 32px auto 40px;
+}
+.choice {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  min-height: 56px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  font:
+    16px/1.4 Georgia,
+    serif;
+}
+.choice:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--accent);
+}
+.choice > span:last-child {
+  color: var(--accent);
+  font:
+    20px system-ui,
+    sans-serif;
+}
+.ending {
+  text-align: center;
+  font:
+    italic 19px Georgia,
+    serif;
+  color: var(--muted);
+}
+.reader-footer {
+  border-top: 1px solid var(--separator);
+  padding-top: 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.reader-footer > p {
+  min-height: 17px;
+  margin: 0 0 10px;
+}
+.footer-actions {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.footer-actions button {
+  background: transparent;
+  color: inherit;
+  padding: 8px 0;
+  min-height: 36px;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .reader {
+    margin-bottom: 0;
+    padding: 24px clamp(22px, 6vw, 54px) 24px;
+    border-left: 0;
+    border-right: 0;
+    min-height: calc(100svh - 150px);
+  }
+  .prose {
+    font-size: 18px;
+  }
+}

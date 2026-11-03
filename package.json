@@ -1,0 +1,48 @@
+{
+  "name": "listoire",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run stories:build && vite --host 127.0.0.1",
+    "stories:build": "node tools/build-story.ts",
+    "build": "npm run stories:build && npm run typecheck && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "check": "npm run stories:build && npm run typecheck && npm run lint && npm run format:check && npm test",
+    "quality": "fallow dead-code --format json --quiet --explain && fallow architecture --format json --quiet --explain && fallow dupes --format json --quiet --explain && fallow health --report-only --format json --quiet --explain",
+    "quality:audit": "fallow audit --format json --quiet --explain"
+  },
+  "dependencies": {
+    "i18next": "26.7.1",
+    "idb-keyval": "6.3.0",
+    "inkjs": "2.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-i18next": "17.1.11",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "fake-indexeddb": "6.2.7",
+    "fallow": "3.38.1",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "5.1.0"
+  },
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "packageManager": "npm@11.6.2"
+}

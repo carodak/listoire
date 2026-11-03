@@ -1,0 +1,28 @@
+name: Quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm run quality
+      - name: Changed-code audit
+        if: github.event_name == 'pull_request'
+        env:
+          AUDIT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: npx --no-install fallow audit --base "$AUDIT_BASE" --format json --quiet --explain
+      - run: npx --no-install playwright install --with-deps chromium firefox webkit
+      - run: npm run test:e2e

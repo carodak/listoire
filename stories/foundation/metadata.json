@@ -1,0 +1,11 @@
+{
+  "storyId": "foundation",
+  "release": "0.1.0",
+  "defaultLocale": "en",
+  "passages": {
+    "threshold": ["threshold.key", "threshold.window"],
+    "landing": ["landing.answer", "landing.key"]
+  },
+  "en": { "title": "A light beyond the gate", "chapter": "The threshold" },
+  "fr": { "title": "Une lumière derrière le portail", "chapter": "Le seuil" }
+}

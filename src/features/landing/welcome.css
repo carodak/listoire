@@ -1,0 +1,84 @@
+.welcome {
+  max-width: 620px;
+  margin: clamp(54px, 12vh, 120px) auto 64px;
+  padding: 0 30px;
+  text-align: center;
+}
+.welcome h1 {
+  font:
+    normal clamp(34px, 5vw, 48px)/1.15 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+  margin: 0 0 22px;
+  text-wrap: balance;
+}
+.welcome-subtitle {
+  display: grid;
+  max-width: 440px;
+  margin: auto;
+  color: var(--muted);
+  font:
+    17px/1.75 Georgia,
+    serif;
+}
+.subtitle-space,
+.subtitle-reveal {
+  grid-area: 1 / 1;
+}
+.subtitle-space {
+  visibility: hidden;
+}
+.welcome-actions {
+  display: grid;
+  gap: 12px;
+  max-width: 390px;
+  margin: 36px auto 0;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.welcome-actions.ready {
+  opacity: 1;
+}
+.welcome-actions button {
+  min-height: 62px;
+  padding: 16px 24px;
+  border: 1px solid var(--border);
+  font:
+    17px Georgia,
+    serif;
+}
+.welcome-play {
+  background: var(--foreground);
+  color: var(--paper);
+}
+.welcome-play:hover:not(:disabled) {
+  background: var(--accent);
+}
+.welcome-create {
+  background: var(--paper);
+  color: var(--muted);
+  display: grid;
+  gap: 7px;
+}
+.welcome-create:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.welcome-create small {
+  font:
+    10px system-ui,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@media (max-width: 700px) {
+  .welcome {
+    margin-top: 54px;
+    padding: 0 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-actions {
+    transition: none;
+  }
+}

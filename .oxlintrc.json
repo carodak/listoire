@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": ["public/stories/**"],
+  "overrides": [
+    {
+      "files": ["src/contracts/**", "src/features/story-runtime/**", "src/persistence/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": ["react", "react/*", "react-dom", "react-dom/*"]
+          }
+        ]
+      }
+    }
+  ]
+}

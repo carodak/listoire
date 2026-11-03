@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-02",
+  "scope": "Phase 1 working tree; no finding suppressions",
+  "fallowVersion": "3.38.1",
+  "sourceSha256": "79a14daf4497f8e7b70d6e9253d621418913ba1b4fb49af9a60292e15400e823",
+  "deadCodeIssues": 0,
+  "architectureIssues": 0,
+  "duplicationCloneGroups": 0,
+  "healthScore": {
+    "formula_version": 3,
+    "score": 90.0,
+    "grade": "A",
+    "penalties": {
+      "dead_files": 0.0,
+      "dead_exports": 0.0,
+      "complexity": 0.0,
+      "p90_complexity": 0.0,
+      "maintainability": 0.0,
+      "hotspots": 0.0,
+      "unused_deps": 0.0,
+      "circular_deps": 0.0,
+      "unit_size": 10.0,
+      "coupling": 0.0,
+      "duplication": 0.0
+    }
+  },
+  "averageMaintainability": 92.0,
+  "coverageModel": "static_estimated",
+  "reviewedFindings": [
+    {
+      "path": "src/reader/StoryPlayer.tsx",
+      "metric": "CRAP",
+      "value": 72,
+      "cyclomatic": 8,
+      "cognitive": 12,
+      "assessment": "Estimated coverage does not include Playwright browser flows; retain visible finding and review as Phase 2 controls grow. Health is explicitly report-only, structural checks gate CI."
+    }
+  ],
+  "validation": {
+    "unitAndIntegrationTestsPassed": 21,
+    "browserChecksPassed": 20,
+    "browserProjects": ["chromium", "firefox", "webkit", "mobile"],
+    "typecheck": "passed",
+    "lint": "passed",
+    "format": "passed",
+    "build": "passed",
+    "remoteCI": "not run"
+  },
+  "regenerate": ["npm run check", "npm run build", "npm run quality", "npm run test:e2e"],
+  "limits": [
+    "No measured coverage percentages",
+    "No physical mobile or Capacitor verification",
+    "No media/TTS/cinematic implementation",
+    "No automatic hook enforcement claim"
+  ]
+}

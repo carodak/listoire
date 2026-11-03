@@ -1,0 +1,14 @@
+node_modules/
+dist/
+public/stories/
+playwright-report/
+test-results/
+coverage/
+.fallow/
+.npm-cache/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+changes.txt
+assets/

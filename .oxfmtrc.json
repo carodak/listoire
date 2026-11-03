@@ -1,0 +1,11 @@
+{
+  "ignorePatterns": [
+    ".agents/**",
+    ".codex/**",
+    "public/stories/**",
+    "skills-lock.json",
+    "Listoire.code-workspace",
+    "package-lock.json",
+    "AGENTS.md"
+  ]
+}

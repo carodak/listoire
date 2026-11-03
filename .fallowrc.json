@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": ["src/main.tsx"],
+  "boundaries": {
+    "coverage": {
+      "requireAllFiles": true,
+      "allowUnmatched": ["tools/**", "*.config.ts"]
+    },
+    "zones": [
+      {
+        "name": "tests",
+        "patterns": ["src/**/*.test.ts", "src/test-fixtures.ts", "tests/**"]
+      },
+      {
+        "name": "landing",
+        "patterns": ["src/features/landing/**"]
+      },
+      {
+        "name": "contracts",
+        "patterns": ["src/contracts/**"]
+      },
+      {
+        "name": "narrative",
+        "patterns": ["src/features/story-runtime/ink-engine.ts"]
+      },
+      {
+        "name": "runtime",
+        "patterns": ["src/features/story-runtime/director.ts"]
+      },
+      {
+        "name": "persistence",
+        "patterns": ["src/persistence/**"]
+      },
+      {
+        "name": "content",
+        "patterns": ["src/features/story-runtime/bundle-loader.ts"]
+      },
+      {
+        "name": "reader",
+        "patterns": ["src/features/reader/**"]
+      },
+      {
+        "name": "i18n",
+        "patterns": ["src/i18n/**"]
+      },
+      {
+        "name": "app",
+        "patterns": ["src/app/**", "src/main.tsx", "index.html"]
+      }
+    ],
+    "rules": [
+      {
+        "from": "tests",
+        "allow": [
+          "contracts",
+          "narrative",
+          "runtime",
+          "persistence",
+          "content",
+          "reader",
+          "i18n",
+          "app",
+          "landing"
+        ]
+      },
+      {
+        "from": "contracts",
+        "allow": []
+      },
+      {
+        "from": "narrative",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "runtime",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "persistence",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "content",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "reader",
+        "allow": ["contracts"],
+        "allowTypeOnly": ["runtime"]
+      },
+      {
+        "from": "i18n",
+        "allow": []
+      },
+      {
+        "from": "app",
+        "allow": [
+          "contracts",
+          "narrative",
+          "runtime",
+          "persistence",
+          "content",
+          "reader",
+          "i18n",
+          "landing"
+        ]
+      },
+      {
+        "from": "landing",
+        "allow": ["contracts"]
+      }
+    ]
+  }
+}
