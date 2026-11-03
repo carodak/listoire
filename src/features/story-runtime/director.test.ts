@@ -18,6 +18,32 @@ beforeEach(async () => {
 });
 
 describe("director and atomic browser checkpoints", () => {
+  it("does not advance a choice when the reader closes during its departure animation", async () => {
+    let finish!: () => void;
+    const presentation = {
+      start: vi.fn(),
+      cancel: vi.fn(),
+      dispose: vi.fn(),
+      leave: vi.fn(async () => {}),
+    };
+    const engine = new InkNarrativeEngine(bundle);
+    const choose = vi.spyOn(engine, "choose");
+    const director = new StoryDirector(bundle, engine, saves, undefined, presentation);
+    await director.load();
+    const saved = await saves.backup(bundle);
+    presentation.leave.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const changing = director.choose("listen", director.getSnapshot().occurrenceId!);
+    director.dispose();
+    finish();
+    await changing;
+    expect(choose).not.toHaveBeenCalled();
+    expect(await saves.backup(bundle)).toBe(saved);
+  });
   it("replays presentation without advancing Ink and restores an earlier checkpoint on back", async () => {
     const engine = new InkNarrativeEngine(bundle);
     const advance = vi.spyOn(engine, "advance");

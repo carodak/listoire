@@ -28,7 +28,19 @@ export function presentationBlocks(bundle: StoryBundle, frame: Frame): Presentat
       ordered.push(block);
     }
   }
-  return ordered;
+  return anchorMedia(ordered, frame.mediaAnchors ?? []);
+}
+function anchorMedia(blocks: PresentationBlock[], anchors: NonNullable<Frame["mediaAnchors"]>) {
+  for (const anchor of anchors) {
+    const index = blocks.findIndex((block) => block.kind === "media" && block.id === anchor.id);
+    if (index < 0) continue;
+    const [block] = blocks.splice(index, 1);
+    const after = anchor.after
+      ? blocks.findIndex((block) => block.kind === "text" && block.segmentId === anchor.after)
+      : -1;
+    blocks.splice(after + 1, 0, block!);
+  }
+  return blocks;
 }
 
 export function reachedBlocks(

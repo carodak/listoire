@@ -1,5 +1,7 @@
 import { MediaPicker } from "./MediaLibrary.tsx";
 import { animationOptions } from "./animation-options.ts";
+import { VideoUpload } from "./VideoUpload.tsx";
+import { CinematicFields } from "./CinematicFields.tsx";
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
@@ -23,19 +25,30 @@ export function MediaDialog({
   onApply: (project: StoryProject, reference: string) => void;
   onClose: () => void;
 }) {
-  const language = project.languages[locale]!;
+  const [form, setForm] = useState(() => {
+    const defaults = mediaDefaults(
+      kind,
+      passageId,
+      selectedId ?? "",
+      project.languages[locale]!.configuration.scenes?.[passageId],
+    );
+    return {
+      language: project.languages[locale]!,
+      sceneId: passageId,
+      asset: defaults.asset,
+      error: "",
+      target: defaults.target,
+      newId: `${passageId}.${kind === "Image" ? "image" : "cue"}-${crypto.randomUUID()}`,
+    };
+  });
+  const { language, sceneId, asset, error, target, newId } = form;
   const scenes = language.configuration.scenes ?? {};
-  const [sceneId, setSceneId] = useState(passageId);
-  const [asset, setAsset] = useState(
-    mediaDefaults(kind, sceneId, selectedId ?? "", scenes[sceneId]).asset,
-  );
-  const [error, setError] = useState("");
-  const [target, setTarget] = useState(
-    mediaDefaults(kind, sceneId, selectedId ?? "", scenes[sceneId]).target,
-  );
-  const [newId] = useState(
-    () => `${passageId}.${kind === "Image" ? "image" : "cue"}-${crypto.randomUUID()}`,
-  );
+  const patch = (change: Partial<typeof form>) => setForm((before) => ({ ...before, ...change }));
+  const setLanguage = (language: typeof form.language) => patch({ language });
+  const setSceneId = (sceneId: string) => patch({ sceneId });
+  const setAsset = (asset: string) => patch({ asset });
+  const setError = (error: string) => patch({ error });
+  const setTarget = (target: string) => patch({ target });
   const scene = scenes[sceneId];
   const id = selectedId ?? newId;
   const initial = mediaDefaults(kind, sceneId, id, scene);
@@ -51,13 +64,21 @@ export function MediaDialog({
       const data = new FormData(event.currentTarget);
       const input = Object.fromEntries(
         Object.entries(initial).map(([key, value]) => {
+          if (key === "motion")
+            return [key, data.has(key) ? JSON.parse(String(data.get(key))) : value];
           if (typeof value === "boolean") return [key, data.has(key)];
           if (!data.has(key)) return [key, value];
           return [key, typeof value === "number" ? Number(data.get(key)) : String(data.get(key))];
         }),
       ) as unknown as MediaEdit;
+      if (kind === "Video")
+        input.duration = Math.min(
+          180000,
+          language.configuration.assets?.find((asset) => asset.id === input.asset)?.upload
+            ?.durationMs ?? 10000,
+        );
       const next = applyMediaEdit(
-        project,
+        { ...project, languages: { ...project.languages, [locale]: language } },
         locale,
         input,
         segmentIds,
@@ -72,6 +93,7 @@ export function MediaDialog({
   const content = { input: initial, segments: segmentIds };
   const Fields = {
     Image: ImageFields,
+    Video: ImageFields,
     Animation: AnimationFields,
     "Sound Effect": AudioFields,
     "Background Music": AudioFields,
@@ -92,6 +114,23 @@ export function MediaDialog({
             ))}
           </select>
         </label>
+        {kind === "Video" && (
+          <VideoUpload
+            onUpload={(asset) => {
+              setLanguage({
+                ...language,
+                configuration: {
+                  ...language.configuration,
+                  assets: [
+                    ...(language.configuration.assets ?? []).filter((item) => item.id !== asset.id),
+                    asset,
+                  ],
+                },
+              });
+              setAsset(asset.id);
+            }}
+          />
+        )}
         {kind !== "Animation" && (
           <MediaPicker
             language={language}
@@ -108,7 +147,19 @@ export function MediaDialog({
           target={target}
           onTarget={setTarget}
         />
-        {kind !== "Image" && target !== "transition" && (
+        {kind === "Image" && (
+          <CinematicFields
+            initial={initial.motion}
+            language={language}
+            quick={Boolean(selectedId)}
+            image={
+              asset
+                ? `/stories/house/${language.configuration.assets?.find((item) => item.id === asset)?.path}`
+                : undefined
+            }
+          />
+        )}
+        {!["Image", "Video"].includes(kind) && target !== "transition" && (
           <TimingFields {...content} trigger={trigger} />
         )}
         {kind === "Animation" && target === "transition" && (
@@ -176,18 +227,20 @@ function ImageFields({
   segments: string[];
   alt: string;
 }) {
+  const mediaType = input.kind === "Video" ? "Video" : "Image";
   return (
     <>
       <label>
-        Placement
-        <select name="layout" defaultValue={input.layout}>
-          <option value="inline">Inline</option>
-          <option value="wide">Wide</option>
-          <option value="background">Background</option>
-          <option value="fullscreen">Fullscreen cinematic</option>
+        Type
+        <select aria-label="Type" name="layout" defaultValue={input.layout}>
+          <option value="inline">{mediaType} Inline</option>
+          <option value="wide">{mediaType} Wide</option>
+          <option value="background">{mediaType} Background</option>
+          <option value="fullscreen">Cinematic {mediaType}</option>
         </select>
       </label>
       <NumberField name="width" label="Width (%)" min={10} max={100} value={input.width} />
+      <PositionFields input={input} />
       <label>
         Alignment
         <select name="align" defaultValue={input.align}>
@@ -227,13 +280,44 @@ function ImageFields({
         max={180000}
         value={input.persistence}
       />
-      <NumberField
-        name="duration"
-        label="Cinematic duration (ms)"
-        max={10000}
-        value={input.duration}
-      />
+      {input.kind !== "Video" && (
+        <NumberField
+          name="duration"
+          label="Cinematic duration (ms)"
+          max={10000}
+          value={input.duration}
+        />
+      )}
+      {input.kind === "Video" && (
+        <p>
+          Fullscreen video uses its reported duration, up to three minutes. The reader can skip it.
+        </p>
+      )}
     </>
+  );
+}
+function PositionFields({ input }: { input: MediaEdit }) {
+  const [override, setOverride] = useState(input.positionOverride);
+  return (
+    <fieldset>
+      <legend>Position</legend>
+      <label className="check">
+        <input
+          type="checkbox"
+          name="positionOverride"
+          checked={override}
+          onChange={(event) => setOverride(event.target.checked)}
+        />
+        Override default position
+      </label>
+      <p>Default: where this media command appears in the script.</p>
+      {override && (
+        <>
+          <NumberField name="x" label="X (%)" min={-100} max={100} value={input.x} />
+          <NumberField name="y" label="Y (%)" min={-100} max={100} value={input.y} />
+        </>
+      )}
+    </fieldset>
   );
 }
 function AnimationFields({

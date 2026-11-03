@@ -22,9 +22,11 @@ export function NarrationDialog({
   onClose: () => void;
 }) {
   const [language, setLanguage] = useState(structuredClone(project.languages[locale]!));
-  const [segment, setSegment] = useState("");
-  const [status, setStatus] = useState("");
-  const [audioUrl, setAudioUrl] = useState("");
+  const [preview, setPreview] = useState({ segment: "", status: "", audioUrl: "" });
+  const { segment, status, audioUrl } = preview;
+  const setSegment = (segment: string) => setPreview((before) => ({ ...before, segment }));
+  const setStatus = (status: string) => setPreview((before) => ({ ...before, status }));
+  const setAudioUrl = (audioUrl: string) => setPreview((before) => ({ ...before, audioUrl }));
   const [recording, setRecording] = useState({
     rights: "",
     marks: "[]",
@@ -32,15 +34,17 @@ export function NarrationDialog({
     spokenText: null as string | null,
   });
   const { rights, marks, duration: manualDuration, spokenText } = recording;
-  const scope = useRef(new AbortController());
-  const previewAudio = useRef<HTMLAudioElement>(null);
+  const handles = useRef({
+    scope: new AbortController(),
+    audio: null as HTMLAudioElement | null,
+  });
   useEffect(() => {
-    if (previewAudio.current) {
-      previewAudio.current.playbackRate = language.defaults.narrationRate ?? 1;
-      previewAudio.current.volume = language.defaults.volumes?.narration ?? 0.8;
+    if (handles.current.audio) {
+      handles.current.audio.playbackRate = language.defaults.narrationRate ?? 1;
+      handles.current.audio.volume = language.defaults.volumes?.narration ?? 0.8;
     }
-  }, [audioUrl, language.defaults.narrationRate, language.defaults.volumes?.narration]);
-  useEffect(() => () => scope.current.abort(), []);
+  }, [audioUrl, language.defaults.narrationRate, language.defaults.volumes?.narration, handles]);
+  useEffect(() => () => handles.current.scope.abort(), [handles]);
   const segments = [
     ...language.script.matchAll(/^(.+?)\s+#\s*(?:passage:[^#]+#\s*)?segment:([a-z][a-z0-9.-]*)/gm),
   ].map((m) => ({ text: m[1]!, id: m[2]! }));
@@ -65,10 +69,10 @@ export function NarrationDialog({
           language.configuration.speechSettings,
         )),
       },
-      scope.current.signal,
+      handles.current.scope.signal,
       true,
     );
-    if (scope.current.signal.aborted) return;
+    if (handles.current.scope.signal.aborted) return;
     if (!result) {
       setStatus(
         "Local Chatterbox is unavailable. Start scripts/start-local.ps1; supported local languages are English and French.",
@@ -77,7 +81,7 @@ export function NarrationDialog({
     }
     try {
       const response = await fetch(result.audioUrl, {
-        signal: scope.current.signal,
+        signal: handles.current.scope.signal,
         redirect: "error",
         credentials: "same-origin",
       });
@@ -95,7 +99,7 @@ export function NarrationDialog({
         "Preview cached in this project. Human listening review is required before publication.",
       );
     } catch (error) {
-      if (!scope.current.signal.aborted)
+      if (!handles.current.scope.signal.aborted)
         setStatus(error instanceof Error ? error.message : String(error));
     }
   }
@@ -153,14 +157,9 @@ export function NarrationDialog({
           value={language.narrationMode}
           onChange={(mode) => setLanguage({ ...language, narrationMode: mode })}
         />
-        <p>
-          Provider: local Chatterbox · Model:{" "}
-          {({ en: "Nano / Multilingual V3", fr: "Multilingual V3" } as Record<string, string>)[
-            locale
-          ] ?? "local model unavailable"}{" "}
-          · Language: {locale}
-        </p>
-        <VoiceDesigner language={language} locale={locale} onChange={setLanguage} />
+        {language.narrationMode.startsWith("ai-") && (
+          <VoiceDesigner language={language} locale={locale} onChange={setLanguage} />
+        )}
         <VoiceControls language={language} onChange={setLanguage} />
         <label>
           Narrative segment
@@ -223,8 +222,12 @@ export function NarrationDialog({
                 type="file"
                 accept="audio/mpeg,.mp3"
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void upload(file);
+                  const input = e.currentTarget;
+                  const file = input.files?.[0];
+                  if (file)
+                    void upload(file).finally(() => {
+                      input.value = "";
+                    });
                 }}
               />
             </label>
@@ -242,7 +245,14 @@ export function NarrationDialog({
           </>
         )}
         {audioUrl && (
-          <audio aria-label="Narration preview" ref={previewAudio} controls src={audioUrl} />
+          <audio
+            aria-label="Narration preview"
+            ref={(node) => {
+              handles.current.audio = node;
+            }}
+            controls
+            src={audioUrl}
+          />
         )}
         {status && <p role="status">{status}</p>}
         <p className="editor-hint">

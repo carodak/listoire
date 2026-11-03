@@ -100,7 +100,7 @@ test("a declarative cinematic can be skipped without changing its story result",
     .getByRole("button", { name: "Skip cinematic", exact: true })
     .click();
   await expect(page.getByRole("button", { name: "Skip cinematic", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
+  await page.locator(".prose p").first().click();
   await expect(page.locator(".prose")).toContainText("twenty-nine years");
   await expect(page.getByRole("button", { name: "Continue reading", exact: true })).toBeEnabled();
   const running = await page

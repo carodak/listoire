@@ -64,7 +64,18 @@ export async function compileLanguage(
     throw new Error("Combat is unavailable: this application has no combat executor.");
   if (language.missingTranslation && !preview)
     throw new Error(`${locale}: translation needs review before publishing.`);
-  const ink = compileInkJson(language.script);
+  const imageIds = new Set(
+    Object.values(language.configuration.scenes ?? {}).flatMap(
+      (scene) =>
+        scene.blocks?.filter((block) => block.kind === "media").map((block) => block.id) ?? [],
+    ),
+  );
+  const script = language.script
+    .replace(/\r\n?/g, "\n")
+    .replace(/^\s*\/\/ @media [a-z0-9.-]+\/([a-z0-9.-]+).*$/gm, (line, id: string) =>
+      imageIds.has(id) ? `# media:${id}` : line,
+    );
+  const ink = compileInkJson(script);
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(JSON.stringify(ink)),

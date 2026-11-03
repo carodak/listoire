@@ -122,6 +122,16 @@ export function StorySettings({
           />
           Sound enabled by default
         </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={language.defaults.pageTurn ?? false}
+            onChange={(event) =>
+              changeLanguage({ defaults: { ...language.defaults, pageTurn: event.target.checked } })
+            }
+          />
+          Page-turn transitions by default
+        </label>
         {language.missingTranslation && (
           <label className="check">
             <input

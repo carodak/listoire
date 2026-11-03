@@ -18,7 +18,7 @@ export const VoiceProfileSchema = z
         name: z.string().max(120),
         data: z
           .string()
-          .max(2_800_000)
+          .max(6_800_000)
           .regex(/^data:audio\/(mpeg|wav);base64,[A-Za-z0-9+/]+=*$/),
         rights: z.string().min(1).max(500),
       })

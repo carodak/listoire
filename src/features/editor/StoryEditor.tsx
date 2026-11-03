@@ -1,6 +1,7 @@
-import { useRef, useReducer } from "react";
+import { useRef, useReducer, useEffect } from "react";
+import { PanelDivider } from "./PanelDivider.tsx";
+import { importProjectArchive } from "./project-archive.ts";
 import type { ReactNode } from "react";
-import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import { useEditorProject, message } from "./use-editor-project.ts";
@@ -16,7 +17,7 @@ import { EditorHeader } from "./EditorHeader.tsx";
 import { StoryOutline } from "./StoryOutline.tsx";
 import { EditorOverlays } from "./EditorOverlays.tsx";
 import { outlineEntries } from "./ink-commands.ts";
-import { editMediaScript, mediaReferenceLine } from "./media-references.ts";
+import { editMediaScript, mediaReferenceLine, sceneMediaEntries } from "./media-references.ts";
 import { useEditorTooltips } from "./tooltips.ts";
 import "./editor.css";
 
@@ -30,6 +31,8 @@ interface EditorView {
   selectedMedia?: string;
   preview: { bundle: StoryBundle; knot: string; key: string } | null;
   busy: boolean;
+  leftWidth: number;
+  previewWidth: number;
 }
 
 export function StoryEditor({
@@ -44,10 +47,19 @@ export function StoryEditor({
 }) {
   const state = useEditorProject();
   const { project, update } = state;
+  const initialPreview = useRef(false);
+  useEffect(() => {
+    if (project && !initialPreview.current) {
+      initialPreview.current = true;
+      void play();
+    }
+  });
   useEditorTooltips(Boolean(project));
   const [view, patchView] = useReducer(
     (before: EditorView, change: Partial<EditorView>) => ({ ...before, ...change }),
     {
+      leftWidth: 215,
+      previewWidth: 480,
       locale: "en",
       tab: "Story",
       collapsed: false,
@@ -60,9 +72,11 @@ export function StoryEditor({
     },
   );
   const { locale, tab, collapsed, dialog, selectedScene, selectedMedia, preview, busy } = view;
-  const editor = useRef<AceEditor | null>(null);
-  const selection = useRef<AceRange | null>(null);
-  const suppress = useRef(false);
+  const handles = useRef<{
+    editor: AceEditor | null;
+    selection: AceRange | null;
+    suppress: boolean;
+  }>({ editor: null, selection: null, suppress: false }).current;
   const file = useRef<HTMLInputElement>(null);
   if (!project)
     return (
@@ -85,7 +99,7 @@ export function StoryEditor({
   ) : null;
 
   function changeScript(script: string) {
-    if (suppress.current) return;
+    if (handles.suppress) return;
     update(
       {
         ...project!,
@@ -95,9 +109,16 @@ export function StoryEditor({
     );
   }
   function insert(text: string, structural = true, base = project!) {
-    const instance = editor.current;
+    const instance = handles.editor;
     if (!instance) return;
-    if (selection.current) instance.selection.setRange(selection.current);
+    if (handles.selection) instance.selection.setRange(handles.selection);
+    if (text.startsWith("// @media")) {
+      const cursor = instance.getCursorPosition();
+      const line = instance.session.getLine(cursor.row);
+      if (/^\s*(?:#.*)?$/.test(line.slice(cursor.column)))
+        instance.gotoLine(cursor.row + 1, line.length);
+      text = `\n${text}`;
+    }
     const range = instance.getSelectionRange();
     let next: StoryProject;
     try {
@@ -107,18 +128,18 @@ export function StoryEditor({
       patchView({ dialog: "Issues" });
       return;
     }
-    suppress.current = true;
+    handles.suppress = true;
     instance.insert(text);
-    suppress.current = false;
+    handles.suppress = false;
     next.languages[activeLocale]!.script = instance.getValue();
     update(next, "Inserted Ink command");
-    selection.current = null;
+    handles.selection = null;
     instance.focus();
   }
   function open(command: string) {
-    selection.current = editor.current?.getSelectionRange() ?? null;
+    handles.selection = handles.editor?.getSelectionRange() ?? null;
     if (command === "Find" || command === "Replace") {
-      editor.current?.execCommand(command.toLowerCase());
+      handles.editor?.execCommand(command.toLowerCase());
       return;
     }
     if (command === "Compile") {
@@ -126,8 +147,8 @@ export function StoryEditor({
       return;
     }
     if (command === "Edit Selected Media") {
-      const cursor = editor.current?.getCursorPosition();
-      const line = cursor ? editor.current?.session.getLine(cursor.row) : "";
+      const cursor = handles.editor?.getCursorPosition();
+      const line = cursor ? handles.editor?.session.getLine(cursor.row) : "";
       const match = line?.match(/@media\s+([^/\s]+)\/([a-z0-9.-]+)/);
       if (!match) {
         state.setIssues([
@@ -138,13 +159,10 @@ export function StoryEditor({
       }
       patchView({ selectedScene: match[1]! });
       patchView({ selectedMedia: match[2] });
-      const scene = language.configuration.scenes?.[match[1]!];
       patchView({
-        dialog: scene?.blocks?.some((b) => b.kind === "media" && b.id === match[2])
-          ? "Image"
-          : scene?.events?.find((e) => e.id === match[2])?.action.kind === "effect"
-            ? "Animation"
-            : "Sound Effect",
+        dialog:
+          sceneMediaEntries(language, match[1]!).find((entry) => entry.id === match[2])?.kind ??
+          "Scene Properties",
       });
       return;
     }
@@ -182,12 +200,13 @@ export function StoryEditor({
   }
   async function importFile(selected: File) {
     try {
-      if (selected.size > 8_000_000) throw new Error("Project files must be smaller than 8 MB.");
+      if (selected.size > 200_000_000)
+        throw new Error("Project archives must be smaller than 200 MB.");
       const text = await selected.text();
       if (selected.name.toLowerCase().endsWith(".ink")) {
         applyLanguage({ ...language, script: text }, `Imported ${activeLocale} Ink`);
       } else {
-        const imported = StoryProjectSchema.parse(JSON.parse(text));
+        const imported = await importProjectArchive(JSON.parse(text));
         update(imported, "Restored project backup");
         patchView({ locale: imported.defaultLocale });
       }
@@ -200,12 +219,12 @@ export function StoryEditor({
   function navigate(name: string) {
     const entry = outlineEntries(language.script).find((e) => e.path === name);
     if (entry) {
-      editor.current?.gotoLine(entry.row + 1);
+      handles.editor?.gotoLine(entry.row + 1);
       patchView({ selectedScene: entry.knot, selectedPath: entry.path });
     }
   }
   function hoverMedia(id: string | null) {
-    editor.current?.highlight(
+    handles.editor?.highlight(
       id === null ? null : mediaReferenceLine(language.script, selectedScene, id),
     );
   }
@@ -222,8 +241,9 @@ export function StoryEditor({
           void play();
         }}
         onFind={(query, replace) => {
-          editor.current?.execCommand(replace ? "replace" : "find");
-          editor.current?.searchBox?.show(query, replace);
+          if (handles.editor?.searchBox) handles.editor.searchBox.searchInput.value = query;
+          handles.editor?.searchBox?.show(query, replace);
+          handles.editor?.find(query);
         }}
       />
       <Ribbon
@@ -235,7 +255,15 @@ export function StoryEditor({
         onCommand={open}
         onInsert={insert}
       />
-      <div className="editor-workspace">
+      <div
+        className="editor-workspace"
+        style={
+          {
+            "--sidebar-width": `${view.leftWidth}px`,
+            "--preview-width": `${view.previewWidth}px`,
+          } as React.CSSProperties
+        }
+      >
         <StoryOutline
           language={language}
           locale={activeLocale}
@@ -246,11 +274,27 @@ export function StoryEditor({
           onDialog={(value) => patchView({ dialog: value })}
           onMedia={(id, kind) => {
             const row = mediaReferenceLine(language.script, selectedScene, id);
-            if (row >= 0) editor.current?.gotoLine(row + 1);
+            if (row >= 0) handles.editor?.gotoLine(row + 1);
             patchView({ selectedMedia: id });
             patchView({ dialog: kind });
           }}
           onHover={hoverMedia}
+        />
+        <PanelDivider
+          label="Resize navigation"
+          value={view.leftWidth}
+          onChange={(left) =>
+            patchView({
+              leftWidth: Math.max(
+                120,
+                Math.min(
+                  left,
+                  window.innerWidth * 0.4,
+                  window.innerWidth - view.previewWidth - 300,
+                ),
+              ),
+            })
+          }
         />
         <section className="editor-script" aria-label="Script workspace">
           <div className="script-tab">
@@ -266,7 +310,7 @@ export function StoryEditor({
             value={language.script}
             onChange={changeScript}
             onReady={(instance) => {
-              editor.current = instance;
+              handles.editor = instance;
             }}
             onError={(error) => state.setIssues([message(error)])}
             onCursor={(row) => {
@@ -278,6 +322,21 @@ export function StoryEditor({
             }}
           />
         </section>
+        {previewView && (
+          <PanelDivider
+            label="Resize preview"
+            value={view.previewWidth}
+            reverse
+            onChange={(preview) =>
+              patchView({
+                previewWidth: Math.max(
+                  260,
+                  Math.min(preview, window.innerWidth - view.leftWidth - 300),
+                ),
+              })
+            }
+          />
+        )}
         {previewView}
       </div>
       <footer className="editor-status">
@@ -299,9 +358,12 @@ export function StoryEditor({
         accept=".ink,.json"
         hidden
         onChange={(event) => {
-          const selected = event.target.files?.[0];
-          if (selected) void importFile(selected);
-          event.target.value = "";
+          const input = event.currentTarget;
+          const selected = input.files?.[0];
+          if (selected)
+            void importFile(selected).finally(() => {
+              input.value = "";
+            });
         }}
       />
       <EditorOverlays

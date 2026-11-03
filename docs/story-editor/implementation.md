@@ -17,13 +17,15 @@ from requirements whose assumed runtime does not exist in this repository.
 4. Save is automatic after a 1.2-second editing pause. Manual Save also creates a
    version checkpoint. Drafts survive compiler errors; only a fully validated project
    replaces the browser's published reader content. Missing media prevents publication.
-5. Preview uses the real StoryPlayer, StoryDirector, Ink engine and presentation services.
-   It has isolated memory saves, language switching, start-from-Knot, restart, pause,
-   resume, fullscreen, state inspection and validated test-variable/character state.
-   The preview is docked to the right of the script on desktop, stacks below on small
-   screens, and has a visible close button. Preview reopens it; typing does not restart it.
+5. Preview opens automatically using the real StoryPlayer, StoryDirector, Ink engine
+   and presentation services, with isolated memory saves. The header Preview button
+   recompiles and restarts it; the footer can start from the selected Knot or Stitch.
+   It docks to the right on desktop, stacks below on small screens, and supports
+   minimize, maximize, fullscreen and close. Typing does not restart the running preview.
+   Keyboard-accessible dividers resize navigation and preview; the script fills the remainder.
 6. Export Ink or a complete project JSON backup. To change the checked-in/default story,
    replace `stories/house/project.json` with that backup and run `npm run build`.
+   Video backups include their bytes; ordinary project history retains only hash references.
    Browser autosave does not modify repository files or other devices.
 
 Serve the application with an SPA fallback for `/editor`. `/editor/` normalizes to
@@ -85,6 +87,12 @@ not gameplay mutations.
 
 Image properties include existing placements, a background placement, width, alignment,
 fit/crop, alt text, caption, page/segment/delayed visibility and optional persistence.
+Type labels are Image Inline, Image Wide, Image Background and Cinematic Image.
+Position defaults to the command's actual executed location in Ink; X/Y percentages
+can override its visual offset. Compilation translates image/video comments into
+non-visible Ink media tags, and resolved frame anchors retain their position through saves.
+This also works for untagged paragraphs and conditional branches. Initial references
+are inserted at the existing scene-block positions, preserving the original layout.
 Scene and event IDs remain stable. All existing images and cues receive visible
 `// @media scene/id` references without changing compiled Ink. The sidebar has Files,
 Story Outline (Knots and Stitches) and Scene Media tabs. Hovering a media entry highlights
@@ -107,7 +115,7 @@ Narration supports Disabled, AI Live, AI Pre-generated and Human Recording setti
 separate model/voice selection, voice allowlists, speed, volume, pitch, temperature,
 seed and supported expressiveness/guidance defaults. Nano disables parameters it ignores.
 Authors can add named voices using permission-attested MP3/WAV examples (6–30 seconds,
-maximum 2 MB, eight profiles per language). This is reference conditioning, not training
+maximum 5 MB, eight profiles per language). This is reference conditioning, not training
 new model weights. Custom conditioning is reset before the next built-in voice request.
 Preview audio applies speed and volume immediately; generation bakes in pitch while
 preserving duration. The exact settings/reference enter cache and clip matching.
@@ -118,7 +126,7 @@ an optional duration override permits authoring when browser MP3 metadata decodi
 unavailable. Every new clip remains a **preview**; no listening approval is fabricated.
 
 The new loopback-only `/api/narration/editor-preview` accepts bounded unsaved authored
-text and bounded voice profiles/settings (3 MB request cap). Audio references are decoded
+text and bounded voice profiles/settings (7 MB request cap). Audio references are decoded
 with forced MP3/WAV demuxers, local-only protocols and subprocess timeouts. The original
 endpoint retains its exported-text allowlist and 20 KB request cap.
 Local generation still requires the existing service, models and development proxy;
@@ -127,6 +135,23 @@ the existing voice configuration. Dynamic Ink text should be checked in Preview;
 manual spoken-text field can represent the resolved variant for a chosen test state.
 Batch `narration:export` uses the active project, and compatible generated publication
 clips can be merged without replacing approved or embedded author recordings.
+
+Videos use the same ordered media blocks, type/width/position/timing forms and reader.
+MP4/WebM uploads require a rights attestation and are capped at 50 MB each. Verified
+immutable binary bytes live in `listoire-media/files`; drafts and undo/history retain
+small identities. Complete JSON archives embed those bytes on export and verify their
+hashes before restoring them. Uploaded media rights remain author-attested, distinct
+from verified library-provider rights. Browser codecs and autoplay rules still apply;
+videos have playback controls and follow presentation pause/resume/cancellation.
+On browsers without a suitable metadata decoder, authors can supply a duration;
+voice-reference duration is still checked by FFprobe before synthesis. MP4/WebM
+container headers and hashes are verified even when a duration override is supplied.
+Windows WebKit rejects IndexedDB Blob writes, so the store persists ArrayBuffer bytes
+and reconstructs playback Blobs; older Blob records remain readable.
+Fullscreen video sequences are bounded to three minutes and remain skippable.
+
+Camera/atmosphere/depth presets, reduced motion and optional page turns are described
+in [cinematic-effects.md](cinematic-effects.md). No animation dependency was added.
 
 Page Replay restarts text, narration and page-local presentation without advancing Ink
 or re-rolling a character. Back restores the earlier coherent checkpoint and restarts
@@ -148,7 +173,8 @@ completed; page sounds and effects are canceled and restarted.
   invented; playback uses the existing runtime's supported operations.
 - UI localization remains English/French. Additional story languages are editable and
   previewable; they need reviewed translations and suitable recorded/device narration.
-- Project import/backups are capped at 8 MB; individual MP3 uploads are capped at 5 MB.
+- Project metadata is capped at 8 MB; archives containing video bytes can be imported
+  up to 200 MB. Human MP3 and voice-example uploads are capped at 5 MB; videos at 50 MB.
   Embedded recordings favor a self-contained backup for this small book. A separate
   blob archive is the upgrade point for larger audio projects. Browser storage quotas
   still apply; failed writes keep dirty state and report errors.

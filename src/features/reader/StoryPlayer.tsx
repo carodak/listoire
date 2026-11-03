@@ -18,6 +18,7 @@ interface Props {
   backup: () => Promise<void>;
   preferences: ReadingPreferences;
   onPreferencesChange: (preferences: ReadingPreferences) => void;
+  focusPassage?: boolean;
 }
 
 export function StoryPlayer(props: Props) {
@@ -116,8 +117,8 @@ function ReaderPassage({
     void director.choose(id, state.occurrenceId!);
   };
   useEffect(() => {
-    heading.current?.focus();
-  }, [state.occurrenceId]);
+    if (player.focusPassage !== false) heading.current?.focus();
+  }, [state.occurrenceId, player.focusPassage]);
 
   return (
     <main

@@ -6,6 +6,7 @@ import { AudioManager } from "../media/audio-manager.ts";
 import { NarrationManager } from "../media/narration-manager.ts";
 import { EffectsEngine } from "./effects.ts";
 import type { EffectTargets } from "./effects.ts";
+import type { MediaAsset } from "../../contracts/uploaded-media.ts";
 import { PresentationClock } from "./presentation-clock.ts";
 
 interface PresentationState {
@@ -49,6 +50,8 @@ export class PresentationSession implements NarrativePresentationPort {
   private readonly reachedSegments = new Set<string>();
   private readonly segmentWaiters = new Map<string, Set<() => void>>();
   private readonly issued = new Set<string>();
+  private readonly videos = new Set<HTMLVideoElement>();
+  readonly resolveAsset: (asset: MediaAsset) => Promise<{ url: string; dispose: () => void }>;
   private blocking = 0;
   private restored = false;
   private skipped = false;
@@ -69,7 +72,18 @@ export class PresentationSession implements NarrativePresentationPort {
     visibleMedia: [],
     expiredMedia: [],
   };
-  constructor(bundle: StoryBundle, preferences: ReadingPreferences, audio = new AudioManager()) {
+  constructor(
+    bundle: StoryBundle,
+    preferences: ReadingPreferences,
+    audio = new AudioManager(),
+    resolveAsset?: (asset: MediaAsset) => Promise<{ url: string; dispose: () => void }>,
+  ) {
+    this.resolveAsset =
+      resolveAsset ??
+      (async (asset) => ({
+        url: `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+        dispose() {},
+      }));
     this.bundle = bundle;
     this.voices = (bundle.narratorVoices ?? []).filter(
       (voice) =>
@@ -147,6 +161,10 @@ export class PresentationSession implements NarrativePresentationPort {
     for (const channel of ["sfx", "ambience", "music", "narration"] as const)
       this.audio.setVolume(channel, volumes[channel]);
     this.audio.setRate(preferences.narrationRate ?? 1);
+    for (const video of this.videos) {
+      video.muted = !preferences.sound;
+      video.volume = volumes.sfx;
+    }
     if (soundWasEnabled && !preferences.sound)
       for (const channel of ["sfx", "ambience", "music"] as const) this.audio.stopChannel(channel);
     if (voiceWasEnabled && !preferences.narration) {
@@ -158,24 +176,51 @@ export class PresentationSession implements NarrativePresentationPort {
     if (!voiceWasEnabled && preferences.narration && this.frame) this.replayNarration();
   }
   bind(targets: EffectTargets, blockId = "scene") {
+    const loaded = () => this.queueTarget(blockId);
     this.targets.set(blockId, targets);
-    if (!this.restored) {
-      this.queue("passage");
-      for (const id of this.revealedSegments) this.queue("segment", id);
-      const block = this.bundle.scenes?.[this.frame?.passageId ?? ""]?.blocks?.find(
-        (block) => block.kind === "media" && block.id === blockId,
-      );
-      if (
-        !block ||
-        block.kind !== "media" ||
-        !block.show ||
-        this.state.visibleMedia.includes(blockId)
-      )
-        this.queue("block", blockId);
+    if (targets.video) {
+      this.videos.add(targets.video);
+      targets.video.muted = !this.preferences.sound;
+      targets.video.volume = this.preferences.volumes?.sfx ?? 0.65;
+      if (!this.restored && targets.video.readyState < 2)
+        targets.video.addEventListener("loadeddata", loaded, {
+          once: true,
+          signal: this.scope.signal,
+        });
     }
+    if (!this.restored) this.queueTarget(blockId);
     return () => {
+      if (targets.video) {
+        targets.video.removeEventListener("loadeddata", loaded);
+        targets.video.pause();
+        this.videos.delete(targets.video);
+      }
       if (this.targets.get(blockId) === targets) this.targets.delete(blockId);
     };
+  }
+  private mediaVisible(id: string) {
+    const block = this.bundle.scenes?.[this.frame?.passageId ?? ""]?.blocks?.find(
+      (block) => block.kind === "media" && block.id === id,
+    );
+    return (
+      !this.state.expiredMedia.includes(id) &&
+      (block?.kind !== "media" || !block.show || this.state.visibleMedia.includes(id))
+    );
+  }
+  private queueTarget(id: string) {
+    if (!this.mediaVisible(id)) return;
+    const video = this.targets.get(id)?.video;
+    if (
+      video &&
+      !this.restored &&
+      !this.state.paused &&
+      !this.reducedMotion() &&
+      !this.state.completedBlocks.includes(id)
+    )
+      void video.play().catch(() => {});
+    this.queue("passage");
+    for (const segment of this.revealedSegments) this.queue("segment", segment);
+    this.queue("block", id);
   }
   bindPage(element: HTMLElement) {
     this.targets.set("page", { canvas: element });
@@ -193,7 +238,7 @@ export class PresentationSession implements NarrativePresentationPort {
       if (this.targets.get("scene")?.canvas === element) this.targets.delete("scene");
     };
   }
-  async leave() {
+  async leave(direction: "forward" | "back" = "forward") {
     const targets = this.targets.get("page");
     if (!targets || this.state.departed) return;
     this.publish({ exiting: true });
@@ -205,9 +250,11 @@ export class PresentationSession implements NarrativePresentationPort {
           ? [event.action.effect]
           : [],
       ) ?? [];
-    const effects = transitions.length
+    const effects: NativeEffect[] = transitions.length
       ? transitions
-      : [{ id: "fade-out" as const, duration: 160, target: "canvas" as const }];
+      : this.preferences.pageTurn
+        ? [{ id: "page-turn", duration: 650, direction, target: "canvas" }]
+        : [{ id: "fade-out" as const, duration: 160, target: "canvas" as const }];
     await Promise.all(
       effects.map(
         (effect) =>
@@ -245,15 +292,15 @@ export class PresentationSession implements NarrativePresentationPort {
     this.issued.add(`show:${id}`);
     this.clock.schedule(() => {
       this.publish({ visibleMedia: [...this.state.visibleMedia, id] });
-      this.queue("block", id);
+      this.queueTarget(id);
       const block = this.bundle.scenes?.[this.frame?.passageId ?? ""]?.blocks?.find(
         (b) => b.kind === "media" && b.id === id,
       );
       if (block?.kind === "media" && block.durationMs)
-        this.clock.schedule(
-          () => this.publish({ expiredMedia: [...this.state.expiredMedia, id] }),
-          block.durationMs,
-        );
+        this.clock.schedule(() => {
+          this.targets.get(id)?.video?.pause();
+          this.publish({ expiredMedia: [...this.state.expiredMedia, id] });
+        }, block.durationMs);
     }, delay);
   }
   private waitForSegment = (id: string, signal: AbortSignal) => {
@@ -275,9 +322,15 @@ export class PresentationSession implements NarrativePresentationPort {
     for (const event of events) {
       if (event.phase === "exit") continue;
       if (!matchesTrigger(event.trigger, kind, targetId) || this.issued.has(event.id)) continue;
-      if (event.action.kind === "effect" && !this.targets.has(event.blockId ?? "scene")) continue;
+      if (event.action.kind === "effect" && !this.effectReady(event.blockId ?? "scene")) continue;
       this.issue(event);
     }
+  }
+  private effectReady(id: string) {
+    const target = this.targets.get(id);
+    return Boolean(
+      target && this.mediaVisible(id) && (!target.video || target.video.readyState >= 2),
+    );
   }
   private issue(event: NarrativeEvent) {
     this.issued.add(event.id);
@@ -446,6 +499,7 @@ export class PresentationSession implements NarrativePresentationPort {
       });
   };
   pause = () => {
+    this.videos.forEach((video) => video.pause());
     this.audio.pause();
     this.audio.setDucking(false);
     this.effects.pause();
@@ -456,6 +510,8 @@ export class PresentationSession implements NarrativePresentationPort {
     });
   };
   resume = () => {
+    for (const [id, target] of this.targets)
+      if (target.video && this.mediaVisible(id)) void target.video.play().catch(() => {});
     this.audio.resume();
     this.effects.resume();
     this.clock.resume();
@@ -491,6 +547,8 @@ export class PresentationSession implements NarrativePresentationPort {
     });
   };
   cancel() {
+    this.videos.forEach((video) => video.pause());
+    this.videos.clear();
     this.generation++;
     this.scope.abort();
     this.clock.clear();

@@ -4,6 +4,9 @@ import type { PresentationBlock } from "../../contracts/presentation.ts";
 import type { NarrativeEvent } from "../../contracts/effects.ts";
 import { NativeEffectSchema, ReactBitsEffectSchema } from "../../contracts/effects.ts";
 import { animationOptions } from "./animation-options.ts";
+import { CinematicSchema } from "../../contracts/cinematic.ts";
+import type { Cinematic } from "../../contracts/cinematic.ts";
+import { cinematicDuration } from "../presentation/cinematic-presets.ts";
 
 type MediaBlock = Extract<PresentationBlock, { kind: "media" }>;
 type Scene = NonNullable<StoryProject["languages"][string]["configuration"]["scenes"]>[string];
@@ -19,6 +22,10 @@ export interface MediaEdit {
   width: number;
   align: "left" | "center" | "right";
   fit: "contain" | "cover";
+  positionOverride: boolean;
+  x: number;
+  y: number;
+  motion: Cinematic;
   show: "page" | "segment" | "delay";
   segment: string;
   delay: number;
@@ -46,6 +53,10 @@ export function mediaDefaults(kind: string, sceneId: string, id: string, scene?:
     width: 100,
     align: "center",
     fit: "contain",
+    positionOverride: false,
+    x: 0,
+    y: 0,
+    motion: CinematicSchema.parse({ preset: "none" }),
     show: "page",
     segment: "",
     delay: 0,
@@ -93,6 +104,10 @@ function imageDefaults(block: MediaBlock) {
     width: block.widthPercent ?? 100,
     align: block.align ?? "center",
     fit: block.fit ?? "contain",
+    positionOverride: Boolean(block.position),
+    x: block.position?.x ?? 0,
+    y: block.position?.y ?? 0,
+    motion: block.motion ?? CinematicSchema.parse({ preset: "none" }),
     show: block.show?.kind ?? "page",
     segment: block.show?.segmentId ?? "",
     delay: block.show?.delayMs ?? 0,
@@ -133,6 +148,8 @@ function imageScene(scene: Scene, input: MediaEdit, segmentIds: string[]) {
     widthPercent: input.width,
     align: input.align,
     fit: input.fit,
+    position: input.positionOverride ? { x: input.x, y: input.y } : undefined,
+    motion: input.motion,
     show: {
       kind: input.show,
       segmentId: input.show === "segment" ? input.segment : undefined,
@@ -147,6 +164,26 @@ function imageScene(scene: Scene, input: MediaEdit, segmentIds: string[]) {
   const position = scene.blocks.findIndex((b) => b.kind === "media" && b.id === input.id);
   if (position >= 0) scene.blocks[position] = block;
   else scene.blocks.splice(Math.max(0, scene.blocks.length - 1), 0, block);
+  const motionId = `${input.id}.motion`;
+  scene.events = scene.events?.filter((event) => event.id !== motionId);
+  if (input.motion.preset !== "none") {
+    scene.events ??= [];
+    scene.events = scene.events.filter((event) => event.id !== `${input.id}.cinematic`);
+    scene.events.push({
+      id: motionId,
+      blockId: input.id,
+      trigger: { kind: "block", blockId: input.id },
+      blocking: input.layout === "fullscreen",
+      action: {
+        kind: "effect",
+        effect: {
+          id: "cinematic-camera",
+          duration: cinematicDuration(input.motion.speed),
+          cinematic: input.motion,
+        },
+      },
+    });
+  }
   if (
     input.layout === "fullscreen" &&
     !scene.events?.some((e) => e.blockId === input.id && e.blocking)
@@ -159,7 +196,10 @@ function imageScene(scene: Scene, input: MediaEdit, segmentIds: string[]) {
       blockId: input.id,
       action: {
         kind: "effect",
-        effect: { id: "slow-zoom", duration: input.duration, scale: 1.08 },
+        effect:
+          input.kind === "Video"
+            ? { id: "video-playback", duration: input.duration }
+            : { id: "slow-zoom", duration: input.duration, scale: 1.08 },
       },
     });
   }
@@ -262,19 +302,23 @@ export function applyMediaEdit(
   const locales = input.shared ? Object.keys(next.languages) : [locale];
   for (const languageId of locales) {
     const language = next.languages[languageId]!;
+    const sourceAsset = next.languages[locale]!.configuration.assets?.find(
+      (asset) => asset.id === input.asset,
+    );
+    if (sourceAsset && !language.configuration.assets?.some((asset) => asset.id === sourceAsset.id))
+      language.configuration.assets = [...(language.configuration.assets ?? []), sourceAsset];
     const scene = language.configuration.scenes?.[input.sceneId] ?? {
       title: input.sceneId,
       progress: 0,
     };
-    const result =
-      input.kind === "Image"
-        ? imageScene(scene, input, segmentIds)
-        : cueScene(scene, input, trigger);
+    const result = ["Image", "Video"].includes(input.kind)
+      ? imageScene(scene, input, segmentIds)
+      : cueScene(scene, input, trigger);
     language.configuration.scenes = {
       ...language.configuration.scenes,
       [input.sceneId]: SceneSchema.parse(result),
     };
-    if (input.kind === "Image" && input.alt)
+    if (["Image", "Video"].includes(input.kind) && input.alt)
       language.configuration.assets = language.configuration.assets?.map((asset) =>
         asset.id === input.asset ? { ...asset, alt: input.alt } : asset,
       );

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
+import { resolveMediaAsset } from "../../persistence/media-store.ts";
+import type { MediaAsset } from "../../contracts/uploaded-media.ts";
 type Language = StoryProject["languages"][string];
 type Entry = NonNullable<StoryProject["mediaLibrary"]>[number];
 type Facet = "category" | "theme" | "usage";
@@ -22,7 +24,7 @@ function MediaLibrary({
 }: {
   language: Language;
   library: Entry[];
-  kind: "image" | "audio";
+  kind: "image" | "audio" | "video";
   onChoose: (id: string) => void;
   onClose: () => void;
 }) {
@@ -89,6 +91,8 @@ function MediaLibrary({
             <article key={asset.id}>
               {kind === "image" ? (
                 <img src={`/stories/house/${asset.path}`} alt={asset.alt} loading="lazy" />
+              ) : kind === "video" ? (
+                <VideoPreview asset={asset} />
               ) : (
                 <audio
                   controls
@@ -148,15 +152,47 @@ export function MediaPicker({
       {selected?.type === "image" && (
         <img className="asset-preview" src={`/stories/house/${selected.path}`} alt={selected.alt} />
       )}
+      {selected?.type === "video" && <VideoPreview asset={selected} />}
       {open && (
         <MediaLibrary
           language={language}
           library={library}
-          kind={kind === "Image" ? "image" : "audio"}
+          kind={kind === "Image" ? "image" : kind === "Video" ? "video" : "audio"}
           onChoose={onAsset}
           onClose={() => setOpen(false)}
         />
       )}
     </div>
+  );
+}
+function VideoPreview({ asset }: { asset: MediaAsset }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
+    void resolveMediaAsset(asset, "house")
+      .then((resource) => {
+        if (cancelled) resource.dispose();
+        else {
+          dispose = resource.dispose;
+          setUrl(resource.url);
+        }
+      })
+      .catch(() => setUrl(""));
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, [asset]);
+  return url ? (
+    <video
+      className="asset-preview"
+      controls
+      preload="metadata"
+      src={url}
+      aria-label={asset.alt || "Video preview"}
+    />
+  ) : (
+    <p>Video preview unavailable.</p>
   );
 }

@@ -8,10 +8,16 @@ Compiled bundles remain derived data, validated with `BundleSchema` before publi
 Bundle additions cover authored Ink, narration modes/voice selection, reading defaults,
 embedded audio and image placement/timing. Strict speech settings include bounded pitch,
 temperature, guidance, expressiveness and seed. Optional named voice profiles embed
-permission-attested MP3/WAV references (at most 2 MB, duration checked at 6–30 seconds by
+permission-attested MP3/WAV references (at most 5 MB, duration checked at 6–30 seconds by
 the local service); projects retain their aggregate 8 MB cap. Generated clips may carry
 a settings digest so old settings cannot silently reuse a different voice preview.
 Events may declare `phase: exit` for a bounded page fade-out on scene departure.
+Media blocks add optional X/Y percentage offsets and cinematic preset settings with
+bounded depth-layer references. Resolved frames carry optional executed `mediaAnchors`;
+these are saved with the same Ink/domain checkpoint. Reader preferences add optional
+page turning, off by default. Video assets have strict MP4/WebM paths and immutable
+SHA-256/size/MIME identities with separate author-attested rights. Their binary bytes
+live outside project history and enter complete backups as `uploadedFiles`.
 The same scene/effect contracts validate
 authoring forms, imported projects and normal playback. Story locales accept two-letter
 language codes with an optional two-letter region; the interface supports English and French.

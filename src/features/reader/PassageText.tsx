@@ -148,6 +148,7 @@ function ReaderIllustration({
         (Boolean(block.show) && !media.visibleMedia.includes(block.id) && !media.revealAll)
       }
       style={{
+        translate: block.position ? `${block.position.x}% ${block.position.y}%` : undefined,
         width: block.widthPercent ? `${block.widthPercent}%` : undefined,
         marginInlineStart: block.align === "right" || block.align === "center" ? "auto" : undefined,
         marginInlineEnd: block.align === "left" || block.align === "center" ? "auto" : undefined,
@@ -159,6 +160,7 @@ function ReaderIllustration({
         presentation={presentation}
         block={block}
       />
+      {block.caption && <figcaption>{block.caption}</figcaption>}
       {block.photograph && (
         <PhotographExamination
           bundle={bundle}

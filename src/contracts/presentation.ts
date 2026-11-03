@@ -1,16 +1,35 @@
 import { z } from "zod";
 
 import { NativeEffectSchema, NarrativeEventSchema } from "./effects.ts";
+import { CinematicSchema } from "./cinematic.ts";
 
 export const RuntimeAssetSchema = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
-    path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3)$/),
-    type: z.enum(["image", "audio"]),
+    path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3|mp4|webm)$/),
+    type: z.enum(["image", "audio", "video"]),
+    upload: z
+      .object({
+        digest: z.string().regex(/^[a-f0-9]{64}$/),
+        mime: z.enum(["video/mp4", "video/webm"]),
+        size: z.number().int().positive().max(50_000_000),
+        rights: z.string().trim().min(1).max(500),
+        durationMs: z.number().positive().max(86400000),
+      })
+      .strict()
+      .optional(),
     alt: z.string().max(500),
     credit: z.string().max(500).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (asset) =>
+      !asset.upload ||
+      (asset.type === "video" &&
+        asset.id === `upload.${asset.upload.digest}` &&
+        asset.path === `media/${asset.id}.${asset.upload.mime === "video/mp4" ? "mp4" : "webm"}`),
+    "Invalid uploaded video identity",
+  );
 
 const PresentationBlockSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("text"), segmentId: z.string() }).strict(),
@@ -23,6 +42,11 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
       widthPercent: z.number().min(10).max(100).optional(),
       align: z.enum(["left", "center", "right"]).optional(),
       fit: z.enum(["contain", "cover"]).optional(),
+      position: z
+        .object({ x: z.number().min(-100).max(100), y: z.number().min(-100).max(100) })
+        .strict()
+        .optional(),
+      motion: CinematicSchema.optional(),
       show: z
         .object({
           kind: z.enum(["page", "segment", "delay"]),
@@ -95,6 +119,7 @@ export const ReadingPreferencesSchema = z
     reveal: z.enum(["progressive", "instant"]),
     sound: z.boolean(),
     narration: z.boolean().optional(),
+    pageTurn: z.boolean().optional(),
     deviceVoice: z.boolean().optional(),
     narrationRate: z.number().min(0.5).max(2).optional(),
     narratorVoice: z.string().max(80).optional(),

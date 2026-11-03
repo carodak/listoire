@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
 import type { StoryBundle } from "../src/contracts/story.ts";
-import { StoryProjectSchema } from "../src/contracts/editor-project.ts";
 import { compileProject } from "../src/features/editor/compiler.ts";
 import { BundleSchema } from "../src/contracts/story.ts";
+import { splitStoryArchive, decodeUploadedFile } from "../src/contracts/story-archive.ts";
+import { verifyUploadedMedia } from "../src/contracts/uploaded-media.ts";
 
 interface CuratedAsset {
   id: string;
@@ -44,7 +45,7 @@ function assetSource(
 }
 
 export async function buildEditorProject(root: URL) {
-  const project = StoryProjectSchema.parse(
+  const { project, uploadedFiles } = splitStoryArchive(
     JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),
   );
   const curated = JSON.parse(await readFile(new URL("assets/catalog/curated.json", root), "utf8"));
@@ -80,7 +81,7 @@ export async function buildEditorProject(root: URL) {
         : original;
     project.languages[locale]!.configuration.narration = bundle.narration;
     project.languages[locale]!.configuration.assets = bundle.assets;
-    await copyAssets(bundle, root, output, curated.entries, copied, referenced);
+    await copyAssets(bundle, root, output, curated.entries, copied, referenced, uploadedFiles);
     await writeFile(new URL(`${locale}.json`, output), JSON.stringify(bundle) + "\n");
     console.log(`Built editor-managed house/${locale}: ${bundle.inkDigest.slice(0, 12)}`);
   }
@@ -95,7 +96,7 @@ export async function buildEditorProject(root: URL) {
     }) + "\n",
   );
   for (const file of await readdir(new URL("media/", output)))
-    if (/^[a-z0-9.-]+\.(webp|mp3)$/.test(file) && !referenced.has(file))
+    if (/^[a-z0-9.-]+\.(webp|mp3|mp4|webm)$/.test(file) && !referenced.has(file))
       await rm(new URL(`media/${file}`, output));
 }
 
@@ -140,9 +141,18 @@ async function copyAssets(
   entries: CuratedAsset[],
   copied: Map<string, string>,
   referenced: Set<string>,
+  uploadedFiles: Record<string, string>,
 ) {
   for (const asset of bundle.assets ?? []) {
     if (bundle.embeddedAudio?.[asset.id]) continue;
+    if (asset.upload) {
+      const data = uploadedFiles[asset.id];
+      if (!data) throw new Error(`Missing uploaded video bytes: ${asset.id}`);
+      const blob = await verifyUploadedMedia(asset, decodeUploadedFile(asset, data));
+      await writeFile(new URL(asset.path, output), new Uint8Array(await blob.arrayBuffer()));
+      referenced.add(asset.path.slice("media/".length));
+      continue;
+    }
     const { source, expected } = assetSource(asset, bundle, entries);
     const signature = `${asset.path}:${expected}`;
     if (copied.get(asset.id) === signature) continue;

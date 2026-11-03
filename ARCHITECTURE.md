@@ -4,6 +4,13 @@ Status: **combined Phases 2 and 3 implemented**. Reviewed 2026-11-03.
 The subsequent Story Editor request authorizes authoring at `/editor`; its current
 implementation and limits are recorded in [the editor report](docs/story-editor/implementation.md).
 Earlier editor deferrals below are historical. A game executor remains unimplemented.
+The cinematic extension reuses EffectsEngine and presentation transport. The editor
+imports the pure camera preset definitions to preview its thumbnails. Uploaded video
+bytes live in a separate immutable binary store; application composition supplies media
+resolution to PresentationSession. Source media markers resolve through Ink into frame
+anchors, so the reader can preserve their actual executed position. See the
+[cinematic implementation](docs/story-editor/cinematic-effects.md) for supported presets
+and the explicit single-image parallax fallback.
 The executable subset below supersedes historical phase-specific descriptions.
 See [the combined report](docs/phases2-3-report.md) for verification and production limits.
 

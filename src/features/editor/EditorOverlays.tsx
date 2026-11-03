@@ -13,6 +13,7 @@ import { JsonProperties } from "./JsonProperties.tsx";
 import { message } from "./use-editor-project.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
 import { download } from "./downloads.ts";
+import { exportProjectArchive } from "./project-archive.ts";
 
 interface Context {
   project: StoryProject;
@@ -58,7 +59,7 @@ export function EditorOverlays({ context: c }: { context: Context }) {
         onClose={onClose}
       />
     );
-  if (["Image", "Animation", "Sound Effect", "Background Music"].includes(dialog))
+  if (["Image", "Video", "Animation", "Sound Effect", "Background Music"].includes(dialog))
     return (
       <MediaDialog
         key={`${dialog}:${c.selectedMedia}`}
@@ -167,7 +168,9 @@ export function EditorOverlays({ context: c }: { context: Context }) {
         </button>
         <button
           onClick={() =>
-            download(`${project.storyId}-project.json`, JSON.stringify(project, null, 2))
+            void exportProjectArchive(project)
+              .then((text) => download(`${project.storyId}-project.json`, text))
+              .catch((error) => state.setIssues([message(error)]))
           }
         >
           Complete project backup

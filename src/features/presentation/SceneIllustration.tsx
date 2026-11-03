@@ -1,10 +1,12 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useState, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import type { MediaAsset } from "../../contracts/uploaded-media.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
 import type { PresentationSession } from "./presentation-session.ts";
 import { ReactBitsLayer } from "./react-bits/ReactBitsLayer.tsx";
 import "./cinematic.css";
+import "./cinematic-shot.css";
 
 export function SceneIllustration({
   bundle,
@@ -18,37 +20,156 @@ export function SceneIllustration({
   block: Extract<PresentationBlock, { kind: "media" }>;
 }) {
   const { t } = useTranslation();
-  const image = useRef<HTMLImageElement>(null);
-  const canvas = useRef<HTMLDivElement>(null);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const wasFullscreen = useRef(false);
+  const nodes = useRef<SurfaceNodes>({
+    image: null,
+    video: null,
+    layers: [],
+    canvas: null,
+    dialog: null,
+    wasFullscreen: false,
+  });
   const state = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const scene = bundle.scenes?.[passageId];
   const illustration = bundle.assets?.find(
-    (asset) => asset.id === block.image && asset.type === "image",
+    (asset) => asset.id === block.image && ["image", "video"].includes(asset.type),
   );
+  const videoSource = useVideoSource(illustration, presentation);
   const fullscreen =
-    block.layout === "fullscreen" && !state.revealAll && !state.completedBlocks.includes(block.id);
+    block.layout === "fullscreen" &&
+    !state.revealAll &&
+    !state.completedBlocks.includes(block.id) &&
+    !state.expiredMedia.includes(block.id) &&
+    (!block.show || state.visibleMedia.includes(block.id));
   const togglePlayback = state.paused
     ? { action: presentation.resume, label: t("resume") }
     : { action: presentation.pause, label: t("pause") };
   useLayoutEffect(() => {
-    if (fullscreen) dialog.current?.showModal();
-    else if (wasFullscreen.current) canvas.current!.focus({ preventScroll: true });
-    wasFullscreen.current = fullscreen;
+    if (fullscreen) nodes.current.dialog?.showModal();
+    else if (nodes.current.wasFullscreen) nodes.current.canvas!.focus({ preventScroll: true });
+    nodes.current.wasFullscreen = fullscreen;
+    if (illustration?.type === "video" && !videoSource) return;
     return presentation.bind(
       {
-        canvas: canvas.current!,
-        image: image.current!,
+        canvas: nodes.current.canvas!,
+        image: nodes.current.image!,
+        layers: nodes.current.layers.filter((layer): layer is HTMLImageElement => Boolean(layer)),
+        video: nodes.current.video ?? undefined,
       },
       block.id,
     );
-  }, [presentation, passageId, block.id, fullscreen]);
+  }, [presentation, passageId, block.id, fullscreen, videoSource, illustration?.type]);
+  const bindNode: BindNode = (kind, node, index = 0) => {
+    if (kind === "layer") nodes.current.layers[index] = node as HTMLImageElement | null;
+    else if (kind === "canvas") nodes.current.canvas = node as HTMLDivElement | null;
+    else {
+      nodes.current.image = node;
+      if (kind === "video") nodes.current.video = node as HTMLVideoElement | null;
+    }
+  };
   const content = (
-    <div ref={canvas} tabIndex={-1} className="cinematic-stage scene-illustration">
-      {illustration && (
+    <IllustrationContent {...{ bundle, block, bindNode, state, illustration, videoSource }} />
+  );
+  if (fullscreen)
+    return (
+      <dialog
+        ref={(node) => {
+          nodes.current.dialog = node;
+        }}
+        className="cinematic-dialog"
+        aria-label={block.caption ?? scene?.title}
+        onCancel={() => presentation.skipCinematic()}
+        onClose={() => presentation.skipCinematic()}
+      >
+        <button className="cinematic-transport" onClick={togglePlayback.action}>
+          {togglePlayback.label}
+        </button>
+        <button
+          className="cinematic-skip"
+          onClick={presentation.skipCinematic}
+          aria-label={t("skipCinematic")}
+        >
+          {t("skipCinematic")} <span aria-hidden="true">↗</span>
+        </button>
+        {content}
+        {block.caption && <p className="cinematic-caption">{block.caption}</p>}
+      </dialog>
+    );
+  return content;
+}
+
+type BindNode = (
+  kind: "image" | "video" | "canvas" | "layer",
+  node: HTMLElement | null,
+  index?: number,
+) => void;
+interface SurfaceNodes {
+  image: HTMLElement | null;
+  video: HTMLVideoElement | null;
+  layers: (HTMLImageElement | null)[];
+  canvas: HTMLDivElement | null;
+  dialog: HTMLDialogElement | null;
+  wasFullscreen: boolean;
+}
+function useVideoSource(illustration: MediaAsset | undefined, presentation: PresentationSession) {
+  const [resource, setResource] = useState<{ assetId: string; url: string | null }>({
+    assetId: "",
+    url: "",
+  });
+  useEffect(() => {
+    if (illustration?.type !== "video") return;
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
+    void presentation
+      .resolveAsset(illustration)
+      .then((resource) => {
+        if (cancelled) {
+          resource.dispose();
+          return;
+        }
+        dispose = resource.dispose;
+        setResource({ assetId: illustration.id, url: resource.url });
+      })
+      .catch(() => {
+        if (!cancelled) setResource({ assetId: illustration.id, url: null });
+      });
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, [illustration, presentation]);
+  return resource.assetId === illustration?.id ? resource.url : "";
+}
+function IllustrationContent({
+  bundle,
+  block,
+  bindNode,
+  state,
+  illustration,
+  videoSource,
+}: {
+  bundle: StoryBundle;
+  block: Extract<PresentationBlock, { kind: "media" }>;
+  bindNode: BindNode;
+  state: ReturnType<PresentationSession["getSnapshot"]>;
+  illustration: MediaAsset | undefined;
+  videoSource: string | null;
+}) {
+  const [videoFailed, setVideoFailed] = useState(false);
+  return (
+    <div
+      ref={(node) => {
+        bindNode("canvas", node);
+      }}
+      tabIndex={-1}
+      className={`cinematic-stage scene-illustration atmosphere-${block.motion?.atmosphere ?? "none"}`}
+      data-paused={state.paused}
+    >
+      {illustration?.type === "image" && (
         <img
-          ref={image}
+          ref={(node) => {
+            bindNode("image", node);
+          }}
+          className="shot-image"
           src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${illustration.path}`}
           alt={illustration.alt}
           style={block.fit ? { objectFit: block.fit } : undefined}
@@ -56,6 +177,65 @@ export function SceneIllustration({
             event.currentTarget.hidden = true;
           }}
         />
+      )}
+      {illustration?.type === "video" &&
+        (videoSource ? (
+          <video
+            ref={(node) => {
+              bindNode("video", node);
+            }}
+            className="shot-image"
+            src={videoSource}
+            aria-label={illustration.alt || "Story video"}
+            controls={
+              block.layout !== "fullscreen" ||
+              state.revealAll ||
+              state.completedBlocks.includes(block.id)
+            }
+            playsInline
+            muted
+            preload="metadata"
+            onLoadStart={() => setVideoFailed(false)}
+            onError={() => setVideoFailed(true)}
+            style={{ objectFit: block.fit ?? "contain" }}
+          />
+        ) : (
+          <p role="status">
+            {videoSource === null
+              ? "Video unavailable. Restore its project backup if the local file is missing."
+              : "Loading video…"}
+          </p>
+        ))}
+      {videoFailed && (
+        <p role="status">
+          This browser cannot decode this video. Its file is preserved; use a compatible MP4/WebM
+          codec or another browser to play it.
+        </p>
+      )}
+      {block.motion?.layers.map((id, index) => {
+        const asset = bundle.assets?.find((asset) => asset.id === id && asset.type === "image");
+        return asset ? (
+          <img
+            className="parallax-layer"
+            key={id}
+            ref={(node) => {
+              bindNode("layer", node, index);
+            }}
+            alt=""
+            aria-hidden="true"
+            src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`}
+            style={{ objectFit: block.fit ?? "cover" }}
+          />
+        ) : null;
+      })}
+      {block.motion?.atmosphere && block.motion.atmosphere !== "none" && (
+        <div aria-hidden="true" className="shot-atmosphere">
+          <i className="shot-grain" />
+          <i className="shot-vignette" />
+          <i className="shot-dust" />
+          <i className="shot-light" />
+          <i className="shot-scratches" />
+        </div>
       )}
       {state.layers
         .filter((layer) => layer.blockId === block.id)
@@ -77,28 +257,4 @@ export function SceneIllustration({
         })}
     </div>
   );
-  if (fullscreen)
-    return (
-      <dialog
-        ref={dialog}
-        className="cinematic-dialog"
-        aria-label={block.caption ?? scene?.title}
-        onCancel={() => presentation.skipCinematic()}
-        onClose={() => presentation.skipCinematic()}
-      >
-        <button className="cinematic-transport" onClick={togglePlayback.action}>
-          {togglePlayback.label}
-        </button>
-        <button
-          className="cinematic-skip"
-          onClick={presentation.skipCinematic}
-          aria-label={t("skipCinematic")}
-        >
-          {t("skipCinematic")} <span aria-hidden="true">↗</span>
-        </button>
-        {content}
-        {block.caption && <p className="cinematic-caption">{block.caption}</p>}
-      </dialog>
-    );
-  return content;
 }

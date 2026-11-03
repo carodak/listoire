@@ -8,7 +8,7 @@ async function openEditor(page: Page) {
   await page.goto("/editor");
   await expect(page.getByLabel("Ink script editor")).toBeVisible();
   await expect(page.locator(".ace_text-input")).toHaveCount(1);
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".editor-status").getByRole("status")).toContainText(
     /Original story loaded|Saved project loaded/,
   );
 }
@@ -18,8 +18,105 @@ async function appendInk(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
+test("inserts images at their source position and preserves video uploads in complete backups", async ({
+  page,
+  browserName,
+}) => {
+  await openEditor(page);
+  await page.locator(".ace_text-input").focus();
+  await expect(page.locator(".preview-slot .prose")).toBeVisible();
+  await expect(page.locator(".ace_text-input")).toBeFocused();
+  await page
+    .getByLabel("Find in Ink", { exact: true })
+    .fill("The girl beside her looked exactly like you.");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "Image", exact: true }).click();
+  await page.getByRole("button", { name: /Browse media library/ }).click();
+  await page.getByLabel("Search media", { exact: true }).fill("human5");
+  await page.getByRole("button", { name: "Use this media", exact: true }).click();
+  await page.getByLabel("Caption", { exact: true }).fill("After the girl");
+  await page.getByLabel("Type", { exact: true }).selectOption("wide");
+  await page.getByLabel("Override default position", { exact: true }).check();
+  await page.getByLabel("X (%)", { exact: true }).fill("5");
+  await page.getByLabel("Y (%)", { exact: true }).fill("0");
+  await page.getByRole("button", { name: "slow reveal", exact: true }).click();
+  await page.getByLabel("Cinematic atmosphere", { exact: true }).selectOption("historical");
+  await page.getByRole("button", { name: "Apply Image", exact: true }).click();
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
+  const figure = page
+    .locator(".preview-slot figure")
+    .filter({ has: page.getByText("After the girl", { exact: true }) });
+  await expect(figure).toBeVisible();
+  expect(await figure.evaluate((node) => node.previousElementSibling?.textContent)).toContain(
+    "The girl beside her looked exactly like you.",
+  );
+  await expect(figure.locator(".atmosphere-historical")).toBeVisible();
+  await page.getByRole("button", { name: "Video", exact: true }).click();
+  await page
+    .getByLabel("Video permission / rights", { exact: true })
+    .fill("Owned synthetic black-frame test fixture.");
+  if (browserName === "webkit")
+    await page
+      .getByLabel("Video duration in seconds (optional override)", { exact: true })
+      .fill("1");
+  await page
+    .getByLabel("Video file (MP4 / WebM, max 50 MB)", { exact: true })
+    .setInputFiles(resolve("tests/fixtures/editor-video.mp4"));
+  await expect(page.getByRole("dialog").locator("video")).toBeVisible();
+  await page.getByRole("button", { name: "Apply Video", exact: true }).click();
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
+  await expect(page.locator(".preview-slot video")).toBeVisible();
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await download).path())!, "utf8"));
+  expect(Object.values(backup.uploadedFiles)[0]).toMatch(/^data:video\/mp4;base64,/);
+  await page.getByRole("button", { name: "Close dialog", exact: true }).click();
+  await page.getByRole("button", { name: "Close preview", exact: true }).click();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open("listoire-media");
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const db = request.result;
+          const transaction = db.transaction("files", "readwrite");
+          transaction.objectStore("files").clear();
+          transaction.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          transaction.onerror = () => reject(transaction.error);
+        };
+      }),
+  );
+  await page.getByRole("button", { name: "Load / Import", exact: true }).click();
+  await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles({
+    name: "restored-project.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(backup)),
+  });
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
+  const restoredVideo = page.locator(".preview-slot video");
+  await expect(restoredVideo).toBeVisible();
+  if (browserName !== "webkit") {
+    await restoredVideo.evaluate(async (video: HTMLVideoElement) => {
+      await video.play();
+    });
+    await expect
+      .poll(() => restoredVideo.evaluate((video: HTMLVideoElement) => video.currentTime))
+      .toBeGreaterThan(0);
+  }
+});
+
 test("saves custom voice profiles and sends the selected synthesis parameters to local preview", async ({
   page,
+  browserName,
 }) => {
   await openEditor(page);
   await page.getByRole("tab", { name: "Media", exact: true }).click();
@@ -45,8 +142,12 @@ test("saves custom voice profiles and sends the selected synthesis parameters to
   wav.writeUInt16LE(16, 34);
   wav.write("data", 36);
   wav.writeUInt32LE(288000, 40);
+  if (browserName === "webkit")
+    await page
+      .getByLabel("Example duration in seconds (optional override)", { exact: true })
+      .fill("6");
   await page
-    .getByLabel("Voice example (MP3 / WAV, max 2 MB)", { exact: true })
+    .getByLabel("Voice example (MP3 / WAV, max 5 MB)", { exact: true })
     .setInputFiles({ name: "example.wav", mimeType: "audio/wav", buffer: wav });
   await expect(page.getByLabel("Voice", { exact: true }).locator("option:checked")).toHaveText(
     "Example voice",
@@ -86,6 +187,21 @@ test("search, sidebar media highlighting, compatible animations and docked previ
   page,
 }) => {
   await openEditor(page);
+  await expect(page.locator(".preview-slot .prose")).toBeVisible();
+  await page.getByRole("button", { name: "Minimize preview", exact: true }).click();
+  await expect(page.locator(".preview-content")).toBeHidden();
+  await page.getByRole("button", { name: "Restore preview", exact: true }).click();
+  await page.getByRole("button", { name: "Maximize preview", exact: true }).click();
+  await expect(page.locator(".experience-preview")).toHaveAttribute("data-window", "maximized");
+  await page.getByRole("button", { name: "Restore preview size", exact: true }).click();
+  if ((page.viewportSize()?.width ?? 0) > 1000) {
+    await page
+      .getByRole("separator", { name: "Resize navigation", exact: true })
+      .press("ArrowRight");
+    await expect(
+      page.getByRole("separator", { name: "Resize navigation", exact: true }),
+    ).toHaveAttribute("aria-valuenow", "239");
+  }
   await expect(
     page.getByLabel("Story language", { exact: true }).locator("option").last(),
   ).toHaveText("+ Add Language…");
@@ -94,7 +210,7 @@ test("search, sidebar media highlighting, compatible animations and docked previ
   await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
   await expect(page.locator(".ace_search_form input")).toHaveValue("photograph");
   await expect(page.locator(".ace_replace_form")).toBeHidden();
-  await page.getByRole("button", { name: "Find and replace…", exact: true }).click();
+  await page.getByRole("button", { name: "Or find and replace…", exact: true }).click();
   await expect(page.locator(".ace_replace_form")).toBeVisible();
   await expect(page.getByLabel("Close search", { exact: true })).toHaveText("×");
   await page.getByLabel("Close search", { exact: true }).click();
@@ -128,6 +244,7 @@ test("search, sidebar media highlighting, compatible animations and docked previ
   await expect(page.getByLabel("Chapter", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
   await expect(page.locator(".preview-slot .prose")).toContainText("The first time");
   await page.getByRole("button", { name: "Continue reading", exact: true }).click();
   await expect(page.locator(".preview-slot .prose")).toContainText("On the back");
@@ -159,8 +276,12 @@ test("edits both languages, undoes metadata, publishes a title and previews the 
     "The Photograph — edited",
   );
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved · reader updated", { timeout: 20_000 });
+  await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
+    "Saved · reader updated",
+    { timeout: 20_000 },
+  );
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
   await expect(page.locator(".experience-preview .prose")).toContainText(
     "The first time you saw the girl",
   );
@@ -216,14 +337,19 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
 test("autosaves invalid drafts without replacing the working story", async ({ page }) => {
   await openEditor(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved · reader updated", { timeout: 20_000 });
+  await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
+    "Saved · reader updated",
+    { timeout: 20_000 },
+  );
   await appendInk(page, "\n=== broken ===\n-> target_does_not_exist\n");
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
     "Draft saved · fix issues to update the reader",
     { timeout: 20_000 },
   );
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText("Saved project loaded");
+  await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
+    "Saved project loaded",
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "Play an existing story" }).click();
   await expect(page.locator(".prose")).toContainText("The first time you saw the girl");
@@ -242,7 +368,7 @@ test("backs up a human recording and restores the complete project from history"
   await page
     .getByLabel("Rights attestation")
     .fill("Automated test fixture; no publication approval.");
-  await page.getByLabel("Duration in seconds (optional override)").fill("2.5");
+  await page.getByLabel("Duration in seconds (optional override)", { exact: true }).fill("2.5");
   await page
     .getByLabel("Upload MP3")
     .setInputFiles(resolve("stories/house/media/sonniss.telephone.mp3"));
@@ -260,7 +386,10 @@ test("backs up a human recording and restores the complete project from history"
     .toEqual({ rate: 1.5, volume: 0.4 });
   await page.getByRole("button", { name: "Apply narration", exact: true }).click();
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Saved · reader updated", { timeout: 20_000 });
+  await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
+    "Saved · reader updated",
+    { timeout: 20_000 },
+  );
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Complete project backup", exact: true }).click();

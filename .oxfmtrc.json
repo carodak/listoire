@@ -3,6 +3,7 @@
     ".agents/**",
     ".codex/**",
     "public/stories/**",
+    "test-results*/**",
     "skills-lock.json",
     "Listoire.code-workspace",
     "package-lock.json",

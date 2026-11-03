@@ -14,6 +14,8 @@ import { verifyMediaAssets } from "./asset-validation.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 import { editorShortcut } from "./editor-shortcuts.ts";
+import { presentationBlocks } from "../reader/narrative-blocks.ts";
+import { CinematicSchema } from "../../contracts/cinematic.ts";
 
 const original = StoryProjectSchema.parse(
   JSON.parse(
@@ -24,6 +26,62 @@ const original = StoryProjectSchema.parse(
   ),
 );
 afterEach(() => vi.restoreAllMocks());
+it("ignores example headings in block comments while preserving real outline source rows", () => {
+  expect(
+    outlineEntries("/*\n=== example ===\n= example_stitch\n*/\n=== start ===\n= first"),
+  ).toMatchObject([
+    { path: "start", row: 4 },
+    { path: "start.first", row: 5 },
+  ]);
+});
+it("compiles mixed Windows line endings and media tags without changing the house story", async () => {
+  const annotated = withMediaReferences(original);
+  const engine = new InkNarrativeEngine(await compileLanguage(annotated, "en"));
+  const baseline = new InkNarrativeEngine(await compileLanguage(original, "en"));
+  const { mediaAnchors, ...frame } = engine.advance();
+  expect(frame).toEqual(baseline.advance());
+  expect(mediaAnchors).toContainEqual({ id: "intro.illustration", after: "intro.p2" });
+  engine.choose("intro.call");
+  baseline.choose("intro.call");
+  expect(engine.advance()).toEqual(baseline.advance());
+});
+
+it("places media at its executed source position, including native untagged paragraphs", async () => {
+  const project = structuredClone(original);
+  project.languages.en!.configuration = {
+    title: "Order",
+    chapter: "Story",
+    assets: original.languages.en!.configuration.assets,
+  };
+  project.languages.en!.script =
+    "-> start\n=== start ===\nFirst sentence.\n// @media start/picture\nSecond sentence.\n-> END";
+  const input = mediaDefaults("Image", "start", "picture");
+  input.asset = "tcp.human5";
+  const bundle = await compileLanguage(applyMediaEdit(project, "en", input, [], "passage"), "en");
+  const frame = new InkNarrativeEngine(bundle).advance();
+  expect(frame.mediaAnchors).toEqual([{ id: "picture", after: frame.segments[0]!.id }]);
+  expect(
+    presentationBlocks(bundle, frame).map((block) =>
+      block.kind === "text"
+        ? frame.segments.find((s) => s.id === block.segmentId)!.text
+        : block.kind,
+    ),
+  ).toEqual(["First sentence.", "media", "Second sentence.", "choices"]);
+  input.motion = CinematicSchema.parse({ preset: "slow-reveal", atmosphere: "historical" });
+  input.positionOverride = true;
+  input.x = 10;
+  input.y = -5;
+  const changed = applyMediaEdit(project, "en", input, [], "passage").languages.en!.configuration
+    .scenes!.start!;
+  expect(changed.blocks).toContainEqual(expect.objectContaining({ position: { x: 10, y: -5 } }));
+  expect(changed.events).toContainEqual(
+    expect.objectContaining({
+      action: expect.objectContaining({
+        effect: expect.objectContaining({ id: "cinematic-camera", duration: 14000 }),
+      }),
+    }),
+  );
+});
 
 it("lists Knot and Stitch paths and makes existing media discoverable without changing Ink", () => {
   expect(outlineEntries("=== start ===\n= first\nHello\n=== end ===")).toMatchObject([

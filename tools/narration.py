@@ -130,14 +130,14 @@ def validate_reference(reference):
     if not isinstance(reference, dict) or reference.keys() != {"name", "data", "rights"} or not isinstance(reference["rights"], str) or not 1 <= len(reference["rights"].strip()) <= 500 or not isinstance(reference["name"], str) or not 1 <= len(reference["name"]) <= 120:
         raise ValueError("Voice reference needs permission and a filename")
     data = reference["data"]
-    if not isinstance(data, str) or len(data) > 2_800_000:
-        raise ValueError("Voice reference exceeds 2 MB")
+    if not isinstance(data, str) or len(data) > 6_800_000:
+        raise ValueError("Voice reference exceeds 5 MB")
     match = re.fullmatch(r"data:audio/(mpeg|wav);base64,([A-Za-z0-9+/=]+)", data)
     if not match:
         raise ValueError("Voice reference must be MP3 or WAV")
     decoded = base64.b64decode(match[2], validate=True)
-    if not 1 <= len(decoded) <= 2_000_000:
-        raise ValueError("Voice reference exceeds 2 MB")
+    if not 1 <= len(decoded) <= 5_000_000:
+        raise ValueError("Voice reference exceeds 5 MB")
     return ("mp3" if match[1] == "mpeg" else "wav"), decoded
 
 
@@ -295,7 +295,7 @@ def serve():
                 size = int(self.headers.get("Content-Length", "0"))
             except ValueError:
                 self.respond(400, b'{}'); return
-            if not 0 < size <= (3_000_000 if self.path.endswith("/editor-preview") else 20000):
+            if not 0 < size <= (7_000_000 if self.path.endswith("/editor-preview") else 20000):
                 self.respond(413, b'{}'); return
             try:
                 authorize = authoring_segment if self.path.endswith("/editor-preview") else authorized_segment

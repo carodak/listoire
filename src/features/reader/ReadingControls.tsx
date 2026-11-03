@@ -20,6 +20,7 @@ export function ReadingControls({
 }) {
   const { t } = useTranslation();
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
+  const volumes = { sfx: 0.65, ambience: 0.3, music: 0.3, narration: 0.8, ...preferences.volumes };
   return (
     <aside className="reading-controls">
       <div className="reading-transport">
@@ -126,60 +127,26 @@ export function ReadingControls({
           <label>
             <input
               type="checkbox"
+              checked={preferences.pageTurn ?? false}
+              onChange={(event) => onChange({ ...preferences, pageTurn: event.target.checked })}
+            />
+            {t("pageTurn")}
+          </label>
+          <label>
+            <input
+              type="checkbox"
               checked={preferences.narration ?? false}
               onChange={(event) => onChange({ ...preferences, narration: event.target.checked })}
             />
             {t("readAloud")}
           </label>
           {preferences.narration && (
-            <>
-              <label>
-                {t("narratorVoice")}
-                <select
-                  aria-label={t("narratorVoice")}
-                  title={t("voiceNextSegment")}
-                  value={
-                    voices.find((voice) => voice.id === preferences.narratorVoice)?.id ??
-                    voices[0]?.id ??
-                    ""
-                  }
-                  onChange={(event) =>
-                    onChange({ ...preferences, narratorVoice: event.target.value })
-                  }
-                >
-                  {voices.map((voice) => (
-                    <option key={voice.id} value={voice.id}>
-                      {voice.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t("deviceVoice")}
-                <input
-                  type="checkbox"
-                  checked={preferences.deviceVoice ?? true}
-                  onChange={(event) =>
-                    onChange({ ...preferences, deviceVoice: event.target.checked })
-                  }
-                />
-              </label>
-              <label>
-                {t("voiceRate")}
-                <input
-                  aria-label={t("voiceRate")}
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={preferences.narrationRate ?? 1}
-                  onChange={(event) =>
-                    onChange({ ...preferences, narrationRate: Number(event.target.value) })
-                  }
-                />
-              </label>
-              {media.voice === "unavailable" && <p role="status">{t("voiceUnavailable")}</p>}
-            </>
+            <NarrationPreferences
+              preferences={preferences}
+              onChange={onChange}
+              voices={voices}
+              unavailable={media.voice === "unavailable"}
+            />
           )}
           {(["sfx", "ambience", "music", "narration"] as const).map((channel) => (
             <label key={channel}>
@@ -189,20 +156,13 @@ export function ReadingControls({
                 min="0"
                 max="1"
                 step="0.05"
-                value={
-                  preferences.volumes?.[channel] ??
-                  (channel === "sfx" ? 0.65 : channel === "narration" ? 0.8 : 0.3)
-                }
+                value={volumes[channel]}
                 aria-label={t(`audioChannels.${channel}`)}
                 onChange={(event) =>
                   onChange({
                     ...preferences,
                     volumes: {
-                      sfx: 0.65,
-                      ambience: 0.3,
-                      music: 0.3,
-                      narration: 0.8,
-                      ...preferences.volumes,
+                      ...volumes,
                       [channel]: Number(event.target.value),
                     },
                   })
@@ -213,5 +173,62 @@ export function ReadingControls({
         </div>
       </details>
     </aside>
+  );
+}
+
+function NarrationPreferences({
+  preferences,
+  onChange,
+  voices,
+  unavailable,
+}: {
+  preferences: ReadingPreferences;
+  onChange: (preferences: ReadingPreferences) => void;
+  voices: { id: string; label: string }[];
+  unavailable: boolean;
+}) {
+  const { t } = useTranslation();
+  const selectedVoice = voices.find((voice) => voice.id === preferences.narratorVoice) ?? voices[0];
+  return (
+    <>
+      <label>
+        {t("narratorVoice")}
+        <select
+          aria-label={t("narratorVoice")}
+          title={t("voiceNextSegment")}
+          value={selectedVoice?.id ?? ""}
+          onChange={(event) => onChange({ ...preferences, narratorVoice: event.target.value })}
+        >
+          {voices.map((voice) => (
+            <option key={voice.id} value={voice.id}>
+              {voice.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        {t("deviceVoice")}
+        <input
+          type="checkbox"
+          checked={preferences.deviceVoice ?? true}
+          onChange={(event) => onChange({ ...preferences, deviceVoice: event.target.checked })}
+        />
+      </label>
+      <label>
+        {t("voiceRate")}
+        <input
+          aria-label={t("voiceRate")}
+          type="range"
+          min="0.5"
+          max="2"
+          step="0.1"
+          value={preferences.narrationRate ?? 1}
+          onChange={(event) =>
+            onChange({ ...preferences, narrationRate: Number(event.target.value) })
+          }
+        />
+      </label>
+      {unavailable && <p role="status">{t("voiceUnavailable")}</p>}
+    </>
   );
 }

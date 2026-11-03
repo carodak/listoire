@@ -24,11 +24,14 @@ export function InkEditor({
   const updating = useRef(false);
   useEffect(() => {
     let disposed = false;
+    let resize: ResizeObserver | undefined;
     void loadAce()
       .then((ace) => {
         if (disposed) return;
         const instance = ace.edit(element.current!);
         editor.current = instance;
+        resize = new ResizeObserver(() => instance.resize());
+        resize.observe(element.current!);
         instance.setOptions({
           fontSize: 14,
           showPrintMargin: false,
@@ -65,11 +68,14 @@ export function InkEditor({
             "fullLine",
           );
         };
+        const { SearchBox } = ace.require("ace/ext/searchbox");
+        new SearchBox(instance).hide();
         latest.current.onReady(instance);
       })
       .catch((error) => latest.current.onError(error));
     return () => {
       disposed = true;
+      resize?.disconnect();
       editor.current?.destroy();
       editor.current = null;
     };

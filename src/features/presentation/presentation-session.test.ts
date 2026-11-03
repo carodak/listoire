@@ -12,6 +12,104 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
+it("resumes only visible videos and keeps expired or not-yet-visible media silent", async () => {
+  vi.useFakeTimers();
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Timed video",
+      progress: 0,
+      blocks: [
+        {
+          kind: "media",
+          id: "clip",
+          image: "movie",
+          layout: "inline",
+          show: { kind: "delay", delayMs: 100 },
+          durationMs: 100,
+        },
+        { kind: "choices" },
+      ],
+    },
+  };
+  const session = new PresentationSession(bundle, defaultReadingPreferences);
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "one",
+    false,
+  );
+  const video = { readyState: 2, play: vi.fn(async () => {}), pause: vi.fn() };
+  session.bind({ canvas: {} as HTMLElement, video: video as unknown as HTMLVideoElement }, "clip");
+  session.pause();
+  session.resume();
+  expect(video.play).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(100);
+  expect(video.play).toHaveBeenCalledOnce();
+  session.pause();
+  session.resume();
+  expect(video.play).toHaveBeenCalledTimes(2);
+  await vi.advanceTimersByTimeAsync(100);
+  session.pause();
+  session.resume();
+  expect(video.play).toHaveBeenCalledTimes(2);
+  session.dispose();
+});
+it("waits for video data before starting its bounded fullscreen cue and removes pending listeners on departure", async () => {
+  vi.useFakeTimers();
+  let finish!: (result: "aborted") => void;
+  const play = vi.spyOn(EffectsEngine.prototype, "play").mockReturnValue({
+    finished: new Promise((resolve) => {
+      finish = resolve;
+    }),
+    stop() {},
+    pause() {},
+    resume() {},
+  });
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Video",
+      progress: 0,
+      blocks: [
+        { kind: "media", id: "clip", image: "movie", layout: "fullscreen" },
+        { kind: "choices" },
+      ],
+      events: [
+        {
+          id: "clip.cinematic",
+          trigger: { kind: "block", blockId: "clip" },
+          blockId: "clip",
+          blocking: true,
+          action: { kind: "effect", effect: { id: "video-playback", duration: 1000 } },
+        },
+      ],
+    },
+  };
+  const session = new PresentationSession(bundle, defaultReadingPreferences);
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "one",
+    false,
+  );
+  const video = Object.assign(new EventTarget(), {
+    readyState: 0,
+    play: vi.fn(async () => {}),
+    pause: vi.fn(),
+    volume: 1,
+    muted: false,
+  });
+  session.bind({ canvas: {} as HTMLElement, video: video as unknown as HTMLVideoElement }, "clip");
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).not.toHaveBeenCalled();
+  video.readyState = 2;
+  video.dispatchEvent(new Event("loadeddata"));
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledOnce();
+  expect(session.getSnapshot().blocking).toBe(true);
+  expect(video.volume).toBe(0.65);
+  session.dispose();
+  finish("aborted");
+});
 
 it("runs scene exit transitions on departure, never on entry", async () => {
   vi.useFakeTimers();

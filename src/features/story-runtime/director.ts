@@ -73,15 +73,19 @@ export class StoryDirector {
     this.listeners.forEach((listener) => listener());
   }
 
-  private async run(operation: () => Promise<void>): Promise<void> {
+  private async run(
+    operation: () => Promise<void>,
+    direction: "forward" | "back" = "forward",
+  ): Promise<void> {
     if (this.disposed || this.snapshot.busy) return;
     this.publish({ busy: true, failure: null });
     try {
-      await this.presentation?.leave?.();
+      await this.presentation?.leave?.(direction);
       this.presentation?.cancel();
     } catch {
       /* Reading remains available without media. */
     }
+    if (this.disposed) return;
     try {
       await operation();
     } catch (error) {
@@ -223,7 +227,7 @@ export class StoryDirector {
         character: save.character ?? null,
         canGoBack: this.previousPages.length > 0,
       });
-    });
+    }, "back");
   }
   private present(frame: Frame, occurrenceId: string, restored: boolean) {
     try {

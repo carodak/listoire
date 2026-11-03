@@ -1,8 +1,11 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
-export function audioDuration(url: string): Promise<number> {
+export function audioDuration(url: string, kind: "audio" | "video" = "audio"): Promise<number> {
   return new Promise((resolve, reject) => {
-    const audio = new Audio(url);
+    const audio =
+      kind === "video"
+        ? Object.assign(document.createElement("video"), { src: url })
+        : new Audio(url);
     const finish = (error?: string) => {
       clearTimeout(timer);
       const duration = audio.duration * 1000;

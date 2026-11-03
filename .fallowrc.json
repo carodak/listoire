@@ -131,7 +131,7 @@
       },
       {
         "from": "editor",
-        "allow": ["contracts", "persistence", "media"]
+        "allow": ["contracts", "persistence", "media", "presentation"]
       },
       {
         "from": "landing",

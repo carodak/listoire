@@ -1,6 +1,7 @@
 import i18next from "i18next";
 
 const en = {
+  pageTurn: "Animated page turns",
   previousPage: "Previous page",
   replayPage: "Replay page",
   narratorVoice: "Narrator",
@@ -96,6 +97,7 @@ const en = {
   },
 };
 const fr: typeof en = {
+  pageTurn: "Animation des pages tournées",
   previousPage: "Page précédente",
   replayPage: "Rejouer la page",
   narratorVoice: "Narrateur",

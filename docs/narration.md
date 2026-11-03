@@ -73,8 +73,8 @@ The service listens only on `127.0.0.1:8765`; Vite proxies `/api/narration`. The
 endpoint accepts only exact exported story variants. `/api/narration/editor-preview`
 also accepts bounded authored text for unsaved editor previews and edited local stories.
 The reader endpoint restricts configured voice IDs and requests to 20 KB. The editor
-endpoint also accepts named profiles and synthesis settings, with a 3 MB request cap.
-Examples must be MP3/WAV, 6–30 seconds and at most 2 MB, with author-attested rights.
+endpoint also accepts named profiles and synthesis settings, with a 7 MB request cap.
+Examples must be MP3/WAV, 6–30 seconds and at most 5 MB, with author-attested rights.
 Forced audio demuxers, local-only protocols and decode timeouts prevent interpreting
 an upload as a playlist. Both endpoints check loopback Host/Origin, serialize model
 generation and serve only hash-named

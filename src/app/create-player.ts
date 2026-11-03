@@ -6,6 +6,7 @@ import { PresentationSession } from "../features/presentation/presentation-sessi
 import type { ReadingPreferences } from "../contracts/presentation.ts";
 import type { z } from "zod";
 import { PreviewStateSchema } from "../contracts/editor-project.ts";
+import { resolveMediaAsset } from "../persistence/media-store.ts";
 
 export async function createPlayer(
   bundle: StoryBundle,
@@ -14,7 +15,9 @@ export async function createPlayer(
   preview?: { startKnot?: string; state?: z.infer<typeof PreviewStateSchema> },
 ) {
   const { InkNarrativeEngine } = await import("../features/story-runtime/ink-engine.ts");
-  const presentation = new PresentationSession(bundle, preferences);
+  const presentation = new PresentationSession(bundle, preferences, undefined, (asset) =>
+    resolveMediaAsset(asset, bundle.storyId),
+  );
   const director = new StoryDirector(
     bundle,
     new InkNarrativeEngine(bundle, preview?.startKnot, preview?.state?.variables),

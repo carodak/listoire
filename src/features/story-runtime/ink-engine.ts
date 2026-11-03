@@ -75,14 +75,17 @@ export class InkNarrativeEngine implements NarrativeEngine {
 
   advance(): Frame {
     const segments: Frame["segments"] = [];
+    const mediaAnchors: NonNullable<Frame["mediaAnchors"]> = [];
     let passageId = "";
     let steps = 0;
     while (this.story.canContinue) {
       if (++steps > 200) throw new ReaderFailure("content");
       const path = this.story.state.currentPathString ?? "start";
       const text = this.continueLine()?.trim();
-      if (!text) continue;
       const tags = this.story.currentTags ?? [];
+      for (const marker of tags.filter((value) => value.startsWith("media:")))
+        mediaAnchors.push({ id: marker.slice(6).trim(), after: segments.at(-1)?.id });
+      if (!text) continue;
       passageId = this.passageId(tags, passageId, path);
       const segmentId = tag(
         tags,
@@ -98,6 +101,7 @@ export class InkNarrativeEngine implements NarrativeEngine {
       passageId,
       segments,
       choices: this.choices(),
+      ...(mediaAnchors.length ? { mediaAnchors } : {}),
       ...(this.bundle.variables ? { facts, actions: this.choices(true) } : {}),
     });
     if (!parsed.success) throw new ReaderFailure("content");

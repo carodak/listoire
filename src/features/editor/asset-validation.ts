@@ -1,10 +1,13 @@
 import type { StoryBundle } from "../../contracts/story.ts";
+import { readUploadedMedia } from "../../persistence/media-store.ts";
 const checked = new Map<string, Promise<void>>();
 export async function verifyMediaAssets(bundles: Record<string, StoryBundle>) {
+  for (const bundle of Object.values(bundles))
+    for (const asset of bundle.assets ?? []) if (asset.upload) await readUploadedMedia(asset);
   const paths = new Set(
     Object.values(bundles).flatMap((bundle) =>
       (bundle.assets ?? [])
-        .filter((asset) => !bundle.embeddedAudio?.[asset.id])
+        .filter((asset) => !asset.upload && !bundle.embeddedAudio?.[asset.id])
         .map((asset) => `/stories/${bundle.storyId}/${asset.path}`),
     ),
   );

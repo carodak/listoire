@@ -165,10 +165,11 @@ var html = '<div class="ace_search right">\
         <button type="button" action="replaceAndFindNext" class="ace_replacebtn">Replace</button>\
         <button type="button" action="replaceAll" class="ace_replacebtn">All</button>\
     </div>\
-    <button type="button" action="toggleReplace" class="editor-replace-toggle" title="Show or hide advanced find and replace">Find and replace&hellip;</button><div class="ace_search_options">\
+    <div class="ace_search_options">\
         <span action="toggleRegexpMode" class="ace_button" title="RegExp Search">.*</span>\
         <span action="toggleCaseSensitive" class="ace_button" title="CaseSensitive Search">Aa</span>\
         <span action="toggleWholeWords" class="ace_button" title="Whole Word Search">\\b</span>\
+        <button type="button" action="toggleReplace" class="editor-replace-toggle" title="Show or hide advanced find and replace">Or find and replace&hellip;</button>\
     </div>\
 </div>'.replace(/>\s+/g, ">");
 

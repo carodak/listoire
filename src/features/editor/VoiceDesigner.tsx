@@ -30,24 +30,24 @@ export function VoiceDesigner({
 }: {
   language: Language;
   locale: string;
-  onChange: (language: Language) => void;
+  onChange: (language: Language | ((current: Language) => Language)) => void;
 }) {
-  const [draft, setDraft] = useState({ name: "", rights: "", error: "" });
+  const [draft, setDraft] = useState({ name: "", rights: "", error: "", duration: 0, busy: false });
   const profiles = availableProfiles(language, locale);
   const voice =
     profiles.find((profile) => profile.id === language.defaults.narratorVoice) ?? profiles[0]!;
   const settings = language.configuration.speechSettings ?? defaultSpeechSettings;
   function choose(profile: VoiceProfile, list = profiles) {
-    onChange({
-      ...language,
+    onChange((current) => ({
+      ...current,
       configuration: {
-        ...language.configuration,
+        ...current.configuration,
         voiceProfiles: list,
         narratorVoices: list.map(({ id, label }) => ({ id, label })),
-        narratorVoiceSelection: language.configuration.narratorVoiceSelection
+        narratorVoiceSelection: current.configuration.narratorVoiceSelection
           ? [
               ...new Set([
-                ...language.configuration.narratorVoiceSelection.filter((id) =>
+                ...current.configuration.narratorVoiceSelection.filter((id) =>
                   list.some((item) => item.id === id),
                 ),
                 profile.id,
@@ -55,19 +55,20 @@ export function VoiceDesigner({
             ]
           : undefined,
       },
-      defaults: { ...language.defaults, narratorVoice: profile.id },
-    });
+      defaults: { ...current.defaults, narratorVoice: profile.id },
+    }));
   }
   async function reference(file: File) {
     try {
       if (profiles.length >= 8) throw new Error("A language can have up to eight voices.");
       if (!draft.name.trim() || !draft.rights.trim())
         throw new Error("Name the voice and confirm permission to use its recording first.");
-      if (file.size > 2_000_000 || !/\.(mp3|wav)$/i.test(file.name))
-        throw new Error("Use an MP3 or WAV up to 2 MB and 30 seconds.");
+      if (file.size > 5_000_000 || !/\.(mp3|wav)$/i.test(file.name))
+        throw new Error("Use an MP3 or WAV up to 5 MB and 30 seconds.");
+      setDraft({ ...draft, busy: true, error: "" });
       const url = URL.createObjectURL(file);
       try {
-        const duration = await audioDuration(url);
+        const duration = draft.duration * 1000 || (await audioDuration(url));
         if (duration < 6000 || duration > 30000)
           throw new Error("The voice example must be between 6 and 30 seconds.");
       } finally {
@@ -92,9 +93,13 @@ export function VoiceDesigner({
         reference: { name: file.name, data, rights: draft.rights },
       });
       choose(profile, [...profiles, profile]);
-      setDraft({ name: "", rights: "", error: "" });
+      setDraft({ name: "", rights: "", error: "", duration: 0, busy: false });
     } catch (error) {
-      setDraft({ ...draft, error: error instanceof Error ? error.message : String(error) });
+      setDraft((current) => ({
+        ...current,
+        busy: false,
+        error: error instanceof Error ? error.message : String(error),
+      }));
     }
   }
   function change(field: keyof SpeechSettings, value: number) {
@@ -109,6 +114,7 @@ export function VoiceDesigner({
         AI model
         <select
           aria-label="AI model"
+          disabled={draft.busy}
           value={voice.model}
           onChange={(e) => choose(profiles.find((profile) => profile.model === e.target.value)!)}
         >
@@ -122,6 +128,7 @@ export function VoiceDesigner({
         Voice
         <select
           aria-label="Voice"
+          disabled={draft.busy}
           value={voice.id}
           onChange={(e) => choose(profiles.find((profile) => profile.id === e.target.value)!)}
         >
@@ -139,7 +146,7 @@ export function VoiceDesigner({
           Add a voice from an example
         </summary>
         <p>
-          Voice conditioning uses an example recording; model weights stay unchanged. Maximum 2 MB /
+          Voice conditioning uses an example recording; model weights stay unchanged. Maximum 5 MB /
           30 seconds; 6–15 seconds of clear speech is recommended.
         </p>
         <label>
@@ -160,14 +167,33 @@ export function VoiceDesigner({
           />
         </label>
         <label>
-          Voice example (MP3 / WAV, max 2 MB)
+          Example duration in seconds (optional override)
+          <input
+            type="number"
+            min="6"
+            max="30"
+            step="0.01"
+            value={draft.duration || ""}
+            onChange={(event) => setDraft({ ...draft, duration: Number(event.target.value) })}
+          />
+        </label>
+        <p>
+          Leave blank for automatic duration. If this browser cannot decode the example, enter its
+          duration; the local service verifies the file before generation.
+        </p>
+        <label>
+          Voice example (MP3 / WAV, max 5 MB)
           <input
             type="file"
+            disabled={draft.busy}
             accept="audio/mpeg,audio/wav,.mp3,.wav"
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void reference(file);
-              e.target.value = "";
+              const input = e.currentTarget;
+              const file = input.files?.[0];
+              if (file)
+                void reference(file).finally(() => {
+                  input.value = "";
+                });
             }}
           />
         </label>
@@ -177,6 +203,7 @@ export function VoiceDesigner({
           <audio controls preload="metadata" src={voice.reference.data} />
           <button
             type="button"
+            disabled={draft.busy}
             onClick={() =>
               choose(
                 profiles[0]!,

@@ -3,7 +3,7 @@ import type { SceneSchema, PresentationBlock } from "./presentation.ts";
 import type { NarrativeEvent } from "./effects.ts";
 
 type Issue = (message: string) => void;
-type Assets = Map<string, { type: "image" | "audio" }>;
+type Assets = Map<string, { type: "image" | "audio" | "video" }>;
 type MediaBlock = Extract<PresentationBlock, { kind: "media" }>;
 
 function validateOrder(blocks: PresentationBlock[], segments: string[], invalid: Issue) {
@@ -60,14 +60,7 @@ function validateCues(
   if (new Set(events.map((event) => event.id)).size !== events.length)
     invalid("Duplicate event ID");
   for (const event of events) {
-    if (
-      event.phase === "exit" &&
-      (event.blockId !== "page" ||
-        event.action.kind !== "effect" ||
-        event.action.effect.id !== "fade-out" ||
-        event.trigger.kind !== "passage")
-    )
-      invalid("Scene transitions require a page fade-out on passage exit");
+    validateExit(event, invalid);
     if (
       event.blockId &&
       !ids.has(event.blockId) &&
@@ -83,6 +76,16 @@ function validateCues(
       invalid("Unknown audio cue");
   }
 }
+function validateExit(event: NarrativeEvent, invalid: Issue) {
+  if (event.phase !== "exit") return;
+  if (
+    event.blockId !== "page" ||
+    event.trigger.kind !== "passage" ||
+    event.action.kind !== "effect" ||
+    event.action.effect.id !== "fade-out"
+  )
+    invalid("Scene transitions require a page fade-out on passage exit");
+}
 
 export function validateScenePresentation(
   scene: z.infer<typeof SceneSchema>,
@@ -94,15 +97,25 @@ export function validateScenePresentation(
   const media = scene.blocks ? validateOrder(scene.blocks, segments, invalid) : [];
   const events = scene.events ?? [];
   validateCues(events, media, segments, assets, invalid);
-  for (const block of media) {
-    if (assets.get(block.image)?.type !== "image") invalid("Unknown block image");
-    if (block.show?.kind === "segment" && !segments.includes(block.show.segmentId!))
-      invalid("Unknown image timing segment");
-    if (
-      block.layout === "fullscreen" &&
-      !events.some((event) => event.blockId === block.id && event.blocking)
-    )
-      invalid("Fullscreen media needs a bounded blocking event");
-  }
+  for (const block of media) validateMediaBlock(block, events, segments, assets, invalid);
   if (palette) for (const event of events) validateColors(event, palette, invalid);
+}
+function validateMediaBlock(
+  block: MediaBlock,
+  events: NarrativeEvent[],
+  segments: string[],
+  assets: Assets,
+  invalid: Issue,
+) {
+  if (!["image", "video"].includes(assets.get(block.image)?.type ?? ""))
+    invalid("Unknown block media");
+  for (const id of block.motion?.layers ?? [])
+    if (assets.get(id)?.type !== "image") invalid("Parallax layers must reference library images");
+  if (block.show?.kind === "segment" && !segments.includes(block.show.segmentId!))
+    invalid("Unknown image timing segment");
+  if (
+    block.layout === "fullscreen" &&
+    !events.some((event) => event.blockId === block.id && event.blocking)
+  )
+    invalid("Fullscreen media needs a bounded blocking event");
 }

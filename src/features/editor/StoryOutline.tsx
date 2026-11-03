@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { sceneMediaEntries } from "./media-references.ts";
+import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { outlineEntries } from "./ink-commands.ts";
 
@@ -100,22 +101,7 @@ function SceneMedia({
   Parameters<typeof StoryOutline>[0],
   "language" | "selectedScene" | "onDialog" | "onMedia" | "onHover"
 >) {
-  const scene = language.configuration.scenes?.[selectedScene];
-  const entries = [
-    ...(scene?.blocks ?? [])
-      .filter((b) => b.kind === "media")
-      .map((b) => ({ id: b.id, kind: "Image", label: b.image })),
-    ...(scene?.events ?? []).map((e) => ({
-      id: e.id,
-      kind: mediaKind(e.action),
-      label:
-        e.action.kind === "effect"
-          ? e.action.effect.id
-          : e.action.kind === "audio"
-            ? e.action.assetId
-            : "Stop audio",
-    })),
-  ];
+  const entries = sceneMediaEntries(language, selectedScene);
   return (
     <div>
       <p className="outline-heading">{selectedScene}</p>
@@ -146,8 +132,4 @@ function SceneMedia({
       {!entries.length && <p>No media in this section yet.</p>}
     </div>
   );
-}
-function mediaKind(action: { kind: string; channel?: string }) {
-  if (action.kind === "effect") return "Animation";
-  return action.channel === "music" ? "Background Music" : "Sound Effect";
 }

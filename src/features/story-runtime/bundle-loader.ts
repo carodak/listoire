@@ -1,3 +1,4 @@
+import { sha256 } from "../../contracts/digest.ts";
 import {
   BundleSchema,
   LocaleSchema,
@@ -42,10 +43,7 @@ export async function loadBundle(locale: Locale, signal: AbortSignal): Promise<S
     const language = LocaleSchema.parse(locale);
     const bundle = BundleSchema.parse(await fetchStoryFile(language, signal));
     const bytes = new TextEncoder().encode(JSON.stringify(bundle.ink));
-    const digest = await crypto.subtle.digest("SHA-256", bytes);
-    const hex = Array.from(new Uint8Array(digest), (byte) =>
-      byte.toString(16).padStart(2, "0"),
-    ).join("");
+    const hex = await sha256(bytes);
     if (
       bundle.locale !== language ||
       bundle.storyId !== "house" ||

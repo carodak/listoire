@@ -50,6 +50,9 @@ export interface AceUndoManager {
   hasRedo(): boolean;
 }
 interface Ace {
+  require(name: "ace/ext/searchbox"): {
+    SearchBox: new (editor: AceEditor) => { hide: () => void };
+  };
   require(name: "ace/range"): {
     Range: new (startRow: number, startCol: number, endRow: number, endCol: number) => AceRange;
   };

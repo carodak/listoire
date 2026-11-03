@@ -96,6 +96,7 @@ const groups: Record<RibbonTab, { label: string; commands: Command[] }[]> = {
       label: "Visuals",
       commands: [
         { label: "Image", icon: "▧", action: "Image" },
+        { label: "Video", icon: "▷", action: "Video" },
         { label: "Animation", icon: "✧", action: "Animation" },
       ],
     },
@@ -163,12 +164,7 @@ function AdditionalCommands({ insert }: { insert: (script: string) => void }) {
     <details className="additional-commands">
       <summary title="Browse all Ink examples and commands, grouped by purpose.">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
-          <path
-            d="M4 4h16M4 8h16M4 12h16m-13 4 5 5 5-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
+          <path d="M5 6h14M8 13l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
         <span>Additional Commands</span>
       </summary>

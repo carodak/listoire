@@ -22,6 +22,10 @@ export const FrameSchema = z
     segments: z.array(SegmentSchema).min(1).max(100),
     choices: z.array(ChoiceSchema).max(20),
     actions: z.array(ChoiceSchema).max(10).optional(),
+    mediaAnchors: z
+      .array(z.object({ id: z.string(), after: z.string().optional() }).strict())
+      .max(120)
+      .optional(),
     facts: z.record(id, z.union([z.number().finite(), z.boolean(), z.string()])).optional(),
   })
   .strict();
