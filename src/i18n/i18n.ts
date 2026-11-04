@@ -61,6 +61,7 @@ const en = {
   storyProgress: "Story progress",
   changeLanguage: "Change language",
   home: "Listoire home",
+  library: "Library",
   languageNames: { en: "English", fr: "French" },
   storyFallback: "This story is available in {{language}}. Your saved progress is preserved.",
   settingsFailed:
@@ -157,6 +158,7 @@ const fr: typeof en = {
   storyProgress: "Progression du récit",
   changeLanguage: "Changer de langue",
   home: "Accueil Listoire",
+  library: "Bibliothèque",
   languageNames: { en: "anglais", fr: "français" },
   storyFallback: "Cette histoire est disponible en {{language}}. Votre progression est conservée.",
   settingsFailed:

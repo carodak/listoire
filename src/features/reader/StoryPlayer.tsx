@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { FailureCode, Frame, StoryBundle } from "../../contracts/story.ts";
 import type { StoryDirector } from "../story-runtime/director.ts";
@@ -18,7 +19,7 @@ interface Props {
   backup: () => Promise<void>;
   preferences: ReadingPreferences;
   onPreferencesChange: (preferences: ReadingPreferences) => void;
-  focusPassage?: boolean;
+  preview?: boolean;
 }
 
 export function StoryPlayer(props: Props) {
@@ -93,7 +94,7 @@ function ReaderPassage({
   failure: FailureCode | null;
   onFailure: (code: FailureCode | null) => void;
 }) {
-  const { bundle, director, presentation, backup, preferences, onPreferencesChange } = player;
+  const { bundle, director, presentation, backup, preferences } = player;
   const { t } = useTranslation();
   const scene = bundle.scenes?.[state.frame.passageId] ?? {
     title: bundle.title,
@@ -101,7 +102,6 @@ function ReaderPassage({
     photograph: false,
     notice: undefined,
   };
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const page = useRef<HTMLElement>(null);
   useLayoutEffect(
@@ -117,8 +117,8 @@ function ReaderPassage({
     void director.choose(id, state.occurrenceId!);
   };
   useEffect(() => {
-    if (player.focusPassage !== false) heading.current?.focus();
-  }, [state.occurrenceId, player.focusPassage]);
+    if (!player.preview) heading.current?.focus();
+  }, [state.occurrenceId, player.preview]);
 
   return (
     <main
@@ -129,37 +129,14 @@ function ReaderPassage({
       aria-busy={state.busy}
       style={{ visibility: media.departed ? "hidden" : undefined }}
     >
-      <div className="reader-toolbar">
-        {bundle.authored && <PageNavigation director={director} state={state} />}
-        <ReadingControls
-          preferences={preferences}
-          onChange={onPreferencesChange}
-          presentation={presentation}
-          voices={presentation.voices}
-          open={preferencesOpen}
-          onOpenChange={(open) => {
-            setPreferencesOpen(open);
-            if (open && characterOpen) onCharacterToggle();
-          }}
-        />
-        <CharacterPanel
-          bundle={bundle}
-          frame={state.frame}
-          profile={state.character}
-          open={characterOpen}
-          onToggle={() => {
-            setPreferencesOpen(false);
-            onCharacterToggle();
-          }}
-        />
-      </div>
-      <p className="eyebrow">
-        {bundle.title} · {bundle.chapter}
-      </p>
-      <h1 ref={heading} tabIndex={-1}>
-        {scene.title}
-      </h1>
+      <ReaderToolbar
+        player={player}
+        state={state}
+        characterOpen={characterOpen}
+        onCharacterToggle={onCharacterToggle}
+      />
       <PassageText
+        heading={<StoryHeading bundle={bundle} title={scene.title} headingRef={heading} />}
         bundle={bundle}
         presentation={presentation}
         frame={state.frame}
@@ -167,7 +144,22 @@ function ReaderPassage({
         media={media}
         disabled={choicesDisabled}
         onChoose={choose}
-      />
+      >
+        <progress
+          className="story-progress"
+          value={scene.progress}
+          max={1}
+          aria-label={t("storyProgress")}
+        />
+        <CheckpointControls
+          director={director}
+          busy={state.busy}
+          hasFrame={true}
+          failure={failure}
+          onFailure={onFailure}
+          backup={backup}
+        />
+      </PassageText>
       {media.layers
         .filter((layer) => layer.blockId === "page" || layer.blockId === "scene")
         .map((layer) => (
@@ -175,42 +167,97 @@ function ReaderPassage({
             <ReactBitsLayer effect={layer.effect} />
           </div>
         ))}
-      <progress
-        className="story-progress"
-        value={scene.progress}
-        max={1}
-        aria-label={t("storyProgress")}
-      />
-      <CheckpointControls
-        director={director}
-        busy={state.busy}
-        hasFrame={true}
-        failure={failure}
-        onFailure={onFailure}
-        backup={backup}
-      />
     </main>
+  );
+}
+
+function ReaderToolbar({
+  player,
+  state,
+  characterOpen,
+  onCharacterToggle,
+}: {
+  player: Props;
+  state: ReturnType<StoryDirector["getSnapshot"]> & { frame: Frame };
+  characterOpen: boolean;
+  onCharacterToggle: () => void;
+}) {
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const { bundle, director, presentation, preferences, onPreferencesChange } = player;
+  return (
+    <div className="reader-toolbar">
+      {bundle.authored && (
+        <PageNavigation director={director} state={state} preview={player.preview} />
+      )}
+      <ReadingControls
+        preferences={preferences}
+        onChange={onPreferencesChange}
+        presentation={presentation}
+        voices={presentation.voices}
+        open={preferencesOpen}
+        onOpenChange={(open) => {
+          setPreferencesOpen(open);
+          if (open && characterOpen) onCharacterToggle();
+        }}
+      />
+      <CharacterPanel
+        bundle={bundle}
+        frame={state.frame}
+        profile={state.character}
+        open={characterOpen}
+        onToggle={() => {
+          setPreferencesOpen(false);
+          onCharacterToggle();
+        }}
+      />
+    </div>
+  );
+}
+
+function StoryHeading({
+  bundle,
+  title,
+  headingRef,
+}: {
+  bundle: StoryBundle;
+  title: string;
+  headingRef: Ref<HTMLHeadingElement>;
+}) {
+  return (
+    <header className="story-scene-heading">
+      <div className="story-heading-copy">
+        <p className="eyebrow">{bundle.title}</p>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {title}
+        </h1>
+        <span className="scene-heading-rule" aria-hidden="true" />
+      </div>
+    </header>
   );
 }
 
 function PageNavigation({
   director,
   state,
+  preview,
 }: {
   director: StoryDirector;
   state: ReturnType<StoryDirector["getSnapshot"]>;
+  preview?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <div className="page-navigation">
-      <button
-        disabled={state.busy || !state.canGoBack}
-        onClick={() => {
-          void director.back();
-        }}
-      >
-        {t("previousPage")}
-      </button>
+      {!preview && (
+        <button
+          disabled={state.busy || !state.canGoBack}
+          onClick={() => {
+            void director.back();
+          }}
+        >
+          {t("previousPage")}
+        </button>
+      )}
       <button
         disabled={state.busy}
         onClick={() => {

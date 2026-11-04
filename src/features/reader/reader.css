@@ -1,10 +1,25 @@
 .reader {
+  --paper: #0b1822;
+  --foreground: #eee5d5;
+  --muted: #c4b9a6;
+  --accent: #d5b67e;
+  --border: #c4b28c55;
+  --separator: #c4b28c33;
+  --hover: #ffffff08;
+  --shadow: #00000038;
+  --reader-gutter: clamp(28px, 5vw, 80px);
   position: relative;
+  container-type: inline-size;
   width: 100%;
   min-height: 610px;
   margin: 0;
-  padding: 24px 32px 28px;
+  padding: 0 var(--reader-gutter) 32px;
   background: var(--paper);
+  background-image:
+    radial-gradient(ellipse at 75% 30%, #a3b3b011, transparent 65%),
+    repeating-linear-gradient(138deg, transparent 0 3px, #d8ceb603 4px, transparent 5px 11px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23888' filter='url(%23n)' opacity='.06' d='M0 0h200v200H0z'/%3E%3C/svg%3E");
+  color: var(--foreground);
 }
 .reader > * {
   max-width: 800px;
@@ -13,18 +28,18 @@
 }
 .eyebrow {
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
   text-transform: uppercase;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.18em;
 }
 .reader h1 {
   font:
-    normal clamp(29px, 4vw, 39px)/1.2 Georgia,
+    normal clamp(30px, 3.6cqw, 54px)/1.12 Georgia,
     serif;
-  text-align: center;
-  margin: 12px auto 26px;
+  text-align: left;
+  margin: 16px 0 22px;
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
@@ -33,7 +48,7 @@
 }
 .prose {
   font:
-    19px/1.9 Georgia,
+    clamp(19px, 1.7cqw, 25px)/1.5 Georgia,
     "Times New Roman",
     serif;
 }
@@ -54,13 +69,15 @@
   top: 0;
   z-index: 5;
   max-width: none;
-  margin-top: -24px;
-  margin-bottom: 6px;
-  background: var(--paper);
+  margin-top: 0;
+  margin-bottom: 0;
+  background: #0b1822f5;
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
   gap: 18px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--separator);
 }
 .reading-controls {
   display: flex;
@@ -319,7 +336,17 @@
   box-shadow: 0 2px 8px var(--shadow);
 }
 .prose p {
-  margin: 0 0 1.05em;
+  margin: 0 0 0.8em;
+}
+.prose > p > [aria-hidden] {
+  display: block;
+}
+.reader.font-serif .prose > p:first-of-type > [aria-hidden]::first-letter {
+  float: left;
+  font-size: 3em;
+  line-height: 0.85;
+  padding: 0.08em 0.09em 0 0;
+  color: var(--foreground);
 }
 .reader > .narrative-blocks {
   max-width: none;
@@ -356,7 +383,8 @@
   min-height: 56px;
   padding: 14px 18px;
   border: 1px solid var(--border);
-  background: transparent;
+  border-left: 2px solid #b4a17a;
+  background: var(--hover);
   text-align: left;
   color: inherit;
   font:
@@ -437,8 +465,9 @@
     width: min(300px, 65vw);
   }
   .reader {
+    --reader-gutter: 24px;
     margin-bottom: 0;
-    padding: 24px clamp(22px, 6vw, 54px) 24px;
+    padding: 0 var(--reader-gutter) 24px;
     border-left: 0;
     border-right: 0;
     min-height: calc(100svh - 150px);
@@ -450,11 +479,21 @@
 
 .examine-photo {
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 12px 18px;
+  border-radius: 0;
+  padding: 10px 28px;
   text-decoration: none;
   background: var(--paper);
-  font-size: 14px;
+  font:
+    19px/1.4 Georgia,
+    serif;
+  outline: 1px solid var(--border);
+  outline-offset: 4px;
+  color: var(--foreground);
+}
+.examine-photo::before {
+  content: "◈";
+  margin-right: 14px;
+  color: var(--accent);
 }
 .narrative-media[hidden] {
   display: none;
@@ -479,9 +518,149 @@
   gap: 10px;
   margin-right: auto;
 }
+.page-navigation button {
+  border: 0;
+  padding: 8px 0;
+  background: transparent;
+  color: var(--muted);
+  font:
+    12px/1.5 system-ui,
+    sans-serif;
+}
+.page-navigation button:hover:not(:disabled) {
+  color: var(--accent);
+}
+@media (max-width: 700px) {
+  .page-navigation {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: center;
+    gap: 14px;
+  }
+}
 .page-effect {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 2;
+}
+
+.reader-scene {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  max-width: none;
+  min-height: calc(100svh - 130px);
+}
+.reader-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  padding: 28px 18px 24px 0;
+}
+.reader-scene[data-illustrated="false"] {
+  display: block;
+  max-width: 800px;
+}
+.story-scene-heading {
+  margin-bottom: 26px;
+}
+.story-heading-copy {
+  max-width: 700px;
+}
+.scene-heading-rule {
+  display: block;
+  width: 46px;
+  height: 2px;
+  background: var(--accent);
+}
+.story-art {
+  position: sticky;
+  top: 62px;
+  align-self: start;
+  height: calc(100svh - 140px);
+  min-height: 480px;
+  margin: 0 -32px 0 -16px;
+  mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+}
+.story-art .narrative-media,
+.story-art .scene-illustration {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+.story-art .scene-illustration .story-cover {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-position: center top;
+  background: transparent;
+  filter: sepia(0.16) brightness(0.92);
+}
+.reader-copy .narrative-blocks {
+  display: block;
+}
+.reader-copy .narrative-media {
+  margin: 28px 0;
+}
+.reader-copy .scene-illustration img {
+  max-height: 240px;
+}
+.scene-illustration .archival-ink {
+  filter: invert(1);
+  background: transparent;
+}
+.reader-copy .media-wide img {
+  width: 100%;
+  max-height: 420px;
+}
+.reader-copy .examine-photo {
+  border-radius: 0;
+  background: transparent;
+}
+.reader-copy .media-photograph {
+  width: min(88%, 560px);
+  margin: 26px auto 34px;
+}
+.media-photograph > .scene-illustration {
+  padding: 0;
+  border: 8px solid #b8a588;
+  border-radius: 12px 8px 14px 6px;
+  background:
+    radial-gradient(ellipse at 35% 25%, #aca38a55, transparent 65%),
+    repeating-linear-gradient(30deg, #ffffff04 0 1px, transparent 2px 4px), #313631;
+  box-shadow:
+    0 10px 25px #0007,
+    inset 0 0 0 3px #a28f71;
+}
+.reader-copy .media-photograph .shot-image {
+  width: 100%;
+  height: clamp(220px, 22cqw, 310px);
+  max-height: none;
+  background: transparent;
+  filter: sepia(0.35) contrast(0.8) brightness(0.9);
+}
+@container (max-width: 760px) {
+  .reader-scene {
+    display: block;
+  }
+  .reader-copy {
+    padding: 28px 0;
+  }
+  .story-art {
+    position: absolute;
+    top: 0;
+    right: calc(-1 * var(--reader-gutter));
+    width: 80%;
+    height: 540px;
+    margin: 0;
+    z-index: 0;
+    opacity: 0.13;
+    pointer-events: none;
+    mask-image: linear-gradient(180deg, #000 35%, transparent);
+  }
+  .reader-copy .media-photograph {
+    width: 90%;
+  }
 }

@@ -144,6 +144,9 @@ describe("complete bilingual house story", () => {
       Object.values(bundle.scenes!).flatMap((scene) => [scene.image, scene.sound].filter(Boolean)),
     );
     refs.add(bundle.character!.portrait);
+    refs.add(bundle.cover);
+    for (const scene of Object.values(bundle.scenes!))
+      for (const block of scene.blocks ?? []) if (block.kind === "media") refs.add(block.image);
     for (const clip of bundle.narration ?? []) refs.add(clip.assetId);
     for (const scene of Object.values(bundle.scenes!))
       for (const event of scene.events ?? []) {
@@ -157,9 +160,12 @@ describe("complete bilingual house story", () => {
       }
     for (const asset of bundle.assets!)
       if (asset.type === "image")
-        expect(asset.id.startsWith("heritage.") || asset.id === "tcp.human5").toBe(true);
+        expect(
+          asset.id.startsWith("heritage.") ||
+            ["tcp.human8-cutout", "tcp.human5-cutout"].includes(asset.id),
+        ).toBe(true);
     expect(ids).toEqual(refs);
-    expect(bundle.assets!.filter((asset) => !asset.id.startsWith("narration."))).toHaveLength(8);
+    expect(bundle.assets!.filter((asset) => !asset.id.startsWith("narration."))).toHaveLength(9);
     for (const asset of bundle.assets!) {
       const source = readFileSync(new URL(`../../../stories/house/${asset.path}`, import.meta.url));
       const published = readFileSync(

@@ -147,27 +147,30 @@ export function StoryEditor({
       return;
     }
     if (command === "Edit Selected Media") {
-      const cursor = handles.editor?.getCursorPosition();
-      const line = cursor ? handles.editor?.session.getLine(cursor.row) : "";
-      const match = line?.match(/@media\s+([^/\s]+)\/([a-z0-9.-]+)/);
-      if (!match) {
-        state.setIssues([
-          "Select a // @media reference or choose an existing media item in the outline.",
-        ]);
-        patchView({ dialog: "Issues" });
-        return;
-      }
-      patchView({ selectedScene: match[1]! });
-      patchView({ selectedMedia: match[2] });
-      patchView({
-        dialog:
-          sceneMediaEntries(language, match[1]!).find((entry) => entry.id === match[2])?.kind ??
-          "Scene Properties",
-      });
+      editSelectedMedia();
       return;
     }
     patchView({ selectedMedia: undefined });
     patchView({ dialog: command });
+  }
+  function editSelectedMedia() {
+    const cursor = handles.editor?.getCursorPosition();
+    const line = cursor ? handles.editor?.session.getLine(cursor.row) : "";
+    const match = line?.match(/@media\s+([^/\s]+)\/([a-z0-9.-]+)/);
+    if (!match) {
+      state.setIssues([
+        "Select a // @media reference or choose an existing media item in the outline.",
+      ]);
+      patchView({ dialog: "Issues" });
+      return;
+    }
+    patchView({ selectedScene: match[1]! });
+    patchView({ selectedMedia: match[2] });
+    patchView({
+      dialog:
+        sceneMediaEntries(language, match[1]!).find((entry) => entry.id === match[2])?.kind ??
+        "Scene Properties",
+    });
   }
   async function validate() {
     patchView({ busy: true });

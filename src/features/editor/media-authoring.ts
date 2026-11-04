@@ -52,7 +52,7 @@ export function mediaDefaults(kind: string, sceneId: string, id: string, scene?:
     caption: "",
     width: 100,
     align: "center",
-    fit: "contain",
+    fit: "cover",
     positionOverride: false,
     x: 0,
     y: 0,
@@ -103,7 +103,7 @@ function imageDefaults(block: MediaBlock) {
     caption: block.caption ?? "",
     width: block.widthPercent ?? 100,
     align: block.align ?? "center",
-    fit: block.fit ?? "contain",
+    fit: block.fit ?? (block.layout === "fullscreen" ? "cover" : "contain"),
     positionOverride: Boolean(block.position),
     x: block.position?.x ?? 0,
     y: block.position?.y ?? 0,
@@ -122,11 +122,13 @@ export function mediaContext(
   selectedId?: string,
 ) {
   const scene = language.configuration.scenes?.[sceneId];
+  const chosen = language.configuration.assets?.find((a) => a.id === asset);
   return {
     segmentIds: [...language.script.matchAll(/#\s*segment:([a-z][a-z0-9.-]*)/g)]
       .map((m) => m[1]!)
       .filter((id) => id.startsWith(`${sceneId}.`)),
-    alt: language.configuration.assets?.find((a) => a.id === asset)?.alt ?? "",
+    alt: chosen?.alt ?? "",
+    assetUrl: chosen ? `/stories/house/${chosen.path}` : undefined,
     blocks: scene?.blocks?.filter((b) => b.kind === "media").map((b) => b.id) ?? [],
     trigger: scene?.events?.find((e) => e.id === selectedId)?.trigger.kind ?? "passage",
   };

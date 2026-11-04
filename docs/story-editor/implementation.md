@@ -20,8 +20,9 @@ from requirements whose assumed runtime does not exist in this repository.
 5. Preview opens automatically using the real StoryPlayer, StoryDirector, Ink engine
    and presentation services, with isolated memory saves. The header Preview button
    recompiles and restarts it; the footer can start from the selected Knot or Stitch.
-   It docks to the right on desktop, stacks below on small screens, and supports
-   minimize, maximize, fullscreen and close. Typing does not restart the running preview.
+   It docks to the right on desktop and stacks below on small screens. Its header
+   keeps only fullscreen and close; the normal reader retains Back, while preview omits it.
+   Typing does not restart the running preview. The language selector uses compact codes.
    Keyboard-accessible dividers resize navigation and preview; the script fills the remainder.
 6. Export Ink or a complete project JSON backup. To change the checked-in/default story,
    replace `stories/house/project.json` with that backup and run `npm run build`.
@@ -84,6 +85,14 @@ loop cannot indefinitely freeze the preview. Runtime failures remain reader fail
 not gameplay mutations.
 
 ## Media and narration
+
+The selected Cover image supplies the right-hand cinematic artwork through a
+validated optional bundle `cover` asset reference. The default bilingual project
+uses three original generated shadow-art illustrations, with provenance and hashes
+in the curated catalog. Existing default artwork identities are refreshed without
+replacing authored text or custom covers. The photograph's hotspot now matches its
+visible upstairs window. Ink and saved progression remain unchanged.
+See [shadow-art.md](shadow-art.md) for generation prompts, migration and checks.
 
 Image properties include existing placements, a background placement, width, alignment,
 fit/crop, alt text, caption, page/segment/delayed visibility and optional persistence.

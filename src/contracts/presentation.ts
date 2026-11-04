@@ -3,6 +3,16 @@ import { z } from "zod";
 import { NativeEffectSchema, NarrativeEventSchema } from "./effects.ts";
 import { CinematicSchema } from "./cinematic.ts";
 
+export function mediaIsVisible(
+  block: Extract<PresentationBlock, { kind: "media" }>,
+  state: { expiredMedia: string[]; visibleMedia: string[]; revealAll: boolean },
+) {
+  return (
+    !state.expiredMedia.includes(block.id) &&
+    (!block.show || state.revealAll || state.visibleMedia.includes(block.id))
+  );
+}
+
 export const RuntimeAssetSchema = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
@@ -38,7 +48,7 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
       kind: z.literal("media"),
       id: z.string(),
       image: z.string(),
-      layout: z.enum(["inline", "wide", "fullscreen", "background"]),
+      layout: z.enum(["inline", "wide", "right", "fullscreen", "background"]),
       widthPercent: z.number().min(10).max(100).optional(),
       align: z.enum(["left", "center", "right"]).optional(),
       fit: z.enum(["contain", "cover"]).optional(),

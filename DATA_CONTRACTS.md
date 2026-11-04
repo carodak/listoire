@@ -525,6 +525,14 @@ compatible with narrative-only foundation fixtures; RPG-profile mode requires ch
 - Character portrait, scene event images/audio, examination and narration assets are
   included in the build allowlist. Four images come from downloaded TCP/Heritage
   files; TCP Human 5 carries a published attribution. Embedded prototype imagery is explicitly rejected by the publication tool.
+- The optional bundle `cover` is an asset ID validated against registered images.
+  It comes from the editor's existing language-specific Cover image setting and
+  supplies the right-hand artwork without entering Ink or gameplay saves. The
+  default house project uses three original generated shadow-art images, with
+  generation provenance and original/runtime hashes distinct from provider licenses.
+  Editor refresh remaps only known default image identities and keeps custom covers,
+  story text, voices, variables and checkpoints. Missing refresh resources preserve
+  the existing draft. Photograph hotspot coordinates belong to the illustration.
 - Narration clips declare segment/locale/voice, NFC text and audio SHA-256, finite
   duration, monotonic timing marks and rights/review evidence. Status distinguishes
   human-approved production recordings from generated previews. The 72 demonstration

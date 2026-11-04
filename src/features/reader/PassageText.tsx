@@ -3,6 +3,7 @@ import type { PresentationSession } from "../presentation/presentation-session.t
 import type { Frame } from "../../contracts/story.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
+import { mediaIsVisible } from "../../contracts/presentation.ts";
 import { SceneIllustration } from "../presentation/SceneIllustration.tsx";
 import { PhotographExamination } from "./PhotographViewer.tsx";
 import { reachedBlocks, presentationBlocks } from "./narrative-blocks.ts";
@@ -17,6 +18,8 @@ export function PassageText({
   media,
   bundle,
   presentation,
+  heading,
+  children,
 }: {
   frame: Frame;
   instant: boolean;
@@ -25,6 +28,8 @@ export function PassageText({
   media: ReturnType<PresentationSession["getSnapshot"]>;
   bundle: StoryBundle;
   presentation: PresentationSession;
+  heading: React.ReactNode;
+  children: React.ReactNode;
 }) {
   const notice = bundle.scenes?.[frame.passageId]?.notice;
   const reveal = useTextReveal(frame, instant || media.revealAll, {
@@ -41,60 +46,76 @@ export function PassageText({
     }
   }, [reveal.paragraphs, presentation]);
   const blocks = presentationBlocks(bundle, frame);
+  const reached = reachedBlocks(
+    blocks,
+    reveal.paragraphs,
+    media.completedBlocks,
+    instant || media.revealAll,
+  );
+  const illustration = (block: Extract<PresentationBlock, { kind: "media" }>) => (
+    <ReaderIllustration
+      key={block.id}
+      {...{ block, bundle, frame, presentation, media, disabled, onChoose }}
+    />
+  );
   const finish = () => {
     reveal.finish();
     presentation.revealRemaining();
   };
   return (
-    <>
-      <div className="narrative-blocks prose">
-        {reachedBlocks(
-          blocks,
-          reveal.paragraphs,
-          media.completedBlocks,
-          instant || media.revealAll,
-        ).map((block) => {
-          if (block.kind === "text") {
-            const segment = reveal.paragraphs.find((segment) => segment.id === block.segmentId);
-            if (!segment) return null;
-            return (
-              <NarrativeParagraph
-                key={segment.id}
-                onClick={finish}
-                presentation={presentation}
-                segment={segment}
-              >
-                <span className="sr-only">{segment.text}</span>
-                <span aria-hidden="true">{segment.visible}</span>
-              </NarrativeParagraph>
-            );
-          }
-          if (block.kind === "media")
-            return (
-              <ReaderIllustration
-                key={block.id}
-                block={block}
-                bundle={bundle}
+    <div
+      className="reader-scene"
+      data-illustrated={blocks.some((block) => block.kind === "media" && block.layout === "right")}
+    >
+      <div className="reader-copy">
+        {heading}
+        <div className="narrative-blocks prose">
+          {reached.map((block) => {
+            if (block.kind === "text") {
+              const segment = reveal.paragraphs.find((segment) => segment.id === block.segmentId);
+              if (!segment) return null;
+              return (
+                <NarrativeParagraph
+                  key={segment.id}
+                  onClick={finish}
+                  presentation={presentation}
+                  segment={segment}
+                >
+                  <span className="sr-only">{segment.text}</span>
+                  <span aria-hidden="true">{segment.visible}</span>
+                </NarrativeParagraph>
+              );
+            }
+            if (block.kind === "media")
+              return block.layout === "right" ? null : illustration(block);
+            return reveal.complete && !media.blocking ? (
+              <ChoiceList
+                key="choices"
                 frame={frame}
-                presentation={presentation}
-                media={media}
+                locale={bundle.locale}
                 disabled={disabled}
                 onChoose={onChoose}
               />
-            );
-          return reveal.complete && !media.blocking ? (
-            <ChoiceList
-              key="choices"
-              frame={frame}
-              locale={bundle.locale}
-              disabled={disabled}
-              onChoose={onChoose}
-            />
-          ) : null;
-        })}
+            ) : null;
+          })}
+        </div>
+        {reveal.complete && notice && <p className="story-notice">{notice}</p>}
+        {children}
       </div>
-      {reveal.complete && notice && <p className="story-notice">{notice}</p>}
-    </>
+      {blocks.some((block) => block.kind === "media" && block.layout === "right") && (
+        <aside
+          className="story-art"
+          aria-label={bundle.locale === "fr" ? "Illustration de la page" : "Page illustration"}
+        >
+          {reached
+            .filter(
+              (block): block is Extract<PresentationBlock, { kind: "media" }> =>
+                block.kind === "media" && block.layout === "right",
+            )
+            .map(illustration)}
+        </aside>
+      )}
+    </div>
   );
 }
 
@@ -141,17 +162,13 @@ function ReaderIllustration({
 }) {
   return (
     <figure
-      className={`narrative-media media-${block.layout}`}
+      className={`narrative-media media-${block.layout}${block.photograph ? " media-photograph" : ""}`}
       data-block={block.id}
-      hidden={
-        media.expiredMedia.includes(block.id) ||
-        (Boolean(block.show) && !media.visibleMedia.includes(block.id) && !media.revealAll)
-      }
+      hidden={!mediaIsVisible(block, media)}
       style={{
         translate: block.position ? `${block.position.x}% ${block.position.y}%` : undefined,
         width: block.widthPercent ? `${block.widthPercent}%` : undefined,
-        marginInlineStart: block.align === "right" || block.align === "center" ? "auto" : undefined,
-        marginInlineEnd: block.align === "left" || block.align === "center" ? "auto" : undefined,
+        ...mediaAlignment[block.align ?? "left"],
       }}
     >
       <SceneIllustration
@@ -173,3 +190,9 @@ function ReaderIllustration({
     </figure>
   );
 }
+
+const mediaAlignment = {
+  left: { marginInlineEnd: "auto" },
+  right: { marginInlineStart: "auto" },
+  center: { marginInlineStart: "auto", marginInlineEnd: "auto" },
+};

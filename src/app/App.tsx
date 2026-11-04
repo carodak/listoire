@@ -52,7 +52,13 @@ export function App({ saves, initialSettings }: Props) {
       </a>
       <header className="site-header">
         <button className="wordmark" onClick={() => setEntered(false)} aria-label={t("home")}>
-          listoire<span aria-hidden="true">.</span>
+          {entered ? (
+            <>← {t("library")}</>
+          ) : (
+            <>
+              listoire<span aria-hidden="true">.</span>
+            </>
+          )}
         </button>
         <LanguageSetting
           language={settings.language}

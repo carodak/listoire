@@ -3,6 +3,7 @@ import { RuntimeAssetSchema } from "../../contracts/presentation.ts";
 import type { MediaAsset } from "../../contracts/uploaded-media.ts";
 import { storeUploadedMedia } from "../../persistence/media-store.ts";
 import { audioDuration } from "./narration-authoring.ts";
+import { DurationField } from "./DurationField.tsx";
 export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => void }) {
   const [draft, setDraft] = useState({ rights: "", error: "", busy: false, duration: 0 });
   async function upload(file: File) {
@@ -54,21 +55,14 @@ export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => voi
           onChange={(event) => setDraft({ ...draft, rights: event.target.value })}
         />
       </label>
-      <label>
-        Video duration in seconds (optional override)
-        <input
-          type="number"
-          min="0.01"
-          max="86400"
-          step="0.01"
-          value={draft.duration || ""}
-          onChange={(event) => setDraft({ ...draft, duration: Number(event.target.value) })}
-        />
-      </label>
-      <p>
-        Leave blank for automatic duration. If this browser cannot decode the video, enter its
-        duration to edit and back it up; playback still needs a compatible codec.
-      </p>
+      <DurationField
+        label="Video duration in seconds (optional override)"
+        min={0.01}
+        max={86400}
+        value={draft.duration}
+        onChange={(duration) => setDraft({ ...draft, duration })}
+        help="Leave blank for automatic duration. If this browser cannot decode the video, enter its duration to edit and back it up; playback still needs a compatible codec."
+      />
       <label>
         Video file (MP4 / WebM, max 50 MB)
         <input

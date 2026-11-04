@@ -1,6 +1,24 @@
 import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { BundleSchema } from "./story.ts";
+import { mediaIsVisible } from "./presentation.ts";
+
+it("shares delayed, revealed and expired media visibility between playback and rendering", () => {
+  const block = {
+    kind: "media" as const,
+    id: "picture",
+    image: "photo",
+    layout: "inline" as const,
+    show: { kind: "delay" as const },
+  };
+  const state = { visibleMedia: [] as string[], expiredMedia: [] as string[], revealAll: false };
+  expect(mediaIsVisible(block, state)).toBe(false);
+  expect(mediaIsVisible(block, { ...state, visibleMedia: ["picture"] })).toBe(true);
+  expect(mediaIsVisible(block, { ...state, revealAll: true })).toBe(true);
+  expect(mediaIsVisible(block, { ...state, revealAll: true, expiredMedia: ["picture"] })).toBe(
+    false,
+  );
+});
 
 it("rejects reordered text, unknown media/cues, premature choices and colors outside the artistic palette", () => {
   const source = JSON.parse(

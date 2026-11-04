@@ -7,6 +7,7 @@ import { ProjectHistory } from "./project-history.ts";
 import { loadAce } from "./ace.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
 import { withMediaReferences } from "./media-references.ts";
+import { hasLegacyArtwork, refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
 
 export function useEditorProject() {
   const [project, setProject] = useState<StoryProject | null>(null);
@@ -30,17 +31,9 @@ export function useEditorProject() {
     const scope = new AbortController();
     async function load() {
       const record = await readEditorRecord();
-      const raw =
-        record?.draft ??
-        (await fetch("/stories/house/project.json", {
-          signal: scope.signal,
-          redirect: "error",
-        }).then(async (response) => {
-          if (!response.ok)
-            throw new Error("The built story project is unavailable. Run npm run stories:build.");
-          return response.json() as Promise<unknown>;
-        }));
-      const seed = withMediaReferences(StoryProjectSchema.parse(raw));
+      const built = await loadDefaultProject(record?.draft, scope.signal);
+      const raw = record?.draft ?? built!;
+      const seed = withMediaReferences(refreshDefaultArtwork(raw, built));
       const ace = await loadAce();
       if (scope.signal.aborted) return;
       const initialized = record ?? (await writeEditorRecord(seed, 0, "Original story"));
@@ -81,6 +74,7 @@ export function useEditorProject() {
   }, []);
 
   function update(next: StoryProject, label: string) {
+    next = refreshDefaultArtwork(next, latest.current);
     next = withMediaReferences(next);
     if (!latest.current || next === latest.current) return;
     history.current?.record(latest.current, next, label);
@@ -182,6 +176,19 @@ export function useEditorProject() {
     redo,
     ...availability,
   };
+}
+
+async function loadDefaultProject(draft: StoryProject | undefined, signal: AbortSignal) {
+  if (draft && !hasLegacyArtwork(draft)) return null;
+  try {
+    const response = await fetch("/stories/house/project.json", { signal, redirect: "error" });
+    if (!response.ok)
+      throw new Error("The built story project is unavailable. Run npm run stories:build.");
+    return StoryProjectSchema.parse(await response.json());
+  } catch (error) {
+    if (!draft) throw error;
+    return null;
+  }
 }
 
 export function message(error: unknown) {

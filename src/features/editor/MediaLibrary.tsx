@@ -148,7 +148,7 @@ export function MediaPicker({
       >
         ▧ Browse media library
       </button>
-      <p>{selected?.alt || selected?.id || "No media selected"}</p>
+      <p>{selected ? selected.alt || selected.id : "No media selected"}</p>
       {selected?.type === "image" && (
         <img className="asset-preview" src={`/stories/house/${selected.path}`} alt={selected.alt} />
       )}
@@ -157,7 +157,7 @@ export function MediaPicker({
         <MediaLibrary
           language={language}
           library={library}
-          kind={kind === "Image" ? "image" : kind === "Video" ? "video" : "audio"}
+          kind={mediaTypes[kind] ?? "audio"}
           onChoose={onAsset}
           onClose={() => setOpen(false)}
         />
@@ -196,3 +196,5 @@ function VideoPreview({ asset }: { asset: MediaAsset }) {
     <p>Video preview unavailable.</p>
   );
 }
+
+const mediaTypes: Record<string, "image" | "video" | "audio"> = { Image: "image", Video: "video" };

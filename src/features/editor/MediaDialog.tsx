@@ -55,6 +55,7 @@ export function MediaDialog({
   const {
     segmentIds,
     alt: defaultAlt,
+    assetUrl,
     blocks,
     trigger,
   } = mediaContext(language, sceneId, asset, selectedId);
@@ -62,15 +63,7 @@ export function MediaDialog({
     event.preventDefault();
     try {
       const data = new FormData(event.currentTarget);
-      const input = Object.fromEntries(
-        Object.entries(initial).map(([key, value]) => {
-          if (key === "motion")
-            return [key, data.has(key) ? JSON.parse(String(data.get(key))) : value];
-          if (typeof value === "boolean") return [key, data.has(key)];
-          if (!data.has(key)) return [key, value];
-          return [key, typeof value === "number" ? Number(data.get(key)) : String(data.get(key))];
-        }),
-      ) as unknown as MediaEdit;
+      const input = readMediaForm(initial, data);
       if (kind === "Video")
         input.duration = Math.min(
           180000,
@@ -114,32 +107,14 @@ export function MediaDialog({
             ))}
           </select>
         </label>
-        {kind === "Video" && (
-          <VideoUpload
-            onUpload={(asset) => {
-              setLanguage({
-                ...language,
-                configuration: {
-                  ...language.configuration,
-                  assets: [
-                    ...(language.configuration.assets ?? []).filter((item) => item.id !== asset.id),
-                    asset,
-                  ],
-                },
-              });
-              setAsset(asset.id);
-            }}
-          />
-        )}
-        {kind !== "Animation" && (
-          <MediaPicker
-            language={language}
-            kind={kind}
-            asset={asset}
-            onAsset={setAsset}
-            library={project.mediaLibrary ?? []}
-          />
-        )}
+        <MediaSource
+          kind={kind}
+          language={language}
+          setLanguage={setLanguage}
+          asset={asset}
+          setAsset={setAsset}
+          library={project.mediaLibrary}
+        />
         <Fields
           {...content}
           alt={defaultAlt}
@@ -152,11 +127,7 @@ export function MediaDialog({
             initial={initial.motion}
             language={language}
             quick={Boolean(selectedId)}
-            image={
-              asset
-                ? `/stories/house/${language.configuration.assets?.find((item) => item.id === asset)?.path}`
-                : undefined
-            }
+            image={assetUrl}
           />
         )}
         {!["Image", "Video"].includes(kind) && target !== "transition" && (
@@ -235,6 +206,7 @@ function ImageFields({
         <select aria-label="Type" name="layout" defaultValue={input.layout}>
           <option value="inline">{mediaType} Inline</option>
           <option value="wide">{mediaType} Wide</option>
+          <option value="right">{mediaType} Right page</option>
           <option value="background">{mediaType} Background</option>
           <option value="fullscreen">Cinematic {mediaType}</option>
         </select>
@@ -415,6 +387,63 @@ function TimingFields({
       </label>
       <SegmentField segments={segments} value={input.segment} />
       <NumberField name="delay" label="Delay (ms)" max={10000} value={input.delay} />
+    </>
+  );
+}
+
+function readMediaForm(initial: MediaEdit, data: FormData): MediaEdit {
+  return Object.fromEntries(
+    Object.entries(initial).map(([key, value]) => {
+      if (key === "motion") return [key, data.has(key) ? JSON.parse(String(data.get(key))) : value];
+      if (typeof value === "boolean") return [key, data.has(key)];
+      if (!data.has(key)) return [key, value];
+      return [key, typeof value === "number" ? Number(data.get(key)) : String(data.get(key))];
+    }),
+  ) as unknown as MediaEdit;
+}
+function MediaSource({
+  kind,
+  language,
+  setLanguage,
+  asset,
+  setAsset,
+  library,
+}: {
+  kind: string;
+  language: StoryProject["languages"][string];
+  setLanguage: (value: StoryProject["languages"][string]) => void;
+  asset: string;
+  setAsset: (id: string) => void;
+  library: StoryProject["mediaLibrary"];
+}) {
+  return (
+    <>
+      {kind === "Video" && (
+        <VideoUpload
+          onUpload={(asset) => {
+            setLanguage({
+              ...language,
+              configuration: {
+                ...language.configuration,
+                assets: [
+                  ...(language.configuration.assets ?? []).filter((item) => item.id !== asset.id),
+                  asset,
+                ],
+              },
+            });
+            setAsset(asset.id);
+          }}
+        />
+      )}
+      {kind !== "Animation" && (
+        <MediaPicker
+          language={language}
+          kind={kind}
+          asset={asset}
+          onAsset={setAsset}
+          library={library ?? []}
+        />
+      )}
     </>
   );
 }

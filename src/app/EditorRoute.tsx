@@ -35,7 +35,7 @@ function FullExperiencePreview({
 }) {
   const bundle = initialBundle;
   const start = knot;
-  const [windowState, setWindowState] = useState("normal");
+  const [expanded, setExpanded] = useState(false);
   const [preferences, setPreferences] = useState(project.languages[bundle.locale]!.defaults);
   const [player, setPlayer] = useState<{
     director: StoryDirector;
@@ -84,39 +84,24 @@ function FullExperiencePreview({
     <section
       className="experience-preview"
       aria-label="Story preview"
-      data-window={windowState}
+      data-window={expanded ? "maximized" : "normal"}
       ref={container}
     >
       <header className="preview-header">
         <strong>Preview</strong>
         <button
-          aria-label={windowState === "minimized" ? "Restore preview" : "Minimize preview"}
-          title="Minimize or restore the preview"
-          onClick={() => {
-            const minimized = windowState !== "minimized";
-            setWindowState(minimized ? "minimized" : "normal");
-            if (minimized) player?.presentation.pause();
-            else player?.presentation.resume();
-          }}
-        >
-          −
-        </button>
-        <button
-          aria-label={windowState === "maximized" ? "Restore preview size" : "Maximize preview"}
-          title="Expand the preview across the workspace"
-          onClick={() => setWindowState(windowState === "maximized" ? "normal" : "maximized")}
-        >
-          □
-        </button>
-        <button
           aria-label="Fullscreen preview"
           title="Open the preview in fullscreen"
           onClick={() => {
-            if (!container.current?.requestFullscreen) {
-              setWindowState("maximized");
+            if (document.fullscreenElement === container.current) {
+              void document.exitFullscreen().catch((error) => setError(message(error)));
               return;
             }
-            void container.current?.requestFullscreen().catch((error) => setError(message(error)));
+            if (!container.current?.requestFullscreen) {
+              setExpanded(!expanded);
+              return;
+            }
+            void container.current?.requestFullscreen().catch(() => setExpanded(!expanded));
           }}
         >
           ⛶
@@ -130,7 +115,7 @@ function FullExperiencePreview({
         </button>
       </header>
       {error && <p role="alert">{error}</p>}
-      <div className="preview-content" hidden={windowState === "minimized"}>
+      <div className="preview-content">
         {player && (
           <StoryPlayer
             key={`${bundle.locale}:${start}`}
@@ -138,7 +123,7 @@ function FullExperiencePreview({
             {...player}
             preferences={preferences}
             onPreferencesChange={setPreferences}
-            focusPassage={false}
+            preview
             backup={async () =>
               download("preview-checkpoint.json", await saves.current!.backup(bundle))
             }

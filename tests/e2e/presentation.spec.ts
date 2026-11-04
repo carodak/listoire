@@ -95,6 +95,20 @@ test("a declarative cinematic can be skipped without changing its story result",
   await page.getByRole("button", { name: "Continue reading", exact: true }).click();
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await page.getByRole("button", { name: "Ask about the locked room", exact: true }).click();
+  const cinematic = page.locator(".cinematic-dialog");
+  await cinematic.getByRole("button", { name: "Pause", exact: true }).click();
+  const viewport = page.viewportSize()!;
+  const dialogBounds = (await cinematic.boundingBox())!;
+  expect(dialogBounds.x).toBe(0);
+  expect(dialogBounds.y).toBe(0);
+  expect(dialogBounds.width).toBeCloseTo(viewport.width, 0);
+  expect(dialogBounds.height).toBeCloseTo(viewport.height, 0);
+  const image = cinematic.locator(".shot-image");
+  const imageBounds = (await image.boundingBox())!;
+  expect(imageBounds.width).toBeGreaterThanOrEqual(viewport.width - 1);
+  expect(imageBounds.height).toBeGreaterThanOrEqual(viewport.height - 1);
+  await expect(image).toHaveCSS("object-fit", "cover");
+  await cinematic.getByRole("button", { name: "Resume", exact: true }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Skip cinematic", exact: true })

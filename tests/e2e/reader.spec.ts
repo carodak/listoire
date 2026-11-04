@@ -117,7 +117,7 @@ test("unifies language selection while preserving each localized save", async ({
   await expect(page.locator(".prose")).toContainText(/Au dos/);
   await chooseLanguage(page, "en");
   await expect(page.locator(".prose")).toContainText(/On the back/);
-  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(250, 249, 246)");
+  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(11, 24, 34)");
   await expect(page.locator("html")).toHaveCSS("background-color", "rgb(245, 245, 245)");
 });
 
@@ -181,19 +181,48 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await enterStory(page);
-  await expect(page.locator(".eyebrow")).toHaveText("The House That Remembered · Chapter One");
+  await expect(page.locator(".eyebrow")).toHaveText("The House That Remembered");
   await expect(page.locator(".reader-shell .site-header")).toBeVisible();
   const shell = await page.locator(".reader-shell").boundingBox();
   const header = await page.locator(".site-header").boundingBox();
   const heading = await page.locator(".reader h1").boundingBox();
   expect(shell!.y).toBeLessThan(25);
   expect(header!.y).toBeGreaterThan(shell!.y);
-  expect(heading!.y).toBeLessThan(155);
+  const hero = await page.locator(".story-scene-heading").boundingBox();
+  expect(hero!.height).toBeLessThan(200);
+  expect(heading!.y).toBeGreaterThan(hero!.y);
+  expect(heading!.y + heading!.height).toBeLessThan(hero!.y + hero!.height);
+  const cover = page.locator(".story-cover");
+  await expect
+    .poll(() => cover.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  await expect(cover).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
   const canvas = await page.locator(".reader").boundingBox();
   const prose = await page.locator(".prose > p").first().boundingBox();
   expect(canvas!.width / 1440).toBeGreaterThanOrEqual(0.9);
   expect(canvas!.width / 1440).toBeLessThanOrEqual(0.95);
-  expect(prose!.width).toBeCloseTo(800, 0);
-  expect(prose!.x + prose!.width / 2).toBeCloseTo(720, 0);
+  const art = await page.locator(".story-art").boundingBox();
+  expect(prose!.width).toBeGreaterThan(canvas!.width * 0.4);
+  expect(prose!.width).toBeLessThan(canvas!.width * 0.55);
+  expect(art!.x).toBeGreaterThan(prose!.x + prose!.width - 80);
+  expect(prose!.x).toBeCloseTo((await page.locator(".reader-copy").boundingBox())!.x, 0);
   expect((await page.locator(".site-header").boundingBox())!.height).toBeLessThan(70);
+});
+
+test("right-page artwork changes with the story and returns on Back and Replay", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await enterStory(page);
+  const artwork = page.locator(".story-art .shot-image");
+  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await expect(page.locator('.story-art [data-block="intro.artwork"]')).toBeVisible();
+  await page.getByRole("button", { name: "Continue reading", exact: true }).click();
+  await expect(artwork).toHaveAttribute("src", /tcp\.human5-cutout\.webp$/);
+  await expect(page.locator('.story-art [data-block="intro.artwork"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Previous page", exact: true }).click();
+  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await expect(artwork).toHaveCount(1);
 });

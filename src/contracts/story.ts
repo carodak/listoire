@@ -62,6 +62,7 @@ export const BundleSchema = z
     variables: z.array(id).max(30).optional(),
     scenes: z.record(id, SceneSchema).optional(),
     assets: z.array(RuntimeAssetSchema).max(500).optional(),
+    cover: z.string().optional(),
     panels: z.array(PanelSchema).max(5).optional(),
     examination: ExaminationSchema.optional(),
     character: CharacterDefinitionSchema.optional(),
@@ -88,6 +89,7 @@ export const BundleSchema = z
     const invalid = (message: string) => context.addIssue({ code: "custom", message });
     const assets = new Map(bundle.assets?.map((asset) => [asset.id, asset]));
     if (assets.size !== (bundle.assets?.length ?? 0)) invalid("Duplicate asset ID");
+    if (bundle.cover && assets.get(bundle.cover)?.type !== "image") invalid("Unknown cover image");
     for (const [passageId, scene] of Object.entries(bundle.scenes ?? {})) {
       if (!bundle.passages[passageId]) invalid("Unknown scene passage");
       validateScenePresentation(

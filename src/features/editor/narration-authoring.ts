@@ -1,5 +1,27 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
+import { textDigest } from "../media/narration-manager.ts";
+
+export async function cacheNarration(
+  result: { clip: NarrationClip; audioUrl: string },
+  text: string,
+  signal: AbortSignal,
+) {
+  const response = await fetch(result.audioUrl, {
+    signal,
+    redirect: "error",
+    credentials: "same-origin",
+  });
+  if (!response.ok || Number(response.headers.get("content-length")) > 5_000_000)
+    throw new Error("Could not cache generated narration.");
+  const cached = await narrationBytes(await response.arrayBuffer());
+  if (
+    cached.audioDigest !== result.clip.audioDigest ||
+    (await textDigest(text)) !== result.clip.spokenTextDigest
+  )
+    throw new Error("Generated narration does not match its text or audio digest.");
+  return cached.dataUrl;
+}
 export function audioDuration(url: string, kind: "audio" | "video" = "audio"): Promise<number> {
   return new Promise((resolve, reject) => {
     const audio =

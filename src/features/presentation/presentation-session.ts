@@ -1,6 +1,7 @@
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
+import { mediaIsVisible } from "../../contracts/presentation.ts";
 import type { NarrativeEvent, NativeEffect, ReactBitsEffect } from "../../contracts/effects.ts";
 import { AudioManager } from "../media/audio-manager.ts";
 import { NarrationManager } from "../media/narration-manager.ts";
@@ -202,10 +203,9 @@ export class PresentationSession implements NarrativePresentationPort {
     const block = this.bundle.scenes?.[this.frame?.passageId ?? ""]?.blocks?.find(
       (block) => block.kind === "media" && block.id === id,
     );
-    return (
-      !this.state.expiredMedia.includes(id) &&
-      (block?.kind !== "media" || !block.show || this.state.visibleMedia.includes(id))
-    );
+    return block?.kind === "media"
+      ? mediaIsVisible(block, this.state)
+      : !this.state.expiredMedia.includes(id);
   }
   private queueTarget(id: string) {
     if (!this.mediaVisible(id)) return;

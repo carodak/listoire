@@ -91,6 +91,7 @@ export async function compileLanguage(
   );
   return BundleSchema.parse({
     ...language.configuration,
+    cover: language.cover,
     scenes,
     schemaVersion: 1,
     storyId: project.storyId,

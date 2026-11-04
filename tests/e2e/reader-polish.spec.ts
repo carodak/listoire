@@ -8,10 +8,10 @@ test("text reaches its media before choices and the compact toolbar follows scro
   await page.getByRole("button", { name: "Play an existing story" }).click();
   await expect(page.getByRole("heading", { name: "The Girl in the Photograph" })).toBeVisible();
   await expect(page.locator(".choices")).toHaveCount(0);
-  await expect(page.locator(".narrative-media")).toHaveCount(0);
+  await expect(page.locator(".prose .narrative-media")).toHaveCount(0);
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
-  const photo = page.locator(".narrative-media img").first();
-  await expect(photo).toHaveAttribute("src", /tcp\.human5\.webp$/);
+  const photo = page.locator(".prose .narrative-media img").first();
+  await expect(photo).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
   const secondParagraph = await page.locator(".prose > p").nth(1).boundingBox();
   expect((await photo.boundingBox())!.y).toBeGreaterThan(
     secondParagraph!.y + secondParagraph!.height,

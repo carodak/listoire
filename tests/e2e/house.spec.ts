@@ -63,8 +63,14 @@ test("English and French finish the original branches and retain inventory and r
     "Continue reading",
     "Turn the photograph over",
     "Continue reading",
-  ])
+  ]) {
     await page.getByRole("button", { name: label, exact: true }).click();
+    if (label === "Break the wax seal") {
+      const key = page.locator('.prose img[src$="heritage.key.webp"]');
+      await expect(key).toHaveCSS("filter", "invert(1)");
+      await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    }
+  }
   await expect(page.getByRole("heading", { name: "The House Is Waiting" })).toBeVisible();
   await page.getByRole("button", { name: /My Character/ }).click();
   await page.getByRole("button", { name: /Inventory/ }).click();
@@ -175,7 +181,7 @@ test("initial reader requests only its scene resources and no source catalogs", 
       /assets\/catalog|heritage-library|GameAudioBundle|\.wav$|\.zip$/.test(path),
     ),
   ).toBe(false);
-  expect(requested.filter((path) => path.includes("/stories/house/media/"))).toEqual([
-    "/stories/house/media/tcp.human5.webp",
+  expect(requested.filter((path) => path.includes("/stories/house/media/")).sort()).toEqual([
+    "/stories/house/media/tcp.human8-cutout.webp",
   ]);
 });

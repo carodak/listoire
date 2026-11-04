@@ -11,6 +11,7 @@ import { mediaDefaults, applyMediaEdit } from "./media-authoring.ts";
 import { addLanguage } from "./add-language.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
+import { cacheNarration } from "./narration-authoring.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 import { editorShortcut } from "./editor-shortcuts.ts";
@@ -46,42 +47,46 @@ it("compiles mixed Windows line endings and media tags without changing the hous
   expect(engine.advance()).toEqual(baseline.advance());
 });
 
-it("places media at its executed source position, including native untagged paragraphs", async () => {
-  const project = structuredClone(original);
-  project.languages.en!.configuration = {
-    title: "Order",
-    chapter: "Story",
-    assets: original.languages.en!.configuration.assets,
-  };
-  project.languages.en!.script =
-    "-> start\n=== start ===\nFirst sentence.\n// @media start/picture\nSecond sentence.\n-> END";
-  const input = mediaDefaults("Image", "start", "picture");
-  input.asset = "tcp.human5";
-  const bundle = await compileLanguage(applyMediaEdit(project, "en", input, [], "passage"), "en");
-  const frame = new InkNarrativeEngine(bundle).advance();
-  expect(frame.mediaAnchors).toEqual([{ id: "picture", after: frame.segments[0]!.id }]);
-  expect(
-    presentationBlocks(bundle, frame).map((block) =>
-      block.kind === "text"
-        ? frame.segments.find((s) => s.id === block.segmentId)!.text
-        : block.kind,
-    ),
-  ).toEqual(["First sentence.", "media", "Second sentence.", "choices"]);
-  input.motion = CinematicSchema.parse({ preset: "slow-reveal", atmosphere: "historical" });
-  input.positionOverride = true;
-  input.x = 10;
-  input.y = -5;
-  const changed = applyMediaEdit(project, "en", input, [], "passage").languages.en!.configuration
-    .scenes!.start!;
-  expect(changed.blocks).toContainEqual(expect.objectContaining({ position: { x: 10, y: -5 } }));
-  expect(changed.events).toContainEqual(
-    expect.objectContaining({
-      action: expect.objectContaining({
-        effect: expect.objectContaining({ id: "cinematic-camera", duration: 14000 }),
+it.each(["inline", "right"] as const)(
+  "places %s media at its executed source position, including native untagged paragraphs",
+  async (layout) => {
+    const project = structuredClone(original);
+    project.languages.en!.configuration = {
+      title: "Order",
+      chapter: "Story",
+      assets: original.languages.en!.configuration.assets,
+    };
+    project.languages.en!.script =
+      "-> start\n=== start ===\nFirst sentence.\n// @media start/picture\nSecond sentence.\n-> END";
+    const input = mediaDefaults("Image", "start", "picture");
+    input.asset = "tcp.human5";
+    input.layout = layout;
+    const bundle = await compileLanguage(applyMediaEdit(project, "en", input, [], "passage"), "en");
+    const frame = new InkNarrativeEngine(bundle).advance();
+    expect(frame.mediaAnchors).toEqual([{ id: "picture", after: frame.segments[0]!.id }]);
+    expect(
+      presentationBlocks(bundle, frame).map((block) =>
+        block.kind === "text"
+          ? frame.segments.find((s) => s.id === block.segmentId)!.text
+          : block.kind,
+      ),
+    ).toEqual(["First sentence.", "media", "Second sentence.", "choices"]);
+    input.motion = CinematicSchema.parse({ preset: "slow-reveal", atmosphere: "historical" });
+    input.positionOverride = true;
+    input.x = 10;
+    input.y = -5;
+    const changed = applyMediaEdit(project, "en", input, [], "passage").languages.en!.configuration
+      .scenes!.start!;
+    expect(changed.blocks).toContainEqual(expect.objectContaining({ position: { x: 10, y: -5 } }));
+    expect(changed.events).toContainEqual(
+      expect.objectContaining({
+        action: expect.objectContaining({
+          effect: expect.objectContaining({ id: "cinematic-camera", duration: 14000 }),
+        }),
       }),
-    }),
-  );
-});
+    );
+  },
+);
 
 it("lists Knot and Stitch paths and makes existing media discoverable without changing Ink", () => {
   expect(outlineEntries("=== start ===\n= first\nHello\n=== end ===")).toMatchObject([
@@ -290,6 +295,25 @@ it("checks string-valued logic and stable tags while accepting translated choice
   expect(structure(original.languages.en!.script)).not.toBe(
     structure(original.languages.fr!.script.replace("segment:intro.p1", "segment:intro.changed")),
   );
+});
+
+it("rejects missing or oversized generated audio before caching any bytes", async () => {
+  const request = {
+    clip: original.languages.en!.configuration.narration![0]!,
+    audioUrl: "/api/narration/audio/test.mp3",
+  };
+  const fetcher = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(new Response(null, { headers: { "content-length": "5000001" } }));
+  const signal = new AbortController().signal;
+  await expect(cacheNarration(request, "Text", signal)).rejects.toThrow(/cache/);
+  await expect(cacheNarration(request, "Text", signal)).rejects.toThrow(/cache/);
+  expect(fetcher).toHaveBeenCalledWith(request.audioUrl, {
+    signal,
+    redirect: "error",
+    credentials: "same-origin",
+  });
 });
 
 it("reports missing media and retries after the resource becomes available", async () => {

@@ -3,6 +3,7 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 import { defaultSpeechSettings, VoiceProfileSchema } from "../../contracts/media.ts";
 import type { VoiceProfile, SpeechSettings } from "../../contracts/media.ts";
 import { audioDuration } from "./narration-authoring.ts";
+import { DurationField } from "./DurationField.tsx";
 
 type Language = StoryProject["languages"][string];
 function availableProfiles(language: Language, locale: string): VoiceProfile[] {
@@ -166,21 +167,14 @@ export function VoiceDesigner({
             onChange={(e) => setDraft({ ...draft, rights: e.target.value })}
           />
         </label>
-        <label>
-          Example duration in seconds (optional override)
-          <input
-            type="number"
-            min="6"
-            max="30"
-            step="0.01"
-            value={draft.duration || ""}
-            onChange={(event) => setDraft({ ...draft, duration: Number(event.target.value) })}
-          />
-        </label>
-        <p>
-          Leave blank for automatic duration. If this browser cannot decode the example, enter its
-          duration; the local service verifies the file before generation.
-        </p>
+        <DurationField
+          label="Example duration in seconds (optional override)"
+          min={6}
+          max={30}
+          value={draft.duration}
+          onChange={(duration) => setDraft({ ...draft, duration })}
+          help="Leave blank for automatic duration. If this browser cannot decode the example, enter its duration; the local service verifies the file before generation."
+        />
         <label>
           Voice example (MP3 / WAV, max 5 MB)
           <input

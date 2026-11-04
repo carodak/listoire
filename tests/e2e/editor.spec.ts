@@ -18,6 +18,39 @@ async function appendInk(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
+test("refreshes an imported legacy project's artwork without losing the author's text", async ({
+  page,
+}) => {
+  await openEditor(page);
+  const legacy = JSON.parse(
+    await readFile(resolve("docs/story-editor/original-project.json"), "utf8"),
+  );
+  legacy.languages.en.configuration.title = "My retained story";
+  legacy.languages.en.script += "\n// My retained draft note\n";
+  await page.getByRole("button", { name: "Load / Import", exact: true }).click();
+  await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles({
+    name: "old-project.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(legacy)),
+  });
+  await expect(page.getByLabel("Story title", { exact: true })).toHaveValue("My retained story");
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.locator(".preview-slot .story-cover")).toHaveAttribute(
+    "src",
+    /tcp\.human8-cutout\.webp$/,
+  );
+  await expect(page.locator(".preview-slot .scene-illustration img").first()).toHaveAttribute(
+    "src",
+    /tcp\.human8-cutout\.webp$/,
+  );
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await download).path())!, "utf8"));
+  expect(backup.languages.en.script).toContain("My retained draft note");
+  expect(backup.languages.en.configuration.title).toBe("My retained story");
+});
+
 test("inserts images at their source position and preserves video uploads in complete backups", async ({
   page,
   browserName,
@@ -34,7 +67,7 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("human5");
+  await page.getByLabel("Search media", { exact: true }).fill("tcp.human8-cutout");
   await page.getByRole("button", { name: "Use this media", exact: true }).click();
   await page.getByLabel("Caption", { exact: true }).fill("After the girl");
   await page.getByLabel("Type", { exact: true }).selectOption("wide");
@@ -188,12 +221,28 @@ test("search, sidebar media highlighting, compatible animations and docked previ
 }) => {
   await openEditor(page);
   await expect(page.locator(".preview-slot .prose")).toBeVisible();
-  await page.getByRole("button", { name: "Minimize preview", exact: true }).click();
-  await expect(page.locator(".preview-content")).toBeHidden();
-  await page.getByRole("button", { name: "Restore preview", exact: true }).click();
-  await page.getByRole("button", { name: "Maximize preview", exact: true }).click();
-  await expect(page.locator(".experience-preview")).toHaveAttribute("data-window", "maximized");
-  await page.getByRole("button", { name: "Restore preview size", exact: true }).click();
+  await expect(page.locator(".preview-header button")).toHaveCount(2);
+  await expect(
+    page.locator(".preview-slot").getByRole("button", { name: "Previous page", exact: true }),
+  ).toHaveCount(0);
+  const language = page.getByLabel("Story language", { exact: true });
+  await expect(language.locator("option:checked")).toHaveText("EN");
+  expect((await language.boundingBox())!.width).toBeLessThan(75);
+  await expect(page.getByRole("button", { name: "Fullscreen preview", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Fullscreen preview", exact: true }).click();
+  await expect
+    .poll(() =>
+      page
+        .locator(".experience-preview")
+        .evaluate(
+          (node) =>
+            document.fullscreenElement === node || node.getAttribute("data-window") === "maximized",
+        ),
+    )
+    .toBe(true);
+  if (await page.evaluate(() => Boolean(document.fullscreenElement)))
+    await page.evaluate(() => document.exitFullscreen());
+  else await page.getByRole("button", { name: "Fullscreen preview", exact: true }).click();
   if ((page.viewportSize()?.width ?? 0) > 1000) {
     await page
       .getByRole("separator", { name: "Resize navigation", exact: true })
@@ -322,7 +371,7 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Add Image" })).toBeVisible();
   await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("human5");
+  await page.getByLabel("Search media", { exact: true }).fill("tcp.human8-cutout");
   await page.getByRole("button", { name: "Use this media", exact: true }).click();
   await page.getByLabel("Alt text").fill("A girl standing beside a house");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();

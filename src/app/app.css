@@ -66,6 +66,12 @@ input:focus-visible {
   top: 12px;
 }
 .reader-shell {
+  --paper: #0b1822;
+  --foreground: #eee5d5;
+  --muted: #c4b9a6;
+  --accent: #d5b67e;
+  --border: #c4b28c55;
+  --hover: #ffffff0a;
   width: 94%;
   margin: 18px auto 60px;
   background: var(--paper);
@@ -74,6 +80,11 @@ input:focus-visible {
 }
 .reader-shell .site-header {
   max-width: none;
+  padding: 8px clamp(28px, 5vw, 80px);
+}
+.reader-shell .wordmark {
+  font-size: 23px;
+  letter-spacing: 0;
 }
 .site-header {
   position: relative;

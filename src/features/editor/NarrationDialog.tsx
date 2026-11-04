@@ -6,7 +6,12 @@ import { NarrationClipSchema } from "../../contracts/media.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
 import { requestLocalNarration } from "../media/local-narration.ts";
 import { textDigest } from "../media/narration-manager.ts";
-import { attachNarration, narrationBytes, audioDuration } from "./narration-authoring.ts";
+import {
+  attachNarration,
+  narrationBytes,
+  audioDuration,
+  cacheNarration,
+} from "./narration-authoring.ts";
 import { VoiceDesigner } from "./VoiceDesigner.tsx";
 import { speechOptions } from "../media/speech-options.ts";
 
@@ -80,19 +85,7 @@ export function NarrationDialog({
       return;
     }
     try {
-      const response = await fetch(result.audioUrl, {
-        signal: handles.current.scope.signal,
-        redirect: "error",
-        credentials: "same-origin",
-      });
-      if (!response.ok || Number(response.headers.get("content-length")) > 5_000_000)
-        throw new Error("Could not cache generated narration.");
-      const { audioDigest, dataUrl } = await narrationBytes(await response.arrayBuffer());
-      if (
-        audioDigest !== result.clip.audioDigest ||
-        (await textDigest(selected.text)) !== result.clip.spokenTextDigest
-      )
-        throw new Error("Generated narration does not match its text or audio digest.");
+      const dataUrl = await cacheNarration(result, selected.text, handles.current.scope.signal);
       setLanguage((current) => attachNarration(current, result.clip, dataUrl));
       setAudioUrl(dataUrl);
       setStatus(
@@ -199,50 +192,7 @@ export function NarrationDialog({
           </button>
         )}
         {language.narrationMode === "human" && (
-          <>
-            <label>
-              Rights attestation
-              <input
-                value={rights}
-                onChange={(e) => setRecording({ ...recording, rights: e.target.value })}
-                placeholder="I own this recording, or license reference"
-              />
-            </label>
-            <label>
-              Text/audio marks JSON
-              <textarea
-                value={marks}
-                onChange={(e) => setRecording({ ...recording, marks: e.target.value })}
-                placeholder='[{"character":0,"startMs":0,"endMs":500}]'
-              />
-            </label>
-            <label>
-              Upload MP3
-              <input
-                type="file"
-                accept="audio/mpeg,.mp3"
-                onChange={(e) => {
-                  const input = e.currentTarget;
-                  const file = input.files?.[0];
-                  if (file)
-                    void upload(file).finally(() => {
-                      input.value = "";
-                    });
-                }}
-              />
-            </label>
-            <label>
-              Duration in seconds (optional override)
-              <input
-                type="number"
-                min="0"
-                max="180"
-                step="0.01"
-                value={manualDuration}
-                onChange={(e) => setRecording({ ...recording, duration: Number(e.target.value) })}
-              />
-            </label>
-          </>
+          <HumanRecordingFields recording={recording} onChange={setRecording} onUpload={upload} />
         )}
         {audioUrl && (
           <audio
@@ -369,6 +319,69 @@ function VoiceControls({
           }
         />
         Narrate by default
+      </label>
+    </>
+  );
+}
+
+function HumanRecordingFields({
+  recording,
+  onChange: setRecording,
+  onUpload: upload,
+}: {
+  recording: { rights: string; marks: string; duration: number; spokenText: string | null };
+  onChange: (value: {
+    rights: string;
+    marks: string;
+    duration: number;
+    spokenText: string | null;
+  }) => void;
+  onUpload: (file: File) => Promise<void>;
+}) {
+  const { rights, marks } = recording;
+  return (
+    <>
+      <label>
+        Rights attestation
+        <input
+          value={rights}
+          onChange={(e) => setRecording({ ...recording, rights: e.target.value })}
+          placeholder="I own this recording, or license reference"
+        />
+      </label>
+      <label>
+        Text/audio marks JSON
+        <textarea
+          value={marks}
+          onChange={(e) => setRecording({ ...recording, marks: e.target.value })}
+          placeholder='[{"character":0,"startMs":0,"endMs":500}]'
+        />
+      </label>
+      <label>
+        Upload MP3
+        <input
+          type="file"
+          accept="audio/mpeg,.mp3"
+          onChange={(e) => {
+            const input = e.currentTarget;
+            const file = input.files?.[0];
+            if (file)
+              void upload(file).finally(() => {
+                input.value = "";
+              });
+          }}
+        />
+      </label>
+      <label>
+        Duration in seconds (optional override)
+        <input
+          type="number"
+          min="0"
+          max="180"
+          step="0.01"
+          value={recording.duration}
+          onChange={(e) => setRecording({ ...recording, duration: Number(e.target.value) })}
+        />
       </label>
     </>
   );

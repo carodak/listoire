@@ -340,6 +340,271 @@
       "sourceSha256": "9b4f3ce855c28800502fcdc0b1b8aa8671c3089865ef41daa35e211b0ea19ee2",
       "runtimeSha256": "21fc0ec55ffb4b7d039b93f5474c371a7ec237a85ba14f4085587a0310e46699",
       "runtimeBytes": 86752
+    },
+    {
+      "id": "unsplash.woodland-house",
+      "originalPath": "assets/images/unsplash/alex-moliski-rTzxt4RIfh8.jpg",
+      "optimizedPath": "stories/house/media/unsplash.woodland-house.webp",
+      "mediaType": "image",
+      "sourceCollection": "Unsplash cinematic photographs",
+      "title": "Woodland house",
+      "creator": "Alex Moliski",
+      "technical": {
+        "format": "jpeg",
+        "bytes": 2103816,
+        "width": 2400,
+        "height": 3600
+      },
+      "verified": {
+        "provenance": "provider-page-and-local-visual-inspection",
+        "license": "Unsplash License",
+        "verifiedAt": "2026-11-03",
+        "evidence": [
+          "https://unsplash.com/photos/an-old-house-in-the-woods-with-a-metal-roof-rTzxt4RIfh8",
+          "https://unsplash.com/license"
+        ],
+        "downloadUrl": "https://images.unsplash.com/photo-1723765103326-3f4dcbed96f2?auto=format&fit=crop&fm=jpg&q=90&w=2400",
+        "photoId": "rTzxt4RIfh8"
+      },
+      "suggested": {
+        "roles": ["scene-atmosphere"],
+        "themes": ["house", "woodland", "mystery"],
+        "moods": ["restrained", "uneasy"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false,
+        "userAttestation": null
+      },
+      "usage": "Optimized story illustration only; no standalone stock-library redistribution.",
+      "sourceSha256": "44feec71164404b11745f3d85d689c0a0aef47c71bb5100e161358a0699b94ec",
+      "runtimeSha256": "a2809539da86ab8b6c69f1764df3d8d4e7bc62ed3e35691f69ba52cc14449491",
+      "runtimeBytes": 327722
+    },
+    {
+      "id": "unsplash.hidden-house",
+      "originalPath": "assets/images/unsplash/intricate-explorer-im7g_xQ-XhA.jpg",
+      "optimizedPath": "stories/house/media/unsplash.hidden-house.webp",
+      "mediaType": "image",
+      "sourceCollection": "Unsplash cinematic photographs",
+      "title": "House beyond the trees",
+      "creator": "Intricate Explorer",
+      "technical": {
+        "format": "jpeg",
+        "bytes": 1298951,
+        "width": 2400,
+        "height": 1601
+      },
+      "verified": {
+        "provenance": "provider-page-and-local-visual-inspection",
+        "license": "Unsplash License",
+        "verifiedAt": "2026-11-03",
+        "evidence": [
+          "https://unsplash.com/photos/abandoned-house-in-a-dark-overgrown-forest-im7g_xQ-XhA",
+          "https://unsplash.com/license"
+        ],
+        "downloadUrl": "https://images.unsplash.com/photo-1767630928362-1a8bcadab3be?auto=format&fit=crop&fm=jpg&q=90&w=2400",
+        "photoId": "im7g_xQ-XhA"
+      },
+      "suggested": {
+        "roles": ["scene-atmosphere"],
+        "themes": ["house", "woodland", "mystery"],
+        "moods": ["restrained", "uneasy"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "attributionRequired": false,
+        "userAttestation": null
+      },
+      "usage": "Optimized story illustration only; no standalone stock-library redistribution.",
+      "sourceSha256": "d49f151958f0df2eb8c7acad7550b60bab1e30be4a711e26aaa8b904d006bf65",
+      "runtimeSha256": "3a05fee1283ea42d475f63387442791a448dabbc981429e52e7c1cc7d625957e",
+      "runtimeBytes": 447486
+    },
+    {
+      "id": "shadow.house",
+      "originalPath": "assets/images/generated/house-shadow.png",
+      "optimizedPath": "stories/house/media/shadow.house.webp",
+      "mediaType": "image",
+      "sourceCollection": "Original shadow art",
+      "title": "House in the shadows",
+      "creator": "Original image generated with Imagegen",
+      "technical": {
+        "format": "png",
+        "bytes": 2579147,
+        "width": 1536,
+        "height": 1024
+      },
+      "verified": {
+        "provenance": "generated-original-and-visual-inspection",
+        "license": "generated-for-this-project",
+        "evidence": "docs/story-editor/shadow-art.md"
+      },
+      "suggested": {
+        "roles": ["scene-atmosphere", "narrative-illustration"],
+        "themes": ["house", "shadow", "mystery"],
+        "moods": ["adult", "restrained", "uneasy"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "providerVerifiedLicense": null,
+        "userAuthorization": "User explicitly requested original generated shadow-art illustrations."
+      },
+      "usage": "Original project illustration; no stock-image redistribution.",
+      "sourceSha256": "383c2166329f1651011f576944930df15819104a61fdabdaae2eb774be6d5993",
+      "runtimeSha256": "3a25843f96b84c6cd0d6b2f6b4b47af8875163dd06c5ff8e218fd35eb39277f7",
+      "runtimeBytes": 184156
+    },
+    {
+      "id": "shadow.woman",
+      "originalPath": "assets/images/generated/woman-shadow.png",
+      "optimizedPath": "stories/house/media/shadow.woman.webp",
+      "mediaType": "image",
+      "sourceCollection": "Original shadow art",
+      "title": "The woman with the photograph",
+      "creator": "Original image generated with Imagegen",
+      "technical": {
+        "format": "png",
+        "bytes": 2277169,
+        "width": 1024,
+        "height": 1536
+      },
+      "verified": {
+        "provenance": "generated-original-and-visual-inspection",
+        "license": "generated-for-this-project",
+        "evidence": "docs/story-editor/shadow-art.md"
+      },
+      "suggested": {
+        "roles": ["scene-atmosphere", "narrative-illustration"],
+        "themes": ["house", "shadow", "mystery"],
+        "moods": ["adult", "restrained", "uneasy"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "providerVerifiedLicense": null,
+        "userAuthorization": "User explicitly requested original generated shadow-art illustrations."
+      },
+      "usage": "Original project illustration; no stock-image redistribution.",
+      "sourceSha256": "e5bd9a943d02b3f5a430f68a4745f1a05f585821165532c76cffa4429a6e1a40",
+      "runtimeSha256": "21da96383fdcfe0cdcfb3faa0d2f3c9f4a06c186ab71f985bbb401d16cf86de3",
+      "runtimeBytes": 170562
+    },
+    {
+      "id": "shadow.photograph",
+      "originalPath": "assets/images/generated/photograph-shadow.png",
+      "optimizedPath": "stories/house/media/shadow.photograph.webp",
+      "mediaType": "image",
+      "sourceCollection": "Original shadow art",
+      "title": "The photograph, 1987",
+      "creator": "Original image generated with Imagegen",
+      "technical": {
+        "format": "png",
+        "bytes": 3062888,
+        "width": 1536,
+        "height": 1024
+      },
+      "verified": {
+        "provenance": "generated-original-and-visual-inspection",
+        "license": "generated-for-this-project",
+        "evidence": "docs/story-editor/shadow-art.md"
+      },
+      "suggested": {
+        "roles": ["scene-atmosphere", "narrative-illustration"],
+        "themes": ["house", "shadow", "mystery"],
+        "moods": ["adult", "restrained", "uneasy"]
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "prohibited",
+        "providerVerifiedLicense": null,
+        "userAuthorization": "User explicitly requested original generated shadow-art illustrations."
+      },
+      "usage": "Original project illustration; no stock-image redistribution.",
+      "sourceSha256": "d1d9730a85a0719b4e0c8a75f35c1b580b09a1fa1e55db47b31143864ab0825d",
+      "runtimeSha256": "8cac46ed6428f6a3ec0238697f2fdb4dd4a93809d40b4d48ec4bffe97e1833c3",
+      "runtimeBytes": 281316
+    },
+    {
+      "id": "tcp.human5-cutout",
+      "title": "TCP Human 5 — original portrait, transparent cutout",
+      "creator": "Jeff Preston; project coordinated by Duane O’Brien",
+      "originalPath": "assets/images/TCP/TCP Human 5.jpg",
+      "optimizedPath": "stories/house/media/tcp.human5-cutout.webp",
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 242046,
+        "width": 830,
+        "height": 1050,
+        "colorMode": "RGB"
+      },
+      "maxDimensions": [1800, 2200],
+      "verified": {
+        "provenance": "local-file-and-visual-inspection",
+        "license": "CC BY 3.0 Unported",
+        "evidence": "assets/images/TCP/license.txt",
+        "creatorEvidence": "assets/images/TCP/readme.txt"
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "allowed-with-attribution",
+        "attributionRequired": true
+      },
+      "suggested": {
+        "roles": ["portrait", "interactive-photograph"],
+        "themes": ["identity"],
+        "moods": ["unsettling"],
+        "tags": ["grayscale", "line-art"]
+      },
+      "credit": "TCP Human 5 — Jeff Preston / Terrible Character Portraits, coordinated by Duane O’Brien. CC BY 3.0: https://creativecommons.org/licenses/by/3.0/ · Source: http://team-preston.com · White exterior removed, converted to WebP.",
+      "usage": "Page illustration from the user’s downloaded TCP collection; original linework retained, exterior paper made transparent.",
+      "sourceSha256": "9b4f3ce855c28800502fcdc0b1b8aa8671c3089865ef41daa35e211b0ea19ee2",
+      "runtimeSha256": "1cbb80e4638a33a68a6c3a8e898840549a49a6370537c259844c868df91c6299",
+      "runtimeBytes": 112936
+    },
+    {
+      "id": "tcp.human8-cutout",
+      "title": "TCP Human 8 — original portrait, transparent cutout",
+      "creator": "Jeff Preston; project coordinated by Duane O’Brien",
+      "originalPath": "assets/images/TCP/TCP Human 8.jpg",
+      "optimizedPath": "stories/house/media/tcp.human8-cutout.webp",
+      "mediaType": "image",
+      "sourceCollection": "TCP",
+      "technical": {
+        "format": "jpg",
+        "bytes": 192803,
+        "width": 864,
+        "height": 1050,
+        "colorMode": "RGB"
+      },
+      "maxDimensions": [1800, 2200],
+      "verified": {
+        "provenance": "local-file-and-visual-inspection",
+        "license": "CC BY 3.0 Unported",
+        "evidence": "assets/images/TCP/license.txt",
+        "creatorEvidence": "assets/images/TCP/readme.txt"
+      },
+      "rights": {
+        "officialStoryUse": "allowed",
+        "thirdPartyResourceUse": "allowed-with-attribution",
+        "attributionRequired": true
+      },
+      "suggested": {
+        "roles": ["portrait", "interactive-photograph"],
+        "themes": ["identity"],
+        "moods": ["unsettling"],
+        "tags": ["grayscale", "line-art"]
+      },
+      "credit": "TCP Human 8 — Jeff Preston / Terrible Character Portraits, coordinated by Duane O’Brien. CC BY 3.0: https://creativecommons.org/licenses/by/3.0/ · Source: http://team-preston.com · White exterior removed, converted to WebP.",
+      "usage": "Page illustration from the user’s downloaded TCP collection; original linework retained, exterior paper made transparent.",
+      "sourceSha256": "afe8ac4e95c667d4a43341556e9a53efa897d6caaa82e5eaa36659c4ac3a60b9",
+      "runtimeSha256": "e0328fc5f22fc4b61f40d292365b3dc5913120b76ec13853a1ef30e61c7c1c6b",
+      "runtimeBytes": 84308
     }
   ]
 }

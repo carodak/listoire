@@ -9,6 +9,7 @@ import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
 import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
 import { readEditorRecord } from "../persistence/editor-store.ts";
+import { hasLegacyArtwork, refreshPublishedArtwork } from "../contracts/artwork-refresh.ts";
 
 interface Props {
   locale: Locale;
@@ -45,11 +46,18 @@ export function ReadingSession({
       .then(async (record) => {
         if (record?.published) {
           const published = record.published;
-          return (
+          const bundle =
             published.bundles[locale] ??
             published.bundles[record.draft.defaultLocale] ??
-            Object.values(published.bundles)[0]!
-          );
+            Object.values(published.bundles)[0]!;
+          if (!hasLegacyArtwork(bundle)) return bundle;
+          try {
+            const source = await loadBundle(bundle.locale, scope.signal);
+            return refreshPublishedArtwork(bundle, source);
+          } catch {
+            // Preserve the published story when its optional artwork refresh is unavailable.
+            return bundle;
+          }
         }
         const manifest = await loadManifest(scope.signal);
         return loadBundle(

@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import argparse
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
@@ -35,6 +36,7 @@ for locale in ("en", "fr"):
     referenced = {scene[key] for scene in bundle["scenes"].values() for key in ("image", "sound") if key in scene}
     referenced.add(bundle["examination"]["image"])
     referenced.add(bundle["character"]["portrait"])
+    if bundle.get("cover"): referenced.add(bundle["cover"])
     for scene in bundle["scenes"].values():
         for block in scene.get("blocks", []):
             if block["kind"] == "media": referenced.add(block["image"])
@@ -53,6 +55,12 @@ for locale in ("en", "fr"):
         if asset["type"] == "image":
             assert entry["originalPath"].startswith("assets/images/")
             assert not entry["originalPath"].startswith("assets/images/reference-house/")
+            assert not asset["id"].startswith("shadow."), "Generated artwork is not part of the active book"
+            illustration = Image.open(ROOT/entry["optimizedPath"])
+            assert illustration.mode == "RGBA" and illustration.getchannel("A").getextrema() == (0, 255), asset["id"]
+            if asset["id"].startswith("tcp."):
+                assert illustration.getpixel((10, 10))[3] == 0, "Exterior paper must be transparent"
+                assert illustration.getpixel((illustration.width//2, illustration.height//2))[3] > 240, "Retain the face inside the cutout"
         paths = [entry["optimizedPath"], "public/stories/house/"+asset["path"], "dist/stories/house/"+asset["path"]]
         if not published_only and "originalPath" in entry: paths.append(entry["originalPath"])
         for path in paths:
