@@ -1,5 +1,6 @@
 import { SaveSchema, ReaderFailure, SettingsSchema } from "../contracts/story.ts";
 import type { ReaderSettings, SaveData, StoryBundle } from "../contracts/story.ts";
+import { validateCheckpoint } from "../contracts/save-validation.ts";
 import { z } from "zod";
 
 const LegacySettings = z
@@ -23,26 +24,13 @@ export class SaveManager {
   }
 
   private key(bundle: StoryBundle): string {
-    return `save:${bundle.storyId}:${bundle.locale}`;
+    return `save:${bundle.checkpointId ?? bundle.storyId}:${bundle.locale}`;
   }
 
   async read(bundle: StoryBundle): Promise<SaveData | null> {
     const raw = await this.store.read(this.key(bundle));
     if (raw === undefined) return null;
-    const result = SaveSchema.safeParse(raw);
-    if (!result.success) throw new ReaderFailure("save-invalid");
-    const save = result.data;
-    if (
-      save.storyId !== bundle.storyId ||
-      save.mode !== bundle.mode ||
-      save.locale !== bundle.locale ||
-      save.release !== bundle.release ||
-      save.inkDigest !== bundle.inkDigest ||
-      save.inkjsVersion !== bundle.inkjsVersion
-    ) {
-      throw new ReaderFailure("save-incompatible");
-    }
-    return save;
+    return validateCheckpoint(bundle, raw);
   }
 
   async commit(
@@ -50,7 +38,7 @@ export class SaveManager {
     next: SaveData,
     expected: SaveData | null | undefined,
   ): Promise<void> {
-    const valid = SaveSchema.parse(next);
+    const valid = validateCheckpoint(bundle, next);
     await this.store.update(this.key(bundle), (previous) => {
       if (expected === null && previous !== undefined) throw new ReaderFailure("save-conflict");
       if (expected) {
@@ -84,5 +72,13 @@ export class SaveManager {
 
   async saveSettings(settings: ReaderSettings): Promise<void> {
     await this.store.update("reader-settings", () => SettingsSchema.parse(settings));
+  }
+  async notes(bundle: StoryBundle): Promise<string> {
+    const text = await this.store.read(`notes:${bundle.storyId}:${bundle.release}`);
+    return typeof text === "string" ? text.slice(0, 20000) : "";
+  }
+  async saveNotes(bundle: StoryBundle, text: string): Promise<void> {
+    const valid = z.string().max(20000).parse(text);
+    await this.store.update(`notes:${bundle.storyId}:${bundle.release}`, () => valid);
   }
 }

@@ -3,6 +3,25 @@ import { NarrationManager, textDigest } from "./narration-manager.ts";
 import { AudioManager } from "./audio-manager.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 afterEach(() => vi.unstubAllGlobals());
+it.each([false, true])(
+  "uses explicit editor preview context (%s), independently of authored Ink",
+  async (editorPreview) => {
+    const fetch = vi.fn().mockResolvedValue(new Response("{}", { status: 503 }));
+    vi.stubGlobal("fetch", fetch);
+    const bundle = { ...fixtureBundle(), authored: true, narrationMode: "ai-live" as const };
+    await new NarrationManager(new AudioManager(), editorPreview).play(
+      { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+      bundle,
+      { rate: 1, deviceVoice: false, settings: () => ({ rate: 1, voiceId: "nano-default" }) },
+      new AbortController().signal,
+      vi.fn(),
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      editorPreview ? "/api/narration/editor-preview" : "/api/narration",
+      expect.objectContaining({ method: "POST" }),
+    );
+  },
+);
 it("verifies approved audio bytes and uses media timestamps for text marks", async () => {
   const bytes = new TextEncoder().encode("recording fixture");
   const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (value) =>

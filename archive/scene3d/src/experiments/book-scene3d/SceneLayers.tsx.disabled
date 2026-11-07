@@ -1,0 +1,82 @@
+import { sceneLayers } from "../../contracts/scene3d.ts";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import type { ModelSource } from "./models.ts";
+import { removeSceneElement } from "./composition.ts";
+export function SceneLayers({
+  scene,
+  sources,
+  selected,
+  onSelect,
+  onChange,
+  onAdd,
+}: {
+  scene: Scene3D;
+  sources: ModelSource[];
+  selected: number;
+  onSelect: (index: number) => void;
+  onChange: (scene: Scene3D) => void;
+  onAdd: (layer: (typeof sceneLayers)[number]) => void;
+}) {
+  return (
+    <section className="scene3d-layers" aria-label="Scene layers">
+      <h3>Scene Layers</h3>
+      {sceneLayers.map((layer) => (
+        <section key={layer}>
+          <header>
+            <strong>{layer === "main" ? "Subjects (optional)" : layer}</strong>
+            <button
+              type="button"
+              aria-label={`Add to ${layer}`}
+              title={`Browse models compatible with ${layer}`}
+              onClick={() => onAdd(layer)}
+            >
+              +
+            </button>
+          </header>
+          {scene.elements.map((element, index) => {
+            if (element.layer !== layer) return null;
+            const title = sources.find((source) => source.id === element.assetId)?.title ?? "Model";
+            return (
+              <div className="scene-layer-row" key={index} data-selected={selected === index}>
+                <button
+                  type="button"
+                  aria-pressed={selected === index}
+                  title={`Select ${title} in the preview`}
+                  onClick={() => onSelect(index)}
+                >
+                  {title}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${element.visible === false ? "Show" : "Hide"} ${title}`}
+                  title="Toggle visibility"
+                  onClick={() =>
+                    onChange({
+                      ...scene,
+                      elements: scene.elements.map((item, at) =>
+                        at === index ? { ...item, visible: item.visible === false } : item,
+                      ),
+                    })
+                  }
+                >
+                  {element.visible === false ? "○" : "◉"}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remove ${title}`}
+                  title={`Remove ${title}`}
+                  onClick={() => {
+                    onChange(removeSceneElement(scene, index));
+                    onSelect(0);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </section>
+      ))}
+    </section>
+  );
+}

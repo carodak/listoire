@@ -126,17 +126,19 @@ const groups: Record<RibbonTab, { label: string; commands: Command[] }[]> = {
         ...["Item", "Equipment", "Inventory"].map((label) => ({
           label,
           icon: "◇",
-          action: "unavailable",
+          action: label,
         })),
       ],
     },
     {
       label: "Actions",
-      commands: ["Stat Check", "Ability Check", "HP", "XP", "Game Condition"].map((label) => ({
-        label,
-        icon: "⚄",
-        action: "unavailable",
-      })),
+      commands: ["Stat Check", "Ability Check", "HP", "XP", "Combat", "Game Condition"].map(
+        (label) => ({
+          label,
+          icon: "⚄",
+          action: label,
+        }),
+      ),
     },
   ],
   Review: [
@@ -202,6 +204,16 @@ function AdditionalCommands({ insert }: { insert: (script: string) => void }) {
   );
 }
 
+interface RibbonProps {
+  tab: RibbonTab;
+  collapsed: boolean;
+  gameMode: string;
+  onTab: (tab: RibbonTab) => void;
+  onCollapse: () => void;
+  onCommand: (action: string) => void;
+  onInsert: (script: string) => void;
+}
+
 export function Ribbon({
   tab,
   collapsed,
@@ -210,15 +222,7 @@ export function Ribbon({
   gameMode,
   onCommand,
   onInsert,
-}: {
-  tab: RibbonTab;
-  collapsed: boolean;
-  gameMode: string;
-  onTab: (tab: RibbonTab) => void;
-  onCollapse: () => void;
-  onCommand: (action: string) => void;
-  onInsert: (script: string) => void;
-}) {
+}: RibbonProps) {
   return (
     <div className="editor-ribbon">
       <div className="ribbon-tabs" role="tablist" aria-label="Ribbon categories">
@@ -251,35 +255,38 @@ export function Ribbon({
           aria-label={`${tab} commands`}
         >
           {groups[tab].map((group) => (
-            <fieldset key={group.label}>
-              <legend>{group.label}</legend>
-              <div>
-                {group.commands.map((command) => (
-                  <button
-                    key={command.label}
-                    title={
-                      command.action === "unavailable"
-                        ? `${command.label}: the existing engine does not implement this operation`
-                        : (commandHelp[command.label] ??
-                          `Insert ${command.label.toLowerCase()} into the Ink script.`)
-                    }
-                    disabled={command.action === "unavailable"}
-                    onClick={() =>
-                      command.action === "insert"
-                        ? onInsert(command.snippet!)
-                        : command.action === "upstream"
-                          ? onInsert(upstreamSnippet(command.snippet!))
-                          : onCommand(command.action)
-                    }
-                  >
-                    <span aria-hidden="true">{command.icon}</span>
-                    {command.label}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <div className="ribbon-group" key={group.label}>
+              <fieldset>
+                <legend>{group.label}</legend>
+                <div>
+                  {group.commands.map((command) => (
+                    <button
+                      key={command.label}
+                      title={
+                        command.action === "unavailable"
+                          ? `${command.label}: the existing engine does not implement this operation`
+                          : (commandHelp[command.label] ??
+                            `Insert ${command.label.toLowerCase()} into the Ink script.`)
+                      }
+                      disabled={command.action === "unavailable"}
+                      onClick={() =>
+                        command.action === "insert"
+                          ? onInsert(command.snippet!)
+                          : command.action === "upstream"
+                            ? onInsert(upstreamSnippet(command.snippet!))
+                            : onCommand(command.action)
+                      }
+                    >
+                      <span aria-hidden="true">{command.icon}</span>
+                      {command.label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              {group.label === "Advanced" && <AdditionalCommands insert={onInsert} />}
+            </div>
           ))}
-          {(tab === "Story" || tab === "Logic") && <AdditionalCommands insert={onInsert} />}
+          {tab === "Story" && <AdditionalCommands insert={onInsert} />}
         </div>
       )}
     </div>

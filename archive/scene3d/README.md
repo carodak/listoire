@@ -1,0 +1,1 @@
+3D experiments are disabled at the user?s request. Source files retain their original relative paths with a .disabled suffix. Restore the directories, Three.js dependencies and the commented integration in EditorRoute before re-enabling. Existing cached scene images/videos and scene metadata remain readable.

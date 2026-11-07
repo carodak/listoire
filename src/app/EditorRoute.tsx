@@ -11,15 +11,30 @@ import type { PresentationSession } from "../features/presentation/presentation-
 import type { StoryDirector } from "../features/story-runtime/director.ts";
 
 import { message } from "../features/editor/use-editor-project.ts";
+// 3D experiment integration is disabled; restorable sources live in archive/scene3d.
 
 export default function EditorRoute() {
   return (
     <StoryEditor
-      renderPreview={(bundle, project, knot, onClose) => (
-        <FullExperiencePreview bundle={bundle} project={project} knot={knot} onClose={onClose} />
+      renderPreview={(bundle, project, knot, onClose, composing) => (
+        <FullExperiencePreview
+          bundle={bundle}
+          project={project}
+          knot={knot}
+          onClose={onClose}
+          composing={composing}
+        />
       )}
     />
   );
+}
+
+interface FullExperiencePreviewProps {
+  bundle: StoryBundle;
+  project: StoryProject;
+  knot: string;
+  onClose: () => void;
+  composing?: boolean;
 }
 
 function FullExperiencePreview({
@@ -27,16 +42,15 @@ function FullExperiencePreview({
   project,
   knot,
   onClose,
-}: {
-  bundle: StoryBundle;
-  project: StoryProject;
-  knot: string;
-  onClose: () => void;
-}) {
+  composing = false,
+}: FullExperiencePreviewProps) {
   const bundle = initialBundle;
   const start = knot;
   const [expanded, setExpanded] = useState(false);
-  const [preferences, setPreferences] = useState(project.languages[bundle.locale]!.defaults);
+  const [preferences, setPreferences] = useState({
+    ...project.languages[bundle.locale]!.defaults,
+    ...(composing ? { reveal: "instant" as const, narration: false } : {}),
+  });
   const [player, setPlayer] = useState<{
     director: StoryDirector;
     presentation: PresentationSession;

@@ -1,32 +1,48 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
+interface EditorDialogProps {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  docked?: boolean;
+  actions?: ReactNode;
+}
+
 export function EditorDialog({
   title,
   children,
   onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
+  docked = false,
+  actions,
+}: EditorDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const focused = document.activeElement as HTMLElement | null;
-    dialog.current!.showModal();
+    dialog.current?.showModal();
     return () => {
       focused?.focus();
     };
   }, []);
-  return (
-    <dialog className="editor-dialog" ref={dialog} aria-label={title} onCancel={onClose}>
+  const content = (
+    <>
       <header>
         <h2>{title}</h2>
+        {actions}
         <button type="button" title="Close this dialog" aria-label="Close dialog" onClick={onClose}>
           ×
         </button>
       </header>
       {children}
+    </>
+  );
+  return docked ? (
+    <section className="editor-dialog editor-docked-media" role="region" aria-label={title}>
+      {content}
+    </section>
+  ) : (
+    <dialog className="editor-dialog" ref={dialog} aria-label={title} onCancel={onClose}>
+      {content}
     </dialog>
   );
 }

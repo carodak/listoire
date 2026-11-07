@@ -14,12 +14,14 @@ const shape = BundleSchema.shape;
 export const StoryConfigurationSchema = z
   .object({
     title: shape.title,
+    checkpointId: shape.checkpointId,
     chapter: shape.chapter,
     scenes: shape.scenes,
     assets: shape.assets,
     panels: shape.panels,
     examination: shape.examination,
     character: shape.character,
+    game: shape.game,
     narration: shape.narration,
     narratorVoices: shape.narratorVoices,
     narratorVoiceSelection: shape.narratorVoiceSelection,
@@ -36,6 +38,7 @@ export const StoryProjectSchema = z
     storyId: z.literal("house"),
     release: z.string().min(1).max(100),
     defaultLocale: z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/),
+    shareConfiguration: z.boolean().optional(),
     gameMode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
     variables: z.array(z.string()).max(100),
     mediaLibrary: z
@@ -47,10 +50,11 @@ export const StoryProjectSchema = z
             category: z.string(),
             themes: z.array(z.string()),
             usage: z.array(z.string()),
+            layerRoles: z.array(z.enum(["foreground", "midground", "background"])).optional(),
           })
           .strict(),
       )
-      .max(500)
+      .max(1000)
       .optional(),
     languages: z.record(
       z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/),

@@ -41,16 +41,16 @@ it("refreshes legacy art atomically while preserving authored text, custom cover
     draft.languages.en!.configuration.character!.abilities,
   );
   expect(result.languages.en!.configuration.examination).toMatchObject({
-    image: "tcp.human8-cutout",
-    hotspot: { x: 82, y: 84 },
+    image: "house.night",
+    hotspot: { x: 79, y: 41 },
   });
   expect(result.languages.en!.configuration.scenes!.intro!.blocks![0]).toMatchObject({
     layout: "right",
-    image: "tcp.human8-cutout",
+    image: "paper.modern-male-character",
   });
   expect(result.languages.en!.configuration.scenes!.call!.blocks![0]).toMatchObject({
     layout: "right",
-    image: "tcp.human5-cutout",
+    image: "paper.modern-grandma-character",
   });
   await expect(compileProject(result)).resolves.toHaveProperty("en");
   expect(refreshDefaultArtwork(result, source)).toBe(result);
@@ -78,7 +78,7 @@ it("replaces generated defaults without overwriting an author's right-page block
   expect(
     result.languages.en!.configuration.assets!.some((asset) => asset.id.startsWith("shadow.")),
   ).toBe(false);
-  expect(result.languages.en!.configuration.character!.portrait).toBe("tcp.human8-cutout");
+  expect(result.languages.en!.configuration.character!.portrait).toBe("tcp.human5-cutout");
   expect(
     result.languages.en!.configuration.scenes!.intro!.blocks!.filter(
       (block) => block.kind === "media" && block.layout === "right",
@@ -99,11 +99,11 @@ it("refreshes a previously published book without changing its Ink, narration or
   expect(result.narration).toEqual(published.narration);
   expect(result.scenes!.intro!.blocks![0]).toMatchObject({
     layout: "right",
-    image: "tcp.human8-cutout",
+    image: "paper.modern-male-character",
   });
   expect(result.scenes!.call!.blocks![0]).toMatchObject({
     layout: "right",
-    image: "tcp.human5-cutout",
+    image: "paper.modern-grandma-character",
   });
   expect(published.scenes!.intro!.blocks![0]).toMatchObject({ kind: "text" });
   expect(refreshPublishedArtwork(result, source)).toBe(result);

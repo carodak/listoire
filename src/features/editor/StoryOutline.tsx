@@ -3,6 +3,18 @@ import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { outlineEntries } from "./ink-commands.ts";
 
+interface StoryOutlineProps {
+  language: StoryProject["languages"][string];
+  locale: string;
+  locales: string[];
+  selectedScene: string;
+  onLocale: (locale: string) => void;
+  onNavigate: (path: string) => void;
+  onDialog: (dialog: string) => void;
+  onMedia: (id: string, kind: string) => void;
+  onHover: (id: string | null) => void;
+}
+
 export function StoryOutline({
   language,
   locale,
@@ -13,17 +25,7 @@ export function StoryOutline({
   onDialog,
   onMedia,
   onHover,
-}: {
-  language: StoryProject["languages"][string];
-  locale: string;
-  locales: string[];
-  selectedScene: string;
-  onLocale: (locale: string) => void;
-  onNavigate: (path: string) => void;
-  onDialog: (dialog: string) => void;
-  onMedia: (id: string, kind: string) => void;
-  onHover: (id: string | null) => void;
-}) {
+}: StoryOutlineProps) {
   const [tab, setTab] = useState("Files");
   return (
     <aside className="editor-outline" aria-label="Project navigation">

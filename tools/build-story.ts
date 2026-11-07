@@ -1,4 +1,5 @@
-﻿import { createHash } from "node:crypto";
+import { writeBundle } from "./write-bundle.ts";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { Compiler } from "inkjs/full";
 import { BundleSchema, StoryManifestSchema } from "../src/contracts/story.ts";
@@ -38,7 +39,6 @@ for (const locale of locales) {
     passages: metadata.passages,
     ink,
   });
-  await writeFile(new URL(`${locale}.json`, output), JSON.stringify(bundle) + "\n");
-  console.log(`Built foundation/${locale}: ${bundle.inkDigest.slice(0, 12)}`);
+  await writeBundle(output, bundle);
 }
 await buildEditorProject(root);

@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { EditorDialog } from "./EditorDialog.tsx";
 
+interface JsonPropertiesProps {
+  title: string;
+  value: unknown;
+  onApply: (value: unknown) => void;
+  onClose: () => void;
+  description?: string;
+}
+
 export function JsonProperties({
   title,
   value,
   onApply,
   onClose,
   description,
-}: {
-  title: string;
-  value: unknown;
-  onApply: (value: unknown) => void;
-  onClose: () => void;
-  description?: string;
-}) {
+}: JsonPropertiesProps) {
   const [text, setText] = useState(JSON.stringify(value, null, 2));
   const [error, setError] = useState("");
   return (

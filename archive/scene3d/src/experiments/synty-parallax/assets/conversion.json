@@ -1,0 +1,100 @@
+[
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_Castle_Wall_Gate_01.fbx",
+    "model": "SM_Bld_Castle_Wall_Gate_01.glb",
+    "bounds": {
+      "min": [-269.8783874511719, -4.048347473144531, -121.62642669677734],
+      "max": [269.8787841796875, 508.95062255859375, 118.03874969482422]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_Castle_Tower_01.fbx",
+    "model": "SM_Bld_Castle_Tower_01.glb",
+    "bounds": {
+      "min": [-138.934326171875, 0, -138.9342498779297],
+      "max": [138.934326171875, 303.6308288574219, 138.9342498779297]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_Castle_Tower_Top_01.fbx",
+    "model": "SM_Bld_Castle_Tower_Top_01.glb",
+    "bounds": {
+      "min": [-159.05075073242188, 0, -159.0508575439453],
+      "max": [159.05075073242188, 164.05316162109375, 159.0508575439453]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_Castle_Wall_01.fbx",
+    "model": "SM_Bld_Castle_Wall_01.glb",
+    "bounds": {
+      "min": [-269.8783874511719, -9.263602297426257e-17, -110.9735336303711],
+      "max": [269.8787841796875, 508.95062255859375, 110.9735336303711]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_House_Room_01.fbx",
+    "model": "SM_Bld_House_Room_01.glb",
+    "bounds": {
+      "min": [-252.0416259765625, 0, -318.3494567871094],
+      "max": [252.0416259765625, 509.0567321777344, 319.33349609375]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_House_RoomTop_01.fbx",
+    "model": "SM_Bld_House_RoomTop_01.glb",
+    "bounds": {
+      "min": [-271.3630676269531, 0, -342.8314208984375],
+      "max": [271.3638610839844, 465.2315979003906, 342.8302917480469]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Bld_Castle_Pillar_01.fbx",
+    "model": "SM_Bld_Castle_Pillar_01.glb",
+    "bounds": {
+      "min": [-39.53791809082031, -1.110325264890022e-12, -30.095827102661133],
+      "max": [39.53791809082031, 509.2062683105469, 30.095827102661133]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Env_Path_Cobble_01.fbx",
+    "model": "SM_Env_Path_Cobble_01.glb",
+    "bounds": {
+      "min": [-0.7080554962158203, 0, -298.7823486328125],
+      "max": [299.929443359375, 6.779051780700684, -1.9523859024047852]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Env_Tree_01.fbx",
+    "model": "SM_Env_Tree_01.glb",
+    "bounds": {
+      "min": [-100.244140625, 0, -82.61260986328125],
+      "max": [131.494140625, 354.742431640625, 58.2000732421875]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Env_RockPile_01.fbx",
+    "model": "SM_Env_RockPile_01.glb",
+    "bounds": {
+      "min": [-316.34710693359375, -81.71284484863281, -233.23898315429688],
+      "max": [316.3467712402344, 535.7596435546875, 233.23974609375]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/SM_Env_MountainGrass_01.fbx",
+    "model": "SM_Env_MountainGrass_01.glb",
+    "bounds": {
+      "min": [-1967.513916015625, 0, -1947.2327880859375],
+      "max": [1967.51708984375, 1511.56494140625, 1947.2327880859375]
+    }
+  },
+  {
+    "source": "assets/Synty/PolygonKnights/Models/Characters/Characters.fbx",
+    "model": "soldier.glb",
+    "bounds": {
+      "min": [-39.296810150146484, -0.22677725553512573, -16.851146697998047],
+      "max": [39.29689025878906, 182.5, 17.29186248779297]
+    },
+    "headwearTrianglesRemoved": 103,
+    "bareScalp": true
+  }
+]

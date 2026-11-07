@@ -1,133 +1,22 @@
-import { NarrationModeSelect } from "./NarrationModeSelect.tsx";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { NarrationClipSchema } from "../../contracts/media.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
-import { requestLocalNarration } from "../media/local-narration.ts";
-import { textDigest } from "../media/narration-manager.ts";
-import {
-  attachNarration,
-  narrationBytes,
-  audioDuration,
-  cacheNarration,
-} from "./narration-authoring.ts";
+import { NarrationModeSelect } from "./NarrationModeSelect.tsx";
 import { VoiceDesigner } from "./VoiceDesigner.tsx";
-import { speechOptions } from "../media/speech-options.ts";
-
-export function NarrationDialog({
-  project,
-  locale,
-  onApply,
-  onClose,
-}: {
+import { VoiceControls } from "./NarrationVoiceControls.tsx";
+import { DeviceVoices } from "./DeviceVoices.tsx";
+import { NarrationRecorder } from "./NarrationRecorder.tsx";
+import { applyNarrationConfiguration } from "./narration-sources.ts";
+interface Props {
   project: StoryProject;
   locale: string;
-  onApply: (next: StoryProject) => void;
+  onApply: (project: StoryProject) => void;
   onClose: () => void;
-}) {
-  const [language, setLanguage] = useState(structuredClone(project.languages[locale]!));
-  const [preview, setPreview] = useState({ segment: "", status: "", audioUrl: "" });
-  const { segment, status, audioUrl } = preview;
-  const setSegment = (segment: string) => setPreview((before) => ({ ...before, segment }));
-  const setStatus = (status: string) => setPreview((before) => ({ ...before, status }));
-  const setAudioUrl = (audioUrl: string) => setPreview((before) => ({ ...before, audioUrl }));
-  const [recording, setRecording] = useState({
-    rights: "",
-    marks: "[]",
-    duration: 0,
-    spokenText: null as string | null,
-  });
-  const { rights, marks, duration: manualDuration, spokenText } = recording;
-  const handles = useRef({
-    scope: new AbortController(),
-    audio: null as HTMLAudioElement | null,
-  });
-  useEffect(() => {
-    if (handles.current.audio) {
-      handles.current.audio.playbackRate = language.defaults.narrationRate ?? 1;
-      handles.current.audio.volume = language.defaults.volumes?.narration ?? 0.8;
-    }
-  }, [audioUrl, language.defaults.narrationRate, language.defaults.volumes?.narration, handles]);
-  useEffect(() => () => handles.current.scope.abort(), [handles]);
-  const segments = [
-    ...language.script.matchAll(/^(.+?)\s+#\s*(?:passage:[^#]+#\s*)?segment:([a-z][a-z0-9.-]*)/gm),
-  ].map((m) => ({ text: m[1]!, id: m[2]! }));
-  const sourceSegment = segments.find((s) => s.id === segment);
-  const selected = sourceSegment
-    ? { ...sourceSegment, text: spokenText ?? sourceSegment.text }
-    : undefined;
-  const { voice } = voiceSelection(language);
-  async function generate() {
-    if (!selected || !voice) return;
-    setStatus("Generating local preview… cached audio is reused when text and voice match.");
-    const result = await requestLocalNarration(
-      {
-        storyId: project.storyId,
-        locale,
-        segmentId: selected.id,
-        text: selected.text,
-        voiceId: voice,
-        ...(await speechOptions(
-          voice,
-          language.configuration.voiceProfiles,
-          language.configuration.speechSettings,
-        )),
-      },
-      handles.current.scope.signal,
-      true,
-    );
-    if (handles.current.scope.signal.aborted) return;
-    if (!result) {
-      setStatus(
-        "Local Chatterbox is unavailable. Start scripts/start-local.ps1; supported local languages are English and French.",
-      );
-      return;
-    }
-    try {
-      const dataUrl = await cacheNarration(result, selected.text, handles.current.scope.signal);
-      setLanguage((current) => attachNarration(current, result.clip, dataUrl));
-      setAudioUrl(dataUrl);
-      setStatus(
-        "Preview cached in this project. Human listening review is required before publication.",
-      );
-    } catch (error) {
-      if (!handles.current.scope.signal.aborted)
-        setStatus(error instanceof Error ? error.message : String(error));
-    }
-  }
-  async function upload(file: File) {
-    try {
-      if (!selected) throw new Error("Choose the narrative segment first.");
-      if (!rights.trim()) throw new Error("Record your rights attestation before uploading.");
-      if (file.size > 5_000_000 || !file.name.toLowerCase().endsWith(".mp3"))
-        throw new Error("Upload an MP3 smaller than 5 MB.");
-      const bytes = await file.arrayBuffer();
-      const { audioDigest: hex, dataUrl } = await narrationBytes(bytes);
-      const durationMs = manualDuration ? manualDuration * 1000 : await audioDuration(dataUrl);
-      const assetId = `recording.${hex}`;
-      const clip = NarrationClipSchema.parse({
-        segmentId: selected.id,
-        locale,
-        voiceId: voice || "human",
-        spokenTextDigest: await textDigest(selected.text),
-        assetId,
-        audioDigest: hex,
-        durationMs,
-        marks: JSON.parse(marks),
-        approval: { status: "preview", reviewer: "author-upload", rightsReference: rights },
-      });
-      setLanguage((current) =>
-        attachNarration({ ...current, narrationMode: "human" }, clip, dataUrl),
-      );
-      setAudioUrl(dataUrl);
-      setStatus(
-        "Human recording attached as a preview. Timing marks are optional; without them the reader uses progressive text.",
-      );
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
-  }
+}
+export function NarrationDialog({ project, locale, onApply, onClose }: Props) {
+  const [language, setLanguage] = useState(structuredClone(project.languages[locale]!)),
+    [error, setError] = useState("");
   return (
     <EditorDialog title="TTS / Narration" onClose={onClose}>
       <form
@@ -135,79 +24,35 @@ export function NarrationDialog({
           event.preventDefault();
           try {
             onApply(
-              StoryProjectSchema.parse({
-                ...project,
-                languages: { ...project.languages, [locale]: language },
-              }),
+              StoryProjectSchema.parse(applyNarrationConfiguration(project, locale, language)),
             );
             onClose();
           } catch (error) {
-            setStatus(error instanceof Error ? error.message : String(error));
+            setError(error instanceof Error ? error.message : String(error));
           }
         }}
       >
         <NarrationModeSelect
           value={language.narrationMode}
-          onChange={(mode) => setLanguage({ ...language, narrationMode: mode })}
+          onChange={(narrationMode) => setLanguage({ ...language, narrationMode })}
         />
         {language.narrationMode.startsWith("ai-") && (
           <VoiceDesigner language={language} locale={locale} onChange={setLanguage} />
         )}
         <VoiceControls language={language} onChange={setLanguage} />
-        <label>
-          Narrative segment
-          <select
-            value={segment}
-            onChange={(e) => {
-              setSegment(e.target.value);
-              setRecording({ ...recording, spokenText: null });
-            }}
-          >
-            <option value="">Choose text</option>
-            {segments.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.id} — {s.text.slice(0, 70)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {selected && (
-          <label>
-            Spoken text (verify dynamic Ink in Preview)
-            <textarea
-              value={selected.text}
-              onChange={(e) => setRecording({ ...recording, spokenText: e.target.value })}
-            />
-          </label>
+        {language.narrationMode === "ai-live" && (
+          <DeviceVoices language={language} locale={locale} onChange={setLanguage} />
         )}
-        {language.narrationMode.startsWith("ai-") && (
-          <button
-            type="button"
-            disabled={!selected || !voice}
-            onClick={() => {
-              void generate();
-            }}
-          >
-            Generate / preview audio
-          </button>
-        )}
-        {language.narrationMode === "human" && (
-          <HumanRecordingFields recording={recording} onChange={setRecording} onUpload={upload} />
-        )}
-        {audioUrl && (
-          <audio
-            aria-label="Narration preview"
-            ref={(node) => {
-              handles.current.audio = node;
-            }}
-            controls
-            src={audioUrl}
-          />
-        )}
-        {status && <p role="status">{status}</p>}
+        <NarrationRecorder
+          storyId={project.storyId}
+          locale={locale}
+          language={language}
+          onChange={setLanguage}
+        />
+        {error && <p role="alert">{error}</p>}
         <p className="editor-hint">
-          Generated and uploaded clips remain previews until listening review. Backups embed
-          uploaded recordings; library media retain licensed file references.
+          Clips remain previews until listening review. Backups embed recordings; library media
+          retain licensed file references.
         </p>
         <footer>
           <button type="button" onClick={onClose}>
@@ -219,170 +64,5 @@ export function NarrationDialog({
         </footer>
       </form>
     </EditorDialog>
-  );
-}
-
-type Language = StoryProject["languages"][string];
-function voiceSelection(language: Language) {
-  const voices = language.configuration.narratorVoices ?? [];
-  const selectedVoices = language.configuration.narratorVoiceSelection ?? voices.map((v) => v.id);
-  const requested = language.defaults.narratorVoice ?? "";
-  return {
-    voices,
-    selectedVoices,
-    voice: selectedVoices.includes(requested) ? requested : (selectedVoices[0] ?? ""),
-  };
-}
-function VoiceControls({
-  language,
-  onChange,
-}: {
-  language: Language;
-  onChange: (language: Language) => void;
-}) {
-  const { voices, selectedVoices } = voiceSelection(language);
-  return (
-    <>
-      <fieldset>
-        <legend>Available voices</legend>
-        {voices.map((v) => (
-          <label className="check" key={v.id}>
-            <input
-              type="checkbox"
-              checked={selectedVoices.includes(v.id)}
-              onChange={(e) =>
-                onChange({
-                  ...language,
-                  configuration: {
-                    ...language.configuration,
-                    narratorVoiceSelection: e.target.checked
-                      ? [...selectedVoices, v.id]
-                      : selectedVoices.filter((id) => id !== v.id),
-                  },
-                })
-              }
-            />
-            {v.label}
-          </label>
-        ))}
-      </fieldset>
-      <label>
-        Speed
-        <input
-          type="number"
-          min="0.5"
-          max="2"
-          step="0.1"
-          value={language.defaults.narrationRate ?? 1}
-          onChange={(e) =>
-            onChange({
-              ...language,
-              defaults: { ...language.defaults, narrationRate: Number(e.target.value) },
-            })
-          }
-        />
-      </label>
-      <label>
-        Volume
-        <input
-          type="number"
-          min="0"
-          max="1"
-          step="0.05"
-          value={language.defaults.volumes?.narration ?? 0.8}
-          onChange={(e) =>
-            onChange({
-              ...language,
-              defaults: {
-                ...language.defaults,
-                volumes: {
-                  sfx: 0.65,
-                  ambience: 0.3,
-                  music: 0.3,
-                  ...language.defaults.volumes,
-                  narration: Number(e.target.value),
-                },
-              },
-            })
-          }
-        />
-      </label>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={language.defaults.narration ?? false}
-          onChange={(e) =>
-            onChange({
-              ...language,
-              defaults: { ...language.defaults, narration: e.target.checked },
-            })
-          }
-        />
-        Narrate by default
-      </label>
-    </>
-  );
-}
-
-function HumanRecordingFields({
-  recording,
-  onChange: setRecording,
-  onUpload: upload,
-}: {
-  recording: { rights: string; marks: string; duration: number; spokenText: string | null };
-  onChange: (value: {
-    rights: string;
-    marks: string;
-    duration: number;
-    spokenText: string | null;
-  }) => void;
-  onUpload: (file: File) => Promise<void>;
-}) {
-  const { rights, marks } = recording;
-  return (
-    <>
-      <label>
-        Rights attestation
-        <input
-          value={rights}
-          onChange={(e) => setRecording({ ...recording, rights: e.target.value })}
-          placeholder="I own this recording, or license reference"
-        />
-      </label>
-      <label>
-        Text/audio marks JSON
-        <textarea
-          value={marks}
-          onChange={(e) => setRecording({ ...recording, marks: e.target.value })}
-          placeholder='[{"character":0,"startMs":0,"endMs":500}]'
-        />
-      </label>
-      <label>
-        Upload MP3
-        <input
-          type="file"
-          accept="audio/mpeg,.mp3"
-          onChange={(e) => {
-            const input = e.currentTarget;
-            const file = input.files?.[0];
-            if (file)
-              void upload(file).finally(() => {
-                input.value = "";
-              });
-          }}
-        />
-      </label>
-      <label>
-        Duration in seconds (optional override)
-        <input
-          type="number"
-          min="0"
-          max="180"
-          step="0.01"
-          value={recording.duration}
-          onChange={(e) => setRecording({ ...recording, duration: Number(e.target.value) })}
-        />
-      </label>
-    </>
   );
 }

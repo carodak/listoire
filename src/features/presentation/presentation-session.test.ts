@@ -10,7 +10,71 @@ import { EffectsEngine } from "./effects.ts";
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
+});
+it("starts segment sound effects at narration onset, once, and retains them in instant text mode", async () => {
+  vi.useFakeTimers();
+  const bundle = fixtureBundle();
+  bundle.assets = [{ id: "bell", path: "media/bell.mp3", type: "audio", alt: "Bell" }];
+  bundle.embeddedAudio = { bell: "data:audio/mpeg;base64,SUQz" };
+  bundle.scenes = {
+    threshold: {
+      title: "Sound",
+      progress: 0,
+      events: [
+        {
+          id: "bell-cue",
+          trigger: { kind: "segment", segmentId: "threshold.key" },
+          blocking: false,
+          action: { kind: "audio", assetId: "bell", channel: "sfx" },
+        },
+      ],
+    },
+  };
+  let progress!: (value: NarrationProgress) => void;
+  vi.spyOn(NarrationManager.prototype, "play").mockImplementation(
+    async (_frame, _bundle, _options, _signal, onProgress) => {
+      progress = onProgress;
+      return new Promise(() => {});
+    },
+  );
+  const audio = new AudioManager();
+  const play = vi.spyOn(audio, "play").mockReturnValue({
+    finished: Promise.resolve("ended"),
+    stop() {},
+    pause() {},
+    resume() {},
+    seek() {},
+  });
+  const session = new PresentationSession(
+    bundle,
+    { ...defaultReadingPreferences, sound: true, narration: true, reveal: "instant" },
+    audio,
+  );
+  session.start(
+    {
+      passageId: "threshold",
+      segments: [{ id: "threshold.key", text: "The bell rings." }],
+      choices: [],
+    },
+    "sound",
+    false,
+  );
+  session.segmentReached("threshold.key");
+  session.segmentRevealed("threshold.key");
+  session.bind({ canvas: {} as HTMLElement });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).not.toHaveBeenCalled();
+  progress({ segmentId: "threshold.key", characters: 1, done: false });
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledOnce();
+  expect(play).toHaveBeenCalledWith(expect.objectContaining({ url: bundle.embeddedAudio.bell }));
+  progress({ segmentId: "threshold.key", characters: 14, done: true });
+  session.segmentRevealed("threshold.key");
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledOnce();
+  session.dispose();
 });
 it("resumes only visible videos and keeps expired or not-yet-visible media silent", async () => {
   vi.useFakeTimers();
@@ -184,6 +248,9 @@ it("restarts image timing on replay and cancels an earlier page timer", async ()
   expect(session.getSnapshot().visibleMedia).toEqual([]);
   await vi.advanceTimersByTimeAsync(50);
   expect(session.getSnapshot().visibleMedia).toContain("delayed");
+  await vi.advanceTimersByTimeAsync(500);
+  expect(session.getSnapshot().expiredMedia).not.toContain("delayed");
+  session.bind({ canvas: {} as HTMLElement }, "delayed");
   await vi.advanceTimersByTimeAsync(200);
   expect(session.getSnapshot().expiredMedia).toContain("delayed");
   session.dispose();
@@ -240,8 +307,17 @@ it("keeps the same music track across authored pages and cancels it when the pla
   await vi.advanceTimersByTimeAsync(1);
   expect(play).toHaveBeenCalledOnce();
   expect(signal.aborted).toBe(false);
-  session.dispose();
+  session.pause();
+  session.reset();
   expect(signal.aborted).toBe(true);
+  expect(session.getSnapshot().paused).toBe(false);
+  session.start(frame, "new-run", false);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledTimes(2);
+  const restartedSignal = play.mock.calls[1]![0].signal;
+  expect(restartedSignal).not.toBe(signal);
+  session.dispose();
+  expect(restartedSignal.aborted).toBe(true);
 });
 it("ignores late voice completion after replay and voice-off within the same passage", async () => {
   const completions: ((result: PlaybackResult) => void)[] = [];
@@ -289,5 +365,81 @@ it("retains late timing marks while paused so resuming cannot strand a segment",
   expect(session.getSnapshot().progress["threshold.key"]).toBe(5);
   session.resume();
   expect(session.getSnapshot().progress["threshold.key"]).toBe(5);
+  session.dispose();
+});
+
+it("autoplays silent illustrations on restored pages without unmuting them with story audio", async () => {
+  vi.useFakeTimers();
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Illustration",
+      progress: 0,
+      blocks: [{ kind: "media", id: "clip", image: "movie", layout: "right" }],
+    },
+  };
+  const session = new PresentationSession(bundle, defaultReadingPreferences);
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "one",
+    true,
+  );
+  const video = Object.assign(new EventTarget(), {
+    readyState: 0,
+    play: vi.fn(async () => {}),
+    pause: vi.fn(),
+    volume: 1,
+    muted: false,
+  });
+  session.bind(
+    { canvas: {} as HTMLElement, video: video as unknown as HTMLVideoElement, silentVideo: true },
+    "clip",
+  );
+  expect(video.play).not.toHaveBeenCalled();
+  video.readyState = 2;
+  video.dispatchEvent(new Event("loadeddata"));
+  expect(video.play).toHaveBeenCalledOnce();
+  session.configure({ ...defaultReadingPreferences, sound: true });
+  expect(video.muted).toBe(true);
+  session.pause();
+  session.resume();
+  expect(video.play).toHaveBeenCalledTimes(2);
+  session.dispose();
+  expect(video.pause).toHaveBeenCalled();
+});
+
+it("keeps automatic illustrations still when reduced motion is requested", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Illustration",
+      progress: 0,
+      blocks: [{ kind: "media", id: "clip", image: "movie", layout: "right" }],
+    },
+  };
+  const session = new PresentationSession(bundle, defaultReadingPreferences);
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "one",
+    false,
+  );
+  const video = {
+    readyState: 2,
+    play: vi.fn(async () => {}),
+    pause: vi.fn(),
+    volume: 1,
+    muted: false,
+    removeEventListener() {},
+  };
+  session.bind(
+    { canvas: {} as HTMLElement, video: video as unknown as HTMLVideoElement, silentVideo: true },
+    "clip",
+  );
+  await vi.advanceTimersByTimeAsync(1);
+  session.pause();
+  session.resume();
+  expect(video.play).not.toHaveBeenCalled();
   session.dispose();
 });

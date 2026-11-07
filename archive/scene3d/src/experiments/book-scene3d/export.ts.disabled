@@ -1,0 +1,220 @@
+import type { Cinematic } from "../../contracts/cinematic.ts";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import { cinematicDuration } from "../../features/presentation/cinematic-presets.ts";
+import { modelBytes, loadModel, disposeModel, saveMedia } from "./models.ts";
+import type { ModelSource } from "./models.ts";
+import { Box3, Vector3 } from "three";
+import { Scene3DSchema } from "../../contracts/scene3d.ts";
+import type { useSceneSurface } from "./use-scene-surface.ts";
+
+async function bakeComposition(
+  canvas: HTMLCanvasElement,
+  scene: Scene3D,
+  sources: ModelSource[],
+  runtime: NonNullable<ReturnType<typeof useSceneSurface>["runtime"]>,
+  onProgress: (progress: number) => void,
+) {
+  if (runtime.surface.warnings.length) throw new Error(runtime.surface.warnings[0]);
+  const data = Scene3DSchema.parse({ ...scene, camera: runtime.baseCamera });
+  runtime.signal.throwIfAborted();
+  canvas.dataset.recording = "true";
+  runtime.controls.enable(false);
+  runtime.surface.useCamera(data.camera);
+  try {
+    const registered = await registerModels(data, sources);
+    runtime.signal.throwIfAborted();
+    const asset = await cacheScene(
+      canvas,
+      registered.composition,
+      runtime.surface.render,
+      runtime.signal,
+      onProgress,
+    );
+    return [...registered.assets, asset];
+  } finally {
+    delete canvas.dataset.recording;
+    if (!runtime.signal.aborted) {
+      runtime.controls.restore();
+      runtime.controls.enable(!runtime.playing);
+    }
+  }
+}
+
+async function registerModels(scene: Scene3D, sources: ModelSource[]) {
+  const assets: MediaAsset[] = [];
+  const ids = new Map<string, string>();
+  for (const id of new Set(scene.elements.map((element) => element.assetId))) {
+    const source = sources.find((source) => source.id === id)!;
+    if (source.asset) {
+      assets.push(source.asset);
+      ids.set(id, id);
+      continue;
+    }
+    const bytes = await modelBytes(source),
+      model = await loadModel(bytes);
+    try {
+      const size = new Box3().setFromObject(model.scene).getSize(new Vector3());
+      const asset = await saveMedia(
+        new Blob([bytes], { type: "model/gltf-binary" }),
+        {
+          type: "model3d",
+          alt: source.title,
+          model3d: { ...source.model3d, dimensions: { x: size.x, y: size.y, z: size.z } },
+        },
+        "User-owned Synty POLYGON Knights pack; source library remains local.",
+      );
+      assets.push(asset);
+      ids.set(id, asset.id);
+    } finally {
+      disposeModel(model.scene);
+    }
+  }
+  return {
+    assets,
+    composition: {
+      ...scene,
+      elements: scene.elements.map((element) => ({
+        ...element,
+        assetId: ids.get(element.assetId)!,
+      })),
+    },
+  };
+}
+function still(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (blob) =>
+        blob?.type === "image/webp"
+          ? resolve(blob)
+          : reject(new Error("This browser cannot export WebP. Try a current Chromium browser.")),
+      "image/webp",
+      0.92,
+    ),
+  );
+}
+function recordScene(
+  canvas: HTMLCanvasElement,
+  render: (seconds: number, progress: number) => void,
+  durationMs: number,
+  signal: AbortSignal,
+  onProgress: (progress: number) => void,
+): Promise<Blob> {
+  const mime = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/mp4"].find(
+    (mime) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(mime),
+  );
+  if (!mime || !canvas.captureStream)
+    throw new Error(
+      "Animated scene export requires canvas recording. Try a current Chromium browser or choose no animation / no camera movement.",
+    );
+  const stream = canvas.captureStream(30);
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+  return new Promise((resolve, reject) => {
+    const chunks: BlobPart[] = [];
+    let raf = 0,
+      size = 0;
+    const cleanup = () => {
+      cancelAnimationFrame(raf);
+      stream.getTracks().forEach((track) => track.stop());
+      signal.removeEventListener("abort", abort);
+    };
+    const abort = () => {
+      if (recorder.state !== "inactive") recorder.stop();
+      cleanup();
+      reject(signal.reason ?? new Error("Export cancelled"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    recorder.ondataavailable = (event) => {
+      size += event.data.size;
+      chunks.push(event.data);
+      if (size > 50_000_000) {
+        abort();
+        reject(new Error("Rendered video exceeds 50 MB. Choose a shorter / faster cinematic."));
+      }
+    };
+    recorder.onerror = () => {
+      cleanup();
+      reject(new Error("Video encoding failed. The editable composition is preserved."));
+    };
+    recorder.onstop = () => {
+      cleanup();
+      resolve(
+        new Blob(chunks, { type: mime.startsWith("video/mp4") ? "video/mp4" : "video/webm" }),
+      );
+    };
+    render(0, 0);
+    recorder.start(250);
+    const start = performance.now();
+    const frame = () => {
+      const elapsed = Math.min(durationMs, performance.now() - start);
+      render(elapsed / 1000, elapsed / durationMs);
+      onProgress(elapsed / durationMs);
+      if (elapsed >= durationMs) recorder.stop();
+      else raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    if (signal.aborted) abort();
+  });
+}
+async function cacheScene(
+  canvas: HTMLCanvasElement,
+  scene: Scene3D,
+  render: (seconds: number, progress: number) => void,
+  signal: AbortSignal,
+  onProgress: (progress: number) => void,
+) {
+  const animated =
+    scene.cinematic.preset !== "none" ||
+    scene.particles !== "none" ||
+    scene.elements.some((element) => element.animation);
+  const durationMs =
+    scene.cinematic.preset === "none"
+      ? 6000
+      : cinematicDuration(scene.cinematic.speed, scene.cinematic);
+  render(0, 0);
+  const blob = animated
+    ? await recordScene(canvas, render, durationMs, signal, onProgress)
+    : await still(canvas);
+  signal.throwIfAborted();
+  return saveMedia(
+    blob,
+    { type: animated ? "video" : "image", alt: scene.title, scene3d: scene },
+    "Rendered from the composition's registered models; their individual rights remain recorded in the project.",
+    animated ? durationMs : undefined,
+  );
+}
+
+export function compositionExport({
+  runtime,
+  error,
+  scene,
+  sources,
+  imports,
+  onState,
+}: {
+  runtime: ReturnType<typeof useSceneSurface>["runtime"];
+  error: string;
+  scene: Scene3D;
+  sources: ModelSource[];
+  imports: MediaAsset[];
+  onState: (busy: boolean, progress: number) => void;
+}) {
+  return {
+    async prepare(motion: Cinematic) {
+      if (!runtime || error) throw new Error(error || "Wait for the 3D preview to finish loading.");
+      onState(true, 0);
+      try {
+        const result = await bakeComposition(
+          runtime.canvas,
+          { ...scene, cinematic: { ...motion, layers: [] } },
+          sources,
+          runtime,
+          (progress) => onState(true, progress),
+        );
+        return [...new Map([...imports, ...result].map((asset) => [asset.id, asset])).values()];
+      } finally {
+        if (!runtime.signal.aborted) onState(false, 0);
+      }
+    },
+  };
+}

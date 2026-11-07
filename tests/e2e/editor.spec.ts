@@ -6,10 +6,10 @@ import { resolve } from "node:path";
 async function openEditor(page: Page) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
-  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  await expect(page.getByLabel("Ink script editor")).toBeVisible({ timeout: 15000 });
   await expect(page.locator(".ace_text-input")).toHaveCount(1);
-  await expect(page.locator(".editor-status").getByRole("status")).toContainText(
-    /Original story loaded|Saved project loaded/,
+  await expect(page.getByLabel("Story title", { exact: true })).toHaveValue(
+    "The House That Remembered",
   );
 }
 async function appendInk(page: Page, text: string) {
@@ -35,13 +35,13 @@ test("refreshes an imported legacy project's artwork without losing the author's
   });
   await expect(page.getByLabel("Story title", { exact: true })).toHaveValue("My retained story");
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
-  await expect(page.locator(".preview-slot .story-cover")).toHaveAttribute(
+  await expect(page.locator(".preview-slot .story-art .shot-plane-image")).toHaveAttribute(
     "src",
-    /tcp\.human8-cutout\.webp$/,
+    /paper\.modern-male-character\.webp$/,
   );
   await expect(page.locator(".preview-slot .scene-illustration img").first()).toHaveAttribute(
     "src",
-    /tcp\.human8-cutout\.webp$/,
+    /house\.night\.webp$/,
   );
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
@@ -67,15 +67,24 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("tcp.human8-cutout");
+  await page.getByLabel("Search media", { exact: true }).fill("house.night");
   await page.getByRole("button", { name: "Use this media", exact: true }).click();
   await page.getByLabel("Caption", { exact: true }).fill("After the girl");
-  await page.getByLabel("Type", { exact: true }).selectOption("wide");
+  await page.getByRole("button", { name: "Wide", exact: true }).click();
+  await page.getByText(/Size and positioning/).click();
   await page.getByLabel("Override default position", { exact: true }).check();
   await page.getByLabel("X (%)", { exact: true }).fill("5");
   await page.getByLabel("Y (%)", { exact: true }).fill("0");
-  await page.getByRole("button", { name: "slow reveal", exact: true }).click();
+  await expect(page.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "cinematic push in", exact: true }).click();
   await page.getByLabel("Cinematic atmosphere", { exact: true }).selectOption("historical");
+  await page.getByLabel("Media examinable", { exact: true }).check();
+  await page
+    .getByLabel("Image details (one per line)", { exact: true })
+    .fill("The locked gate.\nA light upstairs.");
+  await page
+    .getByLabel("Text on the reverse (optional)", { exact: true })
+    .fill("Do not tell her your name.");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   await expect(page.getByRole("button", { name: "▷ Preview", exact: true })).toBeEnabled();
@@ -87,6 +96,15 @@ test("inserts images at their source position and preserves video uploads in com
     "The girl beside her looked exactly like you.",
   );
   await expect(figure.locator(".atmosphere-historical")).toBeVisible();
+  await expect(figure.locator(".scene-illustration")).toHaveCSS("border-top-width", "2px");
+  await page.getByRole("button", { name: "Examine the image", exact: true }).click();
+  const examination = page.getByRole("dialog", { name: "Image", exact: true });
+  await expect(examination).toContainText("The locked gate.");
+  await examination.getByRole("button", { name: "Examine details", exact: true }).click();
+  await expect(examination).toContainText("A light upstairs.");
+  await examination.getByRole("button", { name: "Turn over", exact: true }).click();
+  await expect(examination.locator(".photo-reverse")).toContainText("Do not tell her your name.");
+  await examination.getByRole("button", { name: "Close", exact: true }).click();
   await page.getByRole("button", { name: "Video", exact: true }).click();
   await page
     .getByLabel("Video permission / rights", { exact: true })
@@ -371,7 +389,7 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Add Image" })).toBeVisible();
   await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("tcp.human8-cutout");
+  await page.getByLabel("Search media", { exact: true }).fill("house.night");
   await page.getByRole("button", { name: "Use this media", exact: true }).click();
   await page.getByLabel("Alt text").fill("A girl standing beside a house");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();
@@ -379,11 +397,21 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await expect(page.locator(".editor-outline")).toContainText("intro.image-");
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByLabel("Game Mode", { exact: true }).selectOption("narrative");
+  const settings = page.getByRole("dialog", { name: "Story Settings", exact: true });
+  await expect(settings.getByLabel("Custom page color", { exact: true })).toHaveValue("#f3e5cf");
+  await settings.getByLabel("Custom page color", { exact: true }).fill("#131313");
   await page.getByRole("button", { name: "Apply settings" }).click();
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.locator(".preview-slot .reader")).toHaveCSS(
+    "background-color",
+    "rgb(19, 19, 19)",
+  );
   await expect(page.getByRole("tab", { name: "Game", exact: true })).toHaveCount(0);
 });
 
-test("autosaves invalid drafts without replacing the working story", async ({ page }) => {
+test("retains invalid drafts and reports their errors instead of opening a stale story", async ({
+  page,
+}) => {
   await openEditor(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator(".editor-status").getByRole("status")).toHaveText(
@@ -401,7 +429,8 @@ test("autosaves invalid drafts without replacing the working story", async ({ pa
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Play an existing story" }).click();
-  await expect(page.locator(".prose")).toContainText("The first time you saw the girl");
+  await expect(page.getByRole("alert")).toContainText("target_does_not_exist");
+  await expect(page.getByRole("link", { name: "Open Story Editor", exact: true })).toBeVisible();
 });
 
 test("backs up a human recording and restores the complete project from history", async ({

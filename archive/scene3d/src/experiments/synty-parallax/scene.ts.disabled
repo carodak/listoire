@@ -1,0 +1,188 @@
+﻿import {
+  ACESFilmicToneMapping,
+  Color,
+  DirectionalLight,
+  FogExp2,
+  Group,
+  HemisphereLight,
+  Mesh,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  SRGBColorSpace,
+  TextureLoader,
+  WebGLRenderer,
+} from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { buildCourtyard } from "./world.ts";
+import { illustrationMaterials } from "./materials.ts";
+import type { Style } from "./materials.ts";
+import { cameraPose } from "./camera.ts";
+
+async function loadModels(signal: AbortSignal) {
+  const files = import.meta.glob<string>("./assets/*.glb", {
+    eager: true,
+    query: "?url",
+    import: "default",
+  });
+  const results = await Promise.allSettled(
+    Object.entries(files).map(async ([file, url]) => {
+      const response = await fetch(url, { signal });
+      if (!response.ok) throw new Error(`Could not load ${file}`);
+      const model = await new GLTFLoader().parseAsync(await response.arrayBuffer(), "");
+      return [file.split("/").at(-1)!.replace(".glb", ""), model.scene] as const;
+    }),
+  );
+  if (results.some((result) => result.status === "rejected")) {
+    for (const result of results)
+      if (result.status === "fulfilled") disposeGeometry(result.value[1]);
+    throw new Error("The selected Synty scene assets could not be loaded.");
+  }
+  return Object.fromEntries(
+    results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : [])),
+  );
+}
+function disposeGeometry(root: Group | Scene) {
+  const geometries = new Set<Mesh["geometry"]>();
+  root.traverse((node) => {
+    if (node instanceof Mesh) geometries.add(node.geometry);
+  });
+  geometries.forEach((geometry) => geometry.dispose());
+}
+function lighting(scene: Scene) {
+  scene.background = new Color("#59636b");
+  scene.fog = new FogExp2("#59636b", 0.026);
+  scene.add(new HemisphereLight("#8798ad", "#332b20", 0.8));
+  const sun = new DirectionalLight("#ffe0ac", 3.5);
+  sun.position.set(-12, 18, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, {
+    left: -24,
+    right: 24,
+    top: 26,
+    bottom: -22,
+    near: 1,
+    far: 70,
+  });
+  sun.shadow.normalBias = 0.025;
+  sun.shadow.bias = -0.0001;
+  scene.add(sun);
+  const rim = new DirectionalLight("#91a5c6", 0.8);
+  rim.position.set(6, 8, -14);
+  scene.add(rim);
+}
+
+export async function createSyntyScene(
+  canvas: HTMLCanvasElement,
+  signal: AbortSignal,
+  onProgress: (value: number) => void,
+) {
+  const renderer = new WebGLRenderer({
+    canvas,
+    antialias: true,
+    powerPreference: "high-performance",
+  });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.85;
+  const scene = new Scene(),
+    camera = new PerspectiveCamera(48, 1, 0.1, 160);
+  const textures = new TextureLoader();
+  const resources = await Promise.allSettled([
+    loadModels(signal),
+    textures.loadAsync(new URL("./assets/environment.png", import.meta.url).href),
+    textures.loadAsync(new URL("./assets/character.png", import.meta.url).href),
+  ]);
+  const [modelResult, environmentResult, characterResult] = resources;
+  if (
+    modelResult!.status !== "fulfilled" ||
+    environmentResult!.status !== "fulfilled" ||
+    characterResult!.status !== "fulfilled" ||
+    signal.aborted
+  ) {
+    if (modelResult!.status === "fulfilled")
+      Object.values(modelResult.value).forEach(disposeGeometry);
+    if (environmentResult!.status === "fulfilled") environmentResult.value.dispose();
+    if (characterResult!.status === "fulfilled") characterResult.value.dispose();
+    renderer.dispose();
+    throw new Error(signal.aborted ? "Scene closed" : "The scene could not be loaded.");
+  }
+  const models = modelResult.value,
+    environment = environmentResult.value,
+    character = characterResult.value;
+  for (const texture of [environment, character]) {
+    texture.colorSpace = SRGBColorSpace;
+    texture.flipY = true;
+  }
+  const materials = illustrationMaterials(environment, character);
+  const world = buildCourtyard(models, materials.styles.toon.ground);
+  scene.add(world);
+  lighting(scene);
+  let frame = 0,
+    progress = 0,
+    disposed = false;
+  const render = () => {
+    if (!disposed) renderer.render(scene, camera);
+  };
+  const position = (value: number) => {
+    progress = value;
+    const pose = cameraPose(value);
+    camera.position.set(pose.x, pose.y, pose.z);
+    camera.lookAt(0.15, 2, -4);
+    render();
+  };
+  const setStyle = (style: Style) => {
+    scene.traverse((node) => {
+      if (node instanceof Mesh) {
+        const kind = node.userData.surface as "character" | "ground" | undefined;
+        node.material = materials.styles[style][kind ?? "environment"];
+      }
+    });
+    canvas.dataset.style = style;
+    render();
+  };
+  const resize = new ResizeObserver(() => {
+    const box = canvas.getBoundingClientRect();
+    renderer.setSize(box.width, box.height, false);
+    camera.aspect = box.width / Math.max(1, box.height);
+    camera.updateProjectionMatrix();
+    render();
+  });
+  resize.observe(canvas);
+  setStyle("toon");
+  position(0);
+  const play = () => {
+    cancelAnimationFrame(frame);
+    const began = performance.now();
+    const tick = (now: number) => {
+      if (disposed) return;
+      position(Math.min(1, (now - began) / 6000));
+      onProgress(progress);
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+  };
+  const pause = () => cancelAnimationFrame(frame);
+  const visibility = () => {
+    if (document.hidden) pause();
+  };
+  document.addEventListener("visibilitychange", visibility);
+  const dispose = () => {
+    disposed = true;
+    pause();
+    resize.disconnect();
+    document.removeEventListener("visibilitychange", visibility);
+    disposeGeometry(scene);
+    Object.values(models).forEach(disposeGeometry);
+    materials.dispose();
+    environment.dispose();
+    character.dispose();
+    renderer.dispose();
+    renderer.forceContextLoss();
+  };
+  return { play, setStyle, dispose };
+}

@@ -2,19 +2,15 @@ import { useEffect, useRef } from "react";
 import type { AceEditor } from "./ace.ts";
 import { loadAce } from "./ace.ts";
 
-export function InkEditor({
-  value,
-  onChange,
-  onReady,
-  onError,
-  onCursor,
-}: {
+interface InkEditorProps {
   value: string;
   onChange: (script: string) => void;
   onReady: (editor: AceEditor) => void;
   onError: (error: unknown) => void;
   onCursor?: (row: number) => void;
-}) {
+}
+
+export function InkEditor({ value, onChange, onReady, onError, onCursor }: InkEditorProps) {
   const element = useRef<HTMLDivElement>(null);
   const editor = useRef<AceEditor | null>(null);
   const latest = useRef({ value, onChange, onReady, onError, onCursor });

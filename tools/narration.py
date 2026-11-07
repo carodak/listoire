@@ -77,13 +77,12 @@ def voice_for(locale, requested=None):
 
 
 def authorized_segment(payload):
-    if set(payload) != {"storyId", "locale", "segmentId", "text", "voiceId"} or payload["storyId"] != "house":
-        raise ValueError("Unknown narration request")
+    _, voice = authoring_segment(payload)
     text = unicodedata.normalize("NFC", payload["text"])
     segment = next((entry for entry in read(BASE / "segments.json")["segments"] if entry["locale"] == payload["locale"] and entry["segmentId"] == payload["segmentId"] and entry["text"] == text), None)
     if not segment:
         raise ValueError("Text is not an exported Ink variant; rerun narration:export")
-    return segment, voice_for(payload["locale"], payload["voiceId"])
+    return segment, voice
 
 
 def authoring_segment(payload):
@@ -295,7 +294,7 @@ def serve():
                 size = int(self.headers.get("Content-Length", "0"))
             except ValueError:
                 self.respond(400, b'{}'); return
-            if not 0 < size <= (7_000_000 if self.path.endswith("/editor-preview") else 20000):
+            if not 0 < size <= 7_000_000:
                 self.respond(413, b'{}'); return
             try:
                 authorize = authoring_segment if self.path.endswith("/editor-preview") else authorized_segment

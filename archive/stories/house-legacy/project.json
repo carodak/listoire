@@ -1,0 +1,4660 @@
+{
+  "schemaVersion": 1,
+  "storyId": "house",
+  "release": "0.3.1",
+  "defaultLocale": "en",
+  "gameMode": "rpg-no-combat",
+  "variables": [
+    "brasskey",
+    "caller",
+    "girl",
+    "examined",
+    "hiddenclue",
+    "metgrandmother",
+    "metcaller",
+    "metgirl"
+  ],
+  "languages": {
+    "en": {
+      "script": "VAR metgrandmother = true\r\nVAR metgirl = true\r\nVAR metcaller = false\r\nVAR brasskey = false\r\nVAR caller = 0\r\nVAR girl = -20\r\nVAR examined = false\r\nVAR hiddenclue = false\r\n-> intro\r\n\r\n=== intro ===\r\nThe first time you saw the girl in the photograph, she was standing beside your grandmother. # passage:intro # segment:intro.p1\r\nThe second time, she was standing alone. # segment:intro.p2\r\nYou discovered the difference three weeks after the funeral. The picture had been hidden between the pages of an old cookbook. # segment:intro.p3\r\nThe photograph was dated June 14th, 1987. Your grandmother was twenty-six. The girl beside her looked exactly like you. # segment:intro.p4\r\n{examined: The upstairs window in the photograph is open. # segment:intro.clue}\r\n* {not examined} [Notice the upstairs window # choice:examine-photo # interaction]\r\n  ~ examined = true\r\n  -> intro\r\n* [Continue reading # choice:intro.call]\r\n  ~ metcaller = true\r\n  -> call\r\n\r\n=== call ===\r\nOn the back, your grandmother had written: If she comes looking for you, do not tell her your name. # passage:call # segment:call.p1\r\nAt that exact moment, the telephone rang. # segment:call.p2\r\n“I am calling about the house,” a woman said. “Has anyone opened the upstairs room?” # segment:call.p3\r\nBehind her voice, someone was humming a lullaby you remembered from childhood. # segment:call.p4\r\n* [Ask about the locked room # choice:call.room]\r\n  ~ caller += 5\r\n  -> room\r\n* [Ask about the singing # choice:call.song]\r\n  ~ caller -= 5\r\n  -> song\r\n\r\n=== room ===\r\n“Why the upstairs room?” # passage:room # segment:room.p1\r\nThe woman hesitated. “Because it was sealed twenty-nine years ago. And someone opened it last night.” # segment:room.p2\r\nThe call ended. # segment:room.p3\r\n* [Continue reading # choice:room.arrival]\r\n  -> arrival\r\n\r\n=== song ===\r\n“Who is singing?” # passage:song # segment:song.p1\r\nThe melody stopped. A second voice whispered into the receiver: “She can hear us.” # segment:song.p2\r\nThe call ended. # segment:song.p3\r\n* [Continue reading # choice:song.arrival]\r\n  -> arrival\r\n\r\n=== arrival ===\r\nSomething slid beneath your apartment door. # passage:arrival # segment:arrival.p1\r\nA cream-coloured envelope. No footsteps followed it. Across the front, in your grandmother’s handwriting: FOR THE ONE WHO STAYED. # segment:arrival.p2\r\nThe wax seal showed a small bird surrounded by seven stars. # segment:arrival.p3\r\n* [Break the wax seal # choice:arrival.break]\r\n  ~ brasskey = true\r\n  -> break\r\n* [Hold the envelope against the lamp # choice:arrival.light]\r\n  ~ hiddenclue = true\r\n  -> light\r\n\r\n=== break ===\r\nThe wax cracked beneath your thumb. # passage:break # segment:break.p1\r\nInside, a letter: “There were two of you that summer. But only one came home.” # segment:break.p2\r\nA tiny brass key was taped beneath the final line. # segment:break.p3\r\n* [Continue reading # choice:break.last]\r\n  -> last\r\n\r\n=== light ===\r\nYou held the envelope close to the lamp. The paper slowly turned translucent. # passage:light # segment:light.p1\r\nA hidden sentence emerged: “She is not your sister. She is what the house kept.” # segment:light.p2\r\nYou lowered the letter. The words were gone. # segment:light.p3\r\n* [Continue reading # choice:light.last]\r\n  -> last\r\n\r\n=== last ===\r\nThe photograph lay on your desk. # passage:last # segment:last.p1\r\nThree quiet knocks sounded at the window. You lived on the fifth floor. # segment:last.p2\r\nThe girl in the photograph was no longer looking at your grandmother. She was looking at you. # segment:last.p3\r\n* [Look out of the window # choice:last.window]\r\n  ~ girl -= 10\r\n  -> window\r\n* [Turn the photograph over # choice:last.photo]\r\n  ~ girl += 10\r\n  -> photo\r\n\r\n=== window ===\r\nBeyond the glass, the night was empty. # passage:window # segment:window.p1\r\nThen a handprint appeared on the outside of the window. Five perfectly ordinary fingers. # segment:window.p2\r\nUnderneath, a word formed in the condensation: COME. # segment:window.p3\r\n* [Continue reading # choice:window.end]\r\n  -> end\r\n\r\n=== photo ===\r\nYou turned the photograph over. # passage:photo # segment:photo.p1\r\nThe warning was gone. A new message had appeared in the same handwriting: “You remember me, don’t you?” # segment:photo.p2\r\nThe paper felt warm against your palm. # segment:photo.p3\r\n* [Continue reading # choice:photo.end]\r\n  -> end\r\n\r\n=== end ===\r\nBy morning, you knew you would return to the house. # passage:end # segment:end.p1\r\nYour grandmother had not been trying to keep you away from it. # segment:end.p2\r\nShe had been trying to keep something inside. # segment:end.p3\r\n-> END\r\n\r\n",
+      "description": "",
+      "missingTranslation": false,
+      "configuration": {
+        "title": "The House That Remembered",
+        "chapter": "Chapter One",
+        "scenes": {
+          "intro": {
+            "title": "The Girl in the Photograph",
+            "progress": 0,
+            "image": "paper.background-the-plains-desolation",
+            "events": [
+              {
+                "id": "intro.paper.motion",
+                "blockId": "intro.paper",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "intro.paper"
+                },
+                "blocking": false,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "intro.artwork",
+                "image": "paper.modern-male-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p2"
+              },
+              {
+                "kind": "media",
+                "id": "intro.illustration",
+                "image": "house.night",
+                "layout": "inline",
+                "photograph": true
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p3"
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p4"
+              },
+              {
+                "kind": "media",
+                "id": "intro.paper",
+                "image": "paper.background-the-plains-desolation",
+                "layout": "inline",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.foreground-tree-2",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.clue"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "photograph": true
+          },
+          "call": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.14285714285714285,
+            "events": [
+              {
+                "id": "call.receiver",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "call.p2"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.telephone",
+                  "channel": "sfx",
+                  "loop": false,
+                  "volume": 0.7
+                }
+              },
+              {
+                "id": "call.lullaby",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "call.p4"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.music-box",
+                  "channel": "music",
+                  "loop": true,
+                  "volume": 0.35,
+                  "fadeMs": 600
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "call.artwork",
+                "image": "paper.modern-grandma-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p1"
+              },
+              {
+                "kind": "media",
+                "id": "call.paper",
+                "image": "paper.modern-male-detective",
+                "layout": "inline",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "right"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p3"
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p4"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "room": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.2857142857142857,
+            "image": "paper.background-city",
+            "events": [
+              {
+                "id": "room.wind",
+                "trigger": {
+                  "kind": "passage"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.wind",
+                  "channel": "ambience",
+                  "loop": true,
+                  "volume": 0.4,
+                  "fadeMs": 600
+                }
+              },
+              {
+                "id": "room.illustration.motion",
+                "blockId": "room.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "room.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "cinematic-push-in",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "room.artwork",
+                "image": "paper.background-mountains-night",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p2"
+              },
+              {
+                "kind": "media",
+                "id": "room.illustration",
+                "image": "paper.background-city",
+                "layout": "fullscreen",
+                "caption": "The room was opened last night.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-detective",
+                      "role": "midground",
+                      "x": 20,
+                      "y": 5,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-industrial",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "cinematic-push-in",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "song": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.2857142857142857,
+            "image": "paper.background-the-plains-forest",
+            "events": [
+              {
+                "id": "song.illustration.motion",
+                "blockId": "song.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "song.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "song.artwork",
+                "image": "paper.modern-nurse-woman-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p2"
+              },
+              {
+                "kind": "media",
+                "id": "song.illustration",
+                "image": "paper.background-the-plains-forest",
+                "layout": "fullscreen",
+                "caption": "She can hear us.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-grandma-character",
+                      "role": "midground",
+                      "x": 20,
+                      "y": 6,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-tree-forest-2",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "arrival": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.42857142857142855,
+            "image": "paper.background-the-plains-montains-2",
+            "events": [
+              {
+                "id": "arrival.illustration.motion",
+                "blockId": "arrival.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "arrival.illustration"
+                },
+                "blocking": false,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "sideways-drift",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "arrival.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p2"
+              },
+              {
+                "kind": "media",
+                "id": "arrival.illustration",
+                "image": "paper.background-the-plains-montains-2",
+                "layout": "wide",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.fantasy-elf-male",
+                      "role": "midground",
+                      "x": 22,
+                      "y": 5,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-tree-fores",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "sideways-drift",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "break": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.5714285714285714,
+            "image": "paper.background-city",
+            "events": [
+              {
+                "id": "break.illustration.motion",
+                "blockId": "break.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "break.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "downward-reveal",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "break.artwork",
+                "image": "paper.modern-male-character-sitting",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p2"
+              },
+              {
+                "kind": "media",
+                "id": "break.illustration",
+                "image": "paper.background-city",
+                "layout": "fullscreen",
+                "caption": "There were two of you.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-detective",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 3,
+                      "scale": 1
+                    },
+                    {
+                      "image": "paper.foreground-dark-chains",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "downward-reveal",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "notice": "Brass key acquired"
+          },
+          "light": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.5714285714285714,
+            "image": "paper.background-ground-other-planet",
+            "events": [
+              {
+                "id": "light.illustration.motion",
+                "blockId": "light.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "light.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "character-focus",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "light.artwork",
+                "image": "paper.background-mountains-pick",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p2"
+              },
+              {
+                "kind": "media",
+                "id": "light.illustration",
+                "image": "paper.background-ground-other-planet",
+                "layout": "fullscreen",
+                "caption": "A second message appears.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-character-reading",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 4,
+                      "scale": 0.95
+                    },
+                    {
+                      "image": "paper.foreground-pipe-rock",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "character-focus",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "notice": "Hidden clue discovered"
+          },
+          "last": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.7142857142857143,
+            "events": [
+              {
+                "id": "last.knocks",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "last.p2"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.impact",
+                  "channel": "sfx",
+                  "loop": false,
+                  "volume": 0.35
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "last.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "window": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.8571428571428571,
+            "image": "paper.background-mountains-night",
+            "events": [
+              {
+                "id": "window.illustration.motion",
+                "blockId": "window.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "window.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "downward-reveal",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "window.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p2"
+              },
+              {
+                "kind": "media",
+                "id": "window.illustration",
+                "image": "paper.background-mountains-night",
+                "layout": "fullscreen",
+                "caption": "Three knocks. Fifth floor.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.foreground-lamp",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "downward-reveal",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "photo": {
+            "title": "The Girl in the Photograph",
+            "progress": 0.8571428571428571,
+            "image": "paper.background-the-plains-desolation",
+            "events": [
+              {
+                "id": "photo.illustration.motion",
+                "blockId": "photo.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "photo.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "photo.artwork",
+                "image": "paper.modern-grandma-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p2"
+              },
+              {
+                "kind": "media",
+                "id": "photo.illustration",
+                "image": "paper.background-the-plains-desolation",
+                "layout": "fullscreen",
+                "caption": "The photograph has changed.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-grandma-character",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 3,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-destroyed-fence",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "photograph": true
+          },
+          "end": {
+            "title": "The House Is Waiting",
+            "progress": 1,
+            "events": [],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "end.paper",
+                "image": "paper.background-city",
+                "layout": "background",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "media",
+                "id": "end.artwork",
+                "image": "paper.modern-male-character-reading",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          }
+        },
+        "assets": [
+          {
+            "id": "narration.03269413fafa8389f6610af60f97fdae9a32edebeb383ed15e69b0faa65b8521",
+            "path": "media/narration.03269413fafa8389f6610af60f97fdae9a32edebeb383ed15e69b0faa65b8521.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c75b89dff887fe717f864763f5b6ab8eeedd3c2d9c510f60f5d228d9b511653f",
+            "path": "media/narration.c75b89dff887fe717f864763f5b6ab8eeedd3c2d9c510f60f5d228d9b511653f.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.089e97b4d6fb3759a8dd0f7cc41e349e3567ab9ad912e6bd9c39e9b0d351be20",
+            "path": "media/narration.089e97b4d6fb3759a8dd0f7cc41e349e3567ab9ad912e6bd9c39e9b0d351be20.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.ea8302c4941deefafe141ddb121ff722078d8e865aa6b28826e4ccab366a720e",
+            "path": "media/narration.ea8302c4941deefafe141ddb121ff722078d8e865aa6b28826e4ccab366a720e.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.6cb926319998ac0b605f9180c9f660530280dea6e72ddec847e064e7730e09f7",
+            "path": "media/narration.6cb926319998ac0b605f9180c9f660530280dea6e72ddec847e064e7730e09f7.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.810cb894a7eaf8f7d6f8698b101089bdb59bfefce38b73d4961419ad38bef876",
+            "path": "media/narration.810cb894a7eaf8f7d6f8698b101089bdb59bfefce38b73d4961419ad38bef876.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c84a5d02b4c65ddb41467e240b71df735bed9f68ef126c70ef0d2f6cb1cdb138",
+            "path": "media/narration.c84a5d02b4c65ddb41467e240b71df735bed9f68ef126c70ef0d2f6cb1cdb138.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.85044f9bc54bb4de211392089ff6b4605a6faca94c38f0653298a32b4b2586b8",
+            "path": "media/narration.85044f9bc54bb4de211392089ff6b4605a6faca94c38f0653298a32b4b2586b8.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.86a9579f076a885bd9939071fffc1f7d3a4bd8bb462252180dd9fe4bf717d14d",
+            "path": "media/narration.86a9579f076a885bd9939071fffc1f7d3a4bd8bb462252180dd9fe4bf717d14d.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.f80af332406be80547a85eec17626d3360a6e17fe1839e95f3e5f76cd1aa887a",
+            "path": "media/narration.f80af332406be80547a85eec17626d3360a6e17fe1839e95f3e5f76cd1aa887a.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.53b7f1d0a36e1f470222fcab3dd03541393e8e50267193364211738ad71fa635",
+            "path": "media/narration.53b7f1d0a36e1f470222fcab3dd03541393e8e50267193364211738ad71fa635.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.cf1e9bdab3653e0d234391e77a8af8a97e20957d5d09f258f6e8e9441a84533e",
+            "path": "media/narration.cf1e9bdab3653e0d234391e77a8af8a97e20957d5d09f258f6e8e9441a84533e.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.907cd99216b3be753d0e3a002e302487e561afcd5e20e184476f938ad5ad58fc",
+            "path": "media/narration.907cd99216b3be753d0e3a002e302487e561afcd5e20e184476f938ad5ad58fc.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.69972285df94515ef4337606ce0a4b4f7eb852ffc507e540ea2a635d7f01e379",
+            "path": "media/narration.69972285df94515ef4337606ce0a4b4f7eb852ffc507e540ea2a635d7f01e379.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c439f1eb9ec44ecd75a33bd86540315a48db5ea4207d005a714deffca99d6ec8",
+            "path": "media/narration.c439f1eb9ec44ecd75a33bd86540315a48db5ea4207d005a714deffca99d6ec8.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.2fbec7a6408488974c146f583347209fcd7a3d6a3607bf41f494e0e59abbff60",
+            "path": "media/narration.2fbec7a6408488974c146f583347209fcd7a3d6a3607bf41f494e0e59abbff60.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.971f73ec71f10d2cf0dbb5eeb29519d14ee4ce44e3c9625b2f13585109f47a76",
+            "path": "media/narration.971f73ec71f10d2cf0dbb5eeb29519d14ee4ce44e3c9625b2f13585109f47a76.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.e0e293d0671ae76438d2d51d1bf0be0b08cfff0fdfee053593c24b4d19e27704",
+            "path": "media/narration.e0e293d0671ae76438d2d51d1bf0be0b08cfff0fdfee053593c24b4d19e27704.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.b95569995035ee8787e22b7dcc57282755ea346aeb2db4cfeb5dc99a739460b6",
+            "path": "media/narration.b95569995035ee8787e22b7dcc57282755ea346aeb2db4cfeb5dc99a739460b6.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.85d89181106e33d953c6d6968adcb106d433bfeba258019d4b39ac79ace3ab21",
+            "path": "media/narration.85d89181106e33d953c6d6968adcb106d433bfeba258019d4b39ac79ace3ab21.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.0af52ef650f75be2665bd626f3f064dcb874ac8fb0f5a1a70fe0a750c9a4845c",
+            "path": "media/narration.0af52ef650f75be2665bd626f3f064dcb874ac8fb0f5a1a70fe0a750c9a4845c.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.d70231c2fede4fc740b526955ddde966f2d71596c630a1aecc1e7b352b4b2d9b",
+            "path": "media/narration.d70231c2fede4fc740b526955ddde966f2d71596c630a1aecc1e7b352b4b2d9b.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.825c883c12bf0c29daf5cce6dac470ff780cb4e335f44df6a520719045666356",
+            "path": "media/narration.825c883c12bf0c29daf5cce6dac470ff780cb4e335f44df6a520719045666356.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.51eb6f62c61a96badde333b0734f25f7ef89ff10841ac237f0526eda76efbc0b",
+            "path": "media/narration.51eb6f62c61a96badde333b0734f25f7ef89ff10841ac237f0526eda76efbc0b.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.d9ad150e32b5c1040e6c93761b8f4b2eb7727fccc806394ba43321a90fa449c9",
+            "path": "media/narration.d9ad150e32b5c1040e6c93761b8f4b2eb7727fccc806394ba43321a90fa449c9.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.28c2d6c65f94bb6572e08dcc62a62c3731c8bd6f93b8bed58efc1ec1157c98f0",
+            "path": "media/narration.28c2d6c65f94bb6572e08dcc62a62c3731c8bd6f93b8bed58efc1ec1157c98f0.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.076335ac25ebfb0e43f2485a4afcf113e355b4305abcab0602bd4ed976fcd078",
+            "path": "media/narration.076335ac25ebfb0e43f2485a4afcf113e355b4305abcab0602bd4ed976fcd078.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.0b5d747c888664f355e72e620ecac1e685e7687ce7ce1485ab6bf0cfbdfdaf83",
+            "path": "media/narration.0b5d747c888664f355e72e620ecac1e685e7687ce7ce1485ab6bf0cfbdfdaf83.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.91c6ba107bf53426d57cbef2c02d9d8004d353380c74e97c7111ce8cf2982f23",
+            "path": "media/narration.91c6ba107bf53426d57cbef2c02d9d8004d353380c74e97c7111ce8cf2982f23.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.9a7d074e48bc46b6e4bb33df44235e1da05c830113f3aa6370add9c15e02905f",
+            "path": "media/narration.9a7d074e48bc46b6e4bb33df44235e1da05c830113f3aa6370add9c15e02905f.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.3e09ea4849449c434c119ad9142d41654f1cebc4b9e0e179057ee345eb2469bd",
+            "path": "media/narration.3e09ea4849449c434c119ad9142d41654f1cebc4b9e0e179057ee345eb2469bd.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.237d3133cebfcba161533692def0156bc1706e194672154813eabcb99a07a1ba",
+            "path": "media/narration.237d3133cebfcba161533692def0156bc1706e194672154813eabcb99a07a1ba.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.e2f59f9c738af965ac1abe6745627e52d1f573f9caceb9ee89fccb3943e2fe81",
+            "path": "media/narration.e2f59f9c738af965ac1abe6745627e52d1f573f9caceb9ee89fccb3943e2fe81.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.3bf92c3a224391a1146550beda69d994681f60aa2d7504867207ce78e39ad94c",
+            "path": "media/narration.3bf92c3a224391a1146550beda69d994681f60aa2d7504867207ce78e39ad94c.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.29dadd5bc10559bf590ed3300fb202029301194e3040279b3eff691a2ed9b884",
+            "path": "media/narration.29dadd5bc10559bf590ed3300fb202029301194e3040279b3eff691a2ed9b884.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c5f832458f06c8e144a348cafe1c2713fa8ac81ac799cc7ae74752ac79381971",
+            "path": "media/narration.c5f832458f06c8e144a348cafe1c2713fa8ac81ac799cc7ae74752ac79381971.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "heritage.key",
+            "path": "media/heritage.key.webp",
+            "type": "image",
+            "alt": "Vintage engraving of a key"
+          },
+          {
+            "id": "heritage.handprint",
+            "path": "media/heritage.handprint.webp",
+            "type": "image",
+            "alt": "Vintage line drawing of an open hand"
+          },
+          {
+            "id": "sonniss.telephone",
+            "path": "media/sonniss.telephone.mp3",
+            "type": "audio",
+            "alt": "Antique telephone receiver"
+          },
+          {
+            "id": "sonniss.music-box",
+            "path": "media/sonniss.music-box.mp3",
+            "type": "audio",
+            "alt": "Music-box recollection"
+          },
+          {
+            "id": "sonniss.wind",
+            "path": "media/sonniss.wind.mp3",
+            "type": "audio",
+            "alt": "Chimney wind"
+          },
+          {
+            "id": "sonniss.impact",
+            "path": "media/sonniss.impact.mp3",
+            "type": "audio",
+            "alt": "Metal impact accent"
+          },
+          {
+            "id": "house.night",
+            "path": "media/house.night.webp",
+            "type": "image",
+            "alt": "A silhouette approaches the house beneath a full moon.",
+            "credit": "House at night ? locally generated illustration, explicitly selected by the user."
+          },
+          {
+            "id": "tcp.human5-cutout",
+            "path": "media/tcp.human5-cutout.webp",
+            "type": "image",
+            "alt": "A young woman drawn in ink.",
+            "credit": "TCP Human 5 — Jeff Preston / Terrible Character Portraits, coordinated by Duane O’Brien. CC BY 3.0: https://creativecommons.org/licenses/by/3.0/ · Source: http://team-preston.com · White exterior removed, converted to WebP."
+          },
+          {
+            "id": "heritage.bird",
+            "path": "media/heritage.bird.webp",
+            "type": "image",
+            "alt": "An antique engraving of a bird.",
+            "credit": "Spirit & Myth — Element 5"
+          },
+          {
+            "id": "paper.background-city",
+            "type": "image",
+            "path": "media/paper.background-city.webp",
+            "alt": "Background city"
+          },
+          {
+            "id": "paper.background-ground-other-planet",
+            "type": "image",
+            "path": "media/paper.background-ground-other-planet.webp",
+            "alt": "Background ground other planet"
+          },
+          {
+            "id": "paper.background-mountains-night",
+            "type": "image",
+            "path": "media/paper.background-mountains-night.webp",
+            "alt": "Background mountains night"
+          },
+          {
+            "id": "paper.background-mountains-pick",
+            "type": "image",
+            "path": "media/paper.background-mountains-pick.webp",
+            "alt": "Background mountains pick"
+          },
+          {
+            "id": "paper.background-the-plains-desolation",
+            "type": "image",
+            "path": "media/paper.background-the-plains-desolation.webp",
+            "alt": "Background the plains desolation"
+          },
+          {
+            "id": "paper.background-the-plains-forest",
+            "type": "image",
+            "path": "media/paper.background-the-plains-forest.webp",
+            "alt": "Background the plains forest"
+          },
+          {
+            "id": "paper.background-the-plains-montains-2",
+            "type": "image",
+            "path": "media/paper.background-the-plains-montains-2.webp",
+            "alt": "Background the plains montains 2"
+          },
+          {
+            "id": "paper.background-the-plains-montains",
+            "type": "image",
+            "path": "media/paper.background-the-plains-montains.webp",
+            "alt": "Background the plains montains"
+          },
+          {
+            "id": "paper.fantasy-elf-male",
+            "type": "image",
+            "path": "media/paper.fantasy-elf-male.webp",
+            "alt": "Fantasy elf male"
+          },
+          {
+            "id": "paper.foreground-dark-chains",
+            "type": "image",
+            "path": "media/paper.foreground-dark-chains.webp",
+            "alt": "Foreground dark chains"
+          },
+          {
+            "id": "paper.foreground-destroyed-fence",
+            "type": "image",
+            "path": "media/paper.foreground-destroyed-fence.webp",
+            "alt": "Foreground destroyed fence"
+          },
+          {
+            "id": "paper.foreground-industrial",
+            "type": "image",
+            "path": "media/paper.foreground-industrial.webp",
+            "alt": "Foreground industrial"
+          },
+          {
+            "id": "paper.foreground-lamp",
+            "type": "image",
+            "path": "media/paper.foreground-lamp.webp",
+            "alt": "Foreground lamp"
+          },
+          {
+            "id": "paper.foreground-pipe-rock",
+            "type": "image",
+            "path": "media/paper.foreground-pipe-rock.webp",
+            "alt": "Foreground pipe rock"
+          },
+          {
+            "id": "paper.foreground-tree-2",
+            "type": "image",
+            "path": "media/paper.foreground-tree-2.webp",
+            "alt": "Foreground tree 2"
+          },
+          {
+            "id": "paper.foreground-tree-fores",
+            "type": "image",
+            "path": "media/paper.foreground-tree-fores.webp",
+            "alt": "Foreground tree fores"
+          },
+          {
+            "id": "paper.foreground-tree-forest-2",
+            "type": "image",
+            "path": "media/paper.foreground-tree-forest-2.webp",
+            "alt": "Foreground tree forest 2"
+          },
+          {
+            "id": "paper.foreground-tree-forest-3",
+            "type": "image",
+            "path": "media/paper.foreground-tree-forest-3.webp",
+            "alt": "Foreground tree forest 3"
+          },
+          {
+            "id": "paper.foreground-tree",
+            "type": "image",
+            "path": "media/paper.foreground-tree.webp",
+            "alt": "Foreground tree"
+          },
+          {
+            "id": "paper.modern-female-character",
+            "type": "image",
+            "path": "media/paper.modern-female-character.webp",
+            "alt": "Modern female character"
+          },
+          {
+            "id": "paper.modern-grandma-character",
+            "type": "image",
+            "path": "media/paper.modern-grandma-character.webp",
+            "alt": "Modern grandma character"
+          },
+          {
+            "id": "paper.modern-male-character-reading",
+            "type": "image",
+            "path": "media/paper.modern-male-character-reading.webp",
+            "alt": "Modern male character reading"
+          },
+          {
+            "id": "paper.modern-male-character-sitting",
+            "type": "image",
+            "path": "media/paper.modern-male-character-sitting.webp",
+            "alt": "Modern male character sitting"
+          },
+          {
+            "id": "paper.modern-male-character",
+            "type": "image",
+            "path": "media/paper.modern-male-character.webp",
+            "alt": "Modern male character"
+          },
+          {
+            "id": "paper.modern-male-detective",
+            "type": "image",
+            "path": "media/paper.modern-male-detective.webp",
+            "alt": "Modern male detective"
+          },
+          {
+            "id": "paper.modern-nurse-woman-character",
+            "type": "image",
+            "path": "media/paper.modern-nurse-woman-character.webp",
+            "alt": "Modern nurse woman character"
+          }
+        ],
+        "examination": {
+          "image": "house.night",
+          "title": "The photograph",
+          "descriptions": [
+            "The photograph is dated June 14th, 1987.",
+            "There is a figure in the photograph who looks exactly like you.",
+            "The background is strangely familiar. The upstairs window is open."
+          ],
+          "reverse": "If she comes looking for you, do not tell her your name.",
+          "actionId": "examine-photo",
+          "hotspot": {
+            "x": 79,
+            "y": 41,
+            "label": "Inspect the photograph detail"
+          }
+        },
+        "character": {
+          "portrait": "tcp.human5-cutout",
+          "abilities": [
+            {
+              "id": "investigation",
+              "name": "Investigation",
+              "description": "Examine objects and connect clues. Rank 1; informational only."
+            },
+            {
+              "id": "intuition",
+              "name": "Intuition",
+              "description": "Sense a discrepancy in familiar places. Rank 1; informational only."
+            }
+          ],
+          "inventory": [
+            {
+              "id": "brasskey",
+              "fact": "brasskey",
+              "name": "Brass key",
+              "description": "A tiny key taped inside your grandmother’s letter."
+            },
+            {
+              "id": "hiddenclue",
+              "fact": "hiddenclue",
+              "name": "Hidden letter message",
+              "description": "She is what the house kept."
+            },
+            {
+              "id": "examined",
+              "fact": "examined",
+              "name": "Photograph clue",
+              "description": "The upstairs window is open."
+            }
+          ],
+          "encounters": [
+            {
+              "id": "grandmother",
+              "fact": "metgrandmother",
+              "name": "Grandmother",
+              "description": "Your late grandmother, whose photograph and warning started the mystery."
+            },
+            {
+              "id": "girl",
+              "fact": "metgirl",
+              "name": "The girl in the photograph",
+              "description": "A familiar figure first encountered in the old photograph."
+            },
+            {
+              "id": "caller",
+              "fact": "metcaller",
+              "name": "Unknown caller",
+              "description": "A woman who asks whether the upstairs room has been opened."
+            }
+          ]
+        },
+        "narration": [
+          {
+            "segmentId": "intro.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "43ccd7fab55e5da11985ccda77a4554822cfa607290961e3f6e95649a09ab743",
+            "assetId": "narration.03269413fafa8389f6610af60f97fdae9a32edebeb383ed15e69b0faa65b8521",
+            "audioDigest": "6d8e96b8b2e31903d021990ecff9dc8d57fc76a727394b19012b202bccfd9b4f",
+            "durationMs": 3840,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "1354670227679a8f4f7a5d72f0b7b35c68170d53684e46b43d5aedae71c510db",
+            "assetId": "narration.c75b89dff887fe717f864763f5b6ab8eeedd3c2d9c510f60f5d228d9b511653f",
+            "audioDigest": "d0a948c05b38d6787e6892e10b6b1ddf22b429c43c9be77f60369e76faff67ab",
+            "durationMs": 2400,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "3535749d1674b9e5098b2d779ff47d0b3741ad38d7ddd5953ce2537d476099cf",
+            "assetId": "narration.089e97b4d6fb3759a8dd0f7cc41e349e3567ab9ad912e6bd9c39e9b0d351be20",
+            "audioDigest": "8c285da082b14db1f4aa517e9654661fc42c9bade97c236e32d7620bc52f8a2c",
+            "durationMs": 6360,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p4",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "80f3b227b6b8b6c86749028216189d862e4a6bfa229ad2393d09677c08b5b62c",
+            "assetId": "narration.ea8302c4941deefafe141ddb121ff722078d8e865aa6b28826e4ccab366a720e",
+            "audioDigest": "23497c7d9ecc94f1f2dab303b74c3bf6d1f90e61647bfe51aff99179a237977d",
+            "durationMs": 7000,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "b65798f2266c53e9fae342c5bce1f2904b9859451818b871f40646442896bba1",
+            "assetId": "narration.6cb926319998ac0b605f9180c9f660530280dea6e72ddec847e064e7730e09f7",
+            "audioDigest": "0f7fb916e043c10c1481f8f1e86ff52536e758efdd7e5c2daac77840220ee57d",
+            "durationMs": 5120,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "606d733bee4a3c41d8af33af08ed6313666b199dd94c6ff0cca90952c9e0e6a1",
+            "assetId": "narration.810cb894a7eaf8f7d6f8698b101089bdb59bfefce38b73d4961419ad38bef876",
+            "audioDigest": "7bf60bf0b7ee5283035f520ffe773ee9c239afa4d005957311662a0d340f38d6",
+            "durationMs": 2600,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "cb747ade2099482f754b720080f9c2ab795d663e32cbe267a95b5641c81436a8",
+            "assetId": "narration.c84a5d02b4c65ddb41467e240b71df735bed9f68ef126c70ef0d2f6cb1cdb138",
+            "audioDigest": "6fc8391b769fb5b6e4842a14d923776652bf0b781f8af868da6c70751e4a7fc5",
+            "durationMs": 5080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p4",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "e06fc90dfb3b3c5029afe35834940314f9ccb6f20b1be55c79eea6fbde1a3ebb",
+            "assetId": "narration.85044f9bc54bb4de211392089ff6b4605a6faca94c38f0653298a32b4b2586b8",
+            "audioDigest": "7e768a2eb052c84400bf0b5b87f2b4503433c223be94127993e9885a969f6150",
+            "durationMs": 4520,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.clue",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "994ff8f73c512dbcfeacce8df3cc81279527616030d20765cf3add6200f550e3",
+            "assetId": "narration.86a9579f076a885bd9939071fffc1f7d3a4bd8bb462252180dd9fe4bf717d14d",
+            "audioDigest": "f3737002ec37d5bc9dc297e9afb798dd561d9e75720b2a50ef678d8caa5edbbd",
+            "durationMs": 2440,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "c2f91c9c21607ec48bd0841bbb503f6380ead1176f0fa7bca8141fe865d58575",
+            "assetId": "narration.f80af332406be80547a85eec17626d3360a6e17fe1839e95f3e5f76cd1aa887a",
+            "audioDigest": "480cdbf46af83b3a98e2add55372edfb695d006a5f4ace34cde1da1dffdae6cb",
+            "durationMs": 1560,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "cca37793a013cb285fadb06c6d78c1a306329e7568b8a24fd487776a63711d02",
+            "assetId": "narration.53b7f1d0a36e1f470222fcab3dd03541393e8e50267193364211738ad71fa635",
+            "audioDigest": "daf3238c5a173b178bb613ad2653dc8e867fa97ef5f8d151032e5c7969ec46fd",
+            "durationMs": 5600,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "d7c235b4a9afa12bb29c2439752b1e5afb39e60ebc4296e05b2f4be2f171aaec",
+            "assetId": "narration.cf1e9bdab3653e0d234391e77a8af8a97e20957d5d09f258f6e8e9441a84533e",
+            "audioDigest": "6c9154359155b58e62e79c64b5b6fa33532f61f4835dde2c739109833d33e2cb",
+            "durationMs": 1240,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "5b8eea9f269135ecc833501bda22e26b5d9914e39aaaf3a26e4fec794d8a7fcd",
+            "assetId": "narration.907cd99216b3be753d0e3a002e302487e561afcd5e20e184476f938ad5ad58fc",
+            "audioDigest": "cf591f2ccf5634275fe3a2f0f26e0dc15d93c24e360207e54656962231649daa",
+            "durationMs": 1080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "26d991a05bc2281ab1ab28f7f955a346c229d6216a9fbc1bcb951b35d6b89278",
+            "assetId": "narration.69972285df94515ef4337606ce0a4b4f7eb852ffc507e540ea2a635d7f01e379",
+            "audioDigest": "b908d2c7ad7573e85bceaa1ddfdb71f99827906b91e606b7056e82fc94252a9f",
+            "durationMs": 4480,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "d7c235b4a9afa12bb29c2439752b1e5afb39e60ebc4296e05b2f4be2f171aaec",
+            "assetId": "narration.c439f1eb9ec44ecd75a33bd86540315a48db5ea4207d005a714deffca99d6ec8",
+            "audioDigest": "6c9154359155b58e62e79c64b5b6fa33532f61f4835dde2c739109833d33e2cb",
+            "durationMs": 1240,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "bdf62594ddd72e4469247d0b4f8052ec1be2fdfab614b9f83ee28f88cca51ddd",
+            "assetId": "narration.2fbec7a6408488974c146f583347209fcd7a3d6a3607bf41f494e0e59abbff60",
+            "audioDigest": "1e301039d3e6b5edd94ca8f55178220387c900477e1fe4985ba15f005f26d330",
+            "durationMs": 2160,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "441668fb2c62c5acd8fc4190a9a864ba0ebab7154493fd154f3d55828faf6197",
+            "assetId": "narration.971f73ec71f10d2cf0dbb5eeb29519d14ee4ce44e3c9625b2f13585109f47a76",
+            "audioDigest": "50b702fa84bac420a16e34e1dc0f683a366188633b94a45c29139a1aa001a94f",
+            "durationMs": 8000,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "0afaf1cd5d020357305293b0753d6bed4df5d809ae6d5fe1972f194881cca0e1",
+            "assetId": "narration.e0e293d0671ae76438d2d51d1bf0be0b08cfff0fdfee053593c24b4d19e27704",
+            "audioDigest": "b0dbb1f2a9adf17360f81fec018d41f7d3b501f559d7f407f861475e67889efd",
+            "durationMs": 3440,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "01c744f005cd068bd0c4b4213531211b672aa2c07754bd68284f3dfad6ec9d1f",
+            "assetId": "narration.b95569995035ee8787e22b7dcc57282755ea346aeb2db4cfeb5dc99a739460b6",
+            "audioDigest": "817f06493680d97c3fedb7867645ef184ac1d56e4b5bba7841a21e286050f830",
+            "durationMs": 2200,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "08c5df95fa9c8b5b6e983eed6efcb1d4becfba512f3313ec30e46559064f2e81",
+            "assetId": "narration.85d89181106e33d953c6d6968adcb106d433bfeba258019d4b39ac79ace3ab21",
+            "audioDigest": "dc4ebebeacf2ada0f6b1c80ed446daa76dda031a7a55f3f34c76335b532af70a",
+            "durationMs": 4960,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "47728a5ad0854fe82acc2484384d141a1a847e7e5784996732f6d1a82342f19c",
+            "assetId": "narration.0af52ef650f75be2665bd626f3f064dcb874ac8fb0f5a1a70fe0a750c9a4845c",
+            "audioDigest": "91684a9952f11d1e158ac5bed5321e17936daac65e8ad011551bcd63bf338664",
+            "durationMs": 3080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "9957e82bb88167669daff4e54d82019b25ad2dc95f0d26d9da72da8eb12104d5",
+            "assetId": "narration.d70231c2fede4fc740b526955ddde966f2d71596c630a1aecc1e7b352b4b2d9b",
+            "audioDigest": "0b19ddadf774597fd77fda9ff98accd851aaac98a9b4d0d6ae56322d2266debb",
+            "durationMs": 4280,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "e275c34bbb40f614b6f3b5e7b9230d5986ccffe1fbb9caf5ed6fba1724a78d9a",
+            "assetId": "narration.825c883c12bf0c29daf5cce6dac470ff780cb4e335f44df6a520719045666356",
+            "audioDigest": "3b5727d730e2783376fd6d8935979a22a38a5be533fdcb2f435f7493ee9eedb5",
+            "durationMs": 4920,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "a2727844fb7bdfb1bc3b85dedcfd6fbe6dbfc9fa5047074c1e199638e823bc40",
+            "assetId": "narration.51eb6f62c61a96badde333b0734f25f7ef89ff10841ac237f0526eda76efbc0b",
+            "audioDigest": "2f3baf4ab9fc04630728e235f80052ff76ec88b65d25fbe6dc02dcf80b8c5018",
+            "durationMs": 2560,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "1e72ed3485cd33241b44831aebbf6c1af2a58129c76523d06f2d2891b445e2f0",
+            "assetId": "narration.d9ad150e32b5c1040e6c93761b8f4b2eb7727fccc806394ba43321a90fa449c9",
+            "audioDigest": "27ff1974a911550fa6ad4752a3491ef1d0aa656d2122ece7b0ac596c9401d938",
+            "durationMs": 2280,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "563ac59520c4d33599f8b73d744e498a1d8f531fd34e7a2503e44dcefcca462d",
+            "assetId": "narration.28c2d6c65f94bb6572e08dcc62a62c3731c8bd6f93b8bed58efc1ec1157c98f0",
+            "audioDigest": "b55b25d3d9b8f9e1a4fcaa5fc9144ab03104c303bfef4186563660985ea5bb4d",
+            "durationMs": 3720,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "474c57a617008ae0a0b9e93d723bf8fdf7d7a1ed574e6886477811dca68aa180",
+            "assetId": "narration.076335ac25ebfb0e43f2485a4afcf113e355b4305abcab0602bd4ed976fcd078",
+            "audioDigest": "fece0d7796a3c43e8f3400d0e8489af522a3d55280df171b3b2422aecd765630",
+            "durationMs": 4640,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "87ea3b496cca3b9bdf4a9b55e5e09cf40fb6ba5e1222c1338d478be044e52e76",
+            "assetId": "narration.0b5d747c888664f355e72e620ecac1e685e7687ce7ce1485ab6bf0cfbdfdaf83",
+            "audioDigest": "34adcf5205604a9052bcbe88ec73de6c22250bf82a4b38f8192d39578b060eff",
+            "durationMs": 2160,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "e9939e285629d084fe704ead2c9f578c1328510477776b5f5fb499ee3816f11f",
+            "assetId": "narration.91c6ba107bf53426d57cbef2c02d9d8004d353380c74e97c7111ce8cf2982f23",
+            "audioDigest": "eb6aad0eebf919978535850b13a328ff231ef5eaf9cfb270218e831bc7489b10",
+            "durationMs": 4720,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "bfc68574b25f944900d0106ec6f7ebe9b8368907b8487e92bd003a6d13dc74c1",
+            "assetId": "narration.9a7d074e48bc46b6e4bb33df44235e1da05c830113f3aa6370add9c15e02905f",
+            "audioDigest": "ecf7093f0c9c59ba245e18fb4679d91d168546a89cbf650bb1f73898993b6e99",
+            "durationMs": 2920,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "2570a1cc9ca0dc99278eb9cd575fde8b990ab0134c22e20d3912ad32ed6d7f08",
+            "assetId": "narration.3e09ea4849449c434c119ad9142d41654f1cebc4b9e0e179057ee345eb2469bd",
+            "audioDigest": "a6dafb67f30b58ba3e21b1097d220fd2b06160d1a418bd97c7a3d75b5c89a7f1",
+            "durationMs": 1760,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "7958ed65c5658b56ef85b5d46b00daa96720ccee8ca00eba2eefd313fbc3c9f7",
+            "assetId": "narration.237d3133cebfcba161533692def0156bc1706e194672154813eabcb99a07a1ba",
+            "audioDigest": "970571dd7c0d6be537133bae7f22c31e850bba6d27d99d952d7d6a7ad02e289a",
+            "durationMs": 5600,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "1d4c03c1a055a0ff70cd121a66bdde7dcd88bfcfcf265acdb4c975f0f92bdda5",
+            "assetId": "narration.e2f59f9c738af965ac1abe6745627e52d1f573f9caceb9ee89fccb3943e2fe81",
+            "audioDigest": "de8ae3cbc9007d3e34ee08e207b3fbb5ed3c0cb3bb805b16a1680b1df17dd022",
+            "durationMs": 2160,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p1",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "32e07697dca67deff70737a6c939682583980d2b0871f073dabf1cb2702e0be6",
+            "assetId": "narration.3bf92c3a224391a1146550beda69d994681f60aa2d7504867207ce78e39ad94c",
+            "audioDigest": "2578788cd7f5f5ea1e998475b7b87e9bf4fd2a08862d4acd56514d9136b9a331",
+            "durationMs": 2680,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p2",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "17438f4525b4a4dcb9d235ea8d0297a16ee44573e2e2418f5295c3ac0cf1a719",
+            "assetId": "narration.29dadd5bc10559bf590ed3300fb202029301194e3040279b3eff691a2ed9b884",
+            "audioDigest": "6b9f65c88faf2c740b8d833b8802ebf9c47811a58da835a8b1db9de86a680739",
+            "durationMs": 3000,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p3",
+            "locale": "en",
+            "voiceId": "nano-default",
+            "spokenTextDigest": "989cd1581afe7b568ab3c772171c1f08866080957c0b521a2db3fa8cf94b5429",
+            "assetId": "narration.c5f832458f06c8e144a348cafe1c2713fa8ac81ac799cc7ae74752ac79381971",
+            "audioDigest": "f9e3d7a3fed66d8f1a000266f5b2c4d56a8b774da7e2ddda827cab4784e07a20",
+            "durationMs": 2080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox-nano MIT; provider built-in conditioning; locally authored Ink"
+            }
+          }
+        ],
+        "narratorVoices": [
+          {
+            "id": "nano-default",
+            "label": "Chatterbox Nano"
+          },
+          {
+            "id": "multilingual-default",
+            "label": "Chatterbox Multilingual V3"
+          }
+        ],
+        "artDirection": {
+          "style": "adult black-and-white shadow art, dry-brush ink and charcoal silhouettes",
+          "colorMode": "grayscale",
+          "palette": ["#faf9f6", "#292929", "#777777", "#ffffff"],
+          "complexity": "restrained"
+        }
+      },
+      "defaults": {
+        "fontSize": "medium",
+        "fontFamily": "serif",
+        "lineHeight": "comfortable",
+        "reveal": "progressive",
+        "sound": false,
+        "backgroundColor": "#f3e5cf",
+        "dropCapColor": "#b58b37"
+      },
+      "narrationMode": "ai-live",
+      "cover": "house.night"
+    },
+    "fr": {
+      "script": "VAR metgrandmother = true\r\nVAR metgirl = true\r\nVAR metcaller = false\r\nVAR brasskey = false\r\nVAR caller = 0\r\nVAR girl = -20\r\nVAR examined = false\r\nVAR hiddenclue = false\r\n-> intro\r\n\r\n=== intro ===\r\nLa première fois que vous avez vu la jeune fille sur la photographie, elle se tenait à côté de votre grand-mère. # passage:intro # segment:intro.p1\r\nLa deuxième fois, elle était seule. # segment:intro.p2\r\nVous avez remarqué la différence trois semaines après les funérailles. La photo était cachée entre les pages d’un vieux livre de recettes. # segment:intro.p3\r\nLa photographie était datée du 14 juin 1987. Votre grand-mère avait vingt-six ans. La jeune fille à ses côtés vous ressemblait trait pour trait. # segment:intro.p4\r\n{examined: La fenêtre à l’étage est ouverte sur la photographie. # segment:intro.clue}\r\n* {not examined} [Remarquer la fenêtre à l’étage # choice:examine-photo # interaction]\r\n  ~ examined = true\r\n  -> intro\r\n* [Continuer la lecture # choice:intro.call]\r\n  ~ metcaller = true\r\n  -> call\r\n\r\n=== call ===\r\nAu dos, votre grand-mère avait écrit : Si elle vient te chercher, ne lui dis pas ton nom. # passage:call # segment:call.p1\r\nÀ cet instant précis, le téléphone a sonné. # segment:call.p2\r\n« J’appelle au sujet de la maison, a dit une femme. Quelqu’un a-t-il ouvert la pièce à l’étage ? » # segment:call.p3\r\nDerrière sa voix, quelqu’un fredonnait une berceuse dont vous vous souveniez depuis l’enfance. # segment:call.p4\r\n* [Poser une question sur la pièce condamnée # choice:call.room]\r\n  ~ caller += 5\r\n  -> room\r\n* [Poser une question sur le chant # choice:call.song]\r\n  ~ caller -= 5\r\n  -> song\r\n\r\n=== room ===\r\n« Pourquoi la pièce à l’étage ? » # passage:room # segment:room.p1\r\nLa femme a hésité. « Parce qu’elle a été condamnée il y a vingt-neuf ans. Et que quelqu’un l’a ouverte la nuit dernière. » # segment:room.p2\r\nLa communication a été coupée. # segment:room.p3\r\n* [Continuer la lecture # choice:room.arrival]\r\n  -> arrival\r\n\r\n=== song ===\r\n« Qui chante ? » # passage:song # segment:song.p1\r\nLa mélodie s’est tue. Une deuxième voix a murmuré dans le combiné : « Elle peut nous entendre. » # segment:song.p2\r\nLa communication a été coupée. # segment:song.p3\r\n* [Continuer la lecture # choice:song.arrival]\r\n  -> arrival\r\n\r\n=== arrival ===\r\nQuelque chose a glissé sous la porte de votre appartement. # passage:arrival # segment:arrival.p1\r\nUne enveloppe couleur crème. Aucun bruit de pas ne l’a suivie. Sur le devant, de l’écriture de votre grand-mère : POUR CELLE QUI EST RESTÉE. # segment:arrival.p2\r\nLe sceau de cire représentait un petit oiseau entouré de sept étoiles. # segment:arrival.p3\r\n* [Briser le sceau de cire # choice:arrival.break]\r\n  ~ brasskey = true\r\n  -> break\r\n* [Tenir l’enveloppe devant la lampe # choice:arrival.light]\r\n  ~ hiddenclue = true\r\n  -> light\r\n\r\n=== break ===\r\nLa cire a craqué sous votre pouce. # passage:break # segment:break.p1\r\nÀ l’intérieur, une lettre : « Vous étiez deux cet été-là. Mais une seule est rentrée à la maison. » # segment:break.p2\r\nUne minuscule clé en laiton était fixée sous la dernière ligne. # segment:break.p3\r\n* [Continuer la lecture # choice:break.last]\r\n  -> last\r\n\r\n=== light ===\r\nVous avez approché l’enveloppe de la lampe. Le papier est lentement devenu translucide. # passage:light # segment:light.p1\r\nUne phrase cachée est apparue : « Elle n’est pas ta sœur. Elle est ce que la maison a gardé. » # segment:light.p2\r\nVous avez baissé la lettre. Les mots avaient disparu. # segment:light.p3\r\n* [Continuer la lecture # choice:light.last]\r\n  -> last\r\n\r\n=== last ===\r\nLa photographie était posée sur votre bureau. # passage:last # segment:last.p1\r\nTrois coups discrets ont retenti à la fenêtre. Vous habitiez au cinquième étage. # segment:last.p2\r\nLa jeune fille sur la photographie ne regardait plus votre grand-mère. Elle vous regardait. # segment:last.p3\r\n* [Regarder par la fenêtre # choice:last.window]\r\n  ~ girl -= 10\r\n  -> window\r\n* [Retourner la photographie # choice:last.photo]\r\n  ~ girl += 10\r\n  -> photo\r\n\r\n=== window ===\r\nDerrière la vitre, la nuit était vide. # passage:window # segment:window.p1\r\nPuis une empreinte de main est apparue à l’extérieur de la fenêtre. Cinq doigts parfaitement ordinaires. # segment:window.p2\r\nEn dessous, un mot s’est formé dans la buée : VIENS. # segment:window.p3\r\n* [Continuer la lecture # choice:window.end]\r\n  -> end\r\n\r\n=== photo ===\r\nVous avez retourné la photographie. # passage:photo # segment:photo.p1\r\nL’avertissement avait disparu. Un nouveau message était apparu, de la même écriture : « Tu te souviens de moi, n’est-ce pas ? » # segment:photo.p2\r\nLe papier était chaud contre votre paume. # segment:photo.p3\r\n* [Continuer la lecture # choice:photo.end]\r\n  -> end\r\n\r\n=== end ===\r\nAu matin, vous saviez que vous retourneriez à la maison. # passage:end # segment:end.p1\r\nVotre grand-mère n’avait pas essayé de vous en tenir à l’écart. # segment:end.p2\r\nElle avait essayé de garder quelque chose à l’intérieur. # segment:end.p3\r\n-> END\r\n\r\n",
+      "description": "",
+      "missingTranslation": false,
+      "configuration": {
+        "title": "La maison qui se souvenait",
+        "chapter": "Chapitre un",
+        "scenes": {
+          "intro": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0,
+            "image": "paper.background-the-plains-desolation",
+            "events": [
+              {
+                "id": "intro.paper.motion",
+                "blockId": "intro.paper",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "intro.paper"
+                },
+                "blocking": false,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "intro.artwork",
+                "image": "paper.modern-male-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p2"
+              },
+              {
+                "kind": "media",
+                "id": "intro.illustration",
+                "image": "house.night",
+                "layout": "inline",
+                "photograph": true
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p3"
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.p4"
+              },
+              {
+                "kind": "media",
+                "id": "intro.paper",
+                "image": "paper.background-the-plains-desolation",
+                "layout": "inline",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.foreground-tree-2",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "intro.clue"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "photograph": true
+          },
+          "call": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.14285714285714285,
+            "events": [
+              {
+                "id": "call.receiver",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "call.p2"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.telephone",
+                  "channel": "sfx",
+                  "loop": false,
+                  "volume": 0.7
+                }
+              },
+              {
+                "id": "call.lullaby",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "call.p4"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.music-box",
+                  "channel": "music",
+                  "loop": true,
+                  "volume": 0.35,
+                  "fadeMs": 600
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "call.artwork",
+                "image": "paper.modern-grandma-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p1"
+              },
+              {
+                "kind": "media",
+                "id": "call.paper",
+                "image": "paper.modern-male-detective",
+                "layout": "inline",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "right"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p3"
+              },
+              {
+                "kind": "text",
+                "segmentId": "call.p4"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "room": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.2857142857142857,
+            "image": "paper.background-city",
+            "events": [
+              {
+                "id": "room.wind",
+                "trigger": {
+                  "kind": "passage"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.wind",
+                  "channel": "ambience",
+                  "loop": true,
+                  "volume": 0.4,
+                  "fadeMs": 600
+                }
+              },
+              {
+                "id": "room.illustration.motion",
+                "blockId": "room.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "room.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "cinematic-push-in",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "room.artwork",
+                "image": "paper.background-mountains-night",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p2"
+              },
+              {
+                "kind": "media",
+                "id": "room.illustration",
+                "image": "paper.background-city",
+                "layout": "fullscreen",
+                "caption": "La chambre a été ouverte la nuit dernière.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-detective",
+                      "role": "midground",
+                      "x": 20,
+                      "y": 5,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-industrial",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "cinematic-push-in",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "room.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "song": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.2857142857142857,
+            "image": "paper.background-the-plains-forest",
+            "events": [
+              {
+                "id": "song.illustration.motion",
+                "blockId": "song.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "song.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "song.artwork",
+                "image": "paper.modern-nurse-woman-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p2"
+              },
+              {
+                "kind": "media",
+                "id": "song.illustration",
+                "image": "paper.background-the-plains-forest",
+                "layout": "fullscreen",
+                "caption": "Elle peut nous entendre.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-grandma-character",
+                      "role": "midground",
+                      "x": 20,
+                      "y": 6,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-tree-forest-2",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "song.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "arrival": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.42857142857142855,
+            "image": "paper.background-the-plains-montains-2",
+            "events": [
+              {
+                "id": "arrival.illustration.motion",
+                "blockId": "arrival.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "arrival.illustration"
+                },
+                "blocking": false,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "sideways-drift",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "arrival.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p2"
+              },
+              {
+                "kind": "media",
+                "id": "arrival.illustration",
+                "image": "paper.background-the-plains-montains-2",
+                "layout": "wide",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.fantasy-elf-male",
+                      "role": "midground",
+                      "x": 22,
+                      "y": 5,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-tree-fores",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "sideways-drift",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "arrival.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "break": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.5714285714285714,
+            "image": "paper.background-city",
+            "events": [
+              {
+                "id": "break.illustration.motion",
+                "blockId": "break.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "break.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "downward-reveal",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "break.artwork",
+                "image": "paper.modern-male-character-sitting",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p2"
+              },
+              {
+                "kind": "media",
+                "id": "break.illustration",
+                "image": "paper.background-city",
+                "layout": "fullscreen",
+                "caption": "Vous étiez deux.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-detective",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 3,
+                      "scale": 1
+                    },
+                    {
+                      "image": "paper.foreground-dark-chains",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "downward-reveal",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "break.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "notice": "Clé en laiton obtenue"
+          },
+          "light": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.5714285714285714,
+            "image": "paper.background-ground-other-planet",
+            "events": [
+              {
+                "id": "light.illustration.motion",
+                "blockId": "light.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "light.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "character-focus",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "light.artwork",
+                "image": "paper.background-mountains-pick",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p2"
+              },
+              {
+                "kind": "media",
+                "id": "light.illustration",
+                "image": "paper.background-ground-other-planet",
+                "layout": "fullscreen",
+                "caption": "Un second message apparaît.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-male-character-reading",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 4,
+                      "scale": 0.95
+                    },
+                    {
+                      "image": "paper.foreground-pipe-rock",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "character-focus",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "light.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "notice": "Indice caché découvert"
+          },
+          "last": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.7142857142857143,
+            "events": [
+              {
+                "id": "last.knocks",
+                "trigger": {
+                  "kind": "segment",
+                  "segmentId": "last.p2"
+                },
+                "action": {
+                  "kind": "audio",
+                  "assetId": "sonniss.impact",
+                  "channel": "sfx",
+                  "loop": false,
+                  "volume": 0.35
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "last.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "last.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "window": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.8571428571428571,
+            "image": "paper.background-mountains-night",
+            "events": [
+              {
+                "id": "window.illustration.motion",
+                "blockId": "window.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "window.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "downward-reveal",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "window.artwork",
+                "image": "paper.modern-female-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p2"
+              },
+              {
+                "kind": "media",
+                "id": "window.illustration",
+                "image": "paper.background-mountains-night",
+                "layout": "fullscreen",
+                "caption": "Trois coups. Cinquième étage.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.foreground-lamp",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "downward-reveal",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "window.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          },
+          "photo": {
+            "title": "La jeune fille sur la photographie",
+            "progress": 0.8571428571428571,
+            "image": "paper.background-the-plains-desolation",
+            "events": [
+              {
+                "id": "photo.illustration.motion",
+                "blockId": "photo.illustration",
+                "trigger": {
+                  "kind": "block",
+                  "blockId": "photo.illustration"
+                },
+                "blocking": true,
+                "action": {
+                  "kind": "effect",
+                  "effect": {
+                    "id": "cinematic-camera",
+                    "duration": 7000,
+                    "cinematic": {
+                      "preset": "gentle-depth",
+                      "speed": "normal",
+                      "intensity": "normal",
+                      "direction": "auto",
+                      "atmosphere": "none",
+                      "layers": [],
+                      "durationMs": 7000
+                    }
+                  }
+                }
+              }
+            ],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "photo.artwork",
+                "image": "paper.modern-grandma-character",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p2"
+              },
+              {
+                "kind": "media",
+                "id": "photo.illustration",
+                "image": "paper.background-the-plains-desolation",
+                "layout": "fullscreen",
+                "caption": "La photographie a changé.",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [
+                    {
+                      "image": "paper.modern-grandma-character",
+                      "role": "midground",
+                      "x": 18,
+                      "y": 3,
+                      "scale": 0.9
+                    },
+                    {
+                      "image": "paper.foreground-destroyed-fence",
+                      "role": "foreground",
+                      "x": 0,
+                      "y": 0,
+                      "scale": 1
+                    }
+                  ],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "gentle-depth",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "photo.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ],
+            "photograph": true
+          },
+          "end": {
+            "title": "La maison vous attend",
+            "progress": 1,
+            "events": [],
+            "blocks": [
+              {
+                "kind": "media",
+                "id": "end.paper",
+                "image": "paper.background-city",
+                "layout": "background",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "background",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "landscape",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "media",
+                "id": "end.artwork",
+                "image": "paper.modern-male-character-reading",
+                "layout": "right",
+                "fit": "cover",
+                "illustration": {
+                  "base": {
+                    "role": "midground",
+                    "x": 0,
+                    "y": 0,
+                    "scale": 1
+                  },
+                  "layers": [],
+                  "aspect": "portrait",
+                  "blend": "paper",
+                  "wrap": "none"
+                },
+                "motion": {
+                  "preset": "none",
+                  "speed": "normal",
+                  "intensity": "normal",
+                  "direction": "auto",
+                  "atmosphere": "none",
+                  "layers": [],
+                  "durationMs": 7000
+                }
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p1"
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p2"
+              },
+              {
+                "kind": "text",
+                "segmentId": "end.p3"
+              },
+              {
+                "kind": "choices"
+              }
+            ]
+          }
+        },
+        "assets": [
+          {
+            "id": "narration.6681cd5f4cb1b74975c7a29ec16df67bd25bfafbaf02e746bdaf7fb70a87683e",
+            "path": "media/narration.6681cd5f4cb1b74975c7a29ec16df67bd25bfafbaf02e746bdaf7fb70a87683e.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.bf1ba219566c6a42006b810bb565efea5b197ad8b0a790e28e14ed5e024a0016",
+            "path": "media/narration.bf1ba219566c6a42006b810bb565efea5b197ad8b0a790e28e14ed5e024a0016.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.bd0646bfd2d9b57cf75cd3862068301959688d5c9a7887f1fb647a59dcc85ac9",
+            "path": "media/narration.bd0646bfd2d9b57cf75cd3862068301959688d5c9a7887f1fb647a59dcc85ac9.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.df59c3a6cf6ed6340f98872a6d0f038f994d6d3776f21b449c4601e22f312eb4",
+            "path": "media/narration.df59c3a6cf6ed6340f98872a6d0f038f994d6d3776f21b449c4601e22f312eb4.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.0d615246f84fe692772a700df8a9b6c939856fb087d25f40a2fe9694ca21dcdb",
+            "path": "media/narration.0d615246f84fe692772a700df8a9b6c939856fb087d25f40a2fe9694ca21dcdb.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.25c9c661e7f153c25582aadba94ccb1cd815c5b5d646d70c6d8326c03031abfb",
+            "path": "media/narration.25c9c661e7f153c25582aadba94ccb1cd815c5b5d646d70c6d8326c03031abfb.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.f7fe09015057e70585e19be9f565e79816aee2f131d3dc5ea60af19d1be0cf46",
+            "path": "media/narration.f7fe09015057e70585e19be9f565e79816aee2f131d3dc5ea60af19d1be0cf46.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.7c1a35d19c9ef683766e0a29f8bf03c39c3b3fae377db51b8072a22d89141dce",
+            "path": "media/narration.7c1a35d19c9ef683766e0a29f8bf03c39c3b3fae377db51b8072a22d89141dce.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.51923a0df341018ed24cc31c0d403b564afa18754514b0f8313c0344f7219605",
+            "path": "media/narration.51923a0df341018ed24cc31c0d403b564afa18754514b0f8313c0344f7219605.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.6fd839cffb5a79d7ff67884f8f4cca4ae2d4688a570fbae9f31191cfa66d64e9",
+            "path": "media/narration.6fd839cffb5a79d7ff67884f8f4cca4ae2d4688a570fbae9f31191cfa66d64e9.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.fdeedac52378107f703ba8da2f8aceb6515b236b6efef3c232d7283b24c51c70",
+            "path": "media/narration.fdeedac52378107f703ba8da2f8aceb6515b236b6efef3c232d7283b24c51c70.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.98b75ce288596f2167db009019b04849f59ee6c6ebeaf108215be3d04df2c692",
+            "path": "media/narration.98b75ce288596f2167db009019b04849f59ee6c6ebeaf108215be3d04df2c692.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.be9798b06a6b2f32c108abeb2eb577b593c0a9c1af768746091211e16bddb810",
+            "path": "media/narration.be9798b06a6b2f32c108abeb2eb577b593c0a9c1af768746091211e16bddb810.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.bcce9f66a05dce3346d2ed186ce3982517fbd116018557b45d1d2e371b28a852",
+            "path": "media/narration.bcce9f66a05dce3346d2ed186ce3982517fbd116018557b45d1d2e371b28a852.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.5f650f32c39a59b6dd37db61d7ae4c29b763215fc224879f637579026458b24d",
+            "path": "media/narration.5f650f32c39a59b6dd37db61d7ae4c29b763215fc224879f637579026458b24d.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.79b2116349914d1be46cd175e4ec5b0d731bf18d18348949581cc8e84c281a45",
+            "path": "media/narration.79b2116349914d1be46cd175e4ec5b0d731bf18d18348949581cc8e84c281a45.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.28ffb238317594ecc61430ffbd1231ec615ce1707521f2c0fcca76cd9d800d26",
+            "path": "media/narration.28ffb238317594ecc61430ffbd1231ec615ce1707521f2c0fcca76cd9d800d26.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.9333a551afa04b83a129a642d94b9598db61975273484d54b600be1591e6b01d",
+            "path": "media/narration.9333a551afa04b83a129a642d94b9598db61975273484d54b600be1591e6b01d.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.8a7a9734178f7786edec78743164a0eddcd5733ae669bba42c60001bcae2795d",
+            "path": "media/narration.8a7a9734178f7786edec78743164a0eddcd5733ae669bba42c60001bcae2795d.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.74d1e294ce674958a014e4ff30887525ecb9665bce31327c268a5fb43b9f497d",
+            "path": "media/narration.74d1e294ce674958a014e4ff30887525ecb9665bce31327c268a5fb43b9f497d.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c1eb8c4eb3232d22f8bce6e0ad839c250bc6e56ea75eee06b3d7322e83d9f8d3",
+            "path": "media/narration.c1eb8c4eb3232d22f8bce6e0ad839c250bc6e56ea75eee06b3d7322e83d9f8d3.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.a3c8f08e37864519cbec9c1e0588b23b2424eb3a5801d7ef90f15efedc8b1ca5",
+            "path": "media/narration.a3c8f08e37864519cbec9c1e0588b23b2424eb3a5801d7ef90f15efedc8b1ca5.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.5645fa13f822d3ae6477352178cbe66bea9d811e1d6dad308637a5096f4d9207",
+            "path": "media/narration.5645fa13f822d3ae6477352178cbe66bea9d811e1d6dad308637a5096f4d9207.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.cd71b99494b7a20acddffed07698bcb8227d03f80132a7a49d85a961c1486565",
+            "path": "media/narration.cd71b99494b7a20acddffed07698bcb8227d03f80132a7a49d85a961c1486565.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.a2b262ae4731b0ea2d0dc0f509837f45ca16ff967a4ef41d30615372a4e3f291",
+            "path": "media/narration.a2b262ae4731b0ea2d0dc0f509837f45ca16ff967a4ef41d30615372a4e3f291.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.d61223a1ccc5f65a468f14340313df2b68045039c6ea2ed36d7d5445936b8821",
+            "path": "media/narration.d61223a1ccc5f65a468f14340313df2b68045039c6ea2ed36d7d5445936b8821.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.53e9fbf3ca87939d5b8ba033f11df65bac196d689da0eeaf8023f58fe984531a",
+            "path": "media/narration.53e9fbf3ca87939d5b8ba033f11df65bac196d689da0eeaf8023f58fe984531a.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.a5dc26a0939e669329c6dcc0d86d1cd942ae460a422c5cc961e7c34ef7192e87",
+            "path": "media/narration.a5dc26a0939e669329c6dcc0d86d1cd942ae460a422c5cc961e7c34ef7192e87.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.f1ab04bc50ea75fca793a5aac043e7d4601d0d0cf1f403ec13975cbde11348ea",
+            "path": "media/narration.f1ab04bc50ea75fca793a5aac043e7d4601d0d0cf1f403ec13975cbde11348ea.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.16a0363bdd629f30c4c8a3856b8cfb98cde4d7c9fc4d75f675f244037c7c5ceb",
+            "path": "media/narration.16a0363bdd629f30c4c8a3856b8cfb98cde4d7c9fc4d75f675f244037c7c5ceb.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.06abffa2ca5ac3aff7bf2f9bd4ccdd46c10fac53ec39a9d93495362ee07a22f2",
+            "path": "media/narration.06abffa2ca5ac3aff7bf2f9bd4ccdd46c10fac53ec39a9d93495362ee07a22f2.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.f7d5d1b918cf5f7b65c439ca2ad587f488faffe2fec70e5b1eecbc7692c89b0b",
+            "path": "media/narration.f7d5d1b918cf5f7b65c439ca2ad587f488faffe2fec70e5b1eecbc7692c89b0b.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.6e334da8920229e408b4d5e2b190bae9d7fc9cd891ece9a0fe2efc29f5ea2524",
+            "path": "media/narration.6e334da8920229e408b4d5e2b190bae9d7fc9cd891ece9a0fe2efc29f5ea2524.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.5c5840a19d9538d076ee25aadbc0b137c856a17471d0530a5342bfdaeb485573",
+            "path": "media/narration.5c5840a19d9538d076ee25aadbc0b137c856a17471d0530a5342bfdaeb485573.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.53238542f2d4807083f2d2380563ad82d07042ef546d0524546248d2b4bcd725",
+            "path": "media/narration.53238542f2d4807083f2d2380563ad82d07042ef546d0524546248d2b4bcd725.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "narration.c61cf65215817f04b9a0d57cca2efb9c90f62c2bba5b90f153208e1747b536a4",
+            "path": "media/narration.c61cf65215817f04b9a0d57cca2efb9c90f62c2bba5b90f153208e1747b536a4.mp3",
+            "type": "audio",
+            "alt": ""
+          },
+          {
+            "id": "heritage.key",
+            "path": "media/heritage.key.webp",
+            "type": "image",
+            "alt": "Gravure ancienne d’une clé"
+          },
+          {
+            "id": "heritage.handprint",
+            "path": "media/heritage.handprint.webp",
+            "type": "image",
+            "alt": "Dessin ancien d’une main ouverte"
+          },
+          {
+            "id": "sonniss.telephone",
+            "path": "media/sonniss.telephone.mp3",
+            "type": "audio",
+            "alt": "Combiné de téléphone ancien"
+          },
+          {
+            "id": "sonniss.music-box",
+            "path": "media/sonniss.music-box.mp3",
+            "type": "audio",
+            "alt": "Souvenir de boîte à musique"
+          },
+          {
+            "id": "sonniss.wind",
+            "path": "media/sonniss.wind.mp3",
+            "type": "audio",
+            "alt": "Vent dans une cheminée"
+          },
+          {
+            "id": "sonniss.impact",
+            "path": "media/sonniss.impact.mp3",
+            "type": "audio",
+            "alt": "Accent sonore métallique"
+          },
+          {
+            "id": "house.night",
+            "path": "media/house.night.webp",
+            "type": "image",
+            "alt": "Une silhouette devant la maison sous la lune.",
+            "credit": "House at night ? locally generated illustration, explicitly selected by the user."
+          },
+          {
+            "id": "tcp.human5-cutout",
+            "path": "media/tcp.human5-cutout.webp",
+            "type": "image",
+            "alt": "Portrait de la jeune femme à l’encre.",
+            "credit": "TCP Human 5 — Jeff Preston / Terrible Character Portraits, coordinated by Duane O’Brien. CC BY 3.0: https://creativecommons.org/licenses/by/3.0/ · Source: http://team-preston.com · White exterior removed, converted to WebP."
+          },
+          {
+            "id": "heritage.bird",
+            "path": "media/heritage.bird.webp",
+            "type": "image",
+            "alt": "Gravure ancienne d’un oiseau.",
+            "credit": "Spirit & Myth — Element 5"
+          },
+          {
+            "id": "paper.background-city",
+            "type": "image",
+            "path": "media/paper.background-city.webp",
+            "alt": "Background city"
+          },
+          {
+            "id": "paper.background-ground-other-planet",
+            "type": "image",
+            "path": "media/paper.background-ground-other-planet.webp",
+            "alt": "Background ground other planet"
+          },
+          {
+            "id": "paper.background-mountains-night",
+            "type": "image",
+            "path": "media/paper.background-mountains-night.webp",
+            "alt": "Background mountains night"
+          },
+          {
+            "id": "paper.background-mountains-pick",
+            "type": "image",
+            "path": "media/paper.background-mountains-pick.webp",
+            "alt": "Background mountains pick"
+          },
+          {
+            "id": "paper.background-the-plains-desolation",
+            "type": "image",
+            "path": "media/paper.background-the-plains-desolation.webp",
+            "alt": "Background the plains desolation"
+          },
+          {
+            "id": "paper.background-the-plains-forest",
+            "type": "image",
+            "path": "media/paper.background-the-plains-forest.webp",
+            "alt": "Background the plains forest"
+          },
+          {
+            "id": "paper.background-the-plains-montains-2",
+            "type": "image",
+            "path": "media/paper.background-the-plains-montains-2.webp",
+            "alt": "Background the plains montains 2"
+          },
+          {
+            "id": "paper.background-the-plains-montains",
+            "type": "image",
+            "path": "media/paper.background-the-plains-montains.webp",
+            "alt": "Background the plains montains"
+          },
+          {
+            "id": "paper.fantasy-elf-male",
+            "type": "image",
+            "path": "media/paper.fantasy-elf-male.webp",
+            "alt": "Fantasy elf male"
+          },
+          {
+            "id": "paper.foreground-dark-chains",
+            "type": "image",
+            "path": "media/paper.foreground-dark-chains.webp",
+            "alt": "Foreground dark chains"
+          },
+          {
+            "id": "paper.foreground-destroyed-fence",
+            "type": "image",
+            "path": "media/paper.foreground-destroyed-fence.webp",
+            "alt": "Foreground destroyed fence"
+          },
+          {
+            "id": "paper.foreground-industrial",
+            "type": "image",
+            "path": "media/paper.foreground-industrial.webp",
+            "alt": "Foreground industrial"
+          },
+          {
+            "id": "paper.foreground-lamp",
+            "type": "image",
+            "path": "media/paper.foreground-lamp.webp",
+            "alt": "Foreground lamp"
+          },
+          {
+            "id": "paper.foreground-pipe-rock",
+            "type": "image",
+            "path": "media/paper.foreground-pipe-rock.webp",
+            "alt": "Foreground pipe rock"
+          },
+          {
+            "id": "paper.foreground-tree-2",
+            "type": "image",
+            "path": "media/paper.foreground-tree-2.webp",
+            "alt": "Foreground tree 2"
+          },
+          {
+            "id": "paper.foreground-tree-fores",
+            "type": "image",
+            "path": "media/paper.foreground-tree-fores.webp",
+            "alt": "Foreground tree fores"
+          },
+          {
+            "id": "paper.foreground-tree-forest-2",
+            "type": "image",
+            "path": "media/paper.foreground-tree-forest-2.webp",
+            "alt": "Foreground tree forest 2"
+          },
+          {
+            "id": "paper.foreground-tree-forest-3",
+            "type": "image",
+            "path": "media/paper.foreground-tree-forest-3.webp",
+            "alt": "Foreground tree forest 3"
+          },
+          {
+            "id": "paper.foreground-tree",
+            "type": "image",
+            "path": "media/paper.foreground-tree.webp",
+            "alt": "Foreground tree"
+          },
+          {
+            "id": "paper.modern-female-character",
+            "type": "image",
+            "path": "media/paper.modern-female-character.webp",
+            "alt": "Modern female character"
+          },
+          {
+            "id": "paper.modern-grandma-character",
+            "type": "image",
+            "path": "media/paper.modern-grandma-character.webp",
+            "alt": "Modern grandma character"
+          },
+          {
+            "id": "paper.modern-male-character-reading",
+            "type": "image",
+            "path": "media/paper.modern-male-character-reading.webp",
+            "alt": "Modern male character reading"
+          },
+          {
+            "id": "paper.modern-male-character-sitting",
+            "type": "image",
+            "path": "media/paper.modern-male-character-sitting.webp",
+            "alt": "Modern male character sitting"
+          },
+          {
+            "id": "paper.modern-male-character",
+            "type": "image",
+            "path": "media/paper.modern-male-character.webp",
+            "alt": "Modern male character"
+          },
+          {
+            "id": "paper.modern-male-detective",
+            "type": "image",
+            "path": "media/paper.modern-male-detective.webp",
+            "alt": "Modern male detective"
+          },
+          {
+            "id": "paper.modern-nurse-woman-character",
+            "type": "image",
+            "path": "media/paper.modern-nurse-woman-character.webp",
+            "alt": "Modern nurse woman character"
+          }
+        ],
+        "examination": {
+          "image": "house.night",
+          "title": "La photographie",
+          "descriptions": [
+            "La photographie est datée du 14 juin 1987.",
+            "Une personne sur la photographie vous ressemble trait pour trait.",
+            "L’arrière-plan est étrangement familier. La fenêtre à l’étage est ouverte."
+          ],
+          "reverse": "Si elle vient te chercher, ne lui dis pas ton nom.",
+          "actionId": "examine-photo",
+          "hotspot": {
+            "x": 79,
+            "y": 41,
+            "label": "Examiner le détail de la photographie"
+          }
+        },
+        "character": {
+          "portrait": "tcp.human5-cutout",
+          "abilities": [
+            {
+              "id": "investigation",
+              "name": "Investigation",
+              "description": "Examiner les objets et relier les indices. Rang 1 ; information uniquement."
+            },
+            {
+              "id": "intuition",
+              "name": "Intuition",
+              "description": "Percevoir un détail inhabituel dans un lieu familier. Rang 1 ; information uniquement."
+            }
+          ],
+          "inventory": [
+            {
+              "id": "brasskey",
+              "fact": "brasskey",
+              "name": "Clé en laiton",
+              "description": "Une petite clé fixée dans la lettre de votre grand-mère."
+            },
+            {
+              "id": "hiddenclue",
+              "fact": "hiddenclue",
+              "name": "Message caché",
+              "description": "Elle est ce que la maison a gardé."
+            },
+            {
+              "id": "examined",
+              "fact": "examined",
+              "name": "Indice photographique",
+              "description": "La fenêtre à l’étage est ouverte."
+            }
+          ],
+          "encounters": [
+            {
+              "id": "grandmother",
+              "fact": "metgrandmother",
+              "name": "Grand-mère",
+              "description": "Votre grand-mère disparue, dont la photographie et l’avertissement ont fait naître le mystère."
+            },
+            {
+              "id": "girl",
+              "fact": "metgirl",
+              "name": "La jeune fille sur la photographie",
+              "description": "Une silhouette familière découverte sur la vieille photographie."
+            },
+            {
+              "id": "caller",
+              "fact": "metcaller",
+              "name": "Inconnue au téléphone",
+              "description": "Une femme qui demande si la pièce à l’étage a été ouverte."
+            }
+          ]
+        },
+        "narration": [
+          {
+            "segmentId": "intro.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "740650e898462cd3b25dd6838b483dc0d2d70e2094bba489deb7bd001075b5a1",
+            "assetId": "narration.6681cd5f4cb1b74975c7a29ec16df67bd25bfafbaf02e746bdaf7fb70a87683e",
+            "audioDigest": "4f7948a5fe4b7f27d362e9648ba7ac032688ef175aef13e74b16f6140ee654cf",
+            "durationMs": 4880,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "337b91aad6d9913cbf307834afd559943e0ddbd8c12d335d767e0576eefeea75",
+            "assetId": "narration.bf1ba219566c6a42006b810bb565efea5b197ad8b0a790e28e14ed5e024a0016",
+            "audioDigest": "2115e24a19e1e75cc944776f96de1d98e54401c6ce587774c8007ae31ded03ff",
+            "durationMs": 2360,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "0f433f71058ce8b7a2cc861b1792826f7a1349b405b08ee1e2d4627e0239d533",
+            "assetId": "narration.bd0646bfd2d9b57cf75cd3862068301959688d5c9a7887f1fb647a59dcc85ac9",
+            "audioDigest": "c747c1eaf77fec9ef8ca07e4c54bcfdc4c8c12eaaa49a2c37ce19180dcb4f3f6",
+            "durationMs": 5840,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.p4",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "e58b5f50d60485de25ec9526cf20e9de81610b6fdf16b2a55a0afee403fa96e8",
+            "assetId": "narration.df59c3a6cf6ed6340f98872a6d0f038f994d6d3776f21b449c4601e22f312eb4",
+            "audioDigest": "3700431a5d7c0a33fce660748138a3df0e5b5b61af097d45c56c5371e709368f",
+            "durationMs": 7680,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "db212cb950d2ff55037bc9c67aec513c7ec75f8323408279dfedb10e28a39433",
+            "assetId": "narration.0d615246f84fe692772a700df8a9b6c939856fb087d25f40a2fe9694ca21dcdb",
+            "audioDigest": "a32ed13ba372885b2604b828635ab5e9a23ebbfbbc76b24751219290c64afd55",
+            "durationMs": 4280,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "514222c393d7084a3cbacd771a5a414763cf102f25f6d6ac98a3608d5ab98502",
+            "assetId": "narration.25c9c661e7f153c25582aadba94ccb1cd815c5b5d646d70c6d8326c03031abfb",
+            "audioDigest": "7260b6df709569397895ed085df2dfd744041524d162395faa77144947a38672",
+            "durationMs": 2720,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "8da9e267b9b7f98c2311e7609f048db3c49920185a55549d82fe74a1ae0805e4",
+            "assetId": "narration.f7fe09015057e70585e19be9f565e79816aee2f131d3dc5ea60af19d1be0cf46",
+            "audioDigest": "284a6883559daa50e93e914fbd569bf87d96f6a99ffd0a5af878cf3d0b51f69b",
+            "durationMs": 4040,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "call.p4",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "0d8945b612e8fd23313e96f09fe7953586e15e61b3c4856031f20c4288053aeb",
+            "assetId": "narration.7c1a35d19c9ef683766e0a29f8bf03c39c3b3fae377db51b8072a22d89141dce",
+            "audioDigest": "8e491740ff0db114b2e1da3dbc0f8442fef15fce0e56ecb550eaef242aef0ba3",
+            "durationMs": 4440,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "intro.clue",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "510794caf4ae7c268a693ea3760a5e07165f0404d008e4942f0331398207ba71",
+            "assetId": "narration.51923a0df341018ed24cc31c0d403b564afa18754514b0f8313c0344f7219605",
+            "audioDigest": "a8264022677628cdd593536d5cbd87389dd79de00a952ea382382d6cc737ce88",
+            "durationMs": 2840,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "ae26c798edb4a24dc5da8c7257f1b30c7ab71fe0a3f07b7aeb89cd49b164f8f2",
+            "assetId": "narration.6fd839cffb5a79d7ff67884f8f4cca4ae2d4688a570fbae9f31191cfa66d64e9",
+            "audioDigest": "476a794fe431cef24408e110a27245f2e184b54c3c9aa14e1c2f978bcb085a8c",
+            "durationMs": 1720,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "1ede1b3b14ff3e4f50080b7ddc44f7df856b7f97a1b60fb7309886a7f8db54f2",
+            "assetId": "narration.fdeedac52378107f703ba8da2f8aceb6515b236b6efef3c232d7283b24c51c70",
+            "audioDigest": "8940b488b815dc7920147354e45f87f4568cd0ba4f95911e4e3018020e743c31",
+            "durationMs": 4600,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "room.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "24696ae5ea4738af299cc51d31e6c9540af595958592a2bae4961b59a4ffc39f",
+            "assetId": "narration.98b75ce288596f2167db009019b04849f59ee6c6ebeaf108215be3d04df2c692",
+            "audioDigest": "ff433180b834e31dd8e39eadf281cf5213e1381b3e9047267c641e36c9128f06",
+            "durationMs": 1760,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "f7cdf52b19d480a486c98924ae1a91223405c985adb5a8054ce3f1f2ae83f5a2",
+            "assetId": "narration.be9798b06a6b2f32c108abeb2eb577b593c0a9c1af768746091211e16bddb810",
+            "audioDigest": "d9fca3a82ec6bda99569e5144bd704e88c44071196179da4bf9adea83396c443",
+            "durationMs": 1120,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "522ddbd53f4c81f73d4435536fc7e4e6c9baf50797071572ef188d9c87792ac2",
+            "assetId": "narration.bcce9f66a05dce3346d2ed186ce3982517fbd116018557b45d1d2e371b28a852",
+            "audioDigest": "dc8e88ce05638d626ec4fe715a83c00ea61e7dc6347d1bc5fa2a537b78e4336b",
+            "durationMs": 4600,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "song.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "24696ae5ea4738af299cc51d31e6c9540af595958592a2bae4961b59a4ffc39f",
+            "assetId": "narration.5f650f32c39a59b6dd37db61d7ae4c29b763215fc224879f637579026458b24d",
+            "audioDigest": "ff433180b834e31dd8e39eadf281cf5213e1381b3e9047267c641e36c9128f06",
+            "durationMs": 1760,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "87720a17f275fbe253791c46d9206eb63c80535737d50477873abb662229fcf8",
+            "assetId": "narration.79b2116349914d1be46cd175e4ec5b0d731bf18d18348949581cc8e84c281a45",
+            "audioDigest": "14d74725bcd09ae0e09cbdcbc914d7d307be313500945af79d4f4ddb3d32718c",
+            "durationMs": 2800,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "5e8b542ab16e135d1d4b9138ecc3d259bb94e7f523e3cf74feed8dd21eb0afef",
+            "assetId": "narration.28ffb238317594ecc61430ffbd1231ec615ce1707521f2c0fcca76cd9d800d26",
+            "audioDigest": "142e6c40cf37a5d4234e27a130f8231d95002f86ffbcf3a93e907f45e9383c61",
+            "durationMs": 5880,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "arrival.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "8d1a4cb89a75960260f5c16049c170cea4e5e43f27ac8a62f7eba3ca8276dd83",
+            "assetId": "narration.9333a551afa04b83a129a642d94b9598db61975273484d54b600be1591e6b01d",
+            "audioDigest": "72ebeb4ff3872909cd2950680024fba0e7327159cf50a8398d6d0857c18fe219",
+            "durationMs": 3840,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "0c25824d127d633b99ede6c504fb438caf2b0bc404edec2027e82cfed511f604",
+            "assetId": "narration.8a7a9734178f7786edec78743164a0eddcd5733ae669bba42c60001bcae2795d",
+            "audioDigest": "2de651a7f10e4970f01bd7e1ffbe5498eb0ad601880bbe2eec1e05dd508340cc",
+            "durationMs": 2040,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "f992ec71decd6a2194c60262aae10c98f8c472b3d5691ecf3436b1c17107b2dc",
+            "assetId": "narration.74d1e294ce674958a014e4ff30887525ecb9665bce31327c268a5fb43b9f497d",
+            "audioDigest": "da6e3ac40c4580fd04c0addb18965539ddb9b2deb5eaf40e5ec707e4bb49585c",
+            "durationMs": 4920,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "break.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "d833f4b809a3d15ff5398071e69b9d567c5e57af4587221b881b7bf4157c2f00",
+            "assetId": "narration.c1eb8c4eb3232d22f8bce6e0ad839c250bc6e56ea75eee06b3d7322e83d9f8d3",
+            "audioDigest": "7c37d999f768fbf6d4f2363dcce1deeaf630fce157e669f90171698ea6e53f06",
+            "durationMs": 3680,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "e68ff2579054172da68c8ec55548e020a0cd66f5cd6895617baf2fcf5344cfc6",
+            "assetId": "narration.a3c8f08e37864519cbec9c1e0588b23b2424eb3a5801d7ef90f15efedc8b1ca5",
+            "audioDigest": "73923c67bb4dca50024301ac9538c2215b616013bce0f94dbe0fd18646545da3",
+            "durationMs": 4000,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "cc8f37b7450fd5b2c3d2c7474be4fcb9385311d146c5c42b1e0ff5fc553d66e3",
+            "assetId": "narration.5645fa13f822d3ae6477352178cbe66bea9d811e1d6dad308637a5096f4d9207",
+            "audioDigest": "b6d31eae83ec17ab858f7be0692ee564350ebb1844ed00bb38786b3fd3e39bde",
+            "durationMs": 4200,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "light.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "9fff088e80506f5bf4ef4d6ddce48d29aeb54e04c5e8f9aa8abd18abf58437d5",
+            "assetId": "narration.cd71b99494b7a20acddffed07698bcb8227d03f80132a7a49d85a961c1486565",
+            "audioDigest": "b7ce25857dda9ffe4572d253cd10de5502c8299dfa1bbca9b3d88a11849353ac",
+            "durationMs": 2800,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "084269483f94d161edff60178c018282e94fb1b1e2c7dcafafa3d8e8ee451c28",
+            "assetId": "narration.a2b262ae4731b0ea2d0dc0f509837f45ca16ff967a4ef41d30615372a4e3f291",
+            "audioDigest": "70e0ba842fbcd20b139b4cc4cd77724d7a028f9cf9a6354926fd062d24190063",
+            "durationMs": 2320,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "05181cc4fd7a643acfa98928de3cc7ad19ee1b2ee59bb931be2e79e733ca2e9c",
+            "assetId": "narration.d61223a1ccc5f65a468f14340313df2b68045039c6ea2ed36d7d5445936b8821",
+            "audioDigest": "fb047efe96946796596607ba861c49ea9ce8797be515fe238342f9eef2bdfe7a",
+            "durationMs": 4080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "last.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "c6ea1b278a371a57a96618df24c91e7c84fd333c7fb7ef2fe92c387a8eea7bba",
+            "assetId": "narration.53e9fbf3ca87939d5b8ba033f11df65bac196d689da0eeaf8023f58fe984531a",
+            "audioDigest": "936ba4816236e748760597e10ec532a723522d843a5ef28b419e299ef35e1cb7",
+            "durationMs": 4120,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "2b1f09546a60cc9c9338059223fc5aa31dce22e862086086fc7e1523f8d824ed",
+            "assetId": "narration.a5dc26a0939e669329c6dcc0d86d1cd942ae460a422c5cc961e7c34ef7192e87",
+            "audioDigest": "a76a94213609e226a1c7ac9b30a90659dcb8155e7f363553b5862849b8c4eb70",
+            "durationMs": 2440,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "be88d3f7c38219145da0aaf249b5134e98309bfc88ba9a08634aece733e9c312",
+            "assetId": "narration.f1ab04bc50ea75fca793a5aac043e7d4601d0d0cf1f403ec13975cbde11348ea",
+            "audioDigest": "5547d5b34e2b3fd802c4d4e1e57b14dc2eb8b6e4f960154c1a2401d44345985e",
+            "durationMs": 5280,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "window.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "9fd568105c6cfe8218c445eb04aec6e8475e8fc95b8fb4c212c831d1186d5368",
+            "assetId": "narration.16a0363bdd629f30c4c8a3856b8cfb98cde4d7c9fc4d75f675f244037c7c5ceb",
+            "audioDigest": "e39679d7244a5cc1e94cb82676eadbd098f2511e532a39302241c0710ce2a885",
+            "durationMs": 2800,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "445c8377ee294d405c244a9ebd9b14dbee9607aca89fc0b636fe22be5865e679",
+            "assetId": "narration.06abffa2ca5ac3aff7bf2f9bd4ccdd46c10fac53ec39a9d93495362ee07a22f2",
+            "audioDigest": "5eace835eddbd7e194c04cdb1203498efa591624e01e197f1ca090a605d1249b",
+            "durationMs": 2000,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "c93225f8184faaa6b9f0fe72e613606209869190bb2cabf3c2cb48da0d9a9fcb",
+            "assetId": "narration.f7d5d1b918cf5f7b65c439ca2ad587f488faffe2fec70e5b1eecbc7692c89b0b",
+            "audioDigest": "d125626a37f5ed45bbc4bb1ec94fedcc0a8769e0b3cbafbf4be76280bfea918d",
+            "durationMs": 6120,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "photo.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "6d5d70b17fcfd2140bd06b3f6cca8750974ab3e95a6367e6d9425fd4c6524bc4",
+            "assetId": "narration.6e334da8920229e408b4d5e2b190bae9d7fc9cd891ece9a0fe2efc29f5ea2524",
+            "audioDigest": "795a629bbf9472f9fbc05ec4466efa438463eae45fc9ae843211207abfcc6190",
+            "durationMs": 2080,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p1",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "5aa66f4f0a203dbd21896c5762f7c9a327d75aca3ebe71232e60c714ad2fdfa1",
+            "assetId": "narration.5c5840a19d9538d076ee25aadbc0b137c856a17471d0530a5342bfdaeb485573",
+            "audioDigest": "a85bc8743b9517ce1f9342636ca02e1bade7d6bb7ed9fe8221a3c4d2a04abc37",
+            "durationMs": 2880,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p2",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "4c93c5c045dcad65e521bcefb6c48e91d0317a38d81b18b2429b8764bb72604a",
+            "assetId": "narration.53238542f2d4807083f2d2380563ad82d07042ef546d0524546248d2b4bcd725",
+            "audioDigest": "304b28ce8e4bfc8b72a0d7222f2944d0d57b6daa2588ad11b422f2f3a4530340",
+            "durationMs": 2960,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          },
+          {
+            "segmentId": "end.p3",
+            "locale": "fr",
+            "voiceId": "multilingual-default",
+            "spokenTextDigest": "407b2d3398de324b542960feafffa722dd64be7062eb5282eabe3082deda5734",
+            "assetId": "narration.c61cf65215817f04b9a0d57cca2efb9c90f62c2bba5b90f153208e1747b536a4",
+            "audioDigest": "b3b3d5f71284b954a27af6cd35fea0f8e9fed32338b9d64f3a2dbfe72999121f",
+            "durationMs": 2280,
+            "marks": [],
+            "approval": {
+              "status": "preview",
+              "reviewer": "Automated waveform/decode checks; human listening pending",
+              "rightsReference": "ResembleAI/chatterbox MIT; provider built-in conditioning; locally authored Ink"
+            }
+          }
+        ],
+        "narratorVoices": [
+          {
+            "id": "multilingual-default",
+            "label": "Chatterbox Multilingual V3"
+          }
+        ],
+        "artDirection": {
+          "style": "adult black-and-white shadow art, dry-brush ink and charcoal silhouettes",
+          "colorMode": "grayscale",
+          "palette": ["#faf9f6", "#292929", "#777777", "#ffffff"],
+          "complexity": "restrained"
+        }
+      },
+      "defaults": {
+        "fontSize": "medium",
+        "fontFamily": "serif",
+        "lineHeight": "comfortable",
+        "reveal": "progressive",
+        "sound": false,
+        "backgroundColor": "#f3e5cf",
+        "dropCapColor": "#b58b37"
+      },
+      "narrationMode": "ai-live",
+      "cover": "house.night"
+    }
+  },
+  "shareConfiguration": true
+}

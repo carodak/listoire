@@ -1,3 +1,4 @@
+import { mediaInsertionPosition } from "./media-references.ts";
 import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
@@ -7,7 +8,8 @@ import { withMediaReferences, editMediaScript, mediaReferenceLine } from "./medi
 import { animationOptions } from "./animation-options.ts";
 import { speechOptions } from "../media/speech-options.ts";
 import { defaultSpeechSettings } from "../../contracts/media.ts";
-import { mediaDefaults, applyMediaEdit } from "./media-authoring.ts";
+import { applyMediaEdit } from "./media-authoring.ts";
+import { mediaDefaults } from "./media-form.ts";
 import { addLanguage } from "./add-language.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
@@ -81,7 +83,7 @@ it.each(["inline", "right"] as const)(
     expect(changed.events).toContainEqual(
       expect.objectContaining({
         action: expect.objectContaining({
-          effect: expect.objectContaining({ id: "cinematic-camera", duration: 14000 }),
+          effect: expect.objectContaining({ id: "cinematic-camera", duration: 6000 }),
         }),
       }),
     );
@@ -277,6 +279,44 @@ it("edits image properties without removing photograph examination or other loca
     original.languages.en!.configuration.examination,
   );
 });
+it("adds independent image examination and removes it for a cinematic or an explicit toggle-off", async () => {
+  const input = mediaDefaults("Image", "intro", "inspectable");
+  input.asset = "tcp.human5";
+  input.examination = {
+    image: input.asset,
+    title: "The drawing",
+    buttonLabel: "Look closer",
+    descriptions: ["A face.", "A familiar detail."],
+    reverse: "Remember.",
+  };
+  const segments = ["intro.p1", "intro.p2", "intro.p3", "intro.p4", "intro.clue"];
+  const added = applyMediaEdit(original, "en", input, segments, "passage");
+  const bundle = await compileLanguage(added, "en");
+  expect(bundle.scenes!.intro!.blocks).toContainEqual(
+    expect.objectContaining({ id: "inspectable", examination: input.examination }),
+  );
+  expect(added.languages.fr).toEqual(original.languages.fr);
+  expect(added.languages.en!.configuration.examination).toEqual(
+    original.languages.en!.configuration.examination,
+  );
+  input.layout = "fullscreen";
+  const film = applyMediaEdit(added, "en", input, segments, "passage");
+  const cinematic = film.languages.en!.configuration.scenes!.intro!.blocks!.find(
+    (block) => block.kind === "media" && block.id === input.id,
+  );
+  expect(cinematic).not.toHaveProperty("examination", expect.anything());
+  input.layout = "inline";
+  input.examination = null;
+  const disabled = await compileLanguage(
+    applyMediaEdit(added, "en", input, segments, "passage"),
+    "en",
+  );
+  expect(
+    disabled.scenes!.intro!.blocks!.find(
+      (block) => block.kind === "media" && block.id === input.id,
+    ),
+  ).not.toHaveProperty("examination", expect.anything());
+});
 
 it("flags a newly added translation, preserves shared images and does not substitute English recordings", async () => {
   const next = addLanguage(original, "en", "es");
@@ -343,4 +383,65 @@ it("bounds an Ink loop during preview and applies test state through the narrati
   project.languages.en!.script = "-> forever\n=== forever ===\n-> forever";
   const looping = await compileLanguage(project, "en");
   expect(() => new InkNarrativeEngine(looping).advance()).toThrow("content");
+});
+
+it("inserts media inside its passage without replacing the selected prose", () => {
+  const project = structuredClone(original);
+  const script =
+    "VAR seen = false\n-> intro\n=== intro ===\n// @media intro/old-art\nA girl waits here. # passage:intro # segment:intro.p1\n-> END";
+  project.languages.en!.script = script;
+  const position = mediaInsertionPosition(script, "intro", { row: 0, column: 3 });
+  expect(position.row).toBe(3);
+  const result = insertLocalized(
+    project,
+    "en",
+    "\n// @media intro/new-art\n",
+    { start: position, end: position },
+    false,
+  );
+  expect(result.languages.en!.script).toContain(
+    "=== intro ===\n// @media intro/old-art\n// @media intro/new-art",
+  );
+  expect(result.languages.en!.script).toContain("A girl waits here.");
+  const selectedProse = mediaInsertionPosition(script, "intro", { row: 4, column: 11 });
+  expect(selectedProse.column).toBe(script.split("\n")[4]!.length);
+});
+it("shares media resources while preserving translated alt text and embedded sounds", () => {
+  const project = structuredClone(original);
+  const en = project.languages.en!,
+    fr = project.languages.fr!;
+  const image = en.configuration.assets!.find((asset) => asset.type === "image")!;
+  fr.configuration.assets!.find((asset) => asset.id === image.id)!.alt = "Description FR";
+  const input = mediaDefaults("Image", "intro", "shared-image");
+  Object.assign(input, { asset: image.id, alt: "Updated EN", shared: true });
+  const images = applyMediaEdit(project, "en", input, [], "passage");
+  expect(
+    images.languages.en!.configuration.assets!.find((asset) => asset.id === image.id)!.alt,
+  ).toBe("Updated EN");
+  expect(
+    images.languages.fr!.configuration.assets!.find((asset) => asset.id === image.id)!.alt,
+  ).toBe("Description FR");
+  en.configuration.assets!.push({
+    id: "uploaded-sound",
+    type: "audio",
+    path: "media/sound.mp3",
+    alt: "Sound",
+  });
+  en.configuration.embeddedAudio = { "uploaded-sound": "data:audio/mpeg;base64,SUQz" };
+  const sound = mediaDefaults("Sound Effect", "intro", "shared-sound");
+  Object.assign(sound, { asset: "uploaded-sound", shared: true });
+  const sounds = applyMediaEdit(project, "en", sound, [], "passage");
+  expect(sounds.languages.fr!.configuration.embeddedAudio?.["uploaded-sound"]).toBe(
+    en.configuration.embeddedAudio["uploaded-sound"],
+  );
+  expect(project.languages.fr!.configuration.embeddedAudio?.["uploaded-sound"]).toBeUndefined();
+});
+it("restores the target image when reopening a sound cue triggered by that image", () => {
+  const project = structuredClone(original);
+  const asset = project.languages.en!.configuration.assets!.find((asset) => asset.type === "audio")!;
+  const input = mediaDefaults("Sound Effect", "intro", "image-sound");
+  Object.assign(input, {asset: asset.id, target: "intro-photo"});
+  const next = applyMediaEdit(project, "en", input, [], "block");
+  const restored = mediaDefaults("Sound Effect", "intro", input.id, next.languages.en!.configuration.scenes!.intro);
+  expect(restored.target).toBe(input.target);
 });

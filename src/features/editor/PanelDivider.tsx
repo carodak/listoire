@@ -1,14 +1,11 @@
-export function PanelDivider({
-  label,
-  value,
-  onChange,
-  reverse = false,
-}: {
+interface PanelDividerProps {
   label: string;
   value: number;
   onChange: (width: number) => void;
   reverse?: boolean;
-}) {
+}
+
+export function PanelDivider({ label, value, onChange, reverse = false }: PanelDividerProps) {
   return (
     <div
       role="separator"

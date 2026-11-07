@@ -110,6 +110,7 @@ export class AudioManager {
       clearTimeout(startTimer);
       clearTimeout(deadline);
       clearInterval(envelope);
+      clearInterval(progressTimer);
       audio.pause();
       signal.removeEventListener("abort", abort);
       audio.removeEventListener("ended", ended);
@@ -128,7 +129,12 @@ export class AudioManager {
         .play()
         .then(() => {
           clearTimeout(startTimer);
-          if (settled) audio.pause();
+          if (settled || track.paused) audio.pause();
+          else if (onTime) {
+            clearInterval(progressTimer);
+            time();
+            progressTimer = setInterval(time, 40);
+          }
         })
         .catch(() => finish("blocked"));
     };
@@ -156,6 +162,7 @@ export class AudioManager {
         clearTimeout(startTimer);
         clearTimeout(deadline);
         clearInterval(envelope);
+        clearInterval(progressTimer);
         audio.pause();
       },
       resume: () => {
@@ -166,6 +173,7 @@ export class AudioManager {
     let startTimer: ReturnType<typeof setTimeout> | undefined;
     let deadline: ReturnType<typeof setTimeout> | undefined;
     let envelope: ReturnType<typeof setInterval> | undefined;
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
     audio.loop = loop;
     audio.playbackRate = Math.max(
       0.5,
@@ -236,12 +244,14 @@ export class AudioManager {
     rate: number,
     signal: AbortSignal,
     onBoundary: (index: number, length: number) => void,
+    selection?: { uri: string; pitch?: number },
   ): Playback {
     this.speech?.stop();
     const synth = globalThis.speechSynthesis;
-    const voice = synth
+    const available = synth
       ?.getVoices()
-      .find((voice) => voice.lang.toLowerCase().startsWith(locale.toLowerCase()));
+      .filter((voice) => voice.lang.toLowerCase().startsWith(locale.toLowerCase()));
+    const voice = available?.find((voice) => voice.voiceURI === selection?.uri) ?? available?.[0];
     if (!synth || !voice || typeof SpeechSynthesisUtterance === "undefined" || signal.aborted)
       return {
         finished: Promise.resolve("unavailable"),
@@ -255,6 +265,7 @@ export class AudioManager {
     utterance.volume = this.muted ? 0 : this.volumes.narration;
     utterance.voice = voice;
     utterance.lang = locale;
+    utterance.pitch = Math.pow(2, (selection?.pitch ?? 0) / 12);
     utterance.rate = this.narrationRate ?? Math.max(0.5, Math.min(2, rate));
     let resolve!: (result: PlaybackResult) => void;
     let settled = false;

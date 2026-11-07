@@ -10,6 +10,38 @@ export const cameraPresets = [
   "suspense",
   "parallax",
   "auto-parallax",
+  "gentle-depth",
+  "cinematic-push-in",
+  "sideways-drift",
+  "character-focus",
+  "atmospheric-still",
+  "dramatic-descent",
+  "handheld-discovery",
+  "dolly-pullback",
+  "sweeping-arrival",
+  "rising-focus",
+  "impact-push",
+  "low-diagonal-pullback",
+  "deep-pullback",
+  "high-arrival-hold-pullback",
+] as const;
+export const illustrationPresets = [
+  "none",
+  "gentle-depth",
+  "cinematic-push-in",
+  "downward-reveal",
+  "sideways-drift",
+  "character-focus",
+  "atmospheric-still",
+  "dramatic-descent",
+  "handheld-discovery",
+  "dolly-pullback",
+  "sweeping-arrival",
+  "rising-focus",
+  "impact-push",
+  "low-diagonal-pullback",
+  "deep-pullback",
+  "high-arrival-hold-pullback",
 ] as const;
 export const atmospheres = [
   "none",
@@ -27,6 +59,7 @@ export const CinematicSchema = z
     direction: z.enum(["auto", "up", "down", "left", "right"]).default("auto"),
     atmosphere: z.enum(atmospheres).default("none"),
     layers: z.array(z.string()).max(4).default([]),
+    durationMs: z.number().min(1000).max(30000).optional(),
   })
   .strict()
   .refine(

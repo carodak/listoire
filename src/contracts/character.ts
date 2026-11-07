@@ -20,7 +20,7 @@ export const CharacterSchema = z
     abilities: z
       .array(z.object({ id: z.string(), rank: z.number().int().min(1).max(4) }).strict())
       .min(1)
-      .max(2),
+      .max(32),
   })
   .strict();
 export type CharacterProfile = z.infer<typeof CharacterSchema>;

@@ -1,0 +1,430 @@
+.story-editor[data-composing="true"] .editor-outline,
+.story-editor[data-composing="true"] .editor-script,
+.story-editor[data-composing="true"] .panel-divider:first-of-type {
+  display: none;
+}
+.story-editor[data-composing="true"] .preview-slot {
+  width: clamp(320px, 38vw, 760px);
+  flex: none;
+}
+.editor-docked-media {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 16px;
+  overflow: auto;
+}
+.editor-docked-media > header {
+  gap: 12px;
+  padding-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fcfdf9;
+}
+.editor-docked-media h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.composition-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.editor-docked-media > header > button,
+.editor-docked-media form > footer {
+  display: none;
+}
+.editor-docked-media .media-dialog-fields {
+  display: flex;
+  flex-direction: column;
+}
+.editor-docked-media .media-picker {
+  order: 2;
+  border: 0;
+  padding: 0;
+  margin: 12px 0;
+}
+.editor-docked-media .media-placement-options {
+  order: 3;
+}
+.editor-docked-media .cinematic-presets {
+  order: 4;
+}
+.editor-docked-media .media-scene-select,
+.editor-docked-media .media-shared-setting,
+.editor-docked-media .media-picker p,
+.editor-docked-media .media-picker > .asset-preview {
+  display: none;
+}
+.media-placement-expanded {
+  border: 0;
+  padding: 0;
+}
+.media-placement-expanded > summary {
+  display: none;
+}
+.editor-docked-media .media-placement-options,
+.editor-docked-media .cinematic-presets {
+  margin-top: 12px;
+  border: 1px solid var(--editor-line);
+  padding: 12px;
+  border-radius: 5px;
+}
+.editor-docked-media .preset-grid {
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+}
+.editor-docked-media .preset-grid img {
+  display: none;
+}
+.scene3d-composer {
+  display: grid;
+  grid-template-columns: minmax(190px, 28%) minmax(0, 1fr);
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.quick-scene {
+  grid-column: 1 / -1;
+  padding: 12px;
+  border: 1px solid var(--editor-line);
+  border-radius: 5px;
+  background: #f1f5ee;
+}
+.quick-scene p {
+  margin: 4px 0 10px;
+  color: var(--editor-muted);
+  font-size: 12px;
+}
+.quick-scene > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.quick-scene button {
+  background: #fff;
+  border: 1px solid var(--editor-line);
+}
+@media (max-width: 650px) {
+  .quick-scene > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.composition-library {
+  min-width: 0;
+  border-right: 1px solid var(--editor-line);
+  padding-right: 12px;
+}
+.scene3d-gallery > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scene3d-gallery > header input {
+  min-width: 0;
+  width: 100%;
+}
+.gallery-target {
+  flex-direction: row !important;
+  align-items: center;
+}
+.gallery-depth-help {
+  font-size: 11px;
+  color: var(--editor-muted);
+  margin: 0 0 10px;
+}
+.gallery-target select {
+  min-width: 0;
+  flex: 1;
+}
+.gallery-browser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow: auto;
+}
+.gallery-browser nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.gallery-browser nav button {
+  font-size: 11px;
+  padding: 5px 6px;
+  border: 1px solid var(--editor-line);
+}
+.scene3d-composer button[aria-pressed="true"] {
+  background: #e4ece1;
+  border-color: #60816b;
+  color: var(--editor-ink);
+}
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  align-content: start;
+}
+.model-grid button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px;
+  min-width: 0;
+  border: 1px solid var(--editor-line);
+  background: #f1f4ef;
+  font-size: 10px;
+}
+.model-thumbnail {
+  height: 100px;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 50% 80%, #bbc7b640, transparent);
+}
+.model-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.scene3d-layers {
+  margin-top: 18px;
+  border-top: 1px solid var(--editor-line);
+  padding-top: 8px;
+}
+.scene3d-layers h3 {
+  margin: 4px 0 10px;
+  font-size: 13px;
+}
+.scene3d-layers section > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: capitalize;
+}
+.scene-layer-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  border: 1px solid var(--editor-line);
+  border-radius: 4px;
+}
+.scene-layer-row[data-selected="true"] {
+  border-color: #60816b;
+  background: #e4ece1;
+}
+.scene-layer-row > button:first-child {
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-layer-row > button {
+  padding: 5px;
+  font-size: 11px;
+}
+.composition-stage {
+  min-width: 0;
+}
+.composition-heading p {
+  color: var(--editor-muted);
+  font-size: 12px;
+  margin: 4px 0 10px;
+}
+.editor-docked-media .composition-heading label {
+  margin: 0;
+}
+.composition-heading input {
+  width: 100%;
+}
+.composition-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.editor-docked-media .composition-presets label {
+  margin: 0;
+  font-size: 11px;
+}
+.composition-presets select {
+  min-width: 0;
+  width: 100%;
+}
+.composition-viewport {
+  position: relative;
+  border: 1px solid var(--editor-line);
+  border-radius: 5px;
+  overflow: hidden;
+  background: repeating-conic-gradient(#e7eae5 0% 25%, #f3f5f0 0% 50%) 0 0 / 24px 24px;
+}
+.composition-viewport canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  touch-action: none;
+}
+.viewport-tools {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: #fcfdf9ee;
+  border: 1px solid var(--editor-line);
+  border-radius: 5px;
+}
+.viewport-tools button {
+  font-size: 11px;
+  padding: 5px 6px;
+}
+.viewport-help {
+  color: var(--editor-muted);
+  font-size: 11px;
+  margin: 6px 0 12px;
+}
+.composition-inspector {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.composition-inspector fieldset {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--editor-line);
+}
+.composition-inspector details > summary {
+  padding: 10px;
+  cursor: pointer;
+  border: 1px solid var(--editor-line);
+  border-radius: 4px;
+}
+.composition-inspector input[type="range"] {
+  width: 100%;
+}
+.transform-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 5px 0;
+}
+.transform-row > span {
+  width: 38px;
+  font-size: 11px;
+}
+.transform-row label {
+  flex-direction: row !important;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+}
+.transform-row input {
+  min-width: 0;
+  width: 100%;
+  padding: 5px 2px;
+  font-size: 11px;
+}
+.transform-row button {
+  font-size: 10px;
+}
+.composition-library > details {
+  margin-top: 15px;
+  font-size: 12px;
+}
+[data-draft-layout]:not([data-draft-layout="right"]) .reader-scene {
+  grid-template-columns: 1fr;
+}
+[data-draft-layout]:not([data-draft-layout="right"]) .story-art,
+[data-draft-layout] .narrative-media:has([data-3d="true"]) {
+  display: none;
+}
+[data-draft-layout] .reader-copy {
+  display: flex;
+  flex-direction: column;
+}
+[data-draft-layout] .reader-copy > :first-child {
+  order: -2;
+}
+.draft-book-figure {
+  margin: 0;
+  order: -1;
+}
+.draft-book-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+[data-draft-layout="right"] .reader-scene {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+[data-draft-layout="right"] .story-art {
+  display: none;
+}
+[data-draft-layout="right"] .draft-book-aside {
+  order: 0;
+  grid-column: 2;
+  height: 100%;
+  margin: 0;
+}
+[data-draft-layout="right"] .draft-book-figure :is(img, .illustration-blend) {
+  height: 100%;
+  object-fit: cover;
+}
+@media (max-width: 1200px) {
+  .story-editor[data-composing="true"] .editor-workspace {
+    flex-wrap: wrap;
+  }
+  .story-editor[data-composing="true"] .preview-slot {
+    width: 100%;
+  }
+  .story-editor[data-composing="true"] .panel-divider {
+    display: none;
+  }
+  .editor-docked-media {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 650px) {
+  .scene3d-composer {
+    grid-template-columns: 1fr;
+  }
+  .composition-library {
+    border-right: 0;
+    border-bottom: 1px solid var(--editor-line);
+    padding-bottom: 12px;
+  }
+  .model-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .gallery-browser {
+    max-height: 220px;
+  }
+  .model-thumbnail {
+    height: 72px;
+  }
+  .composition-inspector {
+    grid-template-columns: 1fr;
+  }
+  .composition-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .editor-docked-media > header {
+    flex-wrap: wrap;
+  }
+}

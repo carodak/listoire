@@ -3,14 +3,15 @@ import { BundleSchema } from "./story.ts";
 import type { StoryBundle } from "./story.ts";
 
 const replacements: Record<string, string> = {
-  "tcp.human5": "tcp.human8-cutout",
-  "shadow.photograph": "tcp.human8-cutout",
-  "shadow.woman": "tcp.human8-cutout",
+  "tcp.human5": "house.night",
+  "tcp.human8-cutout": "house.night",
+  "shadow.photograph": "house.night",
+  "shadow.woman": "house.night",
   "shadow.house": "heritage.bird",
-  "unsplash.woodland-house": "tcp.human8-cutout",
+  "unsplash.woodland-house": "house.night",
   "unsplash.hidden-house": "heritage.bird",
 };
-export function hasLegacyArtwork(value: StoryProject | StoryBundle) {
+function hasLegacyArtwork(value: StoryProject | StoryBundle) {
   const configurations =
     "languages" in value
       ? Object.values(value.languages).map((language) => language.configuration)
@@ -28,6 +29,16 @@ export function refreshDefaultArtwork(
   for (const [locale, language] of Object.entries(next.languages)) {
     const available = source.languages[locale] ?? source.languages[source.defaultLocale]!;
     refreshLanguage(language, available);
+  }
+  if (source.mediaLibrary) {
+    const library = new Map(
+      next.mediaLibrary
+        ?.filter((entry) => !(entry.id in replacements))
+        .map((entry) => [entry.id, entry]),
+    );
+    for (const entry of source.mediaLibrary)
+      if (!library.has(entry.id)) library.set(entry.id, structuredClone(entry));
+    next.mediaLibrary = [...library.values()];
   }
   return next;
 }
@@ -77,6 +88,12 @@ function refreshLanguage(language: Language, available: Language) {
   if (!needed.size) return;
   const cover = language.cover ? replace(language.cover) : available.cover;
   if (cover) needed.add(cover);
+  if (
+    language.configuration.character &&
+    language.configuration.character.portrait in replacements &&
+    available.configuration.character
+  )
+    needed.add(available.configuration.character.portrait);
   const artwork = pageArtwork(language, available);
   artwork.forEach(({ block }) => needed.add(block.image));
   const supplied = new Map(available.configuration.assets?.map((asset) => [asset.id, asset]));
@@ -93,7 +110,7 @@ function refreshLanguage(language: Language, available: Language) {
     if (event && !scene.events?.some((existing) => existing.id === event.id))
       scene.events = [...(scene.events ?? []), structuredClone(event)];
   }
-  refreshExamination(language.configuration);
+  refreshExamination(language.configuration, available.configuration);
   language.cover = cover;
   language.configuration.assets = [
     ...assets.filter((asset) => !(asset.id in replacements)),
@@ -106,7 +123,13 @@ function refreshScene(scene: NonNullable<Language["configuration"]["scenes"]>[st
   if (scene.image) scene.image = replace(scene.image);
   scene.blocks?.forEach((block) => {
     if (block.kind !== "media") return;
+    if (block.layout === "right" && block.image in replacements && block.id.endsWith(".artwork"))
+      block.fit = "cover";
     block.image = replace(block.image);
+    block.illustration?.layers.forEach((layer) => {
+      layer.image = replace(layer.image);
+    });
+    if (block.examination) block.examination.image = block.image;
     if (block.motion) block.motion.layers = block.motion.layers.map(replace);
   });
   scene.events?.forEach(({ action }) => {
@@ -114,10 +137,16 @@ function refreshScene(scene: NonNullable<Language["configuration"]["scenes"]>[st
       action.effect.image = replace(action.effect.image);
   });
 }
-function refreshExamination(config: Language["configuration"]) {
+function refreshExamination(config: Language["configuration"], source: Language["configuration"]) {
   if (config.examination && config.examination.image in replacements) {
     config.examination.image = replace(config.examination.image);
-    config.examination.hotspot = { ...config.examination.hotspot, x: 82, y: 84 };
+    if (config.examination.hotspot && source.examination?.hotspot)
+      config.examination.hotspot = {
+        ...config.examination.hotspot,
+        x: source.examination.hotspot.x,
+        y: source.examination.hotspot.y,
+      };
   }
-  if (config.character) config.character.portrait = replace(config.character.portrait);
+  if (config.character && config.character.portrait in replacements)
+    config.character.portrait = source.character?.portrait ?? replace(config.character.portrait);
 }

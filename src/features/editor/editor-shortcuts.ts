@@ -4,7 +4,7 @@ type ShortcutEvent = Pick<
 >;
 export function editorShortcut(
   event: ShortcutEvent,
-  actions: { undo: () => void; redo: () => void; save: () => Promise<void> },
+  actions: { undo: () => void; redo: () => void; save: () => Promise<unknown> },
 ) {
   if (!(event.ctrlKey || event.metaKey)) return;
   if ((event.target as HTMLElement | null)?.closest?.("dialog")) return;

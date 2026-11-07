@@ -86,13 +86,14 @@ not gameplay mutations.
 
 ## Media and narration
 
-The selected Cover image supplies the right-hand cinematic artwork through a
-validated optional bundle `cover` asset reference. The default bilingual project
-uses three original generated shadow-art illustrations, with provenance and hashes
-in the curated catalog. Existing default artwork identities are refreshed without
-replacing authored text or custom covers. The photograph's hotspot now matches its
-visible upstairs window. Ink and saved progression remain unchanged.
-See [shadow-art.md](shadow-art.md) for generation prompts, migration and checks.
+Right-hand artwork is a media block belonging to the current page; it changes with
+Ink progression and takes the reading surface's full height. The optional Cover
+setting remains for story metadata rather than supplying a permanent overlay.
+The user-selected house image is cataloged as `house.night`, with its actual source,
+provenance and hashes; the old TCP portrait identity is no longer published for that
+file. Known default artwork migrations preserve custom drafts and checkpoint data.
+The photograph's hotspot matches the lit upstairs window of this house illustration.
+Historical art-generation notes remain in [shadow-art.md](shadow-art.md).
 
 Image properties include existing placements, a background placement, width, alignment,
 fit/crop, alt text, caption, page/segment/delayed visibility and optional persistence.
@@ -214,3 +215,89 @@ was installed. The existing Ink compiler and runtime remain pinned by the applic
 
 The final verification record is recorded in `verification.md` beside this report.
 It includes domain, browser, build, asset, Fallow and review results and their limits.
+
+## Current media extensions
+
+Non-cinematic images can be marked examinable, with a 2px black border and a reusable
+examination dialog (details, optional reverse and magnifier). Cinematic media unmount
+with their effects at completion; persistence starts when a media block is actually
+reached and visible. Restart resets paused clocks, audio and cancellation scopes.
+Reader background color is a validated hex setting, defaulting to `#080b0d`, with
+contrasting text colors. Curated images expose reviewed depth-layer roles.
+
+**Media ? 3D Scene** is an isolated authoring experiment, described in
+[the experiment README](../../src/experiments/book-scene3d/README.md). It uses the same
+media layout, position, visibility, timing, examination and cinematic controls.
+Models/composition are retained in the existing asset registry and archive; cached
+WebP/video output uses the normal reader. Three.js loads only for 3D authoring or the
+standalone Synty test. No default story content is replaced by the 3D experiment.
+
+The 3D composer uses the normal editor colors, header and ribbon, docking inside
+the existing workspace beside the story preview. Apply is labeled **Apply to Story**.
+Name, style and framing precede the viewport; numeric object transforms are under
+**Adjust selected object**. Its gallery renders actual
+model thumbnails; layer selection, visibility, mouse picking, transform gizmos and
+numeric transforms share the same composition data. Orbit/pan/zoom and focal length
+are saved with the scene; Reframe returns to automatic shot presets. Ten real
+material treatments share the renderer used by the Synty experiment.
+During editing, a clean temporary raster is shown in the actual book surface.
+Live and saved illustrations share the same rounded, feathered mask on all four
+edges. Wide images bleed into the reader gutter. Hidden environment layers do not
+leave an opaque sky behind an isolated subject; cached stills preserve transparency.
+Apply replaces it with cached media and replays the selected passage automatically.
+Wide 3D illustrations use the full reading column; existing right-page artwork is
+retained in the project. A new reached Right Page illustration replaces the prior
+one visually. Ink insertion preserves selected prose and respects the selected
+scene even when the text cursor is still in the file header.
+
+Quick scene buttons provide a complete medieval village, forest path, transparent
+character or transparent object. Place presets keep individual editable models
+and add renderer-owned soil/path, grass clumps, hills and clouded sky. No raw source
+pack or separate environment editor is exposed. Removing/replacing a model preserves
+the remaining world positions through the existing relative transforms.
+3D video illustrations autoplay silently without native controls; reduced-motion
+users see the still frame. The reader's global pause/resume controls remain active,
+and restored pages can resume decorative video without rerunning Ink or narrative cues.
+
+Place presets no longer create a character by default. A subject is optional;
+scenery-only compositions validate and frame visible background/middleground assets.
+Curated foreground insertion scales and depth guidance distinguish framing foliage,
+low props and distant scenery. Book illustration mode adds shared editorial haze,
+vignette and text-safe gradients, with optional leaf/grass page silhouettes. These
+ornaments remain distinct from editable 3D scene layers and cinematic animation.
+The optimized catalog soldier is bareheaded; existing cached renders are retained
+until the author replaces the older model and applies the scene again.
+
+Image authoring now reuses the media library for separated paper illustrations.
+In Media ? Image, choose Landscape, Character in forest or Two moons; choose a camera
+preset (or None), then Apply Image. Background / Middleground / Foreground gallery
+buttons filter reviewed layer roles and retain search/preview. Optional per-layer
+crop/scale, aspect, paper/soft/no blend, safe-margin preview and Inline text wrapping
+sit next to the composition. Existing single-image and video workflows remain valid.
+
+The supplied generated-2 pack contributes 26 selected optimized WebPs (about 4.3 MB)
+to the gallery. Catalog hashes track unchanged original PNGs and derived WebPs;
+user authorization and the absence of a provider-verified license stay separate.
+`python tools/prepare-paper-illustrations.py` reproduces this explicit allowlist.
+No source directory or raw source-library catalog is served. The example story uses
+still characters/backgrounds, inline and wide multiplane pictures, right-page art
+and bounded fullscreen cinematics; Ink, audio, the approved cover and photograph
+interaction remain intact. New example pages use warm paper, with preset/custom
+page colors available in both story Settings and reader preferences.
+
+Saved drafts receive missing gallery entries without replacing author text or
+presentation data. Load / Import ? Apply new illustration pack explicitly updates
+matching example block IDs and page color, retaining uploaded images, Ink and audio;
+Undo restores the previous draft. The saved publication changes only after validation.
+The camera uses explicit per-plane perspective projection through the existing effect
+engine so Safari software rendering keeps differential depth. This is authored 2.5D
+multiplane art; it does not infer geometry or create missing background pixels.
+
+The motion design follows the separated planes, camera tracking and dolly techniques
+in Adobe's official [Animate layer-depth guide](https://helpx.adobe.com/gr_en/animate/desktop/using/layer-depth.html)
+and [After Effects camera guide](https://helpx.adobe.com/after-effects/desktop/work-with-layers/camera-layer/cameras-lights-points-interest.html).
+The six named reading presets are application-specific tunings, not an imported
+commercial preset library. Gentle tracking uses depth ratios 1 / .5 / .15; dolly
+projection changes apparent scale differently at each distance, and Character Focus
+keeps the middleground subject stationary while distant layers shift. Duration is
+adjustable, with finite movement rather than scroll-driven or endless camera loops.

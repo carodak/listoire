@@ -1,0 +1,42 @@
+import { sceneTemplate, sceneTemplates } from "./templates.ts";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import type { ModelSource } from "./models.ts";
+export function QuickScene({
+  scene,
+  sources,
+  onChange,
+}: {
+  scene: Scene3D;
+  sources: ModelSource[];
+  onChange: (scene: Scene3D) => void;
+}) {
+  const subject = scene.elements.find((element) => element.layer === "main");
+  const category = sources.find((source) => source.id === subject?.assetId)?.model3d.category;
+  function choose(kind: keyof typeof sceneTemplates) {
+    const keep =
+      kind === "character"
+        ? category === "character"
+        : kind === "object"
+          ? category !== "character"
+          : true;
+    onChange(sceneTemplate(kind, scene.cinematic, keep ? subject : undefined));
+  }
+  return (
+    <section className="quick-scene" aria-label="Scene templates">
+      <strong>Start with a scene</strong>
+      <p>1. Choose a starting scene · 2. Choose a look · 3. Apply to Story</p>
+      <div>
+        {Object.entries(sceneTemplates).map(([kind, label]) => (
+          <button
+            type="button"
+            key={kind}
+            title="Replace the current composition with this editable starting scene"
+            onClick={() => choose(kind as keyof typeof sceneTemplates)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}

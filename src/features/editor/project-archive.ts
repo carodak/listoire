@@ -22,7 +22,7 @@ export async function exportProjectArchive(project: StoryProject) {
           .then((blob) => {
             const reader = new FileReader();
             reader.onload = () => resolve(String(reader.result));
-            reader.onerror = () => reject(new Error("Could not export video."));
+            reader.onerror = () => reject(new Error("Could not export media."));
             reader.readAsDataURL(blob);
           })
           .catch(reject);
@@ -39,7 +39,7 @@ export async function importProjectArchive(raw: unknown) {
   const { project, uploadedFiles } = splitStoryArchive(raw);
   for (const asset of uploads(project)) {
     const data = uploadedFiles[asset.id];
-    if (!data) throw new Error(`Backup is missing video ${asset.id}.`);
+    if (!data) throw new Error(`Backup is missing media ${asset.id}.`);
     await storeUploadedMedia(asset, decodeUploadedFile(asset, data));
   }
   return project;

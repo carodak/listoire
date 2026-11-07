@@ -1,3 +1,4 @@
+import { writeBundle } from "./write-bundle.ts";
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
 import type { StoryBundle } from "../src/contracts/story.ts";
@@ -5,10 +6,12 @@ import { compileProject } from "../src/features/editor/compiler.ts";
 import { BundleSchema } from "../src/contracts/story.ts";
 import { splitStoryArchive, decodeUploadedFile } from "../src/contracts/story-archive.ts";
 import { verifyUploadedMedia } from "../src/contracts/uploaded-media.ts";
+import { storyAssetIds } from "../src/contracts/story-assets.ts";
 
 interface CuratedAsset {
   id: string;
   optimizedPath: string;
+  runtimePath?: string;
   runtimeSha256: string;
   originalPath: string;
   mediaType: string;
@@ -30,7 +33,7 @@ function assetSource(
         entry.originalPath.startsWith("assets/images/reference-house/"))
     )
       throw new Error(`House image is not from the downloaded library: ${asset.id}`);
-    if (entry.optimizedPath !== `stories/house/${asset.path}`)
+    if ((entry.runtimePath ?? entry.optimizedPath.replace("stories/house/", "")) !== asset.path)
       throw new Error(`Asset path mismatch: ${asset.id}`);
     return { source: entry.optimizedPath, expected: entry.runtimeSha256 };
   }
@@ -49,18 +52,20 @@ export async function buildEditorProject(root: URL) {
     JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),
   );
   const curated = JSON.parse(await readFile(new URL("assets/catalog/curated.json", root), "utf8"));
-  project.mediaLibrary ??= curated.entries.map(
+  project.mediaLibrary = curated.entries.map(
     (entry: {
       id: string;
       title: string;
       sourceCollection: string;
-      suggested: { themes: string[]; roles: string[] };
+      category?: string;
+      suggested: { themes: string[]; roles: string[]; layerRoles?: string[] };
     }) => ({
       id: entry.id,
       title: entry.title,
-      category: entry.sourceCollection,
+      category: entry.category ?? entry.sourceCollection,
       themes: entry.suggested.themes,
       usage: entry.suggested.roles,
+      layerRoles: entry.suggested.layerRoles,
     }),
   );
   const bundles = await compileProject(project);
@@ -75,15 +80,19 @@ export async function buildEditorProject(root: URL) {
   const copied = new Map<string, string>();
   const referenced = new Set<string>();
   for (const [locale, original] of Object.entries(bundles)) {
-    const bundle =
+    const full =
       publication?.inkDigests[locale] === original.inkDigest
         ? mergeGeneratedClips(original, publication.clips)
         : original;
-    project.languages[locale]!.configuration.narration = bundle.narration;
-    project.languages[locale]!.configuration.assets = bundle.assets;
+    project.languages[locale]!.configuration.narration = full.narration;
+    project.languages[locale]!.configuration.assets = full.assets;
+    const references = storyAssetIds(full);
+    const bundle = BundleSchema.parse({
+      ...full,
+      assets: full.assets?.filter((asset) => references.has(asset.id)),
+    });
     await copyAssets(bundle, root, output, curated.entries, copied, referenced, uploadedFiles);
-    await writeFile(new URL(`${locale}.json`, output), JSON.stringify(bundle) + "\n");
-    console.log(`Built editor-managed house/${locale}: ${bundle.inkDigest.slice(0, 12)}`);
+    await writeBundle(output, bundle);
   }
   await writeFile(new URL("project.json", output), JSON.stringify(project) + "\n");
   await writeFile(
@@ -96,7 +105,7 @@ export async function buildEditorProject(root: URL) {
     }) + "\n",
   );
   for (const file of await readdir(new URL("media/", output)))
-    if (/^[a-z0-9.-]+\.(webp|mp3|mp4|webm)$/.test(file) && !referenced.has(file))
+    if (/^[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/.test(file) && !referenced.has(file))
       await rm(new URL(`media/${file}`, output));
 }
 
@@ -147,7 +156,7 @@ async function copyAssets(
     if (bundle.embeddedAudio?.[asset.id]) continue;
     if (asset.upload) {
       const data = uploadedFiles[asset.id];
-      if (!data) throw new Error(`Missing uploaded video bytes: ${asset.id}`);
+      if (!data) throw new Error(`Missing uploaded media bytes: ${asset.id}`);
       const blob = await verifyUploadedMedia(asset, decodeUploadedFile(asset, data));
       await writeFile(new URL(asset.path, output), new Uint8Array(await blob.arrayBuffer()));
       referenced.add(asset.path.slice("media/".length));

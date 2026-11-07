@@ -66,9 +66,11 @@ test("English and French finish the original branches and retain inventory and r
   ]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     if (label === "Break the wax seal") {
-      const key = page.locator('.prose img[src$="heritage.key.webp"]');
-      await expect(key).toHaveCSS("filter", "invert(1)");
-      await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      const illustration = page
+        .getByRole("complementary", { name: "Page illustration" })
+        .locator('img[src$="paper.modern-male-character-sitting.webp"]');
+      await expect(illustration).toHaveCSS("filter", "none");
+      await expect(illustration).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     }
   }
   await expect(page.getByRole("heading", { name: "The House Is Waiting" })).toBeVisible();
@@ -109,6 +111,8 @@ test("progressive text can be revealed immediately and preferences persist", asy
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
   await expect(next).toBeEnabled();
   await page.getByText("Reading preferences", { exact: true }).click();
+  await page.getByRole("button", { name: "Page color #faf8f2", exact: true }).click();
+  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(250, 248, 242)");
   await page.getByLabel("Text size", { exact: true }).selectOption("large");
   await page.getByLabel("Typeface", { exact: true }).selectOption("sans");
   await page.getByLabel("Line spacing", { exact: true }).selectOption("spacious");
@@ -120,6 +124,7 @@ test("progressive text can be revealed immediately and preferences persist", asy
   await page.reload();
   await page.getByRole("button", { name: "Play an existing story" }).click();
   await expect(page.locator(".reader")).toHaveClass(/font-sans text-large lines-spacious/);
+  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(250, 248, 242)");
   await expect(page.getByRole("button", { name: "Show all text" })).toHaveCount(0);
 });
 
@@ -175,13 +180,13 @@ test("initial reader requests only its scene resources and no source catalogs", 
   const requested: string[] = [];
   page.on("request", (request) => requested.push(new URL(request.url()).pathname));
   await enter(page);
-  await expect(page.locator(".scene-illustration img")).toBeVisible();
+  await expect(page.locator(".scene-illustration img").first()).toBeVisible();
   expect(
     requested.some((path) =>
       /assets\/catalog|heritage-library|GameAudioBundle|\.wav$|\.zip$/.test(path),
     ),
   ).toBe(false);
-  expect(requested.filter((path) => path.includes("/stories/house/media/")).sort()).toEqual([
-    "/stories/house/media/tcp.human8-cutout.webp",
-  ]);
+  expect(
+    [...new Set(requested.filter((path) => path.includes("/stories/house/media/")))].sort(),
+  ).toEqual(["/stories/house/media/house.night.webp"]);
 });

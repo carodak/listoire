@@ -15,8 +15,12 @@ export async function createPlayer(
   preview?: { startKnot?: string; state?: z.infer<typeof PreviewStateSchema> },
 ) {
   const { InkNarrativeEngine } = await import("../features/story-runtime/ink-engine.ts");
-  const presentation = new PresentationSession(bundle, preferences, undefined, (asset) =>
-    resolveMediaAsset(asset, bundle.storyId),
+  const presentation = new PresentationSession(
+    bundle,
+    preferences,
+    undefined,
+    (asset) => resolveMediaAsset(asset, bundle.storyId),
+    Boolean(preview),
   );
   const director = new StoryDirector(
     bundle,
@@ -41,5 +45,12 @@ export async function createPlayer(
       : undefined,
     presentation,
   );
-  return { director, presentation };
+  return {
+    director,
+    presentation,
+    notes: {
+      read: () => saves.notes(bundle),
+      write: (text: string) => saves.saveNotes(bundle, text),
+    },
+  };
 }

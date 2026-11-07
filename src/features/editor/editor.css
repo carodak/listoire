@@ -149,6 +149,11 @@
   flex-direction: column-reverse;
   margin: 0;
 }
+.ribbon-group {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
 .ribbon-commands legend {
   float: none;
   font-size: 10px;
@@ -182,8 +187,8 @@
 .additional-commands {
   align-self: stretch;
   position: relative;
-  margin-left: auto;
-  margin-right: clamp(0px, 6vw, 120px);
+  margin-left: 0;
+  margin-right: 0;
   min-width: 180px;
 }
 .additional-commands summary {
@@ -677,7 +682,7 @@
 .experience-preview:fullscreen {
   background: #f7f5ef;
 }
-.editor-dialog:has(.media-library) {
+.editor-dialog:has(.media-library):not(:has(.media-preview-column)) {
   width: min(900px, calc(100vw - 30px));
 }
 .media-library-grid {
@@ -835,6 +840,9 @@
   background: #e4ebdf;
   border-color: #427257;
 }
+.preset-grid button[hidden] {
+  display: none;
+}
 .preset-grid button span {
   display: block;
   font-size: 24px;
@@ -895,4 +903,11 @@
   .preview-slot .experience-preview {
     height: 75dvh;
   }
+}
+
+.media-dialog-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
 }

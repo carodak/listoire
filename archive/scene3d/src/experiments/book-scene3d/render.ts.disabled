@@ -1,0 +1,344 @@
+import { buildEnvironment } from "./environment.ts";
+import {
+  Scene,
+  Group,
+  Vector3,
+  MeshBasicMaterial,
+  BackSide,
+  Texture,
+  SkinnedMesh,
+  WebGLRenderer,
+  PerspectiveCamera,
+  Color,
+  FogExp2,
+  HemisphereLight,
+  DirectionalLight,
+  Mesh,
+  MeshStandardMaterial,
+  TextureLoader,
+  SRGBColorSpace,
+  ACESFilmicToneMapping,
+  PCFSoftShadowMap,
+  Box3,
+  AnimationMixer,
+  EdgesGeometry,
+  LineSegments,
+  LineBasicMaterial,
+  Points,
+  BufferGeometry,
+  Float32BufferAttribute,
+  PointsMaterial,
+} from "three";
+import type { Material } from "three";
+import { Scene3DSchema, validateSceneModels } from "../../contracts/scene3d.ts";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import { illustrationMaterial } from "../synty-parallax/materials.ts";
+import environmentUrl from "../synty-parallax/assets/environment.png?url";
+import characterUrl from "../synty-parallax/assets/character.png?url";
+import { loadModel, modelBytes, disposeModel } from "./models.ts";
+import type { ModelSource } from "./models.ts";
+import {
+  placeModel,
+  avoidOverlap,
+  cameraFraming,
+  animateCamera,
+  sceneFocus,
+} from "./composition.ts";
+
+const ambience = {
+  daylight: { sky: "#738185", sun: "#fff2dc", power: 3, fog: 0.012, exposure: 1 },
+  "golden-hour": { sky: "#a7977b", sun: "#ffe0ac", power: 3.4, fog: 0.032, exposure: 1.08 },
+  moonlight: { sky: "#101c2a", sun: "#aecff7", power: 2.3, fog: 0.018, exposure: 0.9 },
+  mist: { sky: "#89918c", sun: "#dbe2d3", power: 2, fog: 0.04, exposure: 1 },
+};
+function paintMesh(node: Mesh, style: Scene3D["style"], palette: Texture | undefined) {
+  const originals: Material[] = Array.isArray(node.material) ? node.material : [node.material];
+  const replacements = originals.map((original) => {
+    const source = original as MeshStandardMaterial;
+    const material = illustrationMaterial(
+      style,
+      palette ?? source.map,
+      source.color?.getStyle() ?? "#dddddd",
+    );
+    material.side = original.side;
+    material.vertexColors = original.vertexColors;
+    material.transparent = original.transparent;
+    material.opacity = original.opacity;
+    material.alphaTest = original.alphaTest;
+    material.userData.sourceTextures = Object.values(original).filter(
+      (value) => value instanceof Texture,
+    );
+    original.dispose();
+    return material;
+  });
+  node.material = Array.isArray(node.material) ? replacements : replacements[0]!;
+  node.castShadow = node.receiveShadow = true;
+  if (style !== "painterly" && style !== "gradient") addOutline(node, style);
+  if (["sketch", "sketch-color"].includes(style) && !(node instanceof SkinnedMesh)) {
+    const edges = new LineSegments(
+      new EdgesGeometry(node.geometry, 28),
+      new LineBasicMaterial({ color: "#25272a", transparent: true, opacity: 0.38 }),
+    );
+    node.add(edges);
+  }
+}
+function addDust(scene: Scene) {
+  const values = Array.from(
+    { length: 240 },
+    (_, i) => Math.sin(i * 234.7) * (i % 3 === 1 ? 4 : 10),
+  );
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new Float32BufferAttribute(values, 3));
+  const particles = new Points(
+    geometry,
+    new PointsMaterial({
+      size: 0.025,
+      color: "#f0d9ac",
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    }),
+  );
+  particles.position.y = 3;
+  scene.add(particles);
+  return particles;
+}
+function sceneLighting(scene: Scene, data: Scene3D, isolated: boolean) {
+  const preset = ambience[data.ambience];
+  const sky = data.style === "sketch" ? "#f1eee6" : preset.sky;
+  scene.background = isolated ? null : new Color(sky);
+  if (!isolated) scene.fog = new FogExp2(sky, preset.fog);
+  scene.add(new HemisphereLight(preset.sun, "#252a32", 1.5));
+  const sun = new DirectionalLight(preset.sun, preset.power);
+  sun.position.set(-5, 9, 5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, far: 70 });
+  sun.shadow.normalBias = 0.025;
+  scene.add(sun);
+  if (!isolated) scene.add(buildEnvironment(data, sky));
+}
+export async function createScene(
+  canvas: HTMLCanvasElement,
+  composition: Scene3D,
+  sources: ModelSource[],
+  signal: AbortSignal,
+  portrait: boolean,
+) {
+  const data = Scene3DSchema.parse(composition);
+  const sourceMap = new Map(sources.map((source) => [source.id, source]));
+  validateSceneModels(data, sourceMap);
+  const renderer = new WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: true,
+    preserveDrawingBuffer: true,
+  });
+  renderer.debug.onShaderError = (gl, _program, vertex, fragment) => {
+    console.error(gl.getShaderInfoLog(vertex), gl.getShaderInfoLog(fragment));
+    throw new Error(
+      "This device could not compile the illustration shader. Try another visual style or browser.",
+    );
+  };
+  renderer.setPixelRatio(1);
+  renderer.setSize(portrait ? 720 : 1280, portrait ? 1080 : 900, false);
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = ambience[data.ambience].exposure;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  const scene = new Scene();
+  const camera = new PerspectiveCamera(45, canvas.width / canvas.height, 0.05, 300);
+  const mixers: AnimationMixer[] = [];
+  const originals: Awaited<ReturnType<typeof loadModel>>["scene"][] = [];
+  const objects: Group[] = [],
+    warnings: string[] = [];
+  const palettes = new Map<string, Texture>();
+  const cleanup = () => {
+    for (const mixer of mixers) {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(mixer.getRoot());
+    }
+    disposeModel(scene);
+    for (const model of originals) disposeModel(model);
+    scene.traverse((node) => {
+      if (node instanceof LineSegments || node instanceof Points) {
+        node.geometry.dispose();
+        (node.material as Material).dispose();
+      }
+    });
+    for (const texture of palettes.values()) texture.dispose();
+    renderer.dispose();
+    renderer.forceContextLoss();
+  };
+  try {
+    const counts = { main: 0, background: 0, midground: 0, foreground: 0 };
+    const occupied: Box3[] = [];
+    const isolated = data.elements
+      .filter((element) => element.visible !== false)
+      .every((element) => element.layer === "main");
+    sceneLighting(scene, data, isolated);
+    for (const element of data.elements) {
+      signal.throwIfAborted();
+      const source = sourceMap.get(element.assetId)!;
+      const model = await styledModel(source, data.style, palettes, signal);
+      originals.push(model.scene);
+      const bounds = placeModel(
+        model.scene,
+        source.model3d,
+        element.layer,
+        counts[element.layer]++,
+      );
+      const group = transformModel(model.scene, bounds, element);
+      group.userData.elementIndex = objects.length;
+      const placed = new Box3().setFromObject(group);
+      if (source.model3d.category === "architecture") {
+        try {
+          avoidOverlap(placed, occupied);
+        } catch (error) {
+          warnings.push(String(error));
+        }
+      }
+      scene.add(group);
+      objects.push(group);
+      originals.pop();
+      if (element.animation) mixers.push(modelAnimation(model, element.animation));
+    }
+    const particles = data.particles === "dust" ? addDust(scene) : undefined;
+    const focus = sceneFocus(objects, data.elements);
+    const character =
+      focus.subjects.length > 0 &&
+      focus.subjects.every(
+        (element) => sourceMap.get(element.assetId)!.model3d.category === "character",
+      );
+    const framing = cameraFraming(focus.bounds, camera.aspect, data.shot, character);
+    const render = (seconds: number, progress: number, moveCamera = true) => {
+      for (const mixer of mixers) mixer.setTime(seconds);
+      if (particles) particles.rotation.y = seconds * 0.035;
+      if (moveCamera) animateCamera(camera, data, framing, progress);
+      renderer.render(scene, camera);
+    };
+    animateCamera(
+      camera,
+      { ...data, cinematic: { ...data.cinematic, preset: "none" } },
+      framing,
+      0,
+    );
+    render(0, 0, false);
+    return {
+      render,
+      dispose: cleanup,
+      camera,
+      scene,
+      objects,
+      warnings,
+      useCamera(value: Scene3D["camera"]) {
+        data.camera = value;
+      },
+      target:
+        data.camera?.target ??
+        camera
+          .getWorldDirection(new Vector3())
+          .multiplyScalar(camera.position.distanceTo(framing.target))
+          .add(camera.position),
+    };
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
+}
+
+async function styledModel(
+  source: ModelSource,
+  style: Scene3D["style"],
+  palettes: Map<string, Texture>,
+  signal: AbortSignal,
+) {
+  const model = await loadModel(await modelBytes(source));
+  try {
+    signal.throwIfAborted();
+    const key = source.model3d.palette;
+    if (key && !palettes.has(key)) {
+      const texture = await new TextureLoader().loadAsync(
+        key === "character" ? characterUrl : environmentUrl,
+      );
+      texture.colorSpace = SRGBColorSpace;
+      texture.flipY = true;
+      palettes.set(key, texture);
+    }
+    const meshes: Mesh[] = [];
+    model.scene.traverse((node) => {
+      if (node instanceof Mesh) meshes.push(node);
+    });
+    for (const mesh of meshes) paintMesh(mesh, style, key ? palettes.get(key) : undefined);
+    signal.throwIfAborted();
+    return model;
+  } catch (error) {
+    disposeModel(model.scene);
+    throw error;
+  }
+}
+function modelAnimation(model: Awaited<ReturnType<typeof loadModel>>, name: string) {
+  const mixer = new AnimationMixer(model.scene);
+  const animation = model.animations.find((clip) => clip.name === name);
+  if (!animation) throw new Error(`Model does not contain animation: ${name}`);
+  const clip = animation.clone();
+  // Keep imported walking clips in place at the book's placement anchor.
+  clip.tracks = clip.tracks.filter((track) => !/(?:root|hips|pelvis)\.position$/i.test(track.name));
+  mixer.clipAction(clip).play();
+  return mixer;
+}
+
+function transformModel(model: Group, bounds: Box3, element: Scene3D["elements"][number]) {
+  const group = new Group();
+  const center = bounds.getCenter(new Vector3());
+  group.position.set(center.x, bounds.min.y, center.z);
+  group.userData.anchor = group.position.clone();
+  model.position.sub(group.position);
+  group.add(model);
+  const transform = element.transform;
+  if (transform) {
+    group.position.add(
+      new Vector3(transform.position.x, transform.position.y, transform.position.z),
+    );
+    group.rotation.set(
+      ...([transform.rotation.x, transform.rotation.y, transform.rotation.z].map(
+        (value) => (value * Math.PI) / 180,
+      ) as [number, number, number]),
+    );
+    group.scale.setScalar(transform.scale);
+  }
+  group.visible = element.visible !== false;
+  group.updateMatrixWorld(true);
+  return group;
+}
+function addOutline(node: Mesh, style: Scene3D["style"]) {
+  const drawn = style === "sketch" || style === "sketch-color";
+  const width = style === "toon" ? 0.004 : drawn ? 0.0028 : 0.002;
+  const material = new MeshBasicMaterial({
+    color: style === "sketch" ? "#45423d" : "#10131b",
+    side: BackSide,
+  });
+  material.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <project_vertex>",
+      `#include <project_vertex>
+      vec3 edgeNormal = normalize(normalMatrix * normal);
+      vec2 strokePosition = gl_Position.xy / gl_Position.w;
+      float wobble = ${drawn ? "0.78 + 0.22 * sin(strokePosition.x*430.0 + sin(strokePosition.y*230.0)*2.0)" : "1.0"};
+      gl_Position.xy += edgeNormal.xy * gl_Position.w * ${width} * wobble;`,
+    );
+  };
+  material.customProgramCacheKey = () => `book-outline-${style}`;
+  const outline =
+    node instanceof SkinnedMesh
+      ? new SkinnedMesh(node.geometry, material)
+      : new Mesh(node.geometry, material);
+  if (outline instanceof SkinnedMesh && node instanceof SkinnedMesh) {
+    outline.skeleton = node.skeleton;
+    outline.bindMatrix.copy(node.bindMatrix);
+    outline.bindMatrixInverse.copy(node.bindMatrixInverse);
+  }
+  outline.morphTargetInfluences = node.morphTargetInfluences;
+  outline.morphTargetDictionary = node.morphTargetDictionary;
+  node.add(outline);
+}

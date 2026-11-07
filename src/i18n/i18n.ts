@@ -1,6 +1,8 @@
 import i18next from "i18next";
 
 const en = {
+  paperColor: "Page color",
+  customPaperColor: "Custom page color",
   pageTurn: "Animated page turns",
   previousPage: "Previous page",
   replayPage: "Replay page",
@@ -24,6 +26,11 @@ const en = {
   },
   magnifierHelp:
     "Move the pointer or drag with one finger. Keyboard: arrows move the lens, plus and minus change magnification, Home centers it.",
+  notes: "Notes",
+  personalNotes: "Your notes",
+  notesHint: "Saved automatically for this story, independently of game progress.",
+  notesLoadError: "Notes could not be loaded. Your saved notes have been kept.",
+  notesSaveError: "Notes could not be saved. Copy your text before leaving this page.",
   myCharacter: "My Character",
   health: "Health",
   inventory: "Inventory",
@@ -62,6 +69,7 @@ const en = {
   changeLanguage: "Change language",
   home: "Listoire home",
   library: "Library",
+  examineImage: "Examine the image",
   languageNames: { en: "English", fr: "French" },
   storyFallback: "This story is available in {{language}}. Your saved progress is preserved.",
   settingsFailed:
@@ -98,6 +106,8 @@ const en = {
   },
 };
 const fr: typeof en = {
+  paperColor: "Couleur des pages",
+  customPaperColor: "Couleur personnalisée des pages",
   pageTurn: "Animation des pages tournées",
   previousPage: "Page précédente",
   replayPage: "Rejouer la page",
@@ -121,6 +131,11 @@ const fr: typeof en = {
   },
   magnifierHelp:
     "Déplacez le pointeur ou glissez avec un doigt. Clavier : flèches pour la loupe, plus et moins pour le grossissement, Origine pour centrer.",
+  notes: "Notes",
+  personalNotes: "Vos notes",
+  notesHint: "Enregistrement automatique pour cette histoire, independant de la progression.",
+  notesLoadError: "Impossible de charger les notes. Vos notes sauvegardees sont conservees.",
+  notesSaveError: "Impossible de sauvegarder. Copiez vos notes avant de quitter cette page.",
   myCharacter: "Mon personnage",
   health: "PV",
   inventory: "Inventaire",
@@ -159,6 +174,7 @@ const fr: typeof en = {
   changeLanguage: "Changer de langue",
   home: "Accueil Listoire",
   library: "Bibliothèque",
+  examineImage: "Examiner l’image",
   languageNames: { en: "anglais", fr: "français" },
   storyFallback: "Cette histoire est disponible en {{language}}. Votre progression est conservée.",
   settingsFailed:

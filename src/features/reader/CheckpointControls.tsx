@@ -2,6 +2,15 @@ import { useTranslation } from "react-i18next";
 import type { FailureCode } from "../../contracts/story.ts";
 import type { StoryDirector } from "../story-runtime/director.ts";
 
+interface CheckpointControlsProps {
+  director: StoryDirector;
+  busy: boolean;
+  hasFrame: boolean;
+  failure: FailureCode | null;
+  onFailure: (code: FailureCode | null) => void;
+  backup: () => Promise<void>;
+}
+
 export function CheckpointControls({
   director,
   busy,
@@ -9,14 +18,7 @@ export function CheckpointControls({
   failure,
   onFailure,
   backup,
-}: {
-  director: StoryDirector;
-  busy: boolean;
-  hasFrame: boolean;
-  failure: FailureCode | null;
-  onFailure: (code: FailureCode | null) => void;
-  backup: () => Promise<void>;
-}) {
+}: CheckpointControlsProps) {
   const { t, i18n } = useTranslation();
   return (
     <>

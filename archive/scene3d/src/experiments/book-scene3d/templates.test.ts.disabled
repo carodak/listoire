@@ -1,0 +1,53 @@
+import { expect, it } from "vitest";
+import { sceneTemplate, sceneTemplates } from "./templates.ts";
+import { CinematicSchema } from "../../contracts/cinematic.ts";
+import { Scene3DSchema, validateSceneModels } from "../../contracts/scene3d.ts";
+import { builtinModels, disposeModel } from "./models.ts";
+import { buildEnvironment } from "./environment.ts";
+import { InstancedMesh } from "three";
+
+it("creates valid editable places or transparent single subjects without inventing model roles", () => {
+  const motion = CinematicSchema.parse({ preset: "none" });
+  const models = new Map(builtinModels.map((model) => [model.id, model]));
+  for (const kind of Object.keys(sceneTemplates) as (keyof typeof sceneTemplates)[]) {
+    const scene = sceneTemplate(kind, motion);
+    expect(Scene3DSchema.safeParse(scene).success).toBe(true);
+    expect(() => validateSceneModels(scene, models)).not.toThrow();
+    if (kind === "character" || kind === "object") {
+      expect(scene.elements).toHaveLength(1);
+      expect(scene.environment).toBeUndefined();
+    } else {
+      expect(scene.elements.some((element) => element.layer === "main")).toBe(false);
+      expect(scene.environment).toBe(kind);
+      expect(scene.elements.filter((element) => element.layer === "background")).toHaveLength(3);
+      expect(
+        scene.elements.filter((element) => element.layer === "foreground").length,
+      ).toBeGreaterThan(1);
+      expect(scene.camera).toBeDefined();
+    }
+  }
+  const subject = { assetId: "custom.knight", layer: "main" as const, animation: "Idle" };
+  expect(sceneTemplate("forest", motion, subject).elements[0]).toMatchObject(subject);
+  expect(subject).not.toHaveProperty("visible");
+});
+
+it("fills places with a sky, earth, hills and repeatable grass clusters outside the reading path", () => {
+  const scene = sceneTemplate("village", CinematicSchema.parse({ preset: "none" }));
+  const first = buildEnvironment(scene, "#a7977b"),
+    second = buildEnvironment(scene, "#a7977b");
+  expect(first.getObjectByName("Earth and winding path")).toBeDefined();
+  expect(first.getObjectByName("Clouded atmospheric sky")).toBeDefined();
+  const grass = first.getObjectByName("Grass along the path") as InstancedMesh;
+  expect(grass.count).toBe(1200);
+  expect(grass.geometry.getAttribute("position").count).toBe(45);
+  expect(grass.instanceMatrix.array).toEqual(
+    (second.getObjectByName("Grass along the path") as InstancedMesh).instanceMatrix.array,
+  );
+  for (let i = 0; i < grass.count; i++) {
+    const x = grass.instanceMatrix.array[i * 16 + 12]!,
+      z = grass.instanceMatrix.array[i * 16 + 14]!;
+    expect(Math.abs(x - Math.sin(z * 0.18) * 0.65)).toBeGreaterThan(1.64);
+  }
+  disposeModel(first);
+  disposeModel(second);
+});

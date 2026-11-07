@@ -1,0 +1,435 @@
+import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+
+test.use({ launchOptions: { args: ["--enable-unsafe-swiftshader"] } });
+function animatedGlb() {
+  const binary = Buffer.from(
+    new Float32Array([-0.5, 0, 0, 0.5, 0, 0, 0, 1.7, 0, 0, 1, 2, 0, 0, 0, 0.2, 0, 0, 0, 0, 0])
+      .buffer,
+  );
+  const data = {
+    asset: { version: "2.0" },
+    scene: 0,
+    scenes: [{ nodes: [0] }],
+    nodes: [{ name: "Figure", mesh: 0 }],
+    meshes: [{ primitives: [{ attributes: { POSITION: 0 } }] }],
+    buffers: [{ byteLength: binary.length }],
+    bufferViews: [
+      { buffer: 0, byteOffset: 0, byteLength: 36 },
+      { buffer: 0, byteOffset: 36, byteLength: 12 },
+      { buffer: 0, byteOffset: 48, byteLength: 36 },
+    ],
+    accessors: [
+      {
+        bufferView: 0,
+        componentType: 5126,
+        count: 3,
+        type: "VEC3",
+        min: [-0.5, 0, 0],
+        max: [0.5, 1.7, 0],
+      },
+      { bufferView: 1, componentType: 5126, count: 3, type: "SCALAR", min: [0], max: [2] },
+      { bufferView: 2, componentType: 5126, count: 3, type: "VEC3" },
+    ],
+    animations: [
+      {
+        name: "Idle",
+        samplers: [{ input: 1, output: 2 }],
+        channels: [{ sampler: 0, target: { node: 0, path: "translation" } }],
+      },
+    ],
+  };
+  const text = JSON.stringify(data),
+    json = Buffer.from(text.padEnd(Math.ceil(text.length / 4) * 4));
+  const result = Buffer.alloc(28 + json.length + binary.length);
+  [0x46546c67, 2, result.length, json.length, 0x4e4f534a].forEach((value, index) =>
+    result.writeUInt32LE(value, index * 4),
+  );
+  json.copy(result, 20);
+  result.writeUInt32LE(binary.length, 20 + json.length);
+  result.writeUInt32LE(0x004e4942, 24 + json.length);
+  binary.copy(result, 28 + json.length);
+  return result;
+}
+
+test("bakes compatible model animation and an existing cinematic preset into normal book video", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "WebGL authoring is verified in Chromium.");
+  test.setTimeout(120000);
+  page.setDefaultTimeout(15000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/editor");
+  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  await page
+    .getByLabel("Find in Ink", { exact: true })
+    .fill("The girl beside her looked exactly like you.");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  const composer = page.locator(".scene3d-composer");
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await composer.getByText("Import a 3D model (GLB, up to 20 MB)", { exact: true }).click();
+  await composer
+    .getByLabel("Model permission / rights", { exact: true })
+    .fill("Original test fixture");
+  await composer
+    .getByLabel("GLB file", { exact: true })
+    .setInputFiles({ name: "animated.glb", mimeType: "model/gltf-binary", buffer: animatedGlb() });
+  await composer.getByRole("searchbox", { name: "Search 3D assets" }).fill("animated.glb");
+  await composer.getByRole("button", { name: "Add animated.glb to main", exact: true }).click();
+  await composer.getByText("Adjust selected object", { exact: true }).click();
+  const animation = composer.getByRole("combobox", { name: "Model animation", exact: true });
+  await expect(animation.locator("option")).toHaveText(["None", "Idle"]);
+  await animation.selectOption("Idle");
+  await composer.getByLabel("Illustration name", { exact: true }).fill("Moving illustration");
+  await composer.getByRole("combobox", { name: "Ambience", exact: true }).selectOption("moonlight");
+  await composer.getByRole("combobox", { name: "Particles", exact: true }).selectOption("dust");
+  await page.getByText("Story placement, timing & size", { exact: true }).click();
+  await page.getByLabel("Type", { exact: true }).selectOption("right");
+  await page.getByRole("button", { name: "parallax", exact: true }).click();
+  await page.getByLabel("Cinematic speed", { exact: true }).selectOption("fast");
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await page.getByRole("button", { name: "Apply to Story", exact: true }).click();
+  await expect(page.getByRole("region", { name: "3D Illustration", exact: true })).toHaveCount(0, {
+    timeout: 45000,
+  });
+  const video = page.locator('.preview-slot .media-right video[aria-label="Moving illustration"]');
+  await expect(video).toBeVisible();
+  await expect(video).toHaveAttribute("src", /^blob:/);
+  await expect(video.locator("..")).toHaveAttribute("data-blend", "true");
+  await expect
+    .poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState))
+    .toBeGreaterThanOrEqual(2);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.videoHeight)).toBe(1080);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.controls)).toBe(false);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.muted)).toBe(true);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
+  await video.evaluate((node: HTMLVideoElement) => node.play());
+  await expect
+    .poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime))
+    .toBeGreaterThan(0.1);
+});
+test("composes imported GLBs, caches an illustration, and restores the editable scene from backup", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "The initial WebGL authoring slice is exercised with Chromium software rendering.",
+  );
+  test.setTimeout(120000);
+  page.setDefaultTimeout(15000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (entry) => {
+    if (entry.type() === "error") errors.push(entry.text());
+  });
+  await page.goto("/editor");
+  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  const headerColor = await page
+    .locator(".editor-header")
+    .evaluate((node) => getComputedStyle(node).backgroundColor);
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  expect(
+    await page.locator(".editor-header").evaluate((node) => getComputedStyle(node).backgroundColor),
+  ).toBe(headerColor);
+  const composer = page.locator(".scene3d-composer");
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await composer.getByText("Import a 3D model (GLB, up to 20 MB)", { exact: true }).click();
+  await composer
+    .getByLabel("Model permission / rights", { exact: true })
+    .fill("My licensed Synty pack");
+  await composer
+    .getByLabel("GLB file", { exact: true })
+    .setInputFiles(resolve("src/experiments/synty-parallax/assets/soldier.glb"));
+  await composer.getByRole("searchbox", { name: "Search 3D assets" }).fill("soldier.glb");
+  await composer.getByRole("button", { name: "Add soldier.glb to main", exact: true }).click();
+  await composer
+    .getByRole("combobox", { name: "Model category", exact: true })
+    .selectOption("architecture");
+  await composer
+    .getByLabel("GLB file", { exact: true })
+    .setInputFiles(resolve("src/experiments/synty-parallax/assets/SM_Bld_Castle_Wall_Gate_01.glb"));
+  await composer.getByRole("button", { name: "Remove Castle gate", exact: true }).click();
+  await composer.getByRole("combobox", { name: "Gallery layer" }).selectOption("background");
+  await composer
+    .getByRole("searchbox", { name: "Search 3D assets" })
+    .fill("SM_Bld_Castle_Wall_Gate_01.glb");
+  await composer
+    .getByRole("button", { name: "Add SM_Bld_Castle_Wall_Gate_01.glb to background", exact: true })
+    .click();
+  await composer.getByRole("button", { name: "soldier.glb", exact: true }).click();
+  await composer.getByText("Adjust selected object", { exact: true }).click();
+  for (const [label, value] of [
+    ["Object position X", "0.6"],
+    ["Object rotation Y", "20"],
+    ["Object scale", "1.1"],
+  ]) {
+    await composer.getByLabel(label!, { exact: true }).fill(value!);
+    await composer.getByLabel(label!, { exact: true }).press("Tab");
+    await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+      timeout: 45000,
+    });
+  }
+  await composer.locator("canvas").scrollIntoViewIfNeeded();
+  const canvasBounds = (await composer.locator("canvas").boundingBox())!;
+  await page.mouse.move(
+    canvasBounds.x + canvasBounds.width * 0.5,
+    canvasBounds.y + canvasBounds.height * 0.55,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    canvasBounds.x + canvasBounds.width * 0.65,
+    canvasBounds.y + canvasBounds.height * 0.5,
+    { steps: 6 },
+  );
+  await page.mouse.up();
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await expect(page.getByRole("img", { name: "Live illustration in the book" })).toBeVisible();
+  await composer.getByLabel("Illustration name", { exact: true }).fill("Courtyard illustration");
+  const styleImages = new Set<string>();
+  for (const style of [
+    "gradient",
+    "poster",
+    "rim",
+    "halftone",
+    "hatching",
+    "glossy",
+    "painterly",
+    "sketch",
+    "sketch-color",
+    "toon",
+  ]) {
+    await composer.getByRole("combobox", { name: "Visual style", exact: true }).selectOption(style);
+    await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+      timeout: 45000,
+    });
+    styleImages.add(
+      await composer.locator("canvas").evaluate((node: HTMLCanvasElement) => node.toDataURL()),
+    );
+  }
+  expect(styleImages.size).toBe(10);
+  await page.getByText("Story placement, timing & size", { exact: true }).click();
+  await page.getByLabel("Type", { exact: true }).selectOption("wide");
+  await page.getByLabel("Caption", { exact: true }).fill("A real 3D courtyard");
+  await page.getByRole("button", { name: "Apply to Story", exact: true }).click();
+  await expect(page.getByRole("region", { name: "3D Illustration", exact: true })).toHaveCount(0, {
+    timeout: 45000,
+  });
+  const image = page
+    .locator(".preview-slot")
+    .getByRole("img", { name: "Courtyard illustration", exact: true });
+  await expect(image).toBeVisible();
+  await expect(image).toHaveAttribute("src", /^blob:/);
+  await expect(page.locator(".preview-slot .reader-scene")).toHaveAttribute(
+    "data-illustrated",
+    "false",
+  );
+  await expect(page.locator(".preview-slot .prose")).toContainText(
+    "The girl beside her looked exactly like you.",
+  );
+  expect(await image.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(1280);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const file = (await (await download).path())!;
+  const archive = JSON.parse(await readFile(file, "utf8"));
+  const project = archive.project ?? archive;
+  const assets = project.languages.en.configuration.assets;
+  const savedScene = assets.find((asset: { scene3d?: unknown }) => asset.scene3d)?.scene3d;
+  expect(savedScene.style).toBe("toon");
+  expect(savedScene.camera.position.x).not.toBe(0);
+  const subject = savedScene.elements.find(
+    (element: { assetId: string }) =>
+      element.assetId ===
+      assets.find(
+        (asset: { type: string; alt: string }) =>
+          asset.type === "model3d" && asset.alt === "soldier.glb",
+      )?.id,
+  );
+  expect(subject.transform.scale).toBe(1.1);
+  expect(subject.transform.position.x).toBeCloseTo(0.6);
+  expect(subject.transform.rotation.y).toBe(20);
+  expect(
+    assets.filter((asset: { type: string }) => asset.type === "model3d").length,
+  ).toBeGreaterThanOrEqual(4);
+  await page.getByRole("button", { name: "Close dialog", exact: true }).last().click();
+  await page.getByRole("button", { name: "Load / Import", exact: true }).click();
+  await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles(file);
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  await page.getByRole("button", { name: /Browse media library/ }).click();
+  await page.getByLabel("Search media", { exact: true }).fill("Courtyard illustration");
+  await page.getByRole("button", { name: "Use this media", exact: true }).click();
+  await expect(page.getByLabel("Illustration name", { exact: true })).toHaveValue(
+    "Courtyard illustration",
+  );
+  await composer.getByRole("button", { name: "soldier.glb", exact: true }).click();
+  await composer.getByText("Adjust selected object", { exact: true }).click();
+  await expect(composer.getByLabel("Object position X", { exact: true })).toHaveValue("0.6");
+  await expect(composer.getByLabel("Object scale", { exact: true })).toHaveValue("1.1");
+  expect(errors).toEqual([]);
+});
+
+test("blends an isolated subject with transparent cached output in the normal editor", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "WebGL authoring is exercised in Chromium.");
+  test.setTimeout(90000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/editor");
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  const composer = page.locator(".scene3d-composer");
+  const canvas = composer.locator("canvas");
+  await expect(canvas).toHaveAttribute("data-ready", "true", { timeout: 45000 });
+  await composer.getByRole("button", { name: "Object only", exact: true }).click();
+  await expect(composer.getByRole("button", { name: "Hide Rocks", exact: true })).toBeVisible();
+  await composer.getByRole("button", { name: "Character only", exact: true }).click();
+  await expect(
+    composer.getByRole("button", { name: "Hide Faceless knight", exact: true }),
+  ).toBeVisible();
+  await expect(canvas).toHaveAttribute("data-ready", "true", { timeout: 45000 });
+  await expect
+    .poll(() =>
+      canvas.evaluate((source: HTMLCanvasElement) => {
+        const sample = document.createElement("canvas");
+        sample.width = source.width;
+        sample.height = source.height;
+        const context = sample.getContext("2d")!;
+        context.drawImage(source, 0, 0);
+        const data = context.getImageData(0, 0, sample.width, sample.height).data;
+        return {
+          corner: data[3],
+          opaque: data.filter((value, index) => index % 4 === 3 && value > 240).length > 1000,
+        };
+      }),
+    )
+    .toEqual({ corner: 0, opaque: true });
+  await composer.getByLabel("Illustration name", { exact: true }).fill("Isolated subject");
+  await page.getByRole("button", { name: "Apply to Story", exact: true }).click();
+  const image = page
+    .locator(".preview-slot")
+    .getByRole("img", { name: "Isolated subject", exact: true });
+  await expect(image).toBeVisible({ timeout: 45000 });
+  await expect
+    .poll(() =>
+      image.evaluate((source: HTMLImageElement) => {
+        const sample = document.createElement("canvas");
+        sample.width = source.naturalWidth;
+        sample.height = source.naturalHeight;
+        const context = sample.getContext("2d")!;
+        context.drawImage(source, 0, 0);
+        return context.getImageData(0, 0, 1, 1).data[3];
+      }),
+    )
+    .toBe(0);
+  const mask = await image.locator("..").evaluate((node) => getComputedStyle(node).maskImage);
+  expect(mask).toContain("radial-gradient");
+  expect(mask.match(/linear-gradient/g)).toHaveLength(2);
+});
+
+test("creates a populated forest preset and plays it without video controls", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "WebGL authoring is verified in Chromium.");
+  test.setTimeout(120000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/editor");
+  const project = JSON.parse(await readFile(resolve("stories/house/project.json"), "utf8"));
+  project.languages.en.defaults.reveal = "instant";
+  project.languages.en.defaults.sound = true;
+  project.languages.en.defaults.narration = false;
+  await page.getByRole("button", { name: "Load / Import", exact: true }).click();
+  await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles({
+    name: "automatic-illustration.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(project)),
+  });
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  const composer = page.locator(".scene3d-composer");
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await composer.getByRole("button", { name: "Forest path", exact: true }).click();
+  await page.getByRole("button", { name: "parallax", exact: true }).click();
+  await page.getByLabel("Cinematic speed", { exact: true }).selectOption("fast");
+  await expect(composer.locator("canvas")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await page.getByRole("button", { name: "Apply to Story", exact: true }).click();
+  const video = page.locator('.preview-slot video[aria-label="Forest path"]');
+  await expect(video).toBeVisible({ timeout: 45000 });
+  expect(await video.evaluate((node: HTMLVideoElement) => node.controls)).toBe(false);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.muted)).toBe(true);
+  await expect
+    .poll(() => video.evaluate((node: HTMLVideoElement) => node.currentTime))
+    .toBeGreaterThan(0.1);
+  const preview = page.locator(".preview-slot");
+  await preview.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
+  await preview.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(false);
+});
+
+test("composes a place without a subject and preserves its editorial blend in the story", async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== "chromium", "WebGL authoring is verified in Chromium.");
+  test.setTimeout(90000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/editor");
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "3D Scene", exact: true }).click();
+  const composer = page.locator(".scene3d-composer");
+  const canvas = composer.locator("canvas");
+  await expect(canvas).toHaveAttribute("data-ready", "true", { timeout: 45000 });
+  await expect(
+    composer.getByRole("button", { name: "Hide Faceless knight", exact: true }),
+  ).toHaveCount(0);
+  await composer.getByRole("button", { name: "Reframe", exact: true }).click();
+  await expect(canvas).toHaveAttribute("data-ready", "true", { timeout: 45000 });
+  await expect(composer.getByRole("alert")).toHaveCount(0);
+  await composer.getByRole("button", { name: "Medieval village", exact: true }).click();
+  await composer.getByLabel("Page foreground", { exact: true }).selectOption("leaves");
+  await expect(canvas).toHaveAttribute("data-ready", "true", { timeout: 45000 });
+  const draft = page.locator('.preview-slot .illustration-editorial[data-edges="leaves"]');
+  await expect(draft.locator("svg")).toBeVisible();
+  const draftGradients = await draft
+    .locator(".editorial-atmosphere")
+    .evaluate((node) => getComputedStyle(node).backgroundImage);
+  expect(draftGradients).toContain("radial-gradient");
+  expect(draftGradients).toContain("linear-gradient");
+  await page.getByRole("button", { name: "Apply to Story", exact: true }).click();
+  const image = page
+    .locator(".preview-slot")
+    .getByRole("img", { name: "Medieval village", exact: true });
+  await expect(image).toBeVisible({ timeout: 45000 });
+  await expect(
+    image.locator("..").locator('.illustration-editorial[data-edges="leaves"] svg'),
+  ).toBeVisible();
+  expect(
+    await image
+      .locator("..")
+      .locator(".editorial-atmosphere")
+      .evaluate((node) => getComputedStyle(node).backgroundImage),
+  ).toBe(draftGradients);
+});

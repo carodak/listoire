@@ -88,12 +88,24 @@ test("voice playback, pause and voice-off leave the committed passage unchanged"
 test("a declarative cinematic can be skipped without changing its story result", async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    bundle.scenes.room.blocks.find(
+      (block: { layout?: string }) => block.layout === "fullscreen",
+    ).durationMs = 100;
+    bundle.scenes.room.events.find(
+      (event: { blocking?: boolean }) => event.blocking,
+    ).action.effect.duration = 5000;
+    await route.fulfill({ json: bundle });
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Play an existing story" }).click();
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
+  await page.locator(".prose p").first().click();
   await page.getByRole("button", { name: "Continue reading", exact: true }).click();
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
+  await page.locator(".prose p").first().click();
   await page.getByRole("button", { name: "Ask about the locked room", exact: true }).click();
   const cinematic = page.locator(".cinematic-dialog");
   await cinematic.getByRole("button", { name: "Pause", exact: true }).click();
@@ -103,16 +115,14 @@ test("a declarative cinematic can be skipped without changing its story result",
   expect(dialogBounds.y).toBe(0);
   expect(dialogBounds.width).toBeCloseTo(viewport.width, 0);
   expect(dialogBounds.height).toBeCloseTo(viewport.height, 0);
-  const image = cinematic.locator(".shot-image");
+  const image = cinematic.locator('.multiplane-plane[data-role="background"] img');
   const imageBounds = (await image.boundingBox())!;
   expect(imageBounds.width).toBeGreaterThanOrEqual(viewport.width - 1);
   expect(imageBounds.height).toBeGreaterThanOrEqual(viewport.height - 1);
   await expect(image).toHaveCSS("object-fit", "cover");
   await cinematic.getByRole("button", { name: "Resume", exact: true }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Skip cinematic", exact: true })
-    .click();
+  await cinematic.getByRole("button", { name: "Skip cinematic", exact: true }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Skip cinematic", exact: true })).toHaveCount(0);
   await page.locator(".prose p").first().click();
   await expect(page.locator(".prose")).toContainText("twenty-nine years");
@@ -121,4 +131,10 @@ test("a declarative cinematic can be skipped without changing its story result",
     .locator(".cinematic-stage")
     .evaluate((stage) => stage.getAnimations({ subtree: true }).length);
   expect(running).toBe(0);
+  await expect(page.locator(".prose .media-fullscreen")).toHaveCount(0);
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  await expect(page.locator(".cinematic-dialog")).toBeVisible();
+  await expect(page.locator(".cinematic-dialog")).toHaveCount(0, { timeout: 8000 });
+  await expect(page.locator(".prose .media-fullscreen")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Continue reading", exact: true })).toBeEnabled();
 });

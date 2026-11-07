@@ -8,8 +8,8 @@ import type { StoryDirector } from "../features/story-runtime/director.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
 import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
-import { readEditorRecord } from "../persistence/editor-store.ts";
-import { hasLegacyArtwork, refreshPublishedArtwork } from "../contracts/artwork-refresh.ts";
+import { readActiveProject } from "../features/editor/default-project.ts";
+import { compileInWorker } from "../features/editor/compile-client.ts";
 
 interface Props {
   locale: Locale;
@@ -31,7 +31,7 @@ export function ReadingSession({
   const { t } = useTranslation();
   const initialPreferences = useRef(preferences);
   const initialHasPreferences = useRef(hasPreferences);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState("");
   const [player, setPlayer] = useState<{
     bundle: StoryBundle;
     director: StoryDirector;
@@ -41,23 +41,13 @@ export function ReadingSession({
   useEffect(() => {
     const scope = new AbortController();
     let director: StoryDirector | undefined;
-    void readEditorRecord()
+    void readActiveProject(scope.signal)
       .catch(() => null)
       .then(async (record) => {
-        if (record?.published) {
-          const published = record.published;
-          const bundle =
-            published.bundles[locale] ??
-            published.bundles[record.draft.defaultLocale] ??
-            Object.values(published.bundles)[0]!;
-          if (!hasLegacyArtwork(bundle)) return bundle;
-          try {
-            const source = await loadBundle(bundle.locale, scope.signal);
-            return refreshPublishedArtwork(bundle, source);
-          } catch {
-            // Preserve the published story when its optional artwork refresh is unavailable.
-            return bundle;
-          }
+        if (record) {
+          const chosen = record.draft.languages[locale] ? locale : record.draft.defaultLocale;
+          const bundles = await compileInWorker(record.draft, chosen);
+          return bundles[chosen]!;
         }
         const manifest = await loadManifest(scope.signal);
         return loadBundle(
@@ -82,8 +72,9 @@ export function ReadingSession({
         setPlayer({ bundle, ...player });
         await director.load();
       })
-      .catch(() => {
-        if (!scope.signal.aborted) setFailed(true);
+      .catch((error) => {
+        if (!scope.signal.aborted)
+          setFailed(error instanceof Error ? error.message : "Content unavailable");
       });
     return () => {
       scope.abort();
@@ -106,6 +97,8 @@ export function ReadingSession({
     return (
       <main id="story" className="notice" role="alert">
         <p>{t("errors.content")}</p>
+        <p>{failed}</p>
+        <a href="/editor">Open Story Editor</a>
         <button onClick={retry}>{t("retry")}</button>
       </main>
     );

@@ -1,0 +1,77 @@
+.illustration-blend[data-blend="true"] {
+  position: relative;
+  mask-image:
+    radial-gradient(ellipse 80% 80% at 50% 45%, #000 45%, #000e 70%, #0005 88%, transparent 100%),
+    linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent),
+    linear-gradient(180deg, transparent, #000 18%, #000 72%, transparent);
+  mask-composite: intersect;
+}
+.illustration-editorial {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.editorial-atmosphere {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      var(--paper, #080b0d) 0%,
+      transparent 27%,
+      transparent 58%,
+      var(--paper, #080b0d) 100%
+    ),
+    radial-gradient(ellipse at 50% 42%, transparent 32%, #0002 65%, #0009 100%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--paper, #080b0d) 75%, transparent),
+      transparent 22%,
+      transparent 78%,
+      color-mix(in srgb, var(--paper, #080b0d) 75%, transparent)
+    );
+}
+.illustration-blend[data-blend-mode="soft"] .editorial-atmosphere {
+  opacity: 0.5;
+}
+.editorial-foreground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--paper, #080b0d);
+  color: var(--paper, #080b0d);
+  opacity: 0.78;
+}
+.illustration-blend[data-blend="true"][data-blend-mode="soft"] {
+  mask-image:
+    linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(180deg, transparent, #000 8%, #000 82%, transparent);
+}
+.reader-copy
+  :is(.media-wide, .draft-book-figure[data-layout="wide"]):has(
+    .illustration-blend[data-blend="true"]
+  ) {
+  width: calc(100% + var(--reader-gutter) * 2);
+  max-width: none;
+  margin: -52px calc(-1 * var(--reader-gutter)) -24px;
+}
+.reader-copy .scene-illustration[data-3d="true"] img {
+  width: 100%;
+  max-height: none;
+  background: transparent;
+}
+.reader-copy .scene-illustration[data-3d="true"] {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.reader-copy .media-wide:has(.illustration-blend[data-blend="true"]) + p {
+  position: relative;
+}
+
+.reader-copy .story-scene-heading {
+  position: relative;
+  z-index: 1;
+}

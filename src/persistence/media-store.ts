@@ -20,13 +20,9 @@ export async function readUploadedMedia(asset: MediaAsset): Promise<Blob> {
       redirect: "error",
       signal: AbortSignal.timeout(15000),
     });
-    if (
-      !response.ok ||
-      !response.headers.get("content-type")?.startsWith("video/") ||
-      Number(response.headers.get("content-length")) > 50_000_000
-    )
-      throw new Error(`Missing uploaded video: ${asset.id}. Restore its complete project backup.`);
-    blob = await response.blob();
+    if (!response.ok || Number(response.headers.get("content-length")) > 50_000_000)
+      throw new Error(`Missing uploaded media: ${asset.id}. Restore its complete project backup.`);
+    blob = new Blob([await response.arrayBuffer()], { type: asset.upload!.mime });
   }
   return verifyUploadedMedia(asset, blob);
 }

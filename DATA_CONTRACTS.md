@@ -525,14 +525,11 @@ compatible with narrative-only foundation fixtures; RPG-profile mode requires ch
 - Character portrait, scene event images/audio, examination and narration assets are
   included in the build allowlist. Four images come from downloaded TCP/Heritage
   files; TCP Human 5 carries a published attribution. Embedded prototype imagery is explicitly rejected by the publication tool.
-- The optional bundle `cover` is an asset ID validated against registered images.
-  It comes from the editor's existing language-specific Cover image setting and
-  supplies the right-hand artwork without entering Ink or gameplay saves. The
-  default house project uses three original generated shadow-art images, with
-  generation provenance and original/runtime hashes distinct from provider licenses.
-  Editor refresh remaps only known default image identities and keeps custom covers,
-  story text, voices, variables and checkpoints. Missing refresh resources preserve
-  the existing draft. Photograph hotspot coordinates belong to the illustration.
+- The optional bundle `cover` remains a validated registered image for story metadata.
+  Page-specific Right Page blocks supply the reading artwork. Default artwork refresh
+  changes only known identities, preserves custom drafts/checkpoints and uses the
+  user-approved `house.night` source/provenance. Photograph hotspot coordinates belong
+  to that illustration.
 - Narration clips declare segment/locale/voice, NFC text and audio SHA-256, finite
   duration, monotonic timing marks and rights/review evidence. Status distinguishes
   human-approved production recordings from generated previews. The 72 demonstration
@@ -548,3 +545,79 @@ Technical inventory evidence and editorial suggestions stay distinct. Curated re
 record original/optimized paths, hashes, excerpts and project-use rights. Unverified or
 raw-library resources are never exposed in the publication. Old house saves are retained
 as incompatible/exportable after Ink/mode changes; no automatic migration is claimed.
+
+## Editor media additions
+
+`RuntimeAssetSchema` optionally carries `model3d` metadata (category, compatible layer
+roles, dimensions and real clip names), or `scene3d` composition metadata on a cached
+image/video. GLB resources are self-contained, bounded and validated before loading;
+external resource URLs and unsupported compressed formats are rejected. File identity
+is `upload.<sha256>`, with validated extension, MIME, size, rights and, for video,
+duration. Complete backups retain those files in the existing upload archive.
+
+`Scene3DSchema` separates models/depth layers, shot/subject position, visual material
+style, curated ambience and optional particles from existing `CinematicSchema` data.
+Bundle validation checks every model reference, compatible role and animation clip.
+The camera samples the same numeric preset frames used by normal cinematic effects;
+model clips run on independent animation mixers. Output is baked to WebP/video.
+Optional object transforms store anchor-relative XYZ position, Euler rotation in
+degrees and uniform scale (0.25–3); visibility is independent of layer membership.
+Optional camera data stores position, target and FOV, used as the unanimated base
+for existing cinematic sampling. Old compositions without these fields retain
+automatic framing. Ten material presets cover cel, gradient, posterized, rim,
+halftone, hatching, glossy, painterly, pencil and color-ink sketch treatments. Optional `blendMode`
+selects soft/atmospheric/no masking; the legacy `blend` flag remains supported.
+Optional `environment` selects village/forest terrain dressing. It applies only
+while scenery layers are visible; a single subject remains transparent. Generated
+sky/soil/path/grass/hills are renderer-owned scenery, not additional source assets.
+Compositions require at least one model, but no `main` element or character.
+Village/forest presets start as places. Automatic framing uses visible subjects
+when present, otherwise scenery; foreground framing objects do not displace the
+scenery focus. `pageEdges` optionally selects none/leaves/grass editorial silhouettes.
+Book blending shares page-colored haze, vignetting and text-safe gradients between
+the live draft and cached image/video presentation; it does not add cinematic events.
+Layer-anchor compensation is stored in existing relative transforms, preserving
+world positions across removal/replacement without introducing a second placement schema.
+The presentation binding's optional `silentVideo` identifies decorative 3D clips:
+they autoplay muted when visible, including on restored pages, respect reduced
+motion, and remain controlled by global reader pause/resume. No narrative event
+is replayed just to resume a decorative clip. Normal uploaded video remains unchanged.
+Ordinary reading does not load models or start a continuous 3D renderer. Right Page
+and Background output may opt into a soft mask; existing background opacity retains
+text contrast. Existing image/video contracts and Ink progression remain in use.
+
+Media blocks optionally declare a reusable examination configuration; only their own
+non-fullscreen image may be examined. Fullscreen completion removes the image and
+its effects. Presentation reset clears paused clocks/audio/scopes. Reader preferences
+allow a hex `backgroundColor`; it stays separate from story checkpoint state.
+
+### Layered paper illustrations
+
+An image media block may declare `illustration`: a base image placement, up to five
+additional image layers, landscape/portrait/square aspect, none/soft/paper blending
+and none/left/right text wrapping. Every placement has a background/midground/foreground
+role, finite bounded X/Y offsets and scale. Bundle validation rejects unknown or
+non-image layer references, duplicate images (including the base), mixed legacy
+`motion.layers` and illustration layers, and wrapping outside Inline layout.
+The existing block image, five layouts, examination, visibility, persistence and
+bounded cinematic event contracts remain authoritative. Shared-language edits copy
+layer asset dependencies as well as the base image. Backups retain the composition.
+
+Camera presets add gentle-depth, cinematic-push-in, sideways-drift, character-focus
+and atmospheric-still alongside the existing downward-reveal. Optional
+`CinematicSchema.durationMs` is 1?30 seconds; authoring derives the existing effect
+duration from it. Preset speed defaults remain available. This is a multiplane
+illustration: planes are placed at camera distances 800 / 1600 / 5333.33 for
+foreground / middleground / background. Explicit perspective projection samples
+camera translation and dolly, giving 1 / 0.5 / 0.15 tracking at the neutral camera.
+Projection is applied per plane through the existing EffectsEngine. This avoids
+Windows WebKit's flattened nested CSS 3D while retaining the same camera mathematics.
+It requires no WebGL context or continuous Three renderer in the reader.
+
+Paper mode combines irregular alpha feathering and multiply/screen compositing,
+selected from the actual page luminance. Soft mode retains page-colored haze.
+Single static unscaled cutouts can use their actual alpha contour for text wrapping;
+composed/cropped illustrations use a conservative polygon contour. Narrow layouts
+return floated images to full width. Reduced motion freezes camera/atmosphere;
+global pause, replay, page departure and cinematic completion own cancellation.
+Reader-selected page color takes priority over the story default, outside checkpoints.

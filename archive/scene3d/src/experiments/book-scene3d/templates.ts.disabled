@@ -1,0 +1,78 @@
+import type { Cinematic } from "../../contracts/cinematic.ts";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import { builtinModels } from "./models.ts";
+
+export const sceneTemplates = {
+  village: "Medieval village",
+  forest: "Forest path",
+  character: "Character only",
+  object: "Object only",
+} as const;
+export function sceneTemplate(
+  kind: keyof typeof sceneTemplates,
+  cinematic: Cinematic,
+  subject?: Scene3D["elements"][number],
+): Scene3D {
+  const element = (
+    title: string,
+    layer: Scene3D["elements"][number]["layer"],
+    x = 0,
+    z = 0,
+    scale = 1,
+  ): Scene3D["elements"][number] => ({
+    assetId: builtinModels.find((model) => model.title === title)!.id,
+    layer,
+    transform: { position: { x, y: 0, z }, rotation: { x: 0, y: 0, z: 0 }, scale },
+  });
+  const main = subject
+    ? { ...subject, visible: true, layer: "main" as const }
+    : element("Faceless knight", "main");
+  const settings = {
+    village: [
+      ...(subject ? [main] : []),
+      element("Castle gate", "background"),
+      element("Castle wall", "background", 0, 3),
+      element("Castle wall", "background", 0, 3),
+      element("Village house", "midground", 1.7),
+      element("Village house", "midground", -1.7),
+      element("Tree", "midground", 2, -8, 1.3),
+      element("Tree", "midground", -2, -10, 1.5),
+      element("Tree", "foreground", 0.1, -0.5, 1.1),
+      element("Rocks", "foreground", 0.2, -0.3, 0.25),
+      element("Rocks", "foreground", 1, -0.5, 0.25),
+    ],
+    forest: [
+      ...(subject ? [main] : []),
+      element("Tree", "background", 0, 0, 2),
+      element("Tree", "background", 3, 0, 2),
+      element("Tree", "background", -3, 0, 2),
+      element("Tree", "midground", 2, 0, 1.6),
+      element("Tree", "midground", -2, 0, 1.9),
+      element("Tree", "midground", 4, -6, 1.8),
+      element("Tree", "midground", -4, -6, 1.6),
+      element("Tree", "foreground", 0.1, -0.5, 1.1),
+      element("Rocks", "foreground", 0, -0.3, 0.25),
+    ],
+    character: [main],
+    object: [subject ?? element("Rocks", "main")],
+  };
+  return {
+    version: 1,
+    title: sceneTemplates[kind],
+    style: "painterly",
+    elements: settings[kind],
+    environment: kind === "village" || kind === "forest" ? kind : undefined,
+    camera:
+      kind === "village" || kind === "forest"
+        ? { position: { x: 0, y: 1.35, z: 4.7 }, target: { x: 0, y: 1, z: 0 }, fov: 35 }
+        : undefined,
+    position: "center",
+    shot: "medium",
+    ambience: "golden-hour",
+    particles: "none",
+    blend: true,
+    blendMode: "atmospheric",
+    pageEdges: kind === "forest" ? "leaves" : "none",
+    cinematic,
+  };
+}

@@ -8,17 +8,14 @@ const nameLabels: Record<string, string> = {
   "Insert Variable": "Variable name",
 };
 
-export function CommandDialog({
-  command,
-  script,
-  onInsert,
-  onClose,
-}: {
+interface CommandDialogProps {
   command: string;
   script: string;
   onInsert: (value: string, structural?: boolean) => void;
   onClose: () => void;
-}) {
+}
+
+export function CommandDialog({ command, script, onInsert, onClose }: CommandDialogProps) {
   const [name, setName] = useState("");
   const [label, setLabel] = useState("");
   const [condition, setCondition] = useState("");

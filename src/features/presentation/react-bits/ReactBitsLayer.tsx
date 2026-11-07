@@ -39,13 +39,12 @@ class EffectBoundary extends Component<{ children: ReactNode }, { failed: boolea
   }
 }
 
-export function ReactBitsLayer({
-  effect,
-  imageUrl,
-}: {
+interface ReactBitsLayerProps {
   effect: ReactBitsEffect;
   imageUrl?: string;
-}) {
+}
+
+export function ReactBitsLayer({ effect, imageUrl }: ReactBitsLayerProps) {
   const root = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [permitted, setPermitted] = useState(false);

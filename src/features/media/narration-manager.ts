@@ -4,6 +4,7 @@ import { AudioManager } from "./audio-manager.ts";
 import type { PlaybackResult } from "./audio-manager.ts";
 import { requestLocalNarration } from "./local-narration.ts";
 import { speechOptions } from "./speech-options.ts";
+import { narrationCharacters } from "./narration-progress.ts";
 interface NarrationOptions {
   rate: number;
   deviceVoice: boolean;
@@ -24,8 +25,10 @@ export async function textDigest(text: string) {
 export class NarrationManager {
   private readonly audio: AudioManager;
   private scope: AbortController | null = null;
-  constructor(audio: AudioManager) {
+  private readonly editorPreview: boolean;
+  constructor(audio: AudioManager, editorPreview = false) {
     this.audio = audio;
+    this.editorPreview = editorPreview;
   }
   stop() {
     this.scope?.abort();
@@ -72,6 +75,17 @@ export class NarrationManager {
     onProgress: (progress: NarrationProgress) => void,
   ): Promise<PlaybackResult> {
     const settings = options.settings?.() ?? { rate: options.rate, voiceId: "" };
+    if (
+      settings.voiceId.startsWith("device:") &&
+      options.deviceVoice &&
+      bundle.narrationMode !== "disabled" &&
+      bundle.narrationMode !== "human" &&
+      bundle.narrationMode !== "ai-pregenerated"
+    )
+      return this.speak(segment, bundle.locale, settings.rate, signal, onProgress, {
+        uri: settings.voiceId.slice(7),
+        pitch: bundle.speechSettings?.pitch,
+      });
     let result: PlaybackResult = "unavailable";
     for (const source of await this.recordings(segment, bundle, settings.voiceId, signal)) {
       result = await this.recorded(
@@ -138,7 +152,7 @@ export class NarrationManager {
               ...options,
             },
             signal,
-            Boolean(bundle.authored),
+            this.editorPreview,
           )
         : null;
     if (local && local.clip.spokenTextDigest === digest) sources.push(local);
@@ -150,12 +164,20 @@ export class NarrationManager {
     rate: number,
     signal: AbortSignal,
     onProgress: (progress: NarrationProgress) => void,
+    selection?: { uri: string; pitch?: number },
   ) {
-    return this.audio.speak(segment.text, locale, rate, signal, (index, length) => {
-      let end = index + length;
-      while (end < segment.text.length && !/\s/.test(segment.text[end]!)) end++;
-      onProgress({ segmentId: segment.id, characters: end, done: false });
-    }).finished;
+    return this.audio.speak(
+      segment.text,
+      locale,
+      rate,
+      signal,
+      (index, length) => {
+        let end = index + length;
+        while (end < segment.text.length && !/\s/.test(segment.text[end]!)) end++;
+        onProgress({ segmentId: segment.id, characters: end, done: false });
+      },
+      selection,
+    ).finished;
   }
   private async recorded(
     clip: NarrationClip,
@@ -192,9 +214,11 @@ export class NarrationManager {
         rate,
         maxMs: clip.durationMs / rate + 5000,
         onTime: (seconds) => {
-          const mark = clip.marks.filter((mark) => mark.startMs <= seconds * 1000).at(-1);
-          if (mark)
-            onProgress({ segmentId: clip.segmentId, characters: mark.character, done: false });
+          onProgress({
+            segmentId: clip.segmentId,
+            characters: narrationCharacters(clip, text.length, seconds),
+            done: false,
+          });
         },
       });
       return await playback.finished;

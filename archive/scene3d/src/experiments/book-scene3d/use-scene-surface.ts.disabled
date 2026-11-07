@@ -1,0 +1,105 @@
+import { useEffect, useState } from "react";
+import type { RefObject } from "react";
+import { createScene } from "./render.ts";
+import { editorControls } from "./controls.ts";
+import { cinematicDuration } from "../../features/presentation/cinematic-presets.ts";
+type Runtime = {
+  canvas: HTMLCanvasElement;
+  surface: Awaited<ReturnType<typeof createScene>>;
+  controls: ReturnType<typeof editorControls>;
+  signal: AbortSignal;
+  key: string;
+  playing: boolean;
+  playStartedAt: number;
+  baseCamera: ReturnType<ReturnType<typeof editorControls>["readCamera"]>;
+  setPlaying: (value: boolean) => void;
+};
+export function useSceneSurface(
+  canvas: RefObject<HTMLCanvasElement | null>,
+  composition: string,
+  sources: string,
+  portrait: boolean,
+  onSelect: Parameters<typeof editorControls>[2],
+  onCommit: Parameters<typeof editorControls>[3],
+  onDraft: (image: string) => void,
+) {
+  const [runtime, setRuntime] = useState<Runtime | null>(null);
+  const [error, setError] = useState("");
+  const key = composition + sources + portrait;
+  useEffect(() => {
+    const abort = new AbortController();
+    let raf = 0,
+      result: Runtime | undefined;
+    void Promise.resolve()
+      .then(async () => {
+        abort.signal.throwIfAborted();
+        setError("");
+        const surface = await createScene(
+          canvas.current!,
+          JSON.parse(composition),
+          JSON.parse(sources),
+          abort.signal,
+          portrait,
+        );
+        if (abort.signal.aborted) {
+          surface.dispose();
+          return;
+        }
+        const controls = editorControls(surface, canvas.current!, onSelect, onCommit);
+        result = {
+          canvas: canvas.current!,
+          surface,
+          controls,
+          signal: abort.signal,
+          key,
+          playing: false,
+          playStartedAt: 0,
+          baseCamera: controls.readCamera(),
+          setPlaying(value) {
+            if (!result) return;
+            result.playing = value;
+            result.playStartedAt = performance.now();
+            controls.enable(!value);
+            if (!value) controls.restore();
+          },
+        };
+        setRuntime(result);
+        const start = performance.now(),
+          duration =
+            cinematicDuration(
+              JSON.parse(composition).cinematic.speed,
+              JSON.parse(composition).cinematic,
+            ) / 1000;
+        let snapshotAt = -1000;
+        const tick = () => {
+          if (abort.signal.aborted) return;
+          try {
+            const seconds = (performance.now() - start) / 1000,
+              progress =
+                (((performance.now() - result!.playStartedAt) / 1000) % duration) / duration;
+            if (!canvas.current?.dataset.recording) {
+              surface.render(seconds, progress, result!.playing);
+              if (performance.now() - snapshotAt > 600) {
+                onDraft(controls.snapshot(seconds, progress));
+                snapshotAt = performance.now();
+              }
+            }
+            raf = requestAnimationFrame(tick);
+          } catch (error) {
+            setError(String(error));
+          }
+        };
+        raf = requestAnimationFrame(tick);
+      })
+      .catch((error: unknown) => {
+        if (!abort.signal.aborted) setError(String(error));
+      });
+    return () => {
+      abort.abort();
+      cancelAnimationFrame(raf);
+      result?.controls.dispose();
+      result?.surface.dispose();
+    };
+  }, [canvas, composition, sources, portrait, key, onSelect, onCommit, onDraft]);
+  return { runtime: runtime?.key === key ? runtime : null, error };
+}

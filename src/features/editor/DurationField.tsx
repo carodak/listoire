@@ -1,18 +1,13 @@
-export function DurationField({
-  label,
-  min,
-  max,
-  value,
-  onChange,
-  help,
-}: {
+interface DurationFieldProps {
   label: string;
   min: number;
   max: number;
   value: number;
   onChange: (value: number) => void;
   help: string;
-}) {
+}
+
+export function DurationField({ label, min, max, value, onChange, help }: DurationFieldProps) {
   return (
     <>
       <label>

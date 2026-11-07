@@ -1,3 +1,5 @@
+import { structure as inkStructure } from "./ink-structure.ts";
+import { gamePrelude } from "./compile-game.ts";
 import { Compiler } from "inkjs/full";
 import { BundleSchema } from "../../contracts/story.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
@@ -19,38 +21,7 @@ function compileInkJson(script: string) {
 }
 
 export function structure(script: string) {
-  // Keep compiled control flow and tags; translated prose never identifies narrative elements.
-  function normalize(value: unknown, preserve = false): unknown {
-    if (Array.isArray(value)) {
-      let tag = false;
-      let evaluation = false;
-      let choiceText = false;
-      return value.map((token, index) => {
-        if (token === "#") tag = true;
-        if (token === "/#") tag = false;
-        if (token === "ev") {
-          evaluation = true;
-          choiceText = isChoiceText(value, index);
-        }
-        if (token === "/ev") evaluation = false;
-        const protectedText = preserve || tag || (evaluation && !choiceText);
-        return typeof token === "string" && token.startsWith("^") && !protectedText
-          ? "^"
-          : normalize(token, protectedText);
-      });
-    }
-    if (value && typeof value === "object")
-      return Object.fromEntries(
-        Object.entries(value).map(([key, entry]) => [key, normalize(entry, preserve)]),
-      );
-    return value;
-  }
-  return JSON.stringify(normalize(compileInkJson(script)));
-}
-function isChoiceText(tokens: unknown[], start: number) {
-  const end = tokens.indexOf("/ev", start + 1);
-  const next = tokens[end + 1];
-  return Boolean(next && typeof next === "object" && "*" in next);
+  return inkStructure(compileInkJson(script));
 }
 
 export async function compileLanguage(
@@ -60,8 +31,6 @@ export async function compileLanguage(
 ): Promise<StoryBundle> {
   const language = project.languages[locale];
   if (!language) throw new Error(`Missing language: ${locale}`);
-  if (project.gameMode === "with-combat")
-    throw new Error("Combat is unavailable: this application has no combat executor.");
   if (language.missingTranslation && !preview)
     throw new Error(`${locale}: translation needs review before publishing.`);
   const imageIds = new Set(
@@ -75,7 +44,8 @@ export async function compileLanguage(
     .replace(/^\s*\/\/ @media [a-z0-9.-]+\/([a-z0-9.-]+).*$/gm, (line, id: string) =>
       imageIds.has(id) ? `# media:${id}` : line,
     );
-  const ink = compileInkJson(script);
+  const gameplay = gamePrelude(project, locale, script);
+  const ink = compileInkJson(gameplay.script);
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(JSON.stringify(ink)),
@@ -86,7 +56,7 @@ export async function compileLanguage(
   const passages = declaredPassages(language.script);
   const scenes = language.configuration.scenes ?? {};
   validateScenes(scenes, passages);
-  const variables = [...language.script.matchAll(/^\s*VAR\s+([a-z][a-z0-9.-]*)\s*=/gm)].map(
+  const variables = [...language.script.matchAll(/^\s*VAR\s+([a-z][a-z0-9._-]*)\s*=/gm)].map(
     (m) => m[1]!,
   );
   return BundleSchema.parse({
@@ -102,9 +72,21 @@ export async function compileLanguage(
     inkDigest,
     inkjsVersion: packageInfo.dependencies.inkjs,
     passages,
-    variables,
+    variables: [...new Set([...variables, ...gameplay.variables])],
     authored: true,
-    ...(project.gameMode === "narrative" ? { character: undefined } : {}),
+    ...(project.gameMode === "narrative"
+      ? { character: undefined, game: undefined }
+      : {
+          character: language.configuration.character ?? {
+            portrait: "",
+            abilities: [
+              { id: "investigation", name: "Investigation", description: "Inspect clues" },
+              { id: "intuition", name: "Intuition", description: "Sense hidden meaning" },
+            ],
+            inventory: [],
+            encounters: [],
+          },
+        }),
     narrationMode: language.narrationMode,
     readingDefaults: language.defaults,
   });
@@ -145,10 +127,13 @@ function validateScenes(
 
 export async function compileProject(source: StoryProject) {
   const project = StoryProjectSchema.parse(source);
-  const reference = structure(project.languages[project.defaultLocale]!.script);
+  const reference = structure(
+    gamePrelude(project, project.defaultLocale, project.languages[project.defaultLocale]!.script)
+      .script,
+  );
   const bundles: Record<string, StoryBundle> = {};
   for (const [locale, language] of Object.entries(project.languages)) {
-    if (structure(language.script) !== reference)
+    if (structure(gamePrelude(project, locale, language.script).script) !== reference)
       throw new Error(
         `${locale}: narrative structure differs. Align Ink instructions and stable tags before publishing.`,
       );

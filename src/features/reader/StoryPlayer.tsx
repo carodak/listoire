@@ -8,9 +8,12 @@ import { CheckpointControls } from "./CheckpointControls.tsx";
 import { ReadingControls } from "./ReadingControls.tsx";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
+import { GamePanel, GameInventory } from "./GamePanel.tsx";
 import { CharacterPanel } from "../character/CharacterPanel.tsx";
 import { ReactBitsLayer } from "../presentation/react-bits/ReactBitsLayer.tsx";
 import "./reader.css";
+import { readerTheme } from "../presentation/reader-theme.ts";
+import type { ReaderNotesPort } from "../../contracts/reader-notes.ts";
 
 interface Props {
   bundle: StoryBundle;
@@ -20,6 +23,7 @@ interface Props {
   preferences: ReadingPreferences;
   onPreferencesChange: (preferences: ReadingPreferences) => void;
   preview?: boolean;
+  notes?: ReaderNotesPort;
 }
 
 export function StoryPlayer(props: Props) {
@@ -79,6 +83,15 @@ export function StoryPlayer(props: Props) {
   );
 }
 
+interface ReaderPassageProps {
+  player: Props;
+  state: ReturnType<StoryDirector["getSnapshot"]> & { frame: Frame };
+  characterOpen: boolean;
+  onCharacterToggle: () => void;
+  failure: FailureCode | null;
+  onFailure: (code: FailureCode | null) => void;
+}
+
 function ReaderPassage({
   player,
   state,
@@ -86,14 +99,7 @@ function ReaderPassage({
   onFailure,
   characterOpen,
   onCharacterToggle,
-}: {
-  player: Props;
-  state: ReturnType<StoryDirector["getSnapshot"]> & { frame: Frame };
-  characterOpen: boolean;
-  onCharacterToggle: () => void;
-  failure: FailureCode | null;
-  onFailure: (code: FailureCode | null) => void;
-}) {
+}: ReaderPassageProps) {
   const { bundle, director, presentation, backup, preferences } = player;
   const { t } = useTranslation();
   const scene = bundle.scenes?.[state.frame.passageId] ?? {
@@ -111,7 +117,7 @@ function ReaderPassage({
   const interactionDisabled = state.busy || Boolean(failure);
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const instant = preferences.reveal === "instant" || state.restored;
-  const choicesDisabled = interactionDisabled || media.blocking;
+  const choicesDisabled = interactionDisabled || media.blocking || Boolean(state.game?.combat);
   const className = `reader font-${preferences.fontFamily} text-${preferences.fontSize} lines-${preferences.lineHeight}`;
   const choose = (id: string) => {
     void director.choose(id, state.occurrenceId!);
@@ -127,7 +133,13 @@ function ReaderPassage({
       className={className}
       lang={bundle.locale}
       aria-busy={state.busy}
-      style={{ visibility: media.departed ? "hidden" : undefined }}
+      style={{
+        ...readerTheme(
+          preferences.backgroundColor ?? bundle.readingDefaults?.backgroundColor,
+          preferences.dropCapColor ?? bundle.readingDefaults?.dropCapColor,
+        ),
+        visibility: media.departed ? "hidden" : undefined,
+      }}
     >
       <ReaderToolbar
         player={player}
@@ -135,6 +147,7 @@ function ReaderPassage({
         characterOpen={characterOpen}
         onCharacterToggle={onCharacterToggle}
       />
+      <GamePanel bundle={bundle} director={director} state={state} />
       <PassageText
         heading={<StoryHeading bundle={bundle} title={scene.title} headingRef={heading} />}
         bundle={bundle}
@@ -171,17 +184,14 @@ function ReaderPassage({
   );
 }
 
-function ReaderToolbar({
-  player,
-  state,
-  characterOpen,
-  onCharacterToggle,
-}: {
+interface ReaderToolbarProps {
   player: Props;
   state: ReturnType<StoryDirector["getSnapshot"]> & { frame: Frame };
   characterOpen: boolean;
   onCharacterToggle: () => void;
-}) {
+}
+
+function ReaderToolbar({ player, state, characterOpen, onCharacterToggle }: ReaderToolbarProps) {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const { bundle, director, presentation, preferences, onPreferencesChange } = player;
   return (
@@ -204,6 +214,9 @@ function ReaderToolbar({
         bundle={bundle}
         frame={state.frame}
         profile={state.character}
+        game={state.game}
+        inventoryControls={<GameInventory bundle={bundle} director={director} state={state} />}
+        notes={player.notes}
         open={characterOpen}
         onToggle={() => {
           setPreferencesOpen(false);
@@ -214,15 +227,13 @@ function ReaderToolbar({
   );
 }
 
-function StoryHeading({
-  bundle,
-  title,
-  headingRef,
-}: {
+interface StoryHeadingProps {
   bundle: StoryBundle;
   title: string;
   headingRef: Ref<HTMLHeadingElement>;
-}) {
+}
+
+function StoryHeading({ bundle, title, headingRef }: StoryHeadingProps) {
   return (
     <header className="story-scene-heading">
       <div className="story-heading-copy">
@@ -236,15 +247,13 @@ function StoryHeading({
   );
 }
 
-function PageNavigation({
-  director,
-  state,
-  preview,
-}: {
+interface PageNavigationProps {
   director: StoryDirector;
   state: ReturnType<StoryDirector["getSnapshot"]>;
   preview?: boolean;
-}) {
+}
+
+function PageNavigation({ director, state, preview }: PageNavigationProps) {
   const { t } = useTranslation();
   return (
     <div className="page-navigation">

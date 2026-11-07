@@ -1,5 +1,23 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 type Language = StoryProject["languages"][string];
+export function mediaInsertionPosition(
+  script: string,
+  sceneId: string,
+  end: { row: number; column: number },
+) {
+  const rows = script.split("\n");
+  const knots = rows.flatMap((line, row) => {
+    const match = line.match(/^\s*={2,}\s*([a-zA-Z0-9_]+)/);
+    return match ? [{ row, name: match[1]!.toLowerCase().replaceAll("_", "-") }] : [];
+  });
+  const current = knots.filter((knot) => knot.row <= end.row).at(-1);
+  const target = knots.find((knot) => knot.name === sceneId);
+  let row = target && current?.name !== sceneId ? target.row : end.row;
+  if (target && current?.name !== sceneId) {
+    while (rows[row + 1] !== undefined && /^\s*(?:\/\/.*)?$/.test(rows[row + 1]!)) row++;
+  }
+  return { row, column: (rows[row] ?? "").length };
+}
 const reference = /^\s*\/\/ @media ([a-z0-9.-]+)\/([a-z0-9.-]+)/;
 export function mediaReferenceLine(script: string, scene: string, id: string) {
   return script.split("\n").findIndex((line) => {

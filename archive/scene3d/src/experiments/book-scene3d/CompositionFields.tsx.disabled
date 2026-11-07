@@ -1,0 +1,254 @@
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import { illustrationStyles } from "../../contracts/scene3d.ts";
+import type { ModelSource } from "./models.ts";
+import type { useSceneSurface } from "./use-scene-surface.ts";
+
+const styleLabels: Record<string, string> = {
+  toon: "Toon / Cel & outline",
+  painterly: "Hand painted",
+  sketch: "Sketch / Pencil",
+  "sketch-color": "Sketch / Color ink",
+  rim: "Flat + Rim",
+  poster: "Posterize",
+  glossy: "Glossy + Rim",
+};
+
+export function CompositionFeedback({
+  runtime,
+  error,
+  status,
+}: {
+  runtime: ReturnType<typeof useSceneSurface>["runtime"];
+  error: string;
+  status: { busy: boolean; progress: number; error: string };
+}) {
+  return (
+    <>
+      {!runtime && !error && <p role="status">Loading models and lighting…</p>}
+      {(error || status.error) && <p role="alert">{error || status.error}</p>}
+      {runtime?.surface.warnings.map((warning) => (
+        <p role="status" key={warning}>
+          {warning}
+        </p>
+      ))}
+      {status.busy && <p role="status">Rendering media… {Math.round(status.progress * 100)}%</p>}
+    </>
+  );
+}
+
+export function CameraFields({
+  scene,
+  runtime,
+  moving,
+  onChange,
+  onMotion,
+}: {
+  scene: Scene3D;
+  runtime: ReturnType<typeof useSceneSurface>["runtime"];
+  moving: boolean;
+  onChange: (scene: Scene3D) => void;
+  onMotion: () => void;
+}) {
+  const commit = () => {
+    const camera = runtime?.controls.readCamera();
+    if (camera) onChange({ ...scene, camera });
+  };
+  return (
+    <fieldset>
+      <legend>Camera</legend>
+      <label>
+        Lens (mm)
+        <input
+          aria-label="Camera lens"
+          type="range"
+          min={20}
+          max={85}
+          step={1}
+          key={scene.camera?.fov ?? 45}
+          defaultValue={Math.round(18 / Math.tan(((scene.camera?.fov ?? 45) * Math.PI) / 360))}
+          onInput={(event) => runtime?.controls.lens(Number(event.currentTarget.value))}
+          onPointerUp={commit}
+          onBlur={commit}
+        />
+      </label>
+      <button
+        type="button"
+        aria-pressed={moving}
+        title="Preview the existing cinematic preset; stop to edit the camera"
+        onClick={onMotion}
+      >
+        {moving ? "Stop motion" : "Preview motion"}
+      </button>
+    </fieldset>
+  );
+}
+
+export function CompositionFields({
+  scene,
+  onChange,
+}: {
+  scene: Scene3D;
+  onChange: (scene: Scene3D) => void;
+}) {
+  const options = {
+    style: illustrationStyles,
+    shot: ["close", "medium", "wide"],
+    position: ["left", "center", "right"],
+    ambience: ["daylight", "golden-hour", "moonlight", "mist"],
+    particles: ["none", "dust"],
+  } as const;
+  const labels = {
+    style: "Visual style",
+    shot: "Shot",
+    position: "Subject position",
+    ambience: "Ambience",
+    particles: "Particles",
+  };
+  return (
+    <div className="composition-presets">
+      {(Object.keys(options) as (keyof typeof options)[]).map((field) => (
+        <label key={field}>
+          {labels[field]}
+          <select
+            aria-label={labels[field]}
+            value={scene[field]}
+            onChange={(event) =>
+              onChange({
+                ...scene,
+                [field]: event.target.value,
+                ...(["shot", "position"].includes(field) ? { camera: undefined } : {}),
+              })
+            }
+          >
+            {options[field].map((value) => (
+              <option key={value} value={value}>
+                {styleLabels[value] ?? value.replaceAll("-", " ")}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      <label>
+        Blend
+        <select
+          aria-label="Illustration blend"
+          value={scene.blendMode ?? (scene.blend ? "atmospheric" : "none")}
+          onChange={(event) =>
+            onChange({
+              ...scene,
+              blend: event.target.value !== "none",
+              blendMode: event.target.value as Scene3D["blendMode"],
+            })
+          }
+        >
+          {["atmospheric", "soft", "none"].map((value) => (
+            <option key={value} value={value}>
+              {value === "atmospheric" ? "Book illustration" : value}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Page foreground
+        <select
+          aria-label="Page foreground"
+          value={scene.pageEdges ?? "none"}
+          onChange={(event) =>
+            onChange({ ...scene, pageEdges: event.target.value as Scene3D["pageEdges"] })
+          }
+        >
+          <option value="none">None</option>
+          <option value="leaves">Leaf silhouettes</option>
+          <option value="grass">Grass silhouettes</option>
+        </select>
+      </label>
+    </div>
+  );
+}
+export function TransformFields({
+  element,
+  source,
+  onChange,
+}: {
+  element: Scene3D["elements"][number] | undefined;
+  source: ModelSource | undefined;
+  onChange: (element: Scene3D["elements"][number]) => void;
+}) {
+  if (!element) return null;
+  const transform = element.transform ?? {
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: 1,
+  };
+  return (
+    <fieldset className="transform-fields">
+      <legend>Transform · {source?.title}</legend>
+      {(["position", "rotation"] as const).map((field) => (
+        <div className="transform-row" key={field}>
+          <span>{field === "position" ? "Move" : "Rotate"}</span>
+          {(["x", "y", "z"] as const).map((axis) => (
+            <label key={axis}>
+              {axis.toUpperCase()}
+              <input
+                key={`${field}:${axis}:${transform[field][axis]}`}
+                aria-label={`Object ${field} ${axis.toUpperCase()}`}
+                type="number"
+                min={field === "position" ? -30 : -180}
+                max={field === "position" ? 30 : 180}
+                step={field === "position" ? 0.1 : 1}
+                defaultValue={Number(transform[field][axis].toFixed(2))}
+                onBlur={(event) => {
+                  const value = event.currentTarget.valueAsNumber;
+                  if (Number.isFinite(value))
+                    onChange({
+                      ...element,
+                      transform: { ...transform, [field]: { ...transform[field], [axis]: value } },
+                    });
+                }}
+              />
+            </label>
+          ))}
+        </div>
+      ))}
+      <div className="transform-row">
+        <label>
+          Scale
+          <input
+            aria-label="Object scale"
+            type="number"
+            min={0.25}
+            max={3}
+            step={0.05}
+            key={transform.scale}
+            defaultValue={Number(transform.scale.toFixed(2))}
+            onBlur={(event) => {
+              const scale = event.currentTarget.valueAsNumber;
+              if (Number.isFinite(scale))
+                onChange({ ...element, transform: { ...transform, scale } });
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          title="Restore automatic scale, rotation and placement"
+          onClick={() => onChange({ ...element, transform: undefined })}
+        >
+          Reset transform
+        </button>
+      </div>
+      <label>
+        Model animation
+        <select
+          aria-label="Model animation"
+          value={element.animation ?? ""}
+          onChange={(event) => onChange({ ...element, animation: event.target.value || undefined })}
+        >
+          <option value="">None</option>
+          {source?.model3d.animations.map((name) => (
+            <option key={name}>{name}</option>
+          ))}
+        </select>
+      </label>
+    </fieldset>
+  );
+}

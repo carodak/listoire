@@ -3,19 +3,21 @@ import type { ReactNode } from "react";
 import { boundedCameraOffset, cameraTransform, imagePoint } from "./camera.ts";
 import { runEffect } from "./effects.ts";
 
+interface MagnifiedImageProps {
+  src: string;
+  alt: string;
+  zoom?: number;
+  instructions: string;
+  children?: ReactNode;
+}
+
 export function MagnifiedImage({
   src,
   alt,
   zoom = 1,
   instructions,
   children,
-}: {
-  src: string;
-  alt: string;
-  zoom?: number;
-  instructions: string;
-  children?: ReactNode;
-}) {
+}: MagnifiedImageProps) {
   const image = useRef<HTMLImageElement>(null);
   const id = useId();
   const [point, setPoint] = useState({ x: 0.5, y: 0.5 });

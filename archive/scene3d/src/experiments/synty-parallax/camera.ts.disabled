@@ -1,0 +1,5 @@
+export function cameraPose(progress: number) {
+  const t = Math.max(0, Math.min(1, progress));
+  const ease = t * t * t * (t * (t * 6 - 15) + 10);
+  return { x: 0.7 + ease * 1.25, y: 3.4 + ease * 0.08, z: 10.2 - ease * 1.8 };
+}

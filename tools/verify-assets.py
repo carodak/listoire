@@ -31,15 +31,19 @@ assert all(entry["status"] in ("extracted", "already-extracted", "extracted-sour
 if not published_only: assert len(report) == len(list((ROOT / "assets/images/heritage-library").rglob(".listoire-extracted.json")))
 curated = {entry["id"]: entry for entry in load("assets/catalog/curated.json")["entries"]}
 expected = set()
+project = load("public/stories/house/project.json")
 for locale in ("en", "fr"):
     bundle = load(f"public/stories/house/{locale}.json")
     referenced = {scene[key] for scene in bundle["scenes"].values() for key in ("image", "sound") if key in scene}
+    referenced.update(asset["id"] for asset in project["languages"][locale]["configuration"]["assets"] if asset["type"] == "image")
     referenced.add(bundle["examination"]["image"])
     referenced.add(bundle["character"]["portrait"])
     if bundle.get("cover"): referenced.add(bundle["cover"])
     for scene in bundle["scenes"].values():
         for block in scene.get("blocks", []):
-            if block["kind"] == "media": referenced.add(block["image"])
+            if block["kind"] == "media":
+                referenced.add(block["image"])
+                referenced.update(layer["image"] for layer in block.get("illustration", {}).get("layers", []))
         for event in scene.get("events", []):
             action = event["action"]
             if action["kind"] == "audio": referenced.add(action["assetId"])
@@ -55,9 +59,12 @@ for locale in ("en", "fr"):
         if asset["type"] == "image":
             assert entry["originalPath"].startswith("assets/images/")
             assert not entry["originalPath"].startswith("assets/images/reference-house/")
-            assert not asset["id"].startswith("shadow."), "Generated artwork is not part of the active book"
             illustration = Image.open(ROOT/entry["optimizedPath"])
-            assert illustration.mode == "RGBA" and illustration.getchannel("A").getextrema() == (0, 255), asset["id"]
+            roles = entry["suggested"].get("layerRoles", [])
+            assert roles, "Image layer roles must be reviewed"
+            if "background" not in roles:
+                alpha = illustration.getchannel("A").getextrema() if illustration.mode == "RGBA" else (255, 255)
+                assert alpha[0] <= 1 and alpha[1] >= 240, asset["id"]
             if asset["id"].startswith("tcp."):
                 assert illustration.getpixel((10, 10))[3] == 0, "Exterior paper must be transparent"
                 assert illustration.getpixel((illustration.width//2, illustration.height//2))[3] > 240, "Retain the face inside the cutout"

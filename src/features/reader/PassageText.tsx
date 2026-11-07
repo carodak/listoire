@@ -6,9 +6,22 @@ import type { PresentationBlock } from "../../contracts/presentation.ts";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
 import { SceneIllustration } from "../presentation/SceneIllustration.tsx";
 import { PhotographExamination } from "./PhotographViewer.tsx";
-import { reachedBlocks, presentationBlocks } from "./narrative-blocks.ts";
+import { reachedBlocks, presentationBlocks, bookMediaLayout } from "./narrative-blocks.ts";
 import { useTextReveal } from "./use-text-reveal.ts";
 import { ChoiceList } from "./ChoiceList.tsx";
+import { ReaderMediaFigure } from "./ReaderMediaFigure.tsx";
+
+interface PassageTextProps {
+  frame: Frame;
+  instant: boolean;
+  disabled: boolean;
+  onChoose: (id: string) => void;
+  media: ReturnType<PresentationSession["getSnapshot"]>;
+  bundle: StoryBundle;
+  presentation: PresentationSession;
+  heading: React.ReactNode;
+  children: React.ReactNode;
+}
 
 export function PassageText({
   frame,
@@ -20,17 +33,7 @@ export function PassageText({
   presentation,
   heading,
   children,
-}: {
-  frame: Frame;
-  instant: boolean;
-  disabled: boolean;
-  onChoose: (id: string) => void;
-  media: ReturnType<PresentationSession["getSnapshot"]>;
-  bundle: StoryBundle;
-  presentation: PresentationSession;
-  heading: React.ReactNode;
-  children: React.ReactNode;
-}) {
+}: PassageTextProps) {
   const notice = bundle.scenes?.[frame.passageId]?.notice;
   const reveal = useTextReveal(frame, instant || media.revealAll, {
     ...media,
@@ -58,15 +61,13 @@ export function PassageText({
       {...{ block, bundle, frame, presentation, media, disabled, onChoose }}
     />
   );
+  const layout = bookMediaLayout(bundle, blocks, reached, media);
   const finish = () => {
     reveal.finish();
     presentation.revealRemaining();
   };
   return (
-    <div
-      className="reader-scene"
-      data-illustrated={blocks.some((block) => block.kind === "media" && block.layout === "right")}
-    >
+    <div className="reader-scene" data-illustrated={layout.illustrated}>
       <div className="reader-copy">
         {heading}
         <div className="narrative-blocks prose">
@@ -102,34 +103,26 @@ export function PassageText({
         {reveal.complete && notice && <p className="story-notice">{notice}</p>}
         {children}
       </div>
-      {blocks.some((block) => block.kind === "media" && block.layout === "right") && (
+      {layout.illustrated && (
         <aside
           className="story-art"
           aria-label={bundle.locale === "fr" ? "Illustration de la page" : "Page illustration"}
         >
-          {reached
-            .filter(
-              (block): block is Extract<PresentationBlock, { kind: "media" }> =>
-                block.kind === "media" && block.layout === "right",
-            )
-            .map(illustration)}
+          {layout.right && illustration(layout.right)}
         </aside>
       )}
     </div>
   );
 }
 
-function NarrativeParagraph({
-  presentation,
-  segment,
-  onClick,
-  children,
-}: {
+interface NarrativeParagraphProps {
   presentation: PresentationSession;
   segment: { id: string };
   onClick: () => void;
   children: React.ReactNode;
-}) {
+}
+
+function NarrativeParagraph({ presentation, segment, onClick, children }: NarrativeParagraphProps) {
   const node = useRef<HTMLParagraphElement>(null);
   useLayoutEffect(() => {
     if (!node.current) return;
@@ -143,6 +136,16 @@ function NarrativeParagraph({
   );
 }
 
+interface ReaderIllustrationProps {
+  block: Extract<PresentationBlock, { kind: "media" }>;
+  bundle: StoryBundle;
+  frame: Frame;
+  presentation: PresentationSession;
+  media: ReturnType<PresentationSession["getSnapshot"]>;
+  disabled: boolean;
+  onChoose: (id: string) => void;
+}
+
 function ReaderIllustration({
   block,
   bundle,
@@ -151,48 +154,40 @@ function ReaderIllustration({
   media,
   disabled,
   onChoose,
-}: {
-  block: Extract<PresentationBlock, { kind: "media" }>;
-  bundle: StoryBundle;
-  frame: Frame;
-  presentation: PresentationSession;
-  media: ReturnType<PresentationSession["getSnapshot"]>;
-  disabled: boolean;
-  onChoose: (id: string) => void;
-}) {
-  return (
-    <figure
-      className={`narrative-media media-${block.layout}${block.photograph ? " media-photograph" : ""}`}
-      data-block={block.id}
-      hidden={!mediaIsVisible(block, media)}
-      style={{
-        translate: block.position ? `${block.position.x}% ${block.position.y}%` : undefined,
-        width: block.widthPercent ? `${block.widthPercent}%` : undefined,
-        ...mediaAlignment[block.align ?? "left"],
-      }}
-    >
-      <SceneIllustration
-        bundle={bundle}
-        passageId={frame.passageId}
+}: ReaderIllustrationProps) {
+  if (block.layout === "fullscreen" && media.completedBlocks.includes(block.id)) return null;
+  const examination = block.examination ?? (block.photograph ? bundle.examination : undefined);
+  const examine =
+    examination && mediaIsVisible(block, media) ? (
+      <PhotographExamination
         presentation={presentation}
-        block={block}
+        bundle={bundle}
+        frame={frame}
+        enabled
+        disabled={disabled}
+        onDiscover={onChoose}
+        examination={examination}
       />
-      {block.caption && <figcaption>{block.caption}</figcaption>}
-      {block.photograph && (
-        <PhotographExamination
+    ) : null;
+  return (
+    <>
+      <ReaderMediaFigure
+        block={block}
+        bundle={bundle}
+        presentation={presentation}
+        examinable={Boolean(examination)}
+        hidden={!mediaIsVisible(block, media)}
+      >
+        <SceneIllustration
           bundle={bundle}
-          frame={frame}
-          enabled
-          disabled={disabled}
-          onDiscover={onChoose}
+          passageId={frame.passageId}
+          presentation={presentation}
+          block={block}
         />
-      )}
-    </figure>
+        {block.caption && <figcaption>{block.caption}</figcaption>}
+        {block.layout !== "background" && examine}
+      </ReaderMediaFigure>
+      {block.layout === "background" && examine}
+    </>
   );
 }
-
-const mediaAlignment = {
-  left: { marginInlineEnd: "auto" },
-  right: { marginInlineStart: "auto" },
-  center: { marginInlineStart: "auto", marginInlineEnd: "auto" },
-};

@@ -1,0 +1,135 @@
+.synty-experiment {
+  background: #080b0d;
+  color: #e9dfcc;
+  min-height: 100svh;
+  padding: 0 3vw;
+}
+.synty-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 68px;
+  border-bottom: 1px solid #c4b28c44;
+  font:
+    13px system-ui,
+    sans-serif;
+}
+.synty-toolbar a {
+  color: inherit;
+  text-decoration: none;
+}
+.synty-toolbar div {
+  display: flex;
+  gap: 6px;
+}
+.synty-experiment button {
+  background: transparent;
+  border: 1px solid #c4b28c55;
+  color: inherit;
+  border-radius: 3px;
+  padding: 10px 18px;
+}
+.synty-experiment button[aria-pressed="true"] {
+  background: #c4b28c22;
+  border-color: #d5b67e;
+}
+.synty-book {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  min-height: calc(100svh - 68px);
+}
+.synty-novel {
+  padding: clamp(24px, 4vw, 70px) clamp(24px, 3vw, 50px) 40px 2vw;
+}
+.synty-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font:
+    11px system-ui,
+    sans-serif;
+  color: #c4b9a6;
+}
+.synty-novel h1 {
+  font:
+    42px/1.15 Georgia,
+    serif;
+  font-weight: normal;
+  margin: 24px 0;
+}
+.synty-rule {
+  display: block;
+  background: #d5b67e;
+  width: 45px;
+  height: 2px;
+  margin-bottom: 32px;
+}
+.synty-paragraph {
+  font:
+    21px/1.65 Georgia,
+    serif;
+  margin: 0 0 24px;
+}
+.synty-paragraph:first-of-type::first-letter {
+  float: left;
+  font-size: 3em;
+  line-height: 0.9;
+  padding-right: 8px;
+}
+.synty-illustration {
+  position: relative;
+  min-height: 680px;
+}
+.synty-illustration canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+.synty-status {
+  position: absolute;
+  inset: 40% 24px auto;
+  text-align: center;
+}
+.synty-playback {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  background: linear-gradient(transparent, #080b0df0);
+  font:
+    12px system-ui,
+    sans-serif;
+}
+.synty-playback progress {
+  width: 100%;
+  height: 3px;
+  accent-color: #d5b67e;
+}
+.synty-playback span {
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .synty-toolbar {
+    flex-wrap: wrap;
+    padding: 12px 0;
+    gap: 14px;
+  }
+  .synty-toolbar > span {
+    display: none;
+  }
+  .synty-book {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .synty-novel {
+    padding: 32px 12px;
+  }
+  .synty-illustration {
+    min-height: 75svh;
+  }
+}

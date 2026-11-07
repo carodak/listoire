@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
 import { compileInWorker } from "./compile-client.ts";
@@ -7,7 +6,9 @@ import { ProjectHistory } from "./project-history.ts";
 import { loadAce } from "./ace.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
 import { withMediaReferences } from "./media-references.ts";
-import { hasLegacyArtwork, refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
+import { refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
+import { addIllustrationLibrary } from "./illustration-pack.ts";
+import { loadDefaultProject, readActiveProject } from "./default-project.ts";
 
 export function useEditorProject() {
   const [project, setProject] = useState<StoryProject | null>(null);
@@ -24,18 +25,25 @@ export function useEditorProject() {
   const lastEvent = useRef("Original story");
   const dirty = useRef(false);
   const mounted = useRef(true);
-  const [availability, setAvailability] = useState({ canUndo: false, canRedo: false });
+  const [availability, setAvailability] = useState({
+    canUndo: false,
+    canRedo: false,
+    illustrationPack: null as StoryProject | null,
+  });
 
   useEffect(() => {
     mounted.current = true;
     const scope = new AbortController();
     async function load() {
-      const record = await readEditorRecord();
+      const record = await readActiveProject(scope.signal);
       const built = await loadDefaultProject(record?.draft, scope.signal);
       const raw = record?.draft ?? built!;
-      const seed = withMediaReferences(refreshDefaultArtwork(raw, built));
+      const seed = withMediaReferences(
+        addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
+      );
       const ace = await loadAce();
       if (scope.signal.aborted) return;
+      setAvailability((before) => ({ ...before, illustrationPack: built }));
       const initialized = record ?? (await writeEditorRecord(seed, 0, "Original story"));
       if (scope.signal.aborted) return;
       revision.current = initialized.revision;
@@ -79,10 +87,11 @@ export function useEditorProject() {
     if (!latest.current || next === latest.current) return;
     history.current?.record(latest.current, next, label);
     lastEvent.current = label;
-    setAvailability({
+    setAvailability((before) => ({
+      ...before,
       canUndo: history.current?.canUndo ?? false,
       canRedo: history.current?.canRedo ?? false,
-    });
+    }));
     latest.current = next;
     change.current++;
     dirty.current = true;
@@ -94,7 +103,7 @@ export function useEditorProject() {
     const source = latest.current;
     const generation = change.current;
     const eventLabel = lastEvent.current;
-    if (!source) return Promise.resolve();
+    if (!source) return Promise.resolve(false);
     const operation = serial.current
       .catch(() => {})
       .then(async () => {
@@ -135,10 +144,13 @@ export function useEditorProject() {
         }
       });
     serial.current = operation;
-    return operation.catch((error) => {
-      setStatus(`Save failed: ${message(error)}`);
-      setIssues([message(error)]);
-    });
+    return operation
+      .then(() => true)
+      .catch((error) => {
+        setStatus(`Save failed: ${message(error)}`);
+        setIssues([message(error)]);
+        return false;
+      });
   }
   useEffect(() => {
     if (!project || !dirty.current) return;
@@ -151,18 +163,20 @@ export function useEditorProject() {
   function undo() {
     lastEvent.current = "Undid an editing change";
     history.current?.undo();
-    setAvailability({
+    setAvailability((before) => ({
+      ...before,
       canUndo: history.current?.canUndo ?? false,
       canRedo: history.current?.canRedo ?? false,
-    });
+    }));
   }
   function redo() {
     lastEvent.current = "Redid an editing change";
     history.current?.redo();
-    setAvailability({
+    setAvailability((before) => ({
+      ...before,
       canUndo: history.current?.canUndo ?? false,
       canRedo: history.current?.canRedo ?? false,
-    });
+    }));
   }
   return {
     project,
@@ -176,19 +190,6 @@ export function useEditorProject() {
     redo,
     ...availability,
   };
-}
-
-async function loadDefaultProject(draft: StoryProject | undefined, signal: AbortSignal) {
-  if (draft && !hasLegacyArtwork(draft)) return null;
-  try {
-    const response = await fetch("/stories/house/project.json", { signal, redirect: "error" });
-    if (!response.ok)
-      throw new Error("The built story project is unavailable. Run npm run stories:build.");
-    return StoryProjectSchema.parse(await response.json());
-  } catch (error) {
-    if (!draft) throw error;
-    return null;
-  }
 }
 
 export function message(error: unknown) {

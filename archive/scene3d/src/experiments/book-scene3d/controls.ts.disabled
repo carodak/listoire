@@ -1,0 +1,156 @@
+import { MOUSE, Raycaster, Vector2, Vector3, MathUtils } from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TransformControls } from "three/addons/controls/TransformControls.js";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+import type { createScene } from "./render.ts";
+
+type Surface = Awaited<ReturnType<typeof createScene>>;
+export type Tool = "camera" | "pan" | "translate" | "rotate" | "scale";
+export function editorControls(
+  surface: Surface,
+  canvas: HTMLCanvasElement,
+  onSelect: (index: number) => void,
+  onCommit: (
+    camera: NonNullable<Scene3D["camera"]>,
+    transform?: NonNullable<Scene3D["elements"][number]["transform"]>,
+    index?: number,
+  ) => void,
+) {
+  const orbit = new OrbitControls(surface.camera, canvas);
+  orbit.target.copy(surface.target);
+  orbit.minDistance = 0.5;
+  orbit.maxDistance = 60;
+  orbit.maxPolarAngle = Math.PI * 0.49;
+  orbit.update();
+  orbit.saveState();
+  const gizmo = new TransformControls(surface.camera, canvas);
+  const helper = gizmo.getHelper();
+  surface.scene.add(helper);
+  let tool: Tool = "camera",
+    selected = 0,
+    enabled = true;
+  const vector = (value: Vector3) => ({ x: value.x, y: value.y, z: value.z });
+  const readCamera = () => ({
+    position: vector(surface.camera.position),
+    target: vector(orbit.target),
+    fov: surface.camera.fov,
+  });
+  const commit = () => {
+    if (!enabled) return;
+    const object = surface.objects[selected];
+    const anchor = object?.userData.anchor as Vector3 | undefined;
+    const rotation = object?.rotation;
+    const angle = (radians: number) =>
+      MathUtils.euclideanModulo(MathUtils.radToDeg(radians) + 180, 360) - 180;
+    const transform =
+      object && anchor && rotation
+        ? {
+            position: vector(object.position.clone().sub(anchor)),
+            rotation: { x: angle(rotation.x), y: angle(rotation.y), z: angle(rotation.z) },
+            scale: object.scale.x,
+          }
+        : undefined;
+    onCommit(readCamera(), ["camera", "pan"].includes(tool) ? undefined : transform, selected);
+  };
+  const dragging = (event: { value: unknown }) => {
+    orbit.enabled = enabled && !event.value;
+  };
+  const limit = () => {
+    const object = gizmo.object;
+    if (!object) return;
+    if (tool === "scale") {
+      const axis = ["x", "y", "z"] as const;
+      const changed = axis.reduce(
+        (best, key) =>
+          Math.abs(object.scale[key] - initialScale) > Math.abs(object.scale[best] - initialScale)
+            ? key
+            : best,
+        "x",
+      );
+      object.scale.setScalar(MathUtils.clamp(object.scale[changed], 0.25, 3));
+    }
+  };
+  let initialScale = 1;
+  const beginScale = () => {
+    initialScale = gizmo.object?.scale.x ?? 1;
+  };
+  gizmo.addEventListener("dragging-changed", dragging);
+  gizmo.addEventListener("mouseDown", beginScale);
+  gizmo.addEventListener("objectChange", limit);
+  gizmo.addEventListener("mouseUp", commit);
+  orbit.addEventListener("end", () => {
+    if (!gizmo.dragging) onCommit(readCamera());
+  });
+  const start = new Vector2();
+  const down = (event: PointerEvent) => {
+    start.set(event.clientX, event.clientY);
+  };
+  const pick = (event: PointerEvent) => {
+    if (!enabled || gizmo.axis || start.distanceTo(new Vector2(event.clientX, event.clientY)) > 5)
+      return;
+    const rect = canvas.getBoundingClientRect();
+    const pointer = new Vector2(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      (-(event.clientY - rect.top) / rect.height) * 2 + 1,
+    );
+    const ray = new Raycaster();
+    ray.setFromCamera(pointer, surface.camera);
+    const hit = ray
+      .intersectObjects(
+        surface.objects.filter((object) => object.visible),
+        true,
+      )
+      .find((hit) => hit.object.visible);
+    if (!hit) return;
+    let object = hit.object;
+    while (object.parent && object.userData.elementIndex === undefined) object = object.parent;
+    if (object.visible && typeof object.userData.elementIndex === "number")
+      onSelect(object.userData.elementIndex);
+  };
+  canvas.addEventListener("pointerdown", down);
+  canvas.addEventListener("pointerup", pick);
+  return {
+    readCamera,
+    restore() {
+      orbit.reset();
+    },
+    snapshot(seconds: number, progress: number) {
+      const visible = helper.visible;
+      helper.visible = false;
+      surface.render(seconds, progress, false);
+      const image = canvas.toDataURL("image/webp", 0.75);
+      helper.visible = visible;
+      return image;
+    },
+    select(index: number, nextTool: Tool) {
+      if (!enabled) return;
+      selected = index;
+      tool = nextTool;
+      const object = surface.objects[index];
+      gizmo.detach();
+      if (object && object.visible && tool !== "camera" && tool !== "pan") {
+        gizmo.setMode(tool);
+        gizmo.attach(object);
+      }
+      helper.visible = tool !== "camera" && tool !== "pan";
+      orbit.mouseButtons.LEFT = tool === "camera" ? MOUSE.ROTATE : MOUSE.PAN;
+    },
+    enable(value: boolean) {
+      enabled = value;
+      orbit.enabled = value;
+      gizmo.enabled = value;
+      helper.visible = value && tool !== "camera" && tool !== "pan";
+    },
+    lens(mm: number) {
+      surface.camera.setFocalLength(mm);
+      surface.camera.updateProjectionMatrix();
+    },
+    dispose() {
+      canvas.removeEventListener("pointerdown", down);
+      canvas.removeEventListener("pointerup", pick);
+      orbit.dispose();
+      gizmo.dispose();
+      surface.scene.remove(helper);
+    },
+  };
+}

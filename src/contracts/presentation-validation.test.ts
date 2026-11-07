@@ -25,12 +25,37 @@ it("rejects reordered text, unknown media/cues, premature choices and colors out
     readFileSync(new URL("../../public/stories/house/en.json", import.meta.url), "utf8"),
   );
   const changes = [
+    (bundle: typeof source) =>
+      bundle.scenes.intro.blocks[0].illustration.layers.push({
+        image: "missing",
+        role: "foreground",
+        x: 0,
+        y: 0,
+        scale: 1,
+      }),
+    (bundle: typeof source) =>
+      bundle.scenes.intro.blocks[0].illustration.layers.push({
+        image: bundle.scenes.intro.blocks[0].image,
+        rotation: 999,
+        role: "foreground",
+        x: 0,
+        y: 0,
+        scale: 1,
+      }),
+    (bundle: typeof source) => (bundle.scenes.intro.blocks[0].illustration.wrap = "left"),
     (bundle: typeof source) => bundle.scenes.intro.blocks.reverse(),
     (bundle: typeof source) =>
       (bundle.scenes.intro.blocks.find((block: { kind: string }) => block.kind === "media").image =
         "unknown"),
     (bundle: typeof source) => (bundle.scenes.intro.events[0].blockId = "unknown"),
-    (bundle: typeof source) => (bundle.scenes.song.events[1].action.effect.props.color = "#ff0000"),
+    (bundle: typeof source) =>
+      (bundle.scenes.song.events.find(
+        (event: { action: { kind: string } }) => event.action.kind === "effect",
+      ).action.effect = {
+        id: "react-bits.dark-veil",
+        duration: 1800,
+        props: { color: "#ff0000" },
+      }),
     (bundle: typeof source) =>
       bundle.scenes.room.events.forEach((event: { blocking: boolean }) => (event.blocking = false)),
   ];

@@ -1,0 +1,54 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import "../../features/presentation/illustration-blend.css";
+import { IllustrationEditorial } from "../../features/presentation/IllustrationEditorial.tsx";
+import type { Scene3D } from "../../contracts/scene3d.ts";
+export function BookDraft({
+  image,
+  layout,
+  blend,
+  edges,
+}: {
+  image: string;
+  layout: string;
+  blend: string;
+  edges?: Scene3D["pageEdges"];
+}) {
+  const [target, setTarget] = useState<Element | null>(null);
+  useEffect(() => {
+    const update = () => {
+      const root = document.querySelector(".preview-slot .experience-preview");
+      if (root) root.setAttribute("data-draft-layout", layout);
+      const selector = layout === "right" ? ".reader-scene" : ".reader-copy";
+      setTarget(root?.querySelector(selector) ?? null);
+    };
+    const observer = new MutationObserver(update);
+    observer.observe(document.querySelector(".editor-workspace") ?? document.body, {
+      subtree: true,
+      childList: true,
+    });
+    update();
+    return () => {
+      observer.disconnect();
+      document.querySelector("[data-draft-layout]")?.removeAttribute("data-draft-layout");
+    };
+  }, [layout]);
+  if (!target || !image) return null;
+  return createPortal(
+    <figure
+      data-layout={layout}
+      className={`draft-book-figure${layout === "right" ? " draft-book-aside" : ""}`}
+    >
+      <div className="illustration-blend" data-blend={blend !== "none"} data-blend-mode={blend}>
+        <img src={image} alt="Live illustration in the book" />
+        <IllustrationEditorial
+          enabled={blend !== "none"}
+          mode={blend}
+          layout={layout}
+          edges={edges}
+        />
+      </div>
+    </figure>,
+    target,
+  );
+}

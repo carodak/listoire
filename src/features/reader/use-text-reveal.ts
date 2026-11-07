@@ -4,7 +4,12 @@ import type { Frame } from "../../contracts/story.ts";
 export function useTextReveal(
   frame: Frame | null,
   instant: boolean,
-  transport?: { paused: boolean; synchronized: boolean; progress: Record<string, number> },
+  transport?: {
+    paused: boolean;
+    synchronized: boolean;
+    progress: Record<string, number>;
+    voice?: string;
+  },
 ) {
   const [count, setCount] = useState(0);
   const [finished, setFinished] = useState(instant);
@@ -24,8 +29,9 @@ export function useTextReveal(
   );
   const total = segments.reduce((sum, segment) => sum + segment.letters.length, 0);
   const paused = transport?.paused ?? false;
+  const narrated = transport?.voice === "playing" || transport?.voice === "paused";
   useEffect(() => {
-    if (instant || paused) return;
+    if (instant || paused || narrated) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     const finish = () => setFinished(true);
     const reduce = () => {
@@ -51,10 +57,10 @@ export function useTextReveal(
       motion.removeEventListener("change", reduce);
       document.removeEventListener("visibilitychange", hide);
     };
-  }, [instant, paused, total]);
+  }, [instant, paused, narrated, total]);
   const wanted = paused
     ? floor
-    : transport?.synchronized
+    : transport && (transport.synchronized || narrated)
       ? segments.reduce(
           (sum, segment) =>
             sum +

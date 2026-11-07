@@ -117,7 +117,7 @@ test("unifies language selection while preserving each localized save", async ({
   await expect(page.locator(".prose")).toContainText(/Au dos/);
   await chooseLanguage(page, "en");
   await expect(page.locator(".prose")).toContainText(/On the back/);
-  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(11, 24, 34)");
+  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(8, 11, 13)");
   await expect(page.locator("html")).toHaveCSS("background-color", "rgb(245, 245, 245)");
 });
 
@@ -192,11 +192,11 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   expect(hero!.height).toBeLessThan(200);
   expect(heading!.y).toBeGreaterThan(hero!.y);
   expect(heading!.y + heading!.height).toBeLessThan(hero!.y + hero!.height);
-  const cover = page.locator(".story-cover");
+  const cover = page.locator(".story-art .shot-plane-image");
   await expect
     .poll(() => cover.evaluate((image: HTMLImageElement) => image.naturalWidth))
     .toBeGreaterThan(0);
-  await expect(cover).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await expect(cover).toHaveAttribute("src", /paper\.modern-male-character\.webp$/);
   const canvas = await page.locator(".reader").boundingBox();
   const prose = await page.locator(".prose > p").first().boundingBox();
   expect(canvas!.width / 1440).toBeGreaterThanOrEqual(0.9);
@@ -214,15 +214,32 @@ test("right-page artwork changes with the story and returns on Back and Replay",
 }) => {
   await page.goto("/");
   await enterStory(page);
-  const artwork = page.locator(".story-art .shot-image");
-  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  const artwork = page.locator(".story-art .shot-plane-image");
+  await expect(artwork).toHaveAttribute("src", /paper\.modern-male-character\.webp$/);
   await expect(page.locator('.story-art [data-block="intro.artwork"]')).toBeVisible();
   await page.getByRole("button", { name: "Continue reading", exact: true }).click();
-  await expect(artwork).toHaveAttribute("src", /tcp\.human5-cutout\.webp$/);
+  await expect(artwork).toHaveAttribute("src", /paper\.modern-grandma-character\.webp$/);
   await expect(page.locator('.story-art [data-block="intro.artwork"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Previous page", exact: true }).click();
-  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await expect(artwork).toHaveAttribute("src", /paper\.modern-male-character\.webp$/);
   await page.getByRole("button", { name: "Replay page", exact: true }).click();
-  await expect(artwork).toHaveAttribute("src", /tcp\.human8-cutout\.webp$/);
+  await expect(artwork).toHaveAttribute("src", /paper\.modern-male-character\.webp$/);
   await expect(artwork).toHaveCount(1);
+});
+test("resetting a paused story resumes a clean first page and allows reading again", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await enterStory(page);
+  await page.getByRole("button", { name: "Continue reading", exact: true }).click();
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Read from the beginning", exact: true }).click();
+  await expect(page.locator(".prose")).toContainText("The first time you saw the girl");
+  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Continue reading", exact: true }).click();
+  await expect(page.locator(".prose")).toContainText("On the back");
+  expect(errors).toEqual([]);
 });

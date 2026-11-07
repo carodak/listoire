@@ -1,4 +1,7 @@
-import { useEffect, useState, useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useIllustrationPlayback } from "./use-illustration-playback.ts";
+import type { BindNode } from "./use-illustration-playback.ts";
+import { useAssetSource } from "./use-asset-source.ts";
+import { useState, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
 import { useTranslation } from "react-i18next";
@@ -9,61 +12,47 @@ import type { PresentationSession } from "./presentation-session.ts";
 import { ReactBitsLayer } from "./react-bits/ReactBitsLayer.tsx";
 import "./cinematic.css";
 import "./cinematic-shot.css";
+import "./illustration-blend.css";
+import { IllustrationEditorial } from "./IllustrationEditorial.tsx";
+import { LayeredIllustration } from "./LayeredIllustration.tsx";
+
+interface SceneIllustrationProps {
+  bundle: StoryBundle;
+  passageId: string;
+  presentation: PresentationSession;
+  block: Extract<PresentationBlock, { kind: "media" }>;
+}
 
 export function SceneIllustration({
   bundle,
   passageId,
   presentation,
   block,
-}: {
-  bundle: StoryBundle;
-  passageId: string;
-  presentation: PresentationSession;
-  block: Extract<PresentationBlock, { kind: "media" }>;
-}) {
-  const nodes = useRef<SurfaceNodes>({
-    image: null,
-    video: null,
-    layers: [],
-    canvas: null,
-    wasFullscreen: false,
-  });
+}: SceneIllustrationProps) {
   const state = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const scene = bundle.scenes?.[passageId];
   const illustration = bundle.assets?.find(
     (asset) => asset.id === block.image && ["image", "video"].includes(asset.type),
   );
-  const videoSource = useVideoSource(illustration, presentation);
+  const videoSource = useAssetSource(illustration, presentation.resolveAsset);
   const fullscreen =
     block.layout === "fullscreen" &&
     !state.revealAll &&
     !state.completedBlocks.includes(block.id) &&
     mediaIsVisible(block, state);
-  useLayoutEffect(() => {
-    if (!fullscreen && nodes.current.wasFullscreen)
-      nodes.current.canvas?.focus({ preventScroll: true });
-    nodes.current.wasFullscreen = fullscreen;
-    if (illustration?.type === "video" && !videoSource) return;
-    return presentation.bind(
-      {
-        canvas: nodes.current.canvas!,
-        image: nodes.current.image!,
-        layers: nodes.current.layers.filter((layer): layer is HTMLImageElement => Boolean(layer)),
-        video: nodes.current.video ?? undefined,
-      },
-      block.id,
-    );
-  }, [presentation, passageId, block.id, fullscreen, videoSource, illustration?.type]);
-  const bindNode: BindNode = (kind, node, index = 0) => {
-    if (kind === "layer") nodes.current.layers[index] = node as HTMLImageElement | null;
-    else if (kind === "canvas") nodes.current.canvas = node as HTMLDivElement | null;
-    else {
-      nodes.current.image = node;
-      if (kind === "video") nodes.current.video = node as HTMLVideoElement | null;
-    }
-  };
+  const bindNode = useIllustrationPlayback(
+    presentation,
+    passageId,
+    block.id,
+    fullscreen,
+    illustration,
+    videoSource,
+  );
   const content = (
-    <IllustrationContent {...{ bundle, block, bindNode, state, illustration, videoSource }} />
+    <IllustrationContent
+      {...{ bundle, block, bindNode, state, illustration, videoSource }}
+      resolveAsset={presentation.resolveAsset}
+    />
   );
   if (fullscreen)
     return (
@@ -79,47 +68,6 @@ export function SceneIllustration({
   return content;
 }
 
-type BindNode = (
-  kind: "image" | "video" | "canvas" | "layer",
-  node: HTMLElement | null,
-  index?: number,
-) => void;
-interface SurfaceNodes {
-  image: HTMLElement | null;
-  video: HTMLVideoElement | null;
-  layers: (HTMLImageElement | null)[];
-  canvas: HTMLDivElement | null;
-  wasFullscreen: boolean;
-}
-function useVideoSource(illustration: MediaAsset | undefined, presentation: PresentationSession) {
-  const [resource, setResource] = useState<{ assetId: string; url: string | null }>({
-    assetId: "",
-    url: "",
-  });
-  useEffect(() => {
-    if (illustration?.type !== "video") return;
-    let cancelled = false;
-    let dispose: (() => void) | undefined;
-    void presentation
-      .resolveAsset(illustration)
-      .then((resource) => {
-        if (cancelled) {
-          resource.dispose();
-          return;
-        }
-        dispose = resource.dispose;
-        setResource({ assetId: illustration.id, url: resource.url });
-      })
-      .catch(() => {
-        if (!cancelled) setResource({ assetId: illustration.id, url: null });
-      });
-    return () => {
-      cancelled = true;
-      dispose?.();
-    };
-  }, [illustration, presentation]);
-  return resource.assetId === illustration?.id ? resource.url : "";
-}
 type IllustrationProps = {
   bundle: StoryBundle;
   block: Extract<PresentationBlock, { kind: "media" }>;
@@ -127,6 +75,7 @@ type IllustrationProps = {
   state: ReturnType<PresentationSession["getSnapshot"]>;
   illustration: MediaAsset | undefined;
   videoSource: string | null;
+  resolveAsset: PresentationSession["resolveAsset"];
 };
 function IllustrationContent({
   bundle,
@@ -135,18 +84,79 @@ function IllustrationContent({
   state,
   illustration,
   videoSource,
+  resolveAsset,
 }: IllustrationProps) {
-  const atmosphere = block.motion?.atmosphere ?? "none";
+  const atmosphere =
+    block.motion?.preset === "atmospheric-still" ? "fantasy" : (block.motion?.atmosphere ?? "none");
+  const blend = block.illustration?.blend ?? illustration?.scene3d?.blendMode ?? "atmospheric";
   return (
     <div
       ref={(node) => {
         bindNode("canvas", node);
       }}
       tabIndex={-1}
-      className={`cinematic-stage scene-illustration atmosphere-${atmosphere}`}
+      className={`cinematic-stage scene-illustration illustration-blend atmosphere-${atmosphere}`}
       data-paused={state.paused}
+      data-3d={Boolean(illustration?.scene3d)}
+      data-layered={Boolean(block.illustration)}
+      data-layout={block.layout}
+      data-blend={Boolean(
+        (block.illustration ? blend !== "none" : illustration?.scene3d?.blend) &&
+        block.layout !== "fullscreen",
+      )}
+      data-blend-mode={blend}
     >
-      {illustration?.type === "image" && (
+      <IllustrationVisual
+        {...{ bundle, block, bindNode, state, illustration, videoSource, resolveAsset }}
+      />
+      <IllustrationEditorial
+        enabled={block.illustration ? blend === "soft" : illustration?.scene3d?.blend}
+        mode={blend}
+        layout={block.layout}
+        edges={illustration?.scene3d?.pageEdges}
+      />
+      <ShotAtmosphere atmosphere={atmosphere} />
+      <EffectLayers bundle={bundle} block={block} state={state} />
+    </div>
+  );
+}
+
+export function ShotAtmosphere({ atmosphere }: { atmosphere: string }) {
+  if (atmosphere === "none") return null;
+  return (
+    <div aria-hidden="true" className="shot-atmosphere">
+      <i className="shot-grain" />
+      <i className="shot-vignette" />
+      <i className="shot-dust" />
+      <i className="shot-light" />
+      <i className="shot-scratches" />
+    </div>
+  );
+}
+
+function IllustrationVisual({
+  bundle,
+  block,
+  bindNode,
+  state,
+  illustration,
+  videoSource,
+  resolveAsset,
+}: IllustrationProps) {
+  return (
+    <>
+      {block.illustration && (
+        <LayeredIllustration
+          image={block.image}
+          illustration={block.illustration}
+          assets={bundle.assets ?? []}
+          resolveAsset={resolveAsset}
+          moving={Boolean(block.motion && block.motion.preset !== "none")}
+          motion={block.motion}
+          cameraRef={(node) => bindNode("image", node)}
+        />
+      )}
+      {!block.illustration && illustration?.type === "image" && (
         <img
           ref={(node) => {
             bindNode("image", node);
@@ -155,7 +165,7 @@ function IllustrationContent({
             illustration,
             block.layout === "right" ? "shot-image story-cover" : "shot-image",
           )}
-          src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${illustration.path}`}
+          src={videoSource || undefined}
           alt={illustration.alt}
           style={{ objectFit: block.fit ?? (block.layout === "fullscreen" ? "cover" : "contain") }}
           onError={(event) => {
@@ -172,38 +182,29 @@ function IllustrationContent({
           source={videoSource}
         />
       )}
-      <DepthLayers bundle={bundle} block={block} bindNode={bindNode} />
-      {atmosphere !== "none" && (
-        <div aria-hidden="true" className="shot-atmosphere">
-          <i className="shot-grain" />
-          <i className="shot-vignette" />
-          <i className="shot-dust" />
-          <i className="shot-light" />
-          <i className="shot-scratches" />
-        </div>
-      )}
-      <EffectLayers bundle={bundle} block={block} state={state} />
-    </div>
+      {!block.illustration && <DepthLayers bundle={bundle} block={block} bindNode={bindNode} />}
+    </>
   );
 }
 
-function CinematicDialog({
-  presentation,
-  paused,
-  title,
-  caption,
-  children,
-}: {
+interface CinematicDialogProps {
   presentation: PresentationSession;
   paused: boolean;
   title?: string;
   caption?: string;
   children: ReactNode;
-}) {
+}
+
+function CinematicDialog({ presentation, paused, title, caption, children }: CinematicDialogProps) {
   const { t } = useTranslation();
   const dialog = useRef<HTMLDialogElement>(null);
   useLayoutEffect(() => {
+    const previousFocus = document.activeElement;
     dialog.current?.showModal();
+    return () => {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected)
+        previousFocus.focus({ preventScroll: true });
+    };
   }, []);
   return (
     <dialog
@@ -232,19 +233,15 @@ function CinematicDialog({
   );
 }
 
-function VideoSurface({
-  illustration,
-  block,
-  bindNode,
-  state,
-  source,
-}: {
+interface VideoSurfaceProps {
   illustration: MediaAsset;
   block: Extract<PresentationBlock, { kind: "media" }>;
   bindNode: BindNode;
   state: ReturnType<PresentationSession["getSnapshot"]>;
   source: string | null;
-}) {
+}
+
+function VideoSurface({ illustration, block, bindNode, state, source }: VideoSurfaceProps) {
   const [failed, setFailed] = useState(false);
   return (
     <>
@@ -255,10 +252,12 @@ function VideoSurface({
           src={source}
           aria-label={illustration.alt || "Story video"}
           controls={
-            block.layout !== "fullscreen" ||
-            state.revealAll ||
-            state.completedBlocks.includes(block.id)
+            !illustration.scene3d &&
+            (block.layout !== "fullscreen" ||
+              state.revealAll ||
+              state.completedBlocks.includes(block.id))
           }
+          loop={Boolean(illustration.scene3d && illustration.scene3d.cinematic.preset === "none")}
           playsInline
           muted
           preload="metadata"

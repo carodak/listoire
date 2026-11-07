@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { NativeEffectSchema, NarrativeEventSchema } from "./effects.ts";
 import { CinematicSchema } from "./cinematic.ts";
+import { Model3DSchema, Scene3DSchema } from "./scene3d.ts";
+import { IllustrationSchema } from "./illustration.ts";
 
 export function mediaIsVisible(
   block: Extract<PresentationBlock, { kind: "media" }>,
@@ -16,15 +18,17 @@ export function mediaIsVisible(
 export const RuntimeAssetSchema = z
   .object({
     id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
-    path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3|mp4|webm)$/),
-    type: z.enum(["image", "audio", "video"]),
+    path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/),
+    type: z.enum(["image", "audio", "video", "model3d"]),
+    model3d: Model3DSchema.optional(),
+    scene3d: Scene3DSchema.optional(),
     upload: z
       .object({
         digest: z.string().regex(/^[a-f0-9]{64}$/),
-        mime: z.enum(["video/mp4", "video/webm"]),
+        mime: z.enum(["video/mp4", "video/webm", "image/webp", "model/gltf-binary"]),
         size: z.number().int().positive().max(50_000_000),
         rights: z.string().trim().min(1).max(500),
-        durationMs: z.number().positive().max(86400000),
+        durationMs: z.number().positive().max(86400000).optional(),
       })
       .strict()
       .optional(),
@@ -34,12 +38,43 @@ export const RuntimeAssetSchema = z
   .strict()
   .refine(
     (asset) =>
-      !asset.upload ||
-      (asset.type === "video" &&
-        asset.id === `upload.${asset.upload.digest}` &&
-        asset.path === `media/${asset.id}.${asset.upload.mime === "video/mp4" ? "mp4" : "webm"}`),
-    "Invalid uploaded video identity",
+      (!asset.scene3d || ["image", "video"].includes(asset.type)) &&
+      (!asset.model3d || asset.type === "model3d") &&
+      (asset.type !== "model3d" ||
+        Boolean(
+          asset.model3d &&
+          asset.upload?.mime === "model/gltf-binary" &&
+          asset.upload.size <= 20_000_000,
+        )) &&
+      (!asset.upload ||
+        ((asset.type === "video"
+          ? asset.upload.mime.startsWith("video/") && Boolean(asset.upload.durationMs)
+          : asset.type === "model3d"
+            ? asset.upload.mime === "model/gltf-binary"
+            : asset.type === "image" &&
+              asset.upload.mime === "image/webp" &&
+              asset.upload.size <= 10_000_000) &&
+          asset.id === `upload.${asset.upload.digest}` &&
+          asset.path ===
+            `media/${asset.id}.${{ "video/mp4": "mp4", "video/webm": "webm", "image/webp": "webp", "model/gltf-binary": "glb" }[asset.upload.mime]}`)),
+    "Invalid uploaded media identity",
   );
+
+export const ExaminationSchema = z
+  .object({
+    image: z.string(),
+    title: z.string().min(1).max(100),
+    buttonLabel: z.string().max(100).optional(),
+    descriptions: z.array(z.string().max(1000)).min(1).max(10),
+    reverse: z.string().max(5000).default(""),
+    actionId: z.string().optional(),
+    hotspot: z
+      .object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100), label: z.string() })
+      .strict()
+      .optional(),
+  })
+  .strict();
+export type ImageExamination = z.infer<typeof ExaminationSchema>;
 
 const PresentationBlockSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("text"), segmentId: z.string() }).strict(),
@@ -57,6 +92,7 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
         .strict()
         .optional(),
       motion: CinematicSchema.optional(),
+      illustration: IllustrationSchema.optional(),
       show: z
         .object({
           kind: z.enum(["page", "segment", "delay"]),
@@ -68,6 +104,7 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
         .optional(),
       durationMs: z.number().min(1).max(180000).optional(),
       photograph: z.boolean().optional(),
+      examination: ExaminationSchema.optional(),
       caption: z.string().max(500).optional(),
     })
     .strict(),
@@ -86,19 +123,6 @@ export const SceneSchema = z
     blocks: z.array(PresentationBlockSchema).min(1).max(120).optional(),
     photograph: z.boolean().optional(),
     notice: z.string().optional(),
-  })
-  .strict();
-
-export const ExaminationSchema = z
-  .object({
-    image: z.string(),
-    title: z.string(),
-    descriptions: z.array(z.string()).min(1).max(10),
-    reverse: z.string(),
-    actionId: z.string(),
-    hotspot: z
-      .object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100), label: z.string() })
-      .strict(),
   })
   .strict();
 
@@ -123,6 +147,14 @@ export const PanelSchema = z
 
 export const ReadingPreferencesSchema = z
   .object({
+    dropCapColor: z
+      .string()
+      .regex(/^#[a-fA-F0-9]{6}$/)
+      .optional(),
+    backgroundColor: z
+      .string()
+      .regex(/^#[a-fA-F0-9]{6}$/)
+      .optional(),
     fontSize: z.enum(["small", "medium", "large"]),
     fontFamily: z.enum(["serif", "sans"]),
     lineHeight: z.enum(["comfortable", "spacious"]),
@@ -132,7 +164,7 @@ export const ReadingPreferencesSchema = z
     pageTurn: z.boolean().optional(),
     deviceVoice: z.boolean().optional(),
     narrationRate: z.number().min(0.5).max(2).optional(),
-    narratorVoice: z.string().max(80).optional(),
+    narratorVoice: z.string().max(512).optional(),
     volumes: z
       .object({
         sfx: z.number().min(0).max(1),

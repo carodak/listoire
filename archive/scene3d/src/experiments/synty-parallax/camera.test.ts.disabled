@@ -1,0 +1,44 @@
+import { expect, it } from "vitest";
+import { PerspectiveCamera, Vector3 } from "three";
+import { cameraPose } from "./camera.ts";
+
+it("tracks and pushes smoothly through real depth, with faster foreground displacement", () => {
+  const camera = new PerspectiveCamera(48, 1, 0.1, 160);
+  const projectedX = (time: number, depth: number) => {
+    const pose = cameraPose(time);
+    camera.position.set(pose.x, pose.y, pose.z);
+    camera.lookAt(0.15, 2, -4);
+    camera.updateMatrixWorld();
+    return new Vector3(-2.8, 1, depth).project(camera).x;
+  };
+  const foreground = Math.abs(projectedX(1, 5) - projectedX(0, 5));
+  const background = Math.abs(projectedX(1, -39) - projectedX(0, -39));
+  expect(foreground).toBeGreaterThan(background * 2);
+  expect(cameraPose(1).z).toBeLessThan(cameraPose(0).z);
+  expect(cameraPose(0.001).x - cameraPose(0).x).toBeLessThan(0.00001);
+  expect(cameraPose(1).x - cameraPose(0.999).x).toBeLessThan(0.00001);
+});
+import { readFileSync } from "node:fs";
+import { inspectGlb } from "../../contracts/scene3d.ts";
+
+it("exports the soldier without helmet faces and closes the original head behind the face", () => {
+  const model = inspectGlb(
+    new Uint8Array(readFileSync(new URL("./assets/soldier.glb", import.meta.url))),
+  );
+  const body =
+    model.meshes[
+      model.nodes.find((node: { name: string }) => node.name === "Character_Soldier_01").mesh
+    ];
+  const scalp =
+    model.meshes[
+      model.nodes.find((node: { name: string }) => node.name === "Soldier_Bare_Scalp").mesh
+    ];
+  expect(body).toBeDefined();
+  expect(scalp).toBeDefined();
+  const bodyPosition = model.accessors[body.primitives[0].attributes.POSITION];
+  const scalpPosition = model.accessors[scalp.primitives[0].attributes.POSITION];
+  expect(bodyPosition.max[1]).toBeLessThan(172);
+  expect(scalpPosition.max[1]).toBe(182.5);
+  expect(scalpPosition.max[0]).toBeLessThan(12);
+  expect(scalpPosition.max[2]).toBeLessThan(11);
+});

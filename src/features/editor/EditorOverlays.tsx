@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
 import { StoryConfigurationSchema } from "../../contracts/editor-project.ts";
 import { addLanguage } from "./add-language.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { SceneSchema } from "../../contracts/presentation.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
+import { GameEditor } from "./GameEditor.tsx";
 import { StorySettings } from "./StorySettings.tsx";
 import { NarrationDialog } from "./NarrationDialog.tsx";
 import { MediaDialog } from "./MediaDialog.tsx";
@@ -14,6 +14,7 @@ import { message } from "./use-editor-project.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
 import { download } from "./downloads.ts";
 import { exportProjectArchive } from "./project-archive.ts";
+import { applyIllustrationPack } from "./illustration-pack.ts";
 
 interface Context {
   project: StoryProject;
@@ -30,156 +31,200 @@ interface Context {
   onCompile: () => Promise<void>;
 }
 
+const inkCommands = [
+  "Knot",
+  "Stitch",
+  "Divert",
+  "Tunnel",
+  "Choice",
+  "Sticky Choice",
+  "Nested Choice",
+  "Conditional Choice",
+  "Variable",
+  "Insert Variable",
+  "Thread",
+];
+const mediaCommands = ["Image", "Video", "Animation", "Sound Effect", "Background Music"];
+const gameCommands = [
+  "Stats",
+  "Ability",
+  "Item",
+  "Equipment",
+  "Inventory",
+  "Stat Check",
+  "Ability Check",
+  "HP",
+  "XP",
+  "Combat",
+  "Game Condition",
+];
 export function EditorOverlays({ context: c }: { context: Context }) {
-  const { project, locale, dialog, sceneId, state, onClose } = c;
-  const language = project.languages[locale]!;
-  function applyLanguage(next: typeof language, label: string) {
-    state.update({ ...project, languages: { ...project.languages, [locale]: next } }, label);
-  }
-  if (
-    [
-      "Knot",
-      "Stitch",
-      "Divert",
-      "Tunnel",
-      "Choice",
-      "Sticky Choice",
-      "Nested Choice",
-      "Conditional Choice",
-      "Variable",
-      "Insert Variable",
-      "Thread",
-    ].includes(dialog)
-  )
+  if (inkCommands.includes(c.dialog))
     return (
       <CommandDialog
-        command={dialog}
-        script={language.script}
+        command={c.dialog}
+        script={c.project.languages[c.locale]!.script}
         onInsert={c.onInsert}
-        onClose={onClose}
+        onClose={c.onClose}
       />
     );
-  if (["Image", "Video", "Animation", "Sound Effect", "Background Music"].includes(dialog))
+  if (mediaCommands.includes(c.dialog)) return <MediaOverlay context={c} />;
+  if (gameCommands.includes(c.dialog))
     return (
-      <MediaDialog
-        key={`${dialog}:${c.selectedMedia}`}
-        kind={dialog}
-        project={project}
-        locale={locale}
-        passageId={sceneId}
-        selectedId={c.selectedMedia}
-        onClose={onClose}
-        onApply={(next, reference) => {
-          if (c.selectedMedia) state.update(next, "Updated media properties");
-          else c.onInsert(reference, false, next);
+      <GameEditor
+        project={c.project}
+        locale={c.locale}
+        command={c.dialog}
+        onClose={c.onClose}
+        onApply={(next, script) => {
+          if (script) c.onInsert(script, true, next);
+          else c.state.update(next, "Updated game configuration");
         }}
       />
     );
-  if (["Character", "Stats", "Ability"].includes(dialog))
+  if (["Character", "Project Properties", "Scene Properties"].includes(c.dialog))
+    return <ConfigurationOverlay context={c} />;
+  if (c.dialog === "Story Settings")
     return (
-      <JsonProperties
-        title={`${dialog} — existing engine configuration`}
-        value={language.configuration.character}
-        onApply={(value) =>
-          applyLanguage(
-            {
-              ...language,
-              configuration: {
-                ...language.configuration,
-                character: StoryConfigurationSchema.shape.character.parse(value),
-              },
-            },
-            "Updated character",
-          )
-        }
-        onClose={onClose}
-        description="The runtime rolls STR, DEX and WIL once at character initialization and retains the result in its checkpoint. Abilities are informational Rank 1."
+      <StorySettings
+        project={c.project}
+        locale={c.locale}
+        onApply={(next) => c.state.update(next, "Updated story settings")}
+        onClose={c.onClose}
       />
     );
-  const dialogs: Record<string, ReactNode> = {
-    "Story Settings": (
-      <StorySettings
-        project={project}
-        locale={locale}
-        onApply={(next) => state.update(next, "Updated story settings")}
-        onClose={onClose}
-      />
-    ),
-    TTS: (
+  if (c.dialog === "TTS")
+    return (
       <NarrationDialog
-        project={project}
-        locale={locale}
-        onApply={(next) => state.update(next, "Updated narration")}
-        onClose={onClose}
+        project={c.project}
+        locale={c.locale}
+        onApply={(next) => c.state.update(next, "Updated narration")}
+        onClose={c.onClose}
       />
-    ),
-    "Project Properties": (
+    );
+  if (c.dialog === "Issues") return <IssuesPanel context={c} />;
+  if (c.dialog === "History") return <HistoryPanel context={c} />;
+  if (c.dialog === "Add Language") return <AddLanguage context={c} />;
+  if (c.dialog === "Load / Import") return <ImportOverlay context={c} />;
+  if (c.dialog === "Export") return <ExportOverlay context={c} />;
+  return null;
+}
+function MediaOverlay({ context: c }: { context: Context }) {
+  return (
+    <MediaDialog
+      key={`${c.dialog}:${c.selectedMedia}`}
+      kind={c.dialog}
+      project={c.project}
+      locale={c.locale}
+      passageId={c.sceneId}
+      selectedId={c.selectedMedia}
+      onClose={c.onClose}
+      onApply={(next, reference) => {
+        if (c.selectedMedia) c.state.update(next, "Updated media properties");
+        else c.onInsert(reference, false, next);
+      }}
+    />
+  );
+}
+function ConfigurationOverlay({ context: c }: { context: Context }) {
+  const { project, locale, sceneId, dialog, onClose, state } = c;
+  const language = project.languages[locale]!;
+  const applyLanguage = (configuration: typeof language.configuration) =>
+    state.update(
+      { ...project, languages: { ...project.languages, [locale]: { ...language, configuration } } },
+      `Updated ${dialog}`,
+    );
+  if (dialog === "Character")
+    return (
+      <JsonProperties
+        title="Character configuration"
+        value={language.configuration.character}
+        onClose={onClose}
+        description="Attributes are rolled once and retained in the checkpoint. Abilities start at Rank 1; configure their checks and offensive effects in Game."
+        onApply={(value) =>
+          applyLanguage({
+            ...language.configuration,
+            character: StoryConfigurationSchema.shape.character.parse(value),
+          })
+        }
+      />
+    );
+  if (dialog === "Project Properties")
+    return (
       <JsonProperties
         title="All story properties"
         value={language.configuration}
-        onApply={(value) =>
-          applyLanguage(
-            { ...language, configuration: StoryConfigurationSchema.parse(value) },
-            "Updated story properties",
-          )
-        }
         onClose={onClose}
+        onApply={(value) => applyLanguage(StoryConfigurationSchema.parse(value))}
       />
-    ),
-    "Scene Properties": (
-      <JsonProperties
-        title={`Scene Properties — ${sceneId}`}
-        value={language.configuration.scenes?.[sceneId] ?? { title: sceneId, progress: 0 }}
-        onApply={(value) =>
-          applyLanguage(
-            {
-              ...language,
-              configuration: {
-                ...language.configuration,
-                scenes: { ...language.configuration.scenes, [sceneId]: SceneSchema.parse(value) },
-              },
-            },
-            "Updated Scene Properties",
-          )
+    );
+  return (
+    <JsonProperties
+      title={`Scene Properties / ${sceneId}`}
+      value={language.configuration.scenes?.[sceneId] ?? { title: sceneId, progress: 0 }}
+      onClose={onClose}
+      onApply={(value) =>
+        applyLanguage({
+          ...language.configuration,
+          scenes: { ...language.configuration.scenes, [sceneId]: SceneSchema.parse(value) },
+        })
+      }
+    />
+  );
+}
+function ImportOverlay({ context: c }: { context: Context }) {
+  return (
+    <EditorDialog title="Load / Import" onClose={c.onClose}>
+      <p>
+        Import an Ink script into {c.locale}, or restore a complete project backup. You can undo the
+        import.
+      </p>
+      <button onClick={c.onChooseFile}>Choose Ink or project file</button>
+      <button onClick={() => window.location.reload()}>Reload saved project</button>
+      <button
+        disabled={!c.state.illustrationPack}
+        onClick={() => {
+          c.state.update(
+            applyIllustrationPack(c.project, c.state.illustrationPack!),
+            "Applied new illustration pack",
+          );
+          c.onClose();
+        }}
+      >
+        Apply new illustration pack
+      </button>
+      <p className="editor-hint">
+        Updates matching example illustrations and page color. Keeps your text, audio and uploaded
+        images. Undo restores the previous version.
+      </p>
+    </EditorDialog>
+  );
+}
+function ExportOverlay({ context: c }: { context: Context }) {
+  return (
+    <EditorDialog title="Export project" onClose={c.onClose}>
+      <p>
+        A complete backup includes every language, recordings and media references. Licensed library
+        assets remain in the application media directory.
+      </p>
+      <button
+        onClick={() =>
+          download(`${c.project.storyId}-${c.locale}.ink`, c.project.languages[c.locale]!.script)
         }
-        onClose={onClose}
-      />
-    ),
-    Issues: <IssuesPanel context={c} />,
-    History: <HistoryPanel context={c} />,
-    "Load / Import": (
-      <EditorDialog title="Load / Import" onClose={onClose}>
-        <p>
-          Import an Ink script into {locale}, or restore a complete project JSON backup. You can
-          undo the import.
-        </p>
-        <button onClick={c.onChooseFile}>Choose Ink or project file</button>
-        <button onClick={() => window.location.reload()}>Reload saved project</button>
-      </EditorDialog>
-    ),
-    Export: (
-      <EditorDialog title="Export project" onClose={onClose}>
-        <p>
-          A complete backup includes every language, uploaded recordings and all presentation and
-          media references. Licensed library assets remain in the application's media directory.
-        </p>
-        <button onClick={() => download(`${project.storyId}-${locale}.ink`, language.script)}>
-          Export Ink
-        </button>
-        <button
-          onClick={() =>
-            void exportProjectArchive(project)
-              .then((text) => download(`${project.storyId}-project.json`, text))
-              .catch((error) => state.setIssues([message(error)]))
-          }
-        >
-          Complete project backup
-        </button>
-      </EditorDialog>
-    ),
-    "Add Language": <AddLanguage context={c} />,
-  };
-  return dialogs[dialog] ?? null;
+      >
+        Export Ink
+      </button>
+      <button
+        onClick={() =>
+          void exportProjectArchive(c.project)
+            .then((text) => download(`${c.project.storyId}-project.json`, text))
+            .catch((error) => c.state.setIssues([message(error)]))
+        }
+      >
+        Complete project backup
+      </button>
+    </EditorDialog>
+  );
 }
 function IssuesPanel({ context: c }: { context: Context }) {
   return (

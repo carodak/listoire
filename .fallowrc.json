@@ -25,11 +25,14 @@
       },
       {
         "name": "narrative",
-        "patterns": ["src/features/story-runtime/ink-engine.ts"]
+        "patterns": ["src/features/story-runtime/ink-*.ts"]
       },
       {
         "name": "runtime",
-        "patterns": ["src/features/story-runtime/director.ts"]
+        "patterns": [
+          "src/features/story-runtime/director.ts",
+          "src/features/story-runtime/game-session.ts"
+        ]
       },
       {
         "name": "persistence",
@@ -62,6 +65,10 @@
       {
         "name": "media",
         "patterns": ["src/features/media/**"]
+      },
+      {
+        "name": "rules",
+        "patterns": ["src/features/rules/**"]
       }
     ],
     "rules": [
@@ -80,7 +87,8 @@
           "presentation",
           "character",
           "media",
-          "editor"
+          "editor",
+          "rules"
         ]
       },
       {
@@ -93,7 +101,7 @@
       },
       {
         "from": "runtime",
-        "allow": ["contracts"]
+        "allow": ["contracts", "rules"]
       },
       {
         "from": "persistence",
@@ -147,6 +155,10 @@
       },
       {
         "from": "media",
+        "allow": ["contracts"]
+      },
+      {
+        "from": "rules",
         "allow": ["contracts"]
       }
     ]

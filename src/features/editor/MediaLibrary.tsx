@@ -1,3 +1,4 @@
+import { useAssetSource } from "../presentation/use-asset-source.ts";
 import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
@@ -15,20 +16,29 @@ function searchable(value: string) {
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 }
-function MediaLibrary({
+interface MediaLibraryProps {
+  language: Language;
+  library: Entry[];
+  kind: "image" | "audio" | "video" | "scene3d";
+  onChoose: (id: string) => void;
+  onClose: () => void;
+  role?: "foreground" | "midground" | "background";
+  embedded?: boolean;
+}
+
+export function MediaLibrary({
   language,
   library,
   kind,
   onChoose,
   onClose,
-}: {
-  language: Language;
-  library: Entry[];
-  kind: "image" | "audio" | "video";
-  onChoose: (id: string) => void;
-  onClose: () => void;
-}) {
+  role,
+  embedded = false,
+}: MediaLibraryProps) {
   const [search, setSearch] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"" | "foreground" | "midground" | "background">(
+    role ?? "",
+  );
   const [filters, setFilters] = useState({ category: "", theme: "", usage: "" });
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -46,15 +56,17 @@ function MediaLibrary({
       ...(meta?.usage ?? []),
     ].join(" ");
     return (
-      asset.type === kind &&
+      Boolean(meta || asset.upload || asset.id.startsWith("recording.")) &&
+      (kind === "scene3d" ? Boolean(asset.scene3d) : asset.type === kind) &&
+      (!selectedRole || !meta?.layerRoles?.length || meta.layerRoles.includes(selectedRole)) &&
       searchable(text).includes(searchable(search)) &&
       (["category", "theme", "usage"] as const).every(
         (facet) => !filters[facet] || Boolean(meta && values(meta, facet).includes(filters[facet])),
       )
     );
   });
-  return (
-    <EditorDialog title="Media library" onClose={onClose}>
+  const content = (
+    <>
       <div ref={root} className="media-library">
         <label>
           Search media
@@ -66,76 +78,155 @@ function MediaLibrary({
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <div className="asset-filters">
-          {(["category", "theme", "usage"] as const).map((facet) => (
-            <label key={facet}>
-              {facet}
-              <select
-                aria-label={`Media ${facet}`}
-                value={filters[facet]}
-                onChange={(e) => setFilters({ ...filters, [facet]: e.target.value })}
-              >
-                <option value="">All</option>
-                {[...new Set(library.flatMap((entry) => values(entry, facet)))]
-                  .sort()
-                  .map((value) => (
-                    <option key={value}>{value}</option>
-                  ))}
-              </select>
-            </label>
-          ))}
-        </div>
+        <LibraryFilters
+          kind={kind}
+          library={library}
+          selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
+          filters={filters}
+          setFilters={setFilters}
+        />
         <p>{assets.length} media · licensed story resources</p>
         <div className="media-library-grid">
           {assets.map((asset) => (
-            <article key={asset.id}>
-              {kind === "image" ? (
-                <img src={`/stories/house/${asset.path}`} alt={asset.alt} loading="lazy" />
-              ) : kind === "video" ? (
-                <VideoPreview asset={asset} />
-              ) : (
-                <audio
-                  controls
-                  preload="none"
-                  src={
-                    language.configuration.embeddedAudio?.[asset.id] ??
-                    `/stories/house/${asset.path}`
-                  }
-                />
-              )}
-              <strong>{library.find((entry) => entry.id === asset.id)?.title ?? asset.id}</strong>
-              <p>{asset.alt || asset.id}</p>
-              <button
-                type="button"
-                title={`Use ${asset.id} in the story`}
-                onClick={() => {
-                  onChoose(asset.id);
-                  onClose();
-                }}
-              >
-                Use this media
-              </button>
-            </article>
+            <MediaCard
+              key={asset.id}
+              asset={asset}
+              entry={library.find((entry) => entry.id === asset.id)}
+              audio={language.configuration.embeddedAudio?.[asset.id]}
+              kind={kind}
+              onChoose={(id) => {
+                onChoose(id);
+                onClose();
+              }}
+            />
           ))}
         </div>
         {!assets.length && <p>No media match this search.</p>}
       </div>
+    </>
+  );
+  return embedded ? (
+    <section className="embedded-media-library" aria-label="Media library">
+      <header>
+        <strong>Media library</strong>
+        <button type="button" onClick={onClose} aria-label="Close gallery">
+          Close gallery
+        </button>
+      </header>
+      {content}
+    </section>
+  ) : (
+    <EditorDialog title="Media library" onClose={onClose}>
+      {content}
     </EditorDialog>
   );
 }
+type Filters = Record<Facet, string>;
+function LibraryFilters({
+  kind,
+  library,
+  selectedRole,
+  setSelectedRole,
+  filters,
+  setFilters,
+}: {
+  kind: MediaLibraryProps["kind"];
+  library: Entry[];
+  selectedRole: "" | "foreground" | "midground" | "background";
+  setSelectedRole: (role: "" | "foreground" | "midground" | "background") => void;
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
+}) {
+  return (
+    <div className="asset-filters">
+      {kind === "image" && (
+        <label>
+          Depth layer
+          <select
+            aria-label="Library depth layer"
+            value={selectedRole}
+            onChange={(event) => setSelectedRole(event.target.value as typeof selectedRole)}
+          >
+            <option value="">All layers</option>
+            {["background", "midground", "foreground"].map((role) => (
+              <option key={role}>{role}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      {(["category", "theme", "usage"] as const).map((facet) => (
+        <label key={facet}>
+          {facet}
+          <select
+            aria-label={`Media ${facet}`}
+            value={filters[facet]}
+            onChange={(e) => setFilters({ ...filters, [facet]: e.target.value })}
+          >
+            <option value="">All</option>
+            {[...new Set(library.flatMap((entry) => values(entry, facet)))].sort().map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+      ))}
+    </div>
+  );
+}
+function MediaCard({
+  asset,
+  entry,
+  audio,
+  kind,
+  onChoose,
+}: {
+  asset: MediaAsset;
+  entry?: Entry;
+  audio?: string;
+  kind: MediaLibraryProps["kind"];
+  onChoose: (id: string) => void;
+}) {
+  return (
+    <article data-asset={asset.id}>
+      {["image", "video"].includes(asset.type) ? (
+        <VisualPreview asset={asset} />
+      ) : (
+        <audio controls preload="none" src={audio ?? `/stories/house/${asset.path}`} />
+      )}
+      <strong>{entry?.title ?? asset.id}</strong>
+      <p>{asset.alt || asset.id}</p>
+      {kind === "image" && (
+        <p>Parallax layers: {entry?.layerRoles?.join(", ") || "Not reviewed"}</p>
+      )}
+      <button
+        type="button"
+        title={`Use ${asset.id} in the story`}
+        onClick={() => {
+          onChoose(asset.id);
+        }}
+      >
+        Use this media
+      </button>
+    </article>
+  );
+}
+interface MediaPickerProps {
+  language: Language;
+  library: Entry[];
+  kind: string;
+  asset: string;
+  onAsset: (id: string) => void;
+  embedded?: boolean;
+}
+
 export function MediaPicker({
   language,
   library,
   kind,
   asset,
   onAsset,
-}: {
-  language: Language;
-  library: Entry[];
-  kind: string;
-  asset: string;
-  onAsset: (id: string) => void;
-}) {
+  embedded = false,
+}: MediaPickerProps) {
   const [open, setOpen] = useState(false);
   const selected = language.configuration.assets?.find((entry) => entry.id === asset);
   return (
@@ -149,15 +240,15 @@ export function MediaPicker({
         ▧ Browse media library
       </button>
       <p>{selected ? selected.alt || selected.id : "No media selected"}</p>
-      {selected?.type === "image" && (
-        <img className="asset-preview" src={`/stories/house/${selected.path}`} alt={selected.alt} />
+      {!embedded && selected && ["image", "video"].includes(selected.type) && (
+        <VisualPreview asset={selected} />
       )}
-      {selected?.type === "video" && <VideoPreview asset={selected} />}
       {open && (
         <MediaLibrary
           language={language}
           library={library}
           kind={mediaTypes[kind] ?? "audio"}
+          embedded={embedded}
           onChoose={onAsset}
           onClose={() => setOpen(false)}
         />
@@ -165,25 +256,15 @@ export function MediaPicker({
     </div>
   );
 }
-function VideoPreview({ asset }: { asset: MediaAsset }) {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    let cancelled = false;
-    let dispose: (() => void) | undefined;
-    void resolveMediaAsset(asset, "house")
-      .then((resource) => {
-        if (cancelled) resource.dispose();
-        else {
-          dispose = resource.dispose;
-          setUrl(resource.url);
-        }
-      })
-      .catch(() => setUrl(""));
-    return () => {
-      cancelled = true;
-      dispose?.();
-    };
-  }, [asset]);
+const resolvePreview = (asset: MediaAsset) => resolveMediaAsset(asset, "house");
+export function VisualPreview({ asset }: { asset: MediaAsset }) {
+  const url = useAssetSource(asset, resolvePreview);
+  if (asset.type === "image")
+    return url ? (
+      <img className="asset-preview" src={url} alt={asset.alt} loading="lazy" />
+    ) : (
+      <p>Loading image?</p>
+    );
   return url ? (
     <video
       className="asset-preview"
@@ -197,4 +278,8 @@ function VideoPreview({ asset }: { asset: MediaAsset }) {
   );
 }
 
-const mediaTypes: Record<string, "image" | "video" | "audio"> = { Image: "image", Video: "video" };
+const mediaTypes: Record<string, "image" | "video" | "audio" | "scene3d"> = {
+  Image: "image",
+  Video: "video",
+  "3D Scene": "scene3d",
+};

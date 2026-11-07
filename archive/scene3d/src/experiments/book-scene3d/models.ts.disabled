@@ -1,0 +1,163 @@
+import { Box3, Vector3, Texture, Mesh } from "three";
+import type { Object3D } from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { inspectGlb, Model3DSchema } from "../../contracts/scene3d.ts";
+import type { Model3D } from "../../contracts/scene3d.ts";
+import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import { readUploadedMedia, storeUploadedMedia } from "../../persistence/media-store.ts";
+import { RuntimeAssetSchema } from "../../contracts/presentation.ts";
+import { sha256 } from "../../contracts/digest.ts";
+
+export interface ModelSource {
+  id: string;
+  title: string;
+  model3d: Model3D;
+  asset?: MediaAsset;
+  url?: string;
+  placementScale?: Partial<Record<"main" | "foreground" | "midground" | "background", number>>;
+}
+const files = import.meta.glob("../synty-parallax/assets/*.glb", {
+  query: "?url",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+const presets = [
+  ["soldier", "Faceless knight", "character", ["main"]],
+  ["SM_Bld_Castle_Wall_Gate_01", "Castle gate", "architecture", ["background"]],
+  ["SM_Bld_House_Room_01", "Village house", "architecture", ["background", "midground"]],
+  ["SM_Bld_Castle_Tower_01", "Castle tower", "architecture", ["background", "midground"]],
+  ["SM_Env_Tree_01", "Tree", "nature", ["background", "midground", "foreground"]],
+  ["SM_Bld_Castle_Pillar_01", "Stone pillar", "architecture", ["midground", "foreground"]],
+  ["SM_Env_RockPile_01", "Rocks", "nature", ["main", "midground", "foreground"]],
+  ["SM_Bld_Castle_Wall_01", "Castle wall", "architecture", ["background"]],
+] as const;
+export const builtinModels: ModelSource[] = presets.map(([file, title, category, roles]) => ({
+  id: `synty.${file.toLowerCase().replaceAll("_", "-")}`,
+  title,
+  url: files[`../synty-parallax/assets/${file}.glb`]!,
+  placementScale:
+    file === "SM_Env_RockPile_01"
+      ? { foreground: 0.28, midground: 0.5 }
+      : file === "SM_Env_Tree_01"
+        ? { foreground: 1.1, background: 1.8 }
+        : undefined,
+  model3d: {
+    category,
+    roles: [...roles],
+    dimensions: { x: 1, y: 1, z: 1 },
+    animations: [],
+    palette: category === "character" ? "character" : "environment",
+  },
+}));
+export function modelSources(assets: MediaAsset[]): ModelSource[] {
+  const sources = [
+    ...builtinModels,
+    ...assets
+      .filter((asset) => asset.type === "model3d" && asset.model3d)
+      .map((asset) => ({ id: asset.id, title: asset.alt, model3d: asset.model3d!, asset })),
+  ];
+  return [...new Map(sources.map((source) => [source.id, source])).values()];
+}
+export async function modelBytes(source: ModelSource) {
+  if (source.asset)
+    return new Uint8Array(await (await readUploadedMedia(source.asset)).arrayBuffer());
+  const response = await fetch(source.url!);
+  if (!response.ok) throw new Error(`Cannot load ${source.title}`);
+  return new Uint8Array(await response.arrayBuffer());
+}
+export async function loadModel(bytes: Uint8Array) {
+  inspectGlb(bytes);
+  const model = await new GLTFLoader().parseAsync(bytes.slice().buffer, "");
+  try {
+    validateGeometry(model.scene);
+    return model;
+  } catch (error) {
+    disposeModel(model.scene);
+    throw error;
+  }
+}
+function validateGeometry(root: Object3D) {
+  let vertices = 0;
+  root.traverse((node) => {
+    if (!(node instanceof Mesh)) return;
+    vertices += node.geometry.getAttribute("position")?.count ?? 0;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials)
+      for (const value of Object.values(material)) {
+        if (value instanceof Texture && (value.image?.width > 4096 || value.image?.height > 4096))
+          throw new Error("Model textures must be at most 4096 × 4096.");
+      }
+  });
+  if (vertices > 250000) throw new Error("Model instances exceed 250,000 vertices.");
+}
+export function disposeModel(root: Object3D) {
+  const textures = new Set<Texture>();
+  root.traverse((node) => {
+    if (!(node instanceof Mesh)) return;
+    node.geometry.dispose();
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    for (const material of materials) {
+      for (const value of [...Object.values(material), ...(material.userData.sourceTextures ?? [])])
+        if (value instanceof Texture) textures.add(value);
+      material.dispose();
+    }
+  });
+  for (const texture of textures) {
+    texture.dispose();
+    if (texture.image instanceof ImageBitmap) texture.image.close();
+  }
+}
+export async function saveMedia(
+  blob: Blob,
+  details: Pick<MediaAsset, "type" | "alt" | "model3d" | "scene3d">,
+  rights: string,
+  durationMs?: number,
+) {
+  const digest = await sha256(new Uint8Array(await blob.arrayBuffer()));
+  const id = `upload.${digest}`;
+  const extension = {
+    "model/gltf-binary": "glb",
+    "image/webp": "webp",
+    "video/webm": "webm",
+    "video/mp4": "mp4",
+  }[blob.type];
+  const asset = RuntimeAssetSchema.parse({
+    ...details,
+    id,
+    path: `media/${id}.${extension}`,
+    upload: { digest, mime: blob.type, size: blob.size, rights, durationMs },
+  });
+  await storeUploadedMedia(asset, blob);
+  return asset;
+}
+export async function importModel(file: File, category: Model3D["category"], rights: string) {
+  if (!rights.trim()) throw new Error("Enter permission / rights before importing a model.");
+  if (!/\.glb$/i.test(file.name) || file.size > 20_000_000)
+    throw new Error("Use a self-contained GLB up to 20 MB.");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const model = await loadModel(bytes);
+  try {
+    const size = new Box3().setFromObject(model.scene).getSize(new Vector3());
+    const roles =
+      category === "character"
+        ? ["main"]
+        : category === "environment"
+          ? ["background"]
+          : category === "architecture"
+            ? ["background", "midground", "foreground"]
+            : ["main", "midground", "foreground"];
+    const model3d = Model3DSchema.parse({
+      category,
+      roles,
+      dimensions: { x: size.x, y: size.y, z: size.z },
+      animations: model.animations.map((clip) => clip.name),
+    });
+    return await saveMedia(
+      new Blob([bytes], { type: "model/gltf-binary" }),
+      { type: "model3d", alt: file.name.slice(0, 100), model3d },
+      rights,
+    );
+  } finally {
+    disposeModel(model.scene);
+  }
+}

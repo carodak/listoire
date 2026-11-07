@@ -1,3 +1,6 @@
+import { gameFacts, startPlayer, resolveGameAction, resolveGameTurn } from "./game-session.ts";
+import type { PlayerMove } from "./game-session.ts";
+import type { GameState } from "../../contracts/game.ts";
 import { ReaderFailure } from "../../contracts/story.ts";
 import type { CharacterProfile } from "../../contracts/character.ts";
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
@@ -14,6 +17,7 @@ interface Saves {
   commit(bundle: StoryBundle, next: SaveData, expected: SaveData | null | undefined): Promise<void>;
 }
 interface ReaderSnapshot {
+  game: GameState | null;
   frame: Frame | null;
   occurrenceId: string | null;
   busy: boolean;
@@ -35,6 +39,7 @@ export class StoryDirector {
   private readonly createCharacter?: () => CharacterProfile;
   private readonly presentation?: NarrativePresentationPort;
   private snapshot: ReaderSnapshot = {
+    game: null,
     frame: null,
     occurrenceId: null,
     busy: false,
@@ -76,19 +81,25 @@ export class StoryDirector {
   private async run(
     operation: () => Promise<void>,
     direction: "forward" | "back" = "forward",
+    transition = true,
   ): Promise<void> {
     if (this.disposed || this.snapshot.busy) return;
     this.publish({ busy: true, failure: null });
     try {
-      await this.presentation?.leave?.(direction);
-      this.presentation?.cancel();
+      if (transition) {
+        await this.presentation?.leave?.(direction);
+        this.presentation?.cancel();
+      }
     } catch {
       /* Reading remains available without media. */
     }
     if (this.disposed) return;
+    const inkBefore = this.engine.serialize();
+    const frameBefore = this.snapshot.frame ?? undefined;
     try {
       await operation();
     } catch (error) {
+      this.engine.restore(inkBefore, frameBefore);
       if (this.snapshot.frame) this.present(this.snapshot.frame, this.snapshot.occurrenceId!, true);
       this.publish({ failure: error instanceof ReaderFailure ? error.code : "storage" });
     } finally {
@@ -102,14 +113,7 @@ export class StoryDirector {
       if (this.disposed) return;
       if (save) {
         this.engine.restore(save.inkStateJson, save.frame);
-        this.saved = save;
-        this.present(save.frame, `${save.runId}:${save.revision}`, true);
-        this.publish({
-          frame: save.frame,
-          occurrenceId: `${save.runId}:${save.revision}`,
-          restored: true,
-          character: save.character ?? null,
-        });
+        this.activate(save, true);
       } else {
         this.engine.restore(this.initialState);
         await this.commitFrame(null);
@@ -117,8 +121,15 @@ export class StoryDirector {
     });
   }
 
-  private async commitFrame(expected: SaveData | null | undefined): Promise<void> {
-    const frame = this.engine.advance();
+  private async commitFrame(
+    expected: SaveData | null | undefined,
+    update?: { character: CharacterProfile; game: GameState },
+    retainedFrame?: Frame,
+  ): Promise<void> {
+    const { character, game } = update ?? startPlayer(this.bundle, expected, this.createCharacter);
+    if (!expected && character && game && this.bundle.game)
+      this.engine.setGameFacts?.(gameFacts({ character, game }));
+    const frame = retainedFrame ?? this.engine.advance();
     const save: SaveData = {
       schemaVersion: 1,
       storyId: this.bundle.storyId,
@@ -132,51 +143,61 @@ export class StoryDirector {
       updatedAt: new Date().toISOString(),
       inkStateJson: this.engine.serialize(),
       frame,
-      ...(this.bundle.character
-        ? { character: expected?.character ?? this.createCharacter?.() }
-        : {}),
+      ...(character ? { character, game } : {}),
     };
     await this.saves.commit(this.bundle, save, expected);
     if (this.disposed) return;
-    this.saved = save;
-    this.present(frame, `${save.runId}:${save.revision}`, false);
-    this.publish({
-      frame,
-      occurrenceId: `${save.runId}:${save.revision}`,
-      restored: false,
-      character: save.character ?? null,
-    });
+    this.activate(save, false, Boolean(retainedFrame));
   }
 
   async choose(choiceId: string, occurrenceId: string): Promise<void> {
-    if (!this.saved || this.snapshot.occurrenceId !== occurrenceId) return;
+    if (!this.saved || this.saved.game?.combat || this.snapshot.occurrenceId !== occurrenceId)
+      return;
     await this.run(async () => {
       const before = this.saved!;
-      try {
-        this.engine.choose(choiceId);
-        await this.commitFrame(before);
-        this.previousPages.push(before);
-        if (this.previousPages.length > 100) this.previousPages.shift();
-        this.publish({ canGoBack: true });
-      } catch (error) {
-        this.engine.restore(before.inkStateJson, before.frame);
-        throw error;
+      const actionId = [...before.frame.choices, ...(before.frame.actions ?? [])].find(
+        (choice) => choice.id === choiceId,
+      )?.gameAction;
+      const update = actionId
+        ? resolveGameAction(this.bundle, before, actionId, choiceId)
+        : undefined;
+      if (update?.game.combat) {
+        await this.commitFrame(before, update, before.frame);
+        return;
       }
+      if (update) this.engine.setGameFacts?.(gameFacts(update));
+      this.engine.choose(choiceId);
+      await this.commitFrame(before, update);
+      this.previousPages.push(before);
+      if (this.previousPages.length > 100) this.previousPages.shift();
+      this.publish({ canGoBack: true });
     });
   }
 
+  async gameTurn(move: PlayerMove, occurrenceId: string): Promise<void> {
+    if (!this.saved?.game || !this.saved.character || this.snapshot.occurrenceId !== occurrenceId)
+      return;
+    await this.run(
+      async () => {
+        const before = this.saved!;
+        const { choice, ...update } = resolveGameTurn(this.bundle, before, move);
+        if (choice) {
+          this.engine.setGameFacts?.(gameFacts(update));
+          this.engine.choose(choice);
+        }
+        await this.commitFrame(before, update, choice ? undefined : before.frame);
+      },
+      "forward",
+      false,
+    );
+  }
   async restart(): Promise<void> {
     await this.run(async () => {
-      const before = this.saved;
-      try {
-        this.engine.restore(this.initialState);
-        await this.commitFrame(undefined);
-        this.previousPages.length = 0;
-        this.publish({ canGoBack: false });
-      } catch (error) {
-        this.engine.restore(before?.inkStateJson ?? this.initialState, before?.frame);
-        throw error;
-      }
+      this.engine.restore(this.initialState);
+      this.presentation?.reset?.();
+      await this.commitFrame(undefined);
+      this.previousPages.length = 0;
+      this.publish({ canGoBack: false });
     });
   }
 
@@ -209,25 +230,24 @@ export class StoryDirector {
         revision: before.revision + 1,
         updatedAt: new Date().toISOString(),
       };
-      try {
-        this.engine.restore(previous.inkStateJson, previous.frame);
-        await this.saves.commit(this.bundle, save, before);
-      } catch (error) {
-        this.engine.restore(before.inkStateJson, before.frame);
-        throw error;
-      }
+      this.engine.restore(previous.inkStateJson, previous.frame);
+      await this.saves.commit(this.bundle, save, before);
       this.previousPages.pop();
-      this.saved = save;
-      const occurrenceId = `${save.runId}:${save.revision}`;
-      this.present(save.frame, occurrenceId, false);
-      this.publish({
-        frame: save.frame,
-        occurrenceId,
-        restored: false,
-        character: save.character ?? null,
-        canGoBack: this.previousPages.length > 0,
-      });
+      this.activate(save, false);
+      this.publish({ canGoBack: this.previousPages.length > 0 });
     }, "back");
+  }
+  private activate(save: SaveData, restored: boolean, retained = false) {
+    this.saved = save;
+    const occurrenceId = retained ? this.snapshot.occurrenceId : `${save.runId}:${save.revision}`;
+    if (!retained) this.present(save.frame, occurrenceId!, restored);
+    this.publish({
+      frame: save.frame,
+      occurrenceId,
+      restored,
+      character: save.character ?? null,
+      game: save.game ?? null,
+    });
   }
   private present(frame: Frame, occurrenceId: string, restored: boolean) {
     try {

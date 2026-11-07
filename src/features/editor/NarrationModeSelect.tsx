@@ -1,12 +1,11 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 type Mode = StoryProject["languages"][string]["narrationMode"];
-export function NarrationModeSelect({
-  value,
-  onChange,
-}: {
+interface NarrationModeSelectProps {
   value: Mode;
   onChange: (mode: Mode) => void;
-}) {
+}
+
+export function NarrationModeSelect({ value, onChange }: NarrationModeSelectProps) {
   return (
     <label>
       Narration mode
