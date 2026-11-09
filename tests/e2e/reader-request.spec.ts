@@ -112,6 +112,7 @@ test("completes the French magic chapter with two combats and visible saved dice
   await enter(page, true);
   let encounters = 0;
   let rolls = 0;
+  let victories = 0;
   for (let step = 0; step < 42; step++) {
     const combat = page.locator(".reader-combat-modal");
     if (await combat.count()) {
@@ -147,14 +148,32 @@ test("completes the French magic chapter with two combats and visible saved dice
         await expect(
           combat.getByRole("button", { name: "Utiliser un objet", exact: true }),
         ).toBeDisabled();
+        await expect(combat.locator(".combat-log li").first()).toContainText(
+          "Vous utilisez Baume de soin",
+        );
       }
       for (let turn = 0; (await combat.count()) && turn < 30; turn++) {
+        if (await combat.locator(".combat-victory-title").count()) break;
         await combat.getByRole("button", { name: "Attaque simple", exact: true }).click();
         await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
         await expect(page.locator(".dice-roll")).toBeVisible();
         await expect(page.locator(".dice-result small").first()).toHaveText("d6");
+        const log = combat.locator(".combat-log li");
+        await expect(log.last()).toBeVisible();
+        if (await page.locator(".combat-victory-title").count()) {
+          // A won fight announces itself in the combat window, then continues on its own.
+          await expect(page.locator(".combat-victory-title")).toHaveText("Victoire !");
+          await expect(log.last()).toContainText("Vous attaquez…");
+          victories++;
+        } else {
+          // Chronological: your attack, then the enemy's, as the newest entries.
+          await expect(log.last()).toContainText("L’adversaire attaque…");
+          await expect(log.nth((await log.count()) - 2)).toContainText("Vous attaquez…");
+        }
+        await expect(combat.locator(".combatant-hit")).toHaveCount(0); // reduced motion
         rolls++;
       }
+      await expect(page.locator(".combat-victory")).toHaveCount(0, { timeout: 15000 });
     }
     await dismissNotice(page);
     if (await page.locator(".ending").count()) break;
@@ -162,6 +181,7 @@ test("completes the French magic chapter with two combats and visible saved dice
   }
   await expect(page.locator(".ending")).toBeVisible();
   expect(encounters).toBe(2);
+  expect(victories).toBe(2);
   expect(rolls).toBeGreaterThanOrEqual(2);
   await expect(page.locator(".reader-copy h1")).toHaveText("Laisser une lumière");
 });

@@ -1,5 +1,5 @@
 import { useModalPause } from "./use-modal-pause.ts";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CheckRoll } from "./CheckRoll.tsx";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { ReaderController, ReaderSnapshot } from "../../contracts/story.ts";
@@ -9,6 +9,8 @@ import type { PresentationSession } from "../presentation/presentation-session.t
 import { CombatControls } from "./CombatControls.tsx";
 import { DiceRoll } from "./DiceRoll.tsx";
 import { SpellFeedback } from "../presentation/SpellFeedback.tsx";
+import { useTranslation } from "react-i18next";
+import { combatLines } from "./combat-log.ts";
 
 interface GamePanelProps {
   bundle: StoryBundle;
@@ -29,6 +31,7 @@ export function GamePanel({
 }: GamePanelProps) {
   if (!state.game || !state.character || !state.occurrenceId) return null;
   const active = { ...state, game: state.game, occurrenceId: state.occurrenceId };
+  const victory = isVictory(state.game);
   return (
     <>
       {state.game.pendingCheck && (
@@ -36,6 +39,14 @@ export function GamePanel({
       )}
       {state.game.combat && combatReady && (
         <CombatEncounter
+          bundle={bundle}
+          director={director}
+          state={state}
+          presentation={presentation}
+        />
+      )}
+      {victory && (
+        <CombatVictory
           bundle={bundle}
           director={director}
           state={state}
@@ -70,6 +81,60 @@ function CombatEncounter({
     </ReaderModal>
   );
 }
+/** A won encounter waits on its story event; the combat window announces it. */
+function isVictory(game: ReaderSnapshot["game"]) {
+  return Boolean(game?.pendingEvent && game.lastResult?.outcome === "victory");
+}
+
+/** Time to read "Victory!" and the last blow before the story moves on. */
+const VICTORY_HOLD_MS = 2000;
+
+function CombatVictory({
+  bundle,
+  director,
+  state,
+  presentation,
+}: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation">) {
+  useModalPause(presentation);
+  const { t } = useTranslation();
+  const result = state.game!.lastResult!;
+  const [settled, setSettled] = useState(state.restored || !result.dice?.length);
+  const finishDice = useCallback(() => setSettled(true), []);
+  const finish = useCallback(
+    () => void director.finishEvent(state.occurrenceId!),
+    [director, state.occurrenceId],
+  );
+  useEffect(() => {
+    if (!settled || state.failure) return;
+    const timer = setTimeout(finish, VICTORY_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [settled, state.failure, finish]);
+  return (
+    <ReaderModal
+      className="reader-combat-modal combat-victory"
+      title={t("combat.title")}
+      closeLabel={t("combat.continue")}
+      onDismiss={state.failure ? finish : undefined}
+    >
+      <p className="combat-victory-title" role="status">
+        {t("combat.victory")}
+      </p>
+      <ol className="combat-feedback combat-log" aria-label={t("combat.log")}>
+        {combatLines(result, t).map((line, index) => (
+          <li key={index}>{line}</li>
+        ))}
+      </ol>
+      <DiceRoll
+        result={result}
+        french={bundle.locale.startsWith("fr")}
+        instant={state.restored}
+        onSettled={finishDice}
+      />
+      {state.failure && <p role="alert">{t("combat.saveFailed")}</p>}
+    </ReaderModal>
+  );
+}
+
 function GameNotifications({ bundle, director, state, seenResults, presentation }: GamePanelProps) {
   const [dismissed, setDismissed] = useState<object | null>(null);
   const game = state.game;
@@ -80,7 +145,8 @@ function GameNotifications({ bundle, director, state, seenResults, presentation 
     game?.pendingCheck ||
     (state.restored && !game?.pendingEvent) ||
     result === dismissed ||
-    seenResults?.has(result)
+    seenResults?.has(result) ||
+    isVictory(game)
   )
     return null;
   const received = bundle.game?.items.find((item) => item.id === result.itemId);

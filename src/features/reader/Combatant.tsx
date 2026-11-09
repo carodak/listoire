@@ -14,6 +14,7 @@ export function Combatant({
   portrait,
   bundle,
   presentation,
+  hit,
 }: {
   label: string;
   name: string;
@@ -23,6 +24,8 @@ export function Combatant({
   portrait?: string;
   bundle: StoryBundle;
   presentation?: PresentationSession;
+  /** Changes per landed blow to replay the slash and flash. */
+  hit?: number;
 }) {
   const asset = bundle.assets?.find((asset) => asset.id === portrait);
   const fallback = useCallback(
@@ -36,7 +39,10 @@ export function Combatant({
   const cropped = useSmartCrop(source || undefined, true);
   return (
     <section className="combatant">
-      <div className="combatant-portrait">{cropped && <img src={cropped} alt={name} />}</div>
+      <div className="combatant-portrait">
+        {cropped && <img src={cropped} alt={name} />}
+        {hit !== undefined && <span key={hit} className="combatant-hit" aria-hidden="true" />}
+      </div>
       <span className="combatant-label">{label}</span>
       <strong className="combatant-name">{name}</strong>
       <small className="combatant-stats">{stats}</small>

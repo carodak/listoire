@@ -7,6 +7,9 @@ import { CombatActions } from "./CombatActions.tsx";
 import { Combatant } from "./Combatant.tsx";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { DiceRoll } from "./DiceRoll.tsx";
+import { useTranslation } from "react-i18next";
+import { useCombatLog } from "./combat-log.ts";
+import { useReducedMotion } from "../../shared/use-reduced-motion.ts";
 
 export function CombatControls({
   bundle,
@@ -23,14 +26,31 @@ export function CombatControls({
   const [rolling, setRolling] = useState(false);
   const finishDice = useCallback(() => setRolling(false), []);
   const { game, character, occurrenceId } = state;
+  const { t } = useTranslation();
+  const reduced = useReducedMotion();
   useCombatFeedback(surface, character?.health.current, game?.lastResult);
+  // Turn 1 still shows the result of the choice that started the fight.
+  const items = bundle.game?.items;
+  const itemName = useCallback(
+    (id: string) => items?.find((item) => item.id === id)?.name ?? id,
+    [items],
+  );
+  const log = useCombatLog(
+    (game?.combat?.turn ?? 0) > 1 ? game?.lastResult : undefined,
+    !rolling,
+    t,
+    itemName,
+  );
   if (!game?.combat || !character || !occurrenceId) return null;
   const french = bundle.locale.startsWith("fr");
   const perform = (move: GameMove) => {
     if (rolling || state.busy) return;
+    const before = director.getSnapshot().game?.lastResult;
     setRolling(move.kind !== "item");
     void director.gameTurn(move, occurrenceId).then(() => {
-      if (director.getSnapshot().failure) setRolling(false);
+      const after = director.getSnapshot();
+      // A refused turn (busy, stale page) leaves the result unchanged: nothing will roll.
+      if (after.failure || after.game?.lastResult === before) setRolling(false);
     });
   };
   return (
@@ -41,8 +61,9 @@ export function CombatControls({
           bundle={bundle}
           state={state}
           presentation={presentation}
-          rolling={rolling}
           onSettled={finishDice}
+          log={log.lines}
+          hit={reduced ? undefined : log.hits || undefined}
         />
       </div>
       <CombatActions bundle={bundle} options={state.combatOptions} perform={perform} />
@@ -54,14 +75,17 @@ interface StatusProps {
   bundle: StoryBundle;
   state: ReaderSnapshot;
   presentation?: PresentationSession;
+  /** Increments per landed blow; undefined disables the hit effect (reduced motion). */
+  hit?: number;
 }
 
 function CombatStatus({
-  rolling,
   onSettled,
+  log,
   ...props
-}: StatusProps & { rolling: boolean; onSettled: () => void }) {
+}: StatusProps & { onSettled: () => void; log: string[] }) {
   const { bundle, state } = props;
+  const { t } = useTranslation();
   const combat = state.game!.combat!;
   const game = state.game!;
   const french = bundle.locale.startsWith("fr");
@@ -78,10 +102,16 @@ function CombatStatus({
               {combat.effects.map((effect) => `${effect.kind} (${effect.turns})`).join(" · ")}
             </p>
           )}
-          {game.lastResult && combat.turn > 1 && !rolling && (
-            <p className="combat-feedback" role="status">
-              {game.lastResult.message}
-            </p>
+          {log.length > 0 && (
+            <ol
+              className="combat-feedback combat-log"
+              aria-label={t("combat.log")}
+              aria-live="polite"
+            >
+              {log.map((line, index) => (
+                <li key={index}>{line}</li>
+              ))}
+            </ol>
           )}
         </div>
         {combat.turn > 1 && (
@@ -103,7 +133,7 @@ function CombatStatus({
   );
 }
 
-function CombatSummary({ bundle, state, presentation }: StatusProps) {
+function CombatSummary({ bundle, state, presentation, hit }: StatusProps) {
   const combat = state.game!.combat!;
   const character = state.character!;
   const french = bundle.locale.startsWith("fr");
@@ -111,6 +141,7 @@ function CombatSummary({ bundle, state, presentation }: StatusProps) {
   return (
     <div className="combat-summary">
       <Combatant
+        hit={hit}
         bundle={bundle}
         presentation={presentation}
         label={french ? "Adversaire" : "Opponent"}

@@ -131,6 +131,9 @@ const result = z
     /** Combat damage this turn, for a localized log; older saves only have `message`. */
     dealt: z.number().int().nonnegative().optional(),
     received: z.number().int().nonnegative().optional(),
+    usedItem: id.optional(),
+    healed: z.number().int().nonnegative().optional(),
+    fled: z.boolean().optional(),
     itemId: id.optional(),
     abilityId: id.optional(),
     abilityUsed: id.optional(),

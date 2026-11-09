@@ -101,6 +101,8 @@ function useItem(
   game.lastResult = {
     success: true,
     roll: 0,
+    usedItem: id,
+    healed: character.health.current - previous,
     message: `${item.name}: +${character.health.current - previous} HP`,
   };
   retaliate(character, game, definition);
@@ -135,6 +137,7 @@ function flee(character: CharacterProfile, game: GameState, definition: GameDefi
     success,
     roll: die,
     dice: [{ sides: 20, value: die }],
+    fled: success,
     message: success ? "Escaped" : `Escape failed · ${die}`,
   };
   if (success) return finish(character, game, "Escaped", false, "escaped");
