@@ -16,6 +16,16 @@ export interface EffectTargets {
   silentVideo?: boolean;
 }
 type EffectResult = "ended" | "aborted" | "unavailable" | "timeout";
+const PERSISTENT_EFFECTS = new Set([
+  "slow-zoom",
+  "camera-zoom",
+  "camera-pan",
+  "parallax",
+  "fade-in",
+  "fade-out",
+  "crossfade",
+  "cinematic-camera",
+]);
 
 export class EffectsEngine {
   private readonly running = new Set<{
@@ -34,16 +44,7 @@ export class EffectsEngine {
       return Promise.resolve(signal.aborted ? "aborted" : "ended");
     targets = imagePlaneTargets(effect, targets);
     const { target, overlay } = effectSurface(effect, targets);
-    const persistent = [
-      "slow-zoom",
-      "camera-zoom",
-      "camera-pan",
-      "parallax",
-      "fade-in",
-      "fade-out",
-      "crossfade",
-      "cinematic-camera",
-    ].includes(effect.id);
+    const persistent = PERSISTENT_EFFECTS.has(effect.id);
     let resolve!: (value: EffectResult) => void;
     const finished = new Promise<EffectResult>((done) => {
       resolve = done;
@@ -71,22 +72,7 @@ export class EffectsEngine {
         finish("unavailable");
         return finished;
       }
-      animations.push(
-        target.animate(effectKeyframes(effect, target), {
-          duration: effect.duration,
-          delay,
-          easing: effectEasing(effect),
-          fill: "forwards",
-        }),
-      );
-      this.animateLayers(effect, targets, animations, delay);
-      if (effect.id === "crossfade" && targets.previousImage?.animate)
-        animations.push(
-          targets.previousImage.animate([{ opacity: 1 }, { opacity: 0 }], {
-            duration: effect.duration,
-            fill: "forwards",
-          }),
-        );
+      this.animate(effect, target, targets, animations, delay);
       void Promise.all(animations.map((animation) => animation.finished)).then(
         () => finish("ended"),
         () => finish("aborted"),
@@ -95,6 +81,30 @@ export class EffectsEngine {
       finish("unavailable");
     }
     return finished;
+  }
+  private animate(
+    effect: NativeEffect,
+    target: HTMLElement,
+    targets: EffectTargets,
+    animations: Animation[],
+    delay: number,
+  ) {
+    animations.push(
+      target.animate(effectKeyframes(effect, target), {
+        duration: effect.duration,
+        delay,
+        easing: effectEasing(effect),
+        fill: "forwards",
+      }),
+    );
+    this.animateLayers(effect, targets, animations, delay);
+    if (effect.id === "crossfade" && targets.previousImage?.animate)
+      animations.push(
+        targets.previousImage.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: effect.duration,
+          fill: "forwards",
+        }),
+      );
   }
   private animateLayers(
     effect: NativeEffect,

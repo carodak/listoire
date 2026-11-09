@@ -14,27 +14,7 @@ export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => voi
         throw new Error("Use an MP4 or WebM up to 50 MB.");
       if (!draft.rights.trim()) throw new Error("Confirm permission to use this video first.");
       setDraft({ ...draft, busy: true, error: "" });
-      const mime = /\.webm$/i.test(file.name) ? "video/webm" : "video/mp4";
-      const url = URL.createObjectURL(file);
-      let durationMs: number;
-      try {
-        durationMs = draft.duration * 1000 || (await audioDuration(url, "video"));
-        if (durationMs <= 0) throw new Error("This video has no playable duration.");
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-      const hex = await sha256(await file.arrayBuffer());
-      const id = `upload.${hex}`;
-      const asset = RuntimeAssetSchema.parse({
-        id,
-        path: `media/${id}.${mime === "video/mp4" ? "mp4" : "webm"}`,
-        type: "video",
-        alt: file.name,
-        upload: { digest: hex, mime, size: file.size, rights: draft.rights, durationMs },
-      });
-      await storeUploadedMedia(asset, new Blob([file], { type: mime }));
-      onUpload(asset);
-
+      onUpload(await storeVideo(file, draft.rights, draft.duration));
       setDraft({ ...draft, busy: false, error: "" });
     } catch (error) {
       setDraft({
@@ -83,4 +63,27 @@ export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => voi
       </p>
     </fieldset>
   );
+}
+
+async function storeVideo(file: File, rights: string, durationOverride: number) {
+  const mime = /\.webm$/i.test(file.name) ? "video/webm" : "video/mp4";
+  const url = URL.createObjectURL(file);
+  let durationMs: number;
+  try {
+    durationMs = durationOverride * 1000 || (await audioDuration(url, "video"));
+    if (durationMs <= 0) throw new Error("This video has no playable duration.");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+  const hex = await sha256(await file.arrayBuffer());
+  const id = `upload.${hex}`;
+  const asset = RuntimeAssetSchema.parse({
+    id,
+    path: `media/${id}.${mime === "video/mp4" ? "mp4" : "webm"}`,
+    type: "video",
+    alt: file.name,
+    upload: { digest: hex, mime, size: file.size, rights, durationMs },
+  });
+  await storeUploadedMedia(asset, new Blob([file], { type: mime }));
+  return asset;
 }

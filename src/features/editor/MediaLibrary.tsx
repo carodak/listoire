@@ -80,6 +80,21 @@ export function MediaLibrary({
       {!assets.length && <p>No media match this search.</p>}
     </div>
   );
+  return (
+    <LibraryFrame embedded={embedded} onClose={onClose}>
+      {content}
+    </LibraryFrame>
+  );
+}
+function LibraryFrame({
+  embedded,
+  onClose,
+  children,
+}: {
+  embedded: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
   return embedded ? (
     <section className="embedded-media-library" aria-label="Media library">
       <header>
@@ -88,11 +103,11 @@ export function MediaLibrary({
           Close gallery
         </button>
       </header>
-      {content}
+      {children}
     </section>
   ) : (
     <EditorDialog title="Media library" onClose={onClose}>
-      {content}
+      {children}
     </EditorDialog>
   );
 }

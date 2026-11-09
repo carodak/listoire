@@ -10,34 +10,13 @@ import { PassageText } from "./PassageText.tsx";
 import { CheckpointControls } from "./CheckpointControls.tsx";
 import { GamePanel } from "./GamePanel.tsx";
 import { ReactBitsLayer } from "../presentation/react-bits/ReactBitsLayer.tsx";
+import type { PresentationState } from "../presentation/playback-context.ts";
 import "./reader.css";
 import { readerTheme } from "../presentation/reader-theme.ts";
 
 export function StoryPlayer(props: Props) {
   const { t } = useTranslation();
-  useEffect(() => {
-    props.presentation.configure(props.preferences);
-  }, [props.presentation, props.preferences]);
-  useEffect(() => {
-    let resumeOnFocus = false;
-    const visibility = () => {
-      if (document.hidden) {
-        resumeOnFocus = !props.presentation.getSnapshot().paused;
-        props.presentation.pause();
-      } else if (resumeOnFocus) {
-        resumeOnFocus = false;
-        props.presentation.resume();
-      }
-    };
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    const reduce = () => props.presentation.skipCinematic();
-    document.addEventListener("visibilitychange", visibility);
-    motion.addEventListener("change", reduce);
-    return () => {
-      document.removeEventListener("visibilitychange", visibility);
-      motion.removeEventListener("change", reduce);
-    };
-  }, [props.presentation]);
+  usePresentationLifecycle(props);
   const state = useSyncExternalStore(props.director.subscribe, props.director.getSnapshot);
   const [characterOpen, setCharacterOpen] = useState(false);
   const [seenGameResults] = useState(() => new WeakSet<object>());
@@ -77,6 +56,32 @@ export function StoryPlayer(props: Props) {
   );
 }
 
+function usePresentationLifecycle({ presentation, preferences }: Props) {
+  useEffect(() => {
+    presentation.configure(preferences);
+  }, [presentation, preferences]);
+  useEffect(() => {
+    let resumeOnFocus = false;
+    const visibility = () => {
+      if (document.hidden) {
+        resumeOnFocus = !presentation.getSnapshot().paused;
+        presentation.pause();
+      } else if (resumeOnFocus) {
+        resumeOnFocus = false;
+        presentation.resume();
+      }
+    };
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const reduce = () => presentation.skipCinematic();
+    document.addEventListener("visibilitychange", visibility);
+    motion.addEventListener("change", reduce);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      motion.removeEventListener("change", reduce);
+    };
+  }, [presentation]);
+}
+
 interface ReaderPassageProps {
   player: Props;
   state: ReaderSnapshot & { frame: Frame };
@@ -87,33 +92,13 @@ interface ReaderPassageProps {
   seenGameResults: WeakSet<object>;
 }
 
-function ReaderPassage({
-  player,
-  state,
-  failure,
-  onFailure,
-  characterOpen,
-  onCharacterToggle,
-  seenGameResults,
-}: ReaderPassageProps) {
-  const { bundle, director, presentation, backup, preferences } = player;
-  const { t } = useTranslation();
-  const scene = bundle.scenes?.[state.frame.passageId] ?? {
-    title: bundle.title,
-    progress: 0,
-    photograph: false,
-    notice: undefined,
-  };
+function ReaderPassage(props: ReaderPassageProps) {
+  const { player, state, characterOpen, onCharacterToggle } = props;
+  const { bundle, presentation, preferences } = player;
   const heading = useRef<HTMLHeadingElement>(null);
   const page = useRef<HTMLElement>(null);
   useLayoutEffect(() => presentation.bindPage(page.current!), [presentation]);
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
-  const { combatReady, choose, choicesDisabled, resumeCombat } = useCombatChoice(
-    player,
-    state,
-    Boolean(failure) || media.blocking,
-  );
-  const instant = preferences.reveal === "instant" || state.restored;
   const className = `reader font-${preferences.fontFamily} text-${preferences.fontSize} lines-${preferences.lineHeight}`;
   useEffect(() => {
     if (!player.preview) heading.current?.focus();
@@ -134,45 +119,67 @@ function ReaderPassage({
         characterOpen={characterOpen}
         onCharacterToggle={onCharacterToggle}
       />
-      <div className="reader-board" style={{ visibility: media.departed ? "hidden" : undefined }}>
-        <GamePanel
-          bundle={bundle}
-          director={director}
-          state={state}
-          combatReady={combatReady}
-          seenResults={seenGameResults}
-          presentation={presentation}
-        />
-        <PassageText
-          heading={<StoryHeading title={scene.title} headingRef={heading} />}
-          bundle={bundle}
-          presentation={presentation}
-          frame={state.frame}
-          instant={instant}
-          media={media}
-          disabled={choicesDisabled}
-          onChoose={choose}
-          resumeCombat={resumeCombat}
-          checkOptions={state.checkOptions}
-        >
-          <progress
-            className="story-progress"
-            value={scene.progress}
-            max={1}
-            aria-label={t("storyProgress")}
-          />
-          <CheckpointControls
-            director={director}
-            busy={state.busy}
-            hasFrame={true}
-            failure={failure}
-            onFailure={onFailure}
-            backup={backup}
-          />
-        </PassageText>
-      </div>
+      <ReaderBoard {...props} media={media} heading={heading} />
       <PageEffects layers={media.layers} />
     </main>
+  );
+}
+
+function ReaderBoard({
+  player,
+  state,
+  failure,
+  onFailure,
+  seenGameResults,
+  media,
+  heading,
+}: ReaderPassageProps & { media: PresentationState; heading: Ref<HTMLHeadingElement> }) {
+  const { bundle, director, presentation, backup, preferences } = player;
+  const { t } = useTranslation();
+  const scene = bundle.scenes?.[state.frame.passageId];
+  const { combatReady, choose, choicesDisabled, resumeCombat } = useCombatChoice(
+    player,
+    state,
+    Boolean(failure) || media.blocking,
+  );
+  return (
+    <div className="reader-board" style={{ visibility: media.departed ? "hidden" : undefined }}>
+      <GamePanel
+        bundle={bundle}
+        director={director}
+        state={state}
+        combatReady={combatReady}
+        seenResults={seenGameResults}
+        presentation={presentation}
+      />
+      <PassageText
+        heading={<StoryHeading title={scene?.title ?? bundle.title} headingRef={heading} />}
+        bundle={bundle}
+        presentation={presentation}
+        frame={state.frame}
+        instant={preferences.reveal === "instant" || state.restored}
+        media={media}
+        disabled={choicesDisabled}
+        onChoose={choose}
+        resumeCombat={resumeCombat}
+        checkOptions={state.checkOptions}
+      >
+        <progress
+          className="story-progress"
+          value={scene?.progress ?? 0}
+          max={1}
+          aria-label={t("storyProgress")}
+        />
+        <CheckpointControls
+          director={director}
+          busy={state.busy}
+          hasFrame={true}
+          failure={failure}
+          onFailure={onFailure}
+          backup={backup}
+        />
+      </PassageText>
+    </div>
   );
 }
 
@@ -194,11 +201,7 @@ function StoryHeading({ title, headingRef }: StoryHeadingProps) {
   );
 }
 
-function PageEffects({
-  layers,
-}: {
-  layers: import("../presentation/playback-context.ts").PresentationState["layers"];
-}) {
+function PageEffects({ layers }: { layers: PresentationState["layers"] }) {
   return (
     <>
       {layers

@@ -99,45 +99,51 @@ function HeaderIdentity({
             style={{ width: `${Math.max(14, language.configuration.title.length + 2)}ch` }}
             value={language.configuration.title}
             onChange={(event) =>
-              state.update(
-                {
-                  ...project,
-                  languages: {
-                    ...project.languages,
-                    [locale]: {
-                      ...language,
-                      configuration: { ...language.configuration, title: event.target.value },
-                    },
-                  },
-                },
-                "Renamed story",
-              )
+              state.update(renameStory(project, locale, event.target.value), "Renamed story")
             }
           />
         </label>
-        <label className="editor-language">
-          <span className="sr-only">Story language</span>
-          <select
-            aria-label="Story language"
-            title={languageLabel(locale, language.missingTranslation)}
-            value={locale}
-            onChange={(event) =>
-              event.target.value === "__add"
-                ? onDialog("Add Language")
-                : onLocale(event.target.value)
-            }
-          >
-            {Object.keys(project.languages).map((code) => (
-              <option value={code} key={code}>
-                {code.toUpperCase()}
-                {project.languages[code]!.missingTranslation ? " *" : ""}
-              </option>
-            ))}
-            <option value="__add">+ Add Language…</option>
-          </select>
-        </label>
+        <LanguageSelect project={project} locale={locale} onLocale={onLocale} onDialog={onDialog} />
       </div>
     </div>
+  );
+}
+function renameStory(project: StoryProject, locale: string, title: string): StoryProject {
+  const language = project.languages[locale]!;
+  return {
+    ...project,
+    languages: {
+      ...project.languages,
+      [locale]: { ...language, configuration: { ...language.configuration, title } },
+    },
+  };
+}
+function LanguageSelect({
+  project,
+  locale,
+  onLocale,
+  onDialog,
+}: Pick<EditorHeaderProps, "project" | "locale" | "onLocale" | "onDialog">) {
+  return (
+    <label className="editor-language">
+      <span className="sr-only">Story language</span>
+      <select
+        aria-label="Story language"
+        title={languageLabel(locale, project.languages[locale]!.missingTranslation)}
+        value={locale}
+        onChange={(event) =>
+          event.target.value === "__add" ? onDialog("Add Language") : onLocale(event.target.value)
+        }
+      >
+        {Object.keys(project.languages).map((code) => (
+          <option value={code} key={code}>
+            {code.toUpperCase()}
+            {project.languages[code]!.missingTranslation ? " *" : ""}
+          </option>
+        ))}
+        <option value="__add">+ Add Language…</option>
+      </select>
+    </label>
   );
 }
 function HeaderSearch({ onFind }: Pick<EditorHeaderProps, "onFind">) {

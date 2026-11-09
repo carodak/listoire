@@ -50,61 +50,24 @@ export function CombatControls({
   );
 }
 
-type Snapshot = ReaderSnapshot;
+interface StatusProps {
+  bundle: StoryBundle;
+  state: ReaderSnapshot;
+  presentation?: PresentationSession;
+}
+
 function CombatStatus({
-  bundle,
-  state,
   rolling,
   onSettled,
-  presentation,
-}: {
-  bundle: StoryBundle;
-  state: Snapshot;
-  rolling: boolean;
-  onSettled: () => void;
-  presentation?: PresentationSession;
-}) {
+  ...props
+}: StatusProps & { rolling: boolean; onSettled: () => void }) {
+  const { bundle, state } = props;
   const combat = state.game!.combat!;
-  const character = state.character!;
   const game = state.game!;
   const french = bundle.locale.startsWith("fr");
   return (
     <>
-      <div className="combat-summary">
-        <Combatant
-          bundle={bundle}
-          presentation={presentation}
-          label={french ? "Adversaire" : "Opponent"}
-          name={
-            bundle.game?.encounters.find((entry) => entry.id === combat.encounterId)?.name ?? ""
-          }
-          portrait={
-            bundle.game?.encounters.find((entry) => entry.id === combat.encounterId)?.portrait
-          }
-          health={combat.hp}
-          maximum={combat.maxHp}
-          stats={
-            <>
-              {french ? "Dégâts" : "Damage"} {combat.damage}
-            </>
-          }
-        />
-        <Combatant
-          bundle={bundle}
-          presentation={presentation}
-          label={french ? "Personnage" : "Character"}
-          name={bundle.character?.name ?? ""}
-          portrait={bundle.character?.portrait}
-          health={character.health.current}
-          maximum={character.health.max}
-          stats={(["STR", "DEX", "WIL"] as const)
-            .map(
-              (key) =>
-                `${key} ${state.attributeDetails?.[key].total ?? character.attributes[key].current}`,
-            )
-            .join(" / ")}
-        />
-      </div>
+      <CombatSummary {...props} />
       <div className="combat-round">
         <div className="combat-readout">
           <p className="combat-turn">
@@ -137,5 +100,45 @@ function CombatStatus({
         </p>
       )}
     </>
+  );
+}
+
+function CombatSummary({ bundle, state, presentation }: StatusProps) {
+  const combat = state.game!.combat!;
+  const character = state.character!;
+  const french = bundle.locale.startsWith("fr");
+  const encounter = bundle.game?.encounters.find((entry) => entry.id === combat.encounterId);
+  return (
+    <div className="combat-summary">
+      <Combatant
+        bundle={bundle}
+        presentation={presentation}
+        label={french ? "Adversaire" : "Opponent"}
+        name={encounter?.name ?? ""}
+        portrait={encounter?.portrait}
+        health={combat.hp}
+        maximum={combat.maxHp}
+        stats={
+          <>
+            {french ? "Dégâts" : "Damage"} {combat.damage}
+          </>
+        }
+      />
+      <Combatant
+        bundle={bundle}
+        presentation={presentation}
+        label={french ? "Personnage" : "Character"}
+        name={bundle.character?.name ?? ""}
+        portrait={bundle.character?.portrait}
+        health={character.health.current}
+        maximum={character.health.max}
+        stats={(["STR", "DEX", "WIL"] as const)
+          .map(
+            (key) =>
+              `${key} ${state.attributeDetails?.[key].total ?? character.attributes[key].current}`,
+          )
+          .join(" / ")}
+      />
+    </div>
   );
 }

@@ -21,42 +21,21 @@ interface Props {
   onChange: (value: Illustration) => void;
 }
 export function ImageLayers(props: Props) {
-  const { image, value, language, library, motion, layout, layered, onChange } = props;
-  const [selected, select] = useState(-1),
-    [margins, showMargins] = useState(false);
+  const { image, value, language, library, layered, onChange } = props;
+  const [selected, select] = useState(-1);
   const [gallery, setGallery] = useState<Illustration["base"]["role"] | null>(null);
   const layer = selected < 0 ? value.base : (value.layers[selected] ?? value.base);
   const update = (patch: Partial<Illustration["base"]>) =>
-    onChange(
-      selected < 0
-        ? { ...value, base: { ...value.base, ...patch } }
-        : {
-            ...value,
-            layers: value.layers.map((item, index) =>
-              index === selected ? { ...item, ...patch } : item,
-            ),
-          },
-    );
+    onChange(patchLayer(value, selected, patch));
+  const [margins, showMargins] = useState(false);
   const preview = (
-    <>
-      <ImageDragStage layer={layer} onChange={update}>
-        <CompositionPreview
-          image={image}
-          value={value}
-          assets={language.configuration.assets ?? []}
-          paper={language.defaults.backgroundColor}
-          motion={motion}
-          layout={layout}
-          margins={margins}
-        />
-      </ImageDragStage>
-      <CheckboxField
-        label="Show crop / safe margins"
-        help="Check the inset frame for exposed edges before applying camera movement."
-        checked={margins}
-        onChange={(event) => showMargins(event.target.checked)}
-      />
-    </>
+    <CompositionStage
+      {...props}
+      layer={layer}
+      onLayerChange={update}
+      margins={margins}
+      onMargins={showMargins}
+    />
   );
   return (
     <>
@@ -110,6 +89,57 @@ export function ImageLayers(props: Props) {
     </>
   );
 }
+function patchLayer(
+  value: Illustration,
+  selected: number,
+  patch: Partial<Illustration["base"]>,
+): Illustration {
+  if (selected < 0) return { ...value, base: { ...value.base, ...patch } };
+  return {
+    ...value,
+    layers: value.layers.map((item, index) => (index === selected ? { ...item, ...patch } : item)),
+  };
+}
+
+function CompositionStage({
+  image,
+  value,
+  language,
+  motion,
+  layout,
+  layer,
+  onLayerChange,
+  margins,
+  onMargins,
+}: Props & {
+  margins: boolean;
+  onMargins: (show: boolean) => void;
+  layer: Illustration["base"];
+  onLayerChange: (patch: Partial<Illustration["base"]>) => void;
+}) {
+  return (
+    <>
+      <ImageDragStage layer={layer} onChange={onLayerChange}>
+        <CompositionPreview
+          image={image}
+          value={value}
+          assets={language.configuration.assets ?? []}
+          paper={language.defaults.backgroundColor}
+          motion={motion}
+          layout={layout}
+          margins={margins}
+        />
+      </ImageDragStage>
+      <CheckboxField
+        label="Show crop / safe margins"
+        help="Check the inset frame for exposed edges before applying camera movement."
+        checked={margins}
+        onChange={(event) => onMargins(event.target.checked)}
+      />
+    </>
+  );
+}
+
 interface ImageDragStageProps {
   layer: Illustration["base"];
   onChange: (change: Partial<Illustration["base"]>) => void;

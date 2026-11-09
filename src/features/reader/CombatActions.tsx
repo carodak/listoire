@@ -2,7 +2,27 @@ import { useState } from "react";
 import type { CombatOption, GameMove } from "../../contracts/game.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import { Info } from "../../shared/Info.tsx";
-import { CombatOptionDetails, chanceLabel } from "./CombatOptionDetails.tsx";
+import { CombatOptionDetails, chanceLabel, optionName } from "./CombatOptionDetails.tsx";
+
+const COPY = {
+  fr: {
+    attack: "Attaque simple",
+    ability: "Utiliser une capacité",
+    item: "Utiliser un objet",
+    flee: "Fuir",
+    details: "Détails",
+    none: "Aucun choix disponible dans votre inventaire ou vos capacités.",
+  },
+  en: {
+    attack: "Basic attack",
+    ability: "Use an ability",
+    item: "Use an item",
+    flee: "Flee",
+    details: "Details",
+    none: "No available item or ability.",
+  },
+};
+const copyFor = (bundle: StoryBundle) => (bundle.locale === "fr" ? COPY.fr : COPY.en);
 
 export function CombatActions({
   bundle,
@@ -14,15 +34,7 @@ export function CombatActions({
   perform: (move: GameMove) => void;
 }) {
   const [open, setOpen] = useState<"ability" | "item" | null>(null);
-  const french = bundle.locale === "fr";
-  const labels = french
-    ? {
-        attack: "Attaque simple",
-        ability: "Utiliser une capacité",
-        item: "Utiliser un objet",
-        flee: "Fuir",
-      }
-    : { attack: "Basic attack", ability: "Use an ability", item: "Use an item", flee: "Flee" };
+  const copy = copyFor(bundle);
   const choose = (move: GameMove) => {
     setOpen(null);
     perform(move);
@@ -41,23 +53,14 @@ export function CombatActions({
                 aria-expanded={grouped ? open === kind : undefined}
                 onClick={() => (grouped ? setOpen(open === kind ? null : kind) : choose({ kind }))}
               >
-                {labels[kind]}
+                {copy[kind]}
               </button>
-              <Info label={`${french ? "Détails" : "Details"} · ${labels[kind]}`}>
+              <Info label={`${copy.details} · ${copy[kind]}`}>
                 {!available.length ? (
-                  <p>
-                    {french
-                      ? "Aucun choix disponible dans votre inventaire ou vos capacités."
-                      : "No available item or ability."}
-                  </p>
+                  <p>{copy.none}</p>
                 ) : (
                   available.map((option, index) => (
-                    <CombatOptionDetails
-                      key={index}
-                      option={option}
-                      name={optionName(bundle, option)}
-                      french={french}
-                    />
+                    <CombatOptionDetails key={index} bundle={bundle} option={option} />
                   ))
                 )}
               </Info>
@@ -66,41 +69,46 @@ export function CombatActions({
         })}
       </div>
       {open && (
-        <div className="combat-ability-menu" aria-label={labels[open]}>
-          {options
-            .filter((option) => option.move.kind === open)
-            .map((option) => {
-              const move = option.move;
-              if (move.kind !== "ability" && move.kind !== "item") return null;
-              const definition =
-                move.kind === "ability" ? bundle.game?.abilities : bundle.game?.items;
-              return (
-                <div key={move.id} className="combat-action">
-                  <button onClick={() => choose(move)}>
-                    {definition?.find((entry) => entry.id === move.id)?.name ?? move.id}
-                    <small>{chanceLabel(option.probability, french)}</small>
-                  </button>
-                  <Info
-                    label={`${french ? "Détails" : "Details"} · ${definition?.find((entry) => entry.id === move.id)?.name ?? move.id}`}
-                  >
-                    <CombatOptionDetails
-                      option={option}
-                      name={optionName(bundle, option)}
-                      french={french}
-                    />
-                  </Info>
-                </div>
-              );
-            })}
-        </div>
+        <CombatMenu
+          bundle={bundle}
+          label={copy[open]}
+          options={options.filter((option) => option.move.kind === open)}
+          choose={choose}
+        />
       )}
     </>
   );
 }
 
-function optionName(bundle: StoryBundle, option: CombatOption) {
-  const move = option.move;
-  if (move.kind !== "ability" && move.kind !== "item") return undefined;
-  const entries = move.kind === "ability" ? bundle.game?.abilities : bundle.game?.items;
-  return entries?.find((entry) => entry.id === move.id)?.name;
+function CombatMenu({
+  bundle,
+  label,
+  options,
+  choose,
+}: {
+  bundle: StoryBundle;
+  label: string;
+  options: CombatOption[];
+  choose: (move: GameMove) => void;
+}) {
+  return (
+    <div className="combat-ability-menu" aria-label={label}>
+      {options.map((option) => {
+        const move = option.move;
+        if (move.kind !== "ability" && move.kind !== "item") return null;
+        const name = optionName(bundle, option) ?? move.id;
+        return (
+          <div key={move.id} className="combat-action">
+            <button onClick={() => choose(move)}>
+              {name}
+              <small>{chanceLabel(option.probability, bundle.locale === "fr")}</small>
+            </button>
+            <Info label={`${copyFor(bundle).details} · ${name}`}>
+              <CombatOptionDetails bundle={bundle} option={option} />
+            </Info>
+          </div>
+        );
+      })}
+    </div>
+  );
 }

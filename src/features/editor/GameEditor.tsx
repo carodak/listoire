@@ -75,6 +75,12 @@ export function GameEditor({ project, locale, command, onApply, onClose }: GameE
     </EditorDialog>
   );
 }
+const GAME_CONDITION = "\n{game_success:\n    Success.\n- else:\n    Failure.\n}\n";
+const newAction = (kind: GameAction["kind"]) =>
+  GameActionSchema.parse({ id: `action-${crypto.randomUUID()}`, label: "New action", kind });
+const actionChoiceScript = (action: GameAction) =>
+  `\n+ [${action.label.replace(/[[\]#\n\r]/g, " ")} # game:${action.id}]\n    {game_success:\n        Success.\n    - else:\n        Failure or escape.\n    }\n    -> END\n`;
+
 interface GameActionsProps {
   game: GameDefinition;
   onChange: (game: GameDefinition) => void;
@@ -98,24 +104,10 @@ function GameActions({ game, onChange, initialKind = "stat-check", onInsert }: G
         <code>game_success</code>; <code>game_roll</code>, <code>game_hp</code> and{" "}
         <code>game_xp</code> are available in Ink.
       </p>
-      <button
-        onClick={() => onInsert("\n{game_success:\n    Success.\n- else:\n    Failure.\n}\n")}
-      >
-        Insert game condition
-      </button>
+      <button onClick={() => onInsert(GAME_CONDITION)}>Insert game condition</button>
       <button
         onClick={() => {
-          onChange({
-            ...game,
-            actions: [
-              ...actions,
-              GameActionSchema.parse({
-                id: `action-${crypto.randomUUID()}`,
-                label: "New action",
-                kind: initialKind,
-              }),
-            ],
-          });
+          onChange({ ...game, actions: [...actions, newAction(initialKind)] });
           select(actions.length);
         }}
       >
@@ -134,13 +126,7 @@ function GameActions({ game, onChange, initialKind = "stat-check", onInsert }: G
       {action && (
         <>
           <GameActionFields action={action} game={game} onChange={update} />
-          <button
-            onClick={() =>
-              onInsert(
-                `\n+ [${action.label.replace(/[[\]#\n\r]/g, " ")} # game:${action.id}]\n    {game_success:\n        Success.\n    - else:\n        Failure or escape.\n    }\n    -> END\n`,
-              )
-            }
-          >
+          <button onClick={() => onInsert(actionChoiceScript(action))}>
             Apply and insert action choice
           </button>
           <button

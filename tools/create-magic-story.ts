@@ -193,162 +193,166 @@ const art: Record<string, ReturnType<typeof illustration>> = {
     1,
   ),
 };
+/** Bilingual [English, French] text; `game()` picks one side. */
+type Text = [english: string, french: string];
+const abilityIds = [
+  "observation",
+  "courage",
+  "little-light",
+  "air-thread",
+  "counter-song",
+  "dawnstroke",
+];
+const abilityNames = {
+  en: ["Observation", "Courage", "Little Light", "Thread of Air", "Counter-song", "Dawnstroke"],
+  fr: ["Observation", "Courage", "Petite Lumière", "Fil d'air", "Contre-chant", "Trait d'aube"],
+};
+const abilityDescriptions = {
+  en: [
+    "Spot traces and flaws that are difficult to see.",
+    "Keep calm when facing danger.",
+    "Kindle a soft light without heat.",
+    "Lift and move a small object from a distance.",
+    "Hold a note against an approaching threat.",
+    "Loosen a broken enchantment with a stroke of light.",
+  ],
+  fr: [
+    "Repérer les traces et les défauts difficiles à voir.",
+    "Rester calme devant un danger.",
+    "Faire naître une lumière douce, sans chaleur.",
+    "Soulever et déplacer un petit objet à distance.",
+    "Tenir une note pour repousser ce qui te menace.",
+    "Dénouer un enchantement abîmé avec un trait de lumière.",
+  ],
+};
+const itemTable: Record<string, unknown>[] = [
+  {
+    id: "healing-balm",
+    name: ["Healing balm", "Baume de soin"],
+    slot: "none",
+    consumable: true,
+    healing: 3,
+  },
+  { id: "letter", name: ["The letter from Orée", "La lettre d'Orée"], slot: "none" },
+  {
+    id: "alder-pen",
+    name: ["Alder pen", "Stylet d'aulne"],
+    slot: "weapon",
+    attribute: "WIL",
+    bonus: { WIL: 1, damage: 1 },
+  },
+  {
+    id: "school-seal",
+    name: ["School seal", "Sceau de l'école"],
+    slot: "accessory",
+    bonus: { HP: 1 },
+  },
+];
+const encounterTable = [
+  {
+    id: "ysee-training",
+    name: ["Ysée Valambre", "Ysée Valambre"],
+    portrait: images.ysee,
+    difficulty: "easy",
+    profile: "balanced",
+  },
+  {
+    id: "broken-guardian",
+    name: ["The broken guardian", "Le gardien brisé"],
+    portrait: images.guardian,
+    difficulty: "easy",
+    profile: "resilient",
+  },
+];
+const learnActions = ["light", "air", "shield", "dawn"].map((suffix, i) => ({
+  id: `learn-${suffix}`,
+  label: [`Learn ${abilityNames.en[i + 2]}`, `Apprendre ${abilityNames.fr[i + 2]}`],
+  kind: "learn",
+  reference: abilityIds[i + 2],
+}));
+const actionTable: Record<string, unknown>[] = [
+  {
+    id: "take-balm",
+    label: [
+      "Ysée gives you a dose of healing balm: restores 3 HP during combat.",
+      "Ysée te confie une dose de baume : rend 3 PV pendant un combat.",
+    ],
+    kind: "give-item",
+    reference: "healing-balm",
+  },
+  {
+    id: "take-letter",
+    label: ["Letter received", "Lettre reçue"],
+    kind: "give-item",
+    reference: "letter",
+  },
+  {
+    id: "take-pen",
+    label: ["Pen received", "Stylet reçu"],
+    kind: "give-item",
+    reference: "alder-pen",
+  },
+  {
+    id: "take-seal",
+    label: ["Seal received", "Sceau reçu"],
+    kind: "give-item",
+    reference: "school-seal",
+  },
+  ...learnActions,
+  {
+    id: "test-air",
+    label: ["Thread of Air", "Fil d'air"],
+    kind: "ability-check",
+    reference: "air-thread",
+  },
+  {
+    id: "test-shield",
+    label: ["Counter-song", "Contre-chant"],
+    kind: "ability-check",
+    reference: "counter-song",
+  },
+  {
+    id: "test-observation",
+    label: ["Study the mark", "Observer la marque"],
+    kind: "stat-check",
+    attribute: "WIL",
+  },
+  {
+    id: "test-courage",
+    label: ["Stand despite fear", "Tenir malgré la peur"],
+    kind: "stat-check",
+    attribute: "WIL",
+  },
+  {
+    id: "training-duel",
+    label: ["Practice duel with Ysée", "Duel d'entraînement avec Ysée"],
+    kind: "combat",
+    reference: "ysee-training",
+  },
+  {
+    id: "guardian",
+    label: ["Protect the doorway", "Protéger le passage"],
+    kind: "combat",
+    reference: "broken-guardian",
+  },
+  { id: "recover", label: ["Ysée's care", "Soins d'Ysée"], kind: "heal", amount: 20 },
+];
 function game(locale: "en" | "fr") {
-  const fr = locale === "fr";
-  const label = (english: string, french: string) => (fr ? french : english);
-  const names = fr
-    ? ["Observation", "Courage", "Petite Lumière", "Fil d'air", "Contre-chant", "Trait d'aube"]
-    : ["Observation", "Courage", "Little Light", "Thread of Air", "Counter-song", "Dawnstroke"];
-  const ids = [
-    "observation",
-    "courage",
-    "little-light",
-    "air-thread",
-    "counter-song",
-    "dawnstroke",
-  ];
-  const descriptions = fr
-    ? [
-        "Repérer les traces et les défauts difficiles à voir.",
-        "Rester calme devant un danger.",
-        "Faire naître une lumière douce, sans chaleur.",
-        "Soulever et déplacer un petit objet à distance.",
-        "Tenir une note pour repousser ce qui te menace.",
-        "Dénouer un enchantement abîmé avec un trait de lumière.",
-      ]
-    : [
-        "Spot traces and flaws that are difficult to see.",
-        "Keep calm when facing danger.",
-        "Kindle a soft light without heat.",
-        "Lift and move a small object from a distance.",
-        "Hold a note against an approaching threat.",
-        "Loosen a broken enchantment with a stroke of light.",
-      ];
+  const at = locale === "fr" ? 1 : 0;
+  const pick = (entries: Record<string, unknown>[], key: string) =>
+    entries.map((entry) => ({ ...entry, [key]: (entry[key] as Text)[at] }));
   return GameDefinitionSchema.parse({
-    abilities: ids.map((id, i) => ({
+    abilities: abilityIds.map((id, i) => ({
       id,
-      name: names[i],
-      description: descriptions[i],
+      name: abilityNames[locale][i],
+      description: abilityDescriptions[locale][i],
       attribute: i === 3 ? "DEX" : "WIL",
       offensive: i === 5,
       effect: i === 5 ? "stun" : "none",
     })),
-    items: [
-      {
-        id: "healing-balm",
-        name: label("Healing balm", "Baume de soin"),
-        slot: "none",
-        consumable: true,
-        healing: 3,
-      },
-      { id: "letter", name: label("The letter from Orée", "La lettre d'Orée"), slot: "none" },
-      {
-        id: "alder-pen",
-        name: label("Alder pen", "Stylet d'aulne"),
-        slot: "weapon",
-        attribute: "WIL",
-        bonus: { WIL: 1, damage: 1 },
-      },
-      {
-        id: "school-seal",
-        name: label("School seal", "Sceau de l'école"),
-        slot: "accessory",
-        bonus: { HP: 1 },
-      },
-    ],
-    encounters: [
-      {
-        id: "ysee-training",
-        name: "Ysée Valambre",
-        portrait: images.ysee,
-        difficulty: "easy",
-        profile: "balanced",
-      },
-      {
-        id: "broken-guardian",
-        name: label("The broken guardian", "Le gardien brisé"),
-        portrait: images.guardian,
-        difficulty: "easy",
-        profile: "resilient",
-      },
-    ],
-    actions: [
-      {
-        id: "take-balm",
-        label: label(
-          "Ysée gives you a dose of healing balm: restores 3 HP during combat.",
-          "Ysée te confie une dose de baume : rend 3 PV pendant un combat.",
-        ),
-        kind: "give-item",
-        reference: "healing-balm",
-      },
-      {
-        id: "take-letter",
-        label: label("Letter received", "Lettre reçue"),
-        kind: "give-item",
-        reference: "letter",
-      },
-      {
-        id: "take-pen",
-        label: label("Pen received", "Stylet reçu"),
-        kind: "give-item",
-        reference: "alder-pen",
-      },
-      {
-        id: "take-seal",
-        label: label("Seal received", "Sceau reçu"),
-        kind: "give-item",
-        reference: "school-seal",
-      },
-      ...["light", "air", "shield", "dawn"].map((suffix, i) => ({
-        id: `learn-${suffix}`,
-        label: fr ? `Apprendre ${names[i + 2]}` : `Learn ${names[i + 2]}`,
-        kind: "learn",
-        reference: ids[i + 2],
-      })),
-      {
-        id: "test-air",
-        label: label("Thread of Air", "Fil d'air"),
-        kind: "ability-check",
-        reference: "air-thread",
-      },
-      {
-        id: "test-shield",
-        label: label("Counter-song", "Contre-chant"),
-        kind: "ability-check",
-        reference: "counter-song",
-      },
-      {
-        id: "test-observation",
-        label: label("Study the mark", "Observer la marque"),
-        kind: "stat-check",
-        attribute: "WIL",
-      },
-      {
-        id: "test-courage",
-        label: label("Stand despite fear", "Tenir malgré la peur"),
-        kind: "stat-check",
-        attribute: "WIL",
-      },
-      {
-        id: "training-duel",
-        label: label("Practice duel with Ysée", "Duel d'entraînement avec Ysée"),
-        kind: "combat",
-        reference: "ysee-training",
-      },
-      {
-        id: "guardian",
-        label: label("Protect the doorway", "Protéger le passage"),
-        kind: "combat",
-        reference: "broken-guardian",
-      },
-      {
-        id: "recover",
-        label: label("Ysée's care", "Soins d'Ysée"),
-        kind: "heal",
-        amount: 20,
-      },
-    ],
+    items: pick(itemTable, "name"),
+    encounters: pick(encounterTable, "name"),
+    actions: pick(actionTable, "label"),
   });
 }
 const languages: Record<string, unknown> = {};

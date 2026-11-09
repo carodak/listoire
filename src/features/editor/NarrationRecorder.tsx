@@ -21,50 +21,17 @@ const initialRecording = {
   duration: 0,
   spokenText: null as string | null,
 };
+type Recording = typeof initialRecording;
 export function NarrationRecorder({ storyId, locale, language, onChange }: Props) {
-  const { preview, setPreview, nextRequest, isCurrent, cancelRequest, getSignal, bindAudio } =
-    useNarrationPreview(language);
+  const { preview, patch, perform, cancelRequest, getSignal, bindAudio } = useNarrationPreview(
+    language,
+    onChange,
+  );
   const { segment, recording, audioUrl, status, busy } = preview;
-  const segments = [
-    ...language.script.matchAll(/^(.+?)\s+#\s*(?:passage:[^#]+#\s*)?segment:([a-z][a-z0-9.-]*)/gm),
-  ].map((match) => ({ text: match[1]!, id: match[2]! }));
+  const segments = scriptSegments(language.script);
   const source = segments.find((item) => item.id === segment),
     selected = source ? { ...source, text: recording.spokenText ?? source.text } : undefined;
-  const voices =
-    language.configuration.narratorVoiceSelection ??
-    language.configuration.narratorVoices?.map((voice) => voice.id) ??
-    [];
-  const voice = voices.includes(language.defaults.narratorVoice ?? "")
-    ? language.defaults.narratorVoice!
-    : (voices[0] ?? "");
-  const patch = (change: Partial<typeof preview>) =>
-    setPreview((current) => ({ ...current, ...change }));
-  async function perform(task: Promise<{ clip: NarrationClip; dataUrl: string }>, human: boolean) {
-    const request = nextRequest();
-    patch({ busy: true, status: "Preparing narration preview..." });
-    try {
-      const result = await task;
-      if (!isCurrent(request)) return;
-      onChange((current) =>
-        attachNarration(
-          human ? { ...current, narrationMode: "human" } : current,
-          result.clip,
-          result.dataUrl,
-        ),
-      );
-      patch({
-        audioUrl: result.dataUrl,
-        status: human
-          ? "Human recording attached as a preview. Timing marks are optional."
-          : "Preview cached in this project. Human listening review is required before publication.",
-      });
-    } catch (error) {
-      if (isCurrent(request))
-        patch({ status: error instanceof Error ? error.message : String(error) });
-    } finally {
-      if (isCurrent(request)) patch({ busy: false });
-    }
-  }
+  const voice = narratorVoice(language);
   return (
     <fieldset disabled={busy} className="narration-recorder">
       <NarrationSegment
@@ -105,7 +72,7 @@ export function NarrationRecorder({ storyId, locale, language, onChange }: Props
     </fieldset>
   );
 }
-function useNarrationPreview(language: Language) {
+function useNarrationPreview(language: Language, onChange: Props["onChange"]) {
   const [preview, setPreview] = useState({
     segment: "",
     status: "",
@@ -113,41 +80,82 @@ function useNarrationPreview(language: Language) {
     busy: false,
     recording: initialRecording,
   });
-  const handles = useRef({
-    scope: new AbortController(),
-    audio: null as HTMLAudioElement | null,
-    generation: 0,
-  });
-  useEffect(() => {
-    const audio = handles.current.audio;
-    if (audio) {
-      audio.playbackRate = language.defaults.narrationRate ?? 1;
-      audio.volume = language.defaults.volumes?.narration ?? 0.8;
-    }
-  }, [preview.audioUrl, language.defaults.narrationRate, language.defaults.volumes?.narration]);
+  const handles = useRef({ scope: new AbortController(), generation: 0 });
+  const bindAudio = usePreviewAudio(language, preview.audioUrl);
   useEffect(() => {
     const scope = new AbortController();
-    const current = handles.current;
-    current.scope = scope;
-    return () => {
-      scope.abort();
-      current.audio?.pause();
-    };
+    handles.current.scope = scope;
+    return () => scope.abort();
   }, []);
+  const patch = (change: Partial<typeof preview>) =>
+    setPreview((current) => ({ ...current, ...change }));
+  const isCurrent = (request: number) =>
+    request === handles.current.generation && !handles.current.scope.signal.aborted;
+  async function perform(task: Promise<{ clip: NarrationClip; dataUrl: string }>, human: boolean) {
+    const request = ++handles.current.generation;
+    patch({ busy: true, status: "Preparing narration preview..." });
+    try {
+      const result = await task;
+      if (!isCurrent(request)) return;
+      onChange((current) =>
+        attachNarration(
+          human ? { ...current, narrationMode: "human" } : current,
+          result.clip,
+          result.dataUrl,
+        ),
+      );
+      patch({
+        audioUrl: result.dataUrl,
+        status: human
+          ? "Human recording attached as a preview. Timing marks are optional."
+          : "Preview cached in this project. Human listening review is required before publication.",
+      });
+    } catch (error) {
+      if (isCurrent(request))
+        patch({ status: error instanceof Error ? error.message : String(error) });
+    } finally {
+      if (isCurrent(request)) patch({ busy: false });
+    }
+  }
   return {
     preview,
-    setPreview,
-    nextRequest: () => ++handles.current.generation,
-    isCurrent: (request: number) =>
-      request === handles.current.generation && !handles.current.scope.signal.aborted,
+    patch,
+    perform,
     cancelRequest: () => {
       handles.current.generation++;
     },
     getSignal: () => handles.current.scope.signal,
-    bindAudio: (node: HTMLAudioElement | null) => {
-      handles.current.audio = node;
-    },
+    bindAudio,
   };
+}
+function usePreviewAudio(language: Language, audioUrl: string) {
+  const audio = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (!audio.current) return;
+    audio.current.playbackRate = language.defaults.narrationRate ?? 1;
+    audio.current.volume = language.defaults.volumes?.narration ?? 0.8;
+  }, [audioUrl, language.defaults.narrationRate, language.defaults.volumes?.narration]);
+  useEffect(() => {
+    const node = audio;
+    return () => node.current?.pause();
+  }, []);
+  return (node: HTMLAudioElement | null) => {
+    audio.current = node;
+  };
+}
+function scriptSegments(script: string): Segment[] {
+  return [
+    ...script.matchAll(/^(.+?)\s+#\s*(?:passage:[^#]+#\s*)?segment:([a-z][a-z0-9.-]*)/gm),
+  ].map((match) => ({ text: match[1]!, id: match[2]! }));
+}
+function narratorVoice(language: Language) {
+  const voices =
+    language.configuration.narratorVoiceSelection ??
+    language.configuration.narratorVoices?.map((voice) => voice.id) ??
+    [];
+  return voices.includes(language.defaults.narratorVoice ?? "")
+    ? language.defaults.narratorVoice!
+    : (voices[0] ?? "");
 }
 function NarrationSegment({
   segments,
@@ -186,13 +194,8 @@ function NarrationSegment({
   );
 }
 interface HumanRecordingFieldsProps {
-  recording: { rights: string; marks: string; duration: number; spokenText: string | null };
-  onChange: (value: {
-    rights: string;
-    marks: string;
-    duration: number;
-    spokenText: string | null;
-  }) => void;
+  recording: Recording;
+  onChange: (value: Recording) => void;
   onUpload: (file: File) => Promise<void>;
 }
 

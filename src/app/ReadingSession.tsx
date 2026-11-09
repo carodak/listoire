@@ -11,6 +11,7 @@ import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
 import { readActiveProject } from "../features/editor/default-project.ts";
 import { compileInWorker } from "../features/editor/compile-client.ts";
+import { download } from "../features/editor/downloads.ts";
 
 interface Props {
   locale: Locale;
@@ -36,6 +37,53 @@ export function ReadingSession({
   onPreferencesChange,
 }: Props) {
   const { t } = useTranslation();
+  const { player, failed } = useReadingPlayer(locale, saves, preferences, hasPreferences);
+
+  async function backup() {
+    if (!player) return;
+    const { bundle } = player;
+    download(`listoire-${bundle.storyId}-${bundle.locale}.json`, await saves.backup(bundle));
+  }
+
+  if (failed)
+    return (
+      <main id="story" className="notice" role="alert">
+        <p>{t("errors.content")}</p>
+        <p>{failed}</p>
+        <a href="/editor">Open Story Editor</a>
+        <button onClick={retry}>{t("retry")}</button>
+      </main>
+    );
+  return player ? (
+    <>
+      {player.bundle.locale !== locale && (
+        <p className="language-note" role="status">
+          {t("storyFallback", { language: t(`languageNames.${player.bundle.locale}`) })}
+        </p>
+      )}
+      <StoryPlayer
+        {...player}
+        backup={backup}
+        onHome={onHome}
+        onLanguageChange={onLanguageChange}
+        languageBusy={languageBusy}
+        preferences={effectivePreferences(player.bundle, preferences, hasPreferences)}
+        onPreferencesChange={onPreferencesChange}
+      />
+    </>
+  ) : (
+    <main id="story" className="loading" role="status">
+      {t("loading")}
+    </main>
+  );
+}
+
+function useReadingPlayer(
+  locale: Locale,
+  saves: SaveManager,
+  preferences: ReadingPreferences,
+  hasPreferences: boolean,
+) {
   const initialPreferences = useRef(preferences);
   const initialHasPreferences = useRef(hasPreferences);
   const [failed, setFailed] = useState("");
@@ -76,49 +124,7 @@ export function ReadingSession({
       director?.dispose();
     };
   }, [locale, saves]);
-
-  async function backup() {
-    if (!player) return;
-    const text = await saves.backup(player.bundle);
-    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `listoire-${player.bundle.storyId}-${player.bundle.locale}.json`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  if (failed)
-    return (
-      <main id="story" className="notice" role="alert">
-        <p>{t("errors.content")}</p>
-        <p>{failed}</p>
-        <a href="/editor">Open Story Editor</a>
-        <button onClick={retry}>{t("retry")}</button>
-      </main>
-    );
-  return player ? (
-    <>
-      {player.bundle.locale !== locale && (
-        <p className="language-note" role="status">
-          {t("storyFallback", { language: t(`languageNames.${player.bundle.locale}`) })}
-        </p>
-      )}
-      <StoryPlayer
-        {...player}
-        backup={backup}
-        onHome={onHome}
-        onLanguageChange={onLanguageChange}
-        languageBusy={languageBusy}
-        preferences={effectivePreferences(player.bundle, preferences, hasPreferences)}
-        onPreferencesChange={onPreferencesChange}
-      />
-    </>
-  ) : (
-    <main id="story" className="loading" role="status">
-      {t("loading")}
-    </main>
-  );
+  return { player, failed };
 }
 
 async function loadReadingBundle(locale: Locale, signal: AbortSignal) {

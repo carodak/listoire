@@ -10,6 +10,13 @@ const nameLabels: Record<string, string> = {
   "Insert Variable": "Variable name",
 };
 
+const commandInput = (data: FormData) => ({
+  name: String(data.get("name") ?? ""),
+  label: String(data.get("label") ?? ""),
+  condition: String(data.get("condition") ?? ""),
+  create: data.has("create"),
+});
+
 interface CommandDialogProps {
   command: string;
   script: string;
@@ -29,20 +36,8 @@ export function CommandDialog({ command, script, onInsert, onClose }: CommandDia
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     try {
-      onInsert(
-        buildInkCommand(
-          command,
-          {
-            name: String(data.get("name") ?? ""),
-            label: String(data.get("label") ?? ""),
-            condition: String(data.get("condition") ?? ""),
-            create: data.has("create"),
-          },
-          knots,
-          `choice-${crypto.randomUUID()}`,
-        ),
-        true,
-      );
+      const id = `choice-${crypto.randomUUID()}`;
+      onInsert(buildInkCommand(command, commandInput(data), knots, id), true);
       onClose();
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));

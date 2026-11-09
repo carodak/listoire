@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { typographyOptions } from "../../contracts/typography.ts";
 import type { Typography } from "../../contracts/typography.ts";
 import { TypographicText } from "../presentation/TypographicText.tsx";
@@ -18,7 +19,6 @@ export function TextToolbar({
   const [message, setMessage] = useState(
     "Select words in the script, preview a style, then apply.",
   );
-  const menu = useRef<HTMLDetailsElement>(null);
   const preview = hover ? { style: hover } : format;
   const capture = () => {
     const text = selection();
@@ -26,36 +26,7 @@ export function TextToolbar({
   };
   return (
     <div className="text-toolbar" onPointerEnter={capture} onFocusCapture={capture}>
-      <details
-        className="text-style-menu"
-        ref={menu}
-        onToggle={() => {
-          if (!menu.current?.open) setHover(undefined);
-        }}
-      >
-        <summary>Style: {format.style ?? "default"}</summary>
-        <div role="group" aria-label="Text styles" onPointerLeave={() => setHover(undefined)}>
-          {typographyOptions.style.map((style) => (
-            <button
-              key={style}
-              type="button"
-              aria-pressed={format.style === style}
-              onPointerEnter={() => setHover(style)}
-              onFocus={() => setHover(style)}
-              onClick={() => {
-                setFormat({ style });
-                setHover(undefined);
-                menu.current?.removeAttribute("open");
-              }}
-            >
-              <TypographicText
-                text={style}
-                typography={[{ start: 0, end: style.length, format: { style } }]}
-              />
-            </button>
-          ))}
-        </div>
-      </details>
+      <StyleMenu format={format} setFormat={setFormat} setHover={setHover} />
       {(Object.keys(typographyOptions) as (keyof Typography)[])
         .filter((key) => key !== "style")
         .map((key) => (
@@ -92,5 +63,49 @@ export function TextToolbar({
       </div>
       <p role="status">{message}</p>
     </div>
+  );
+}
+
+function StyleMenu({
+  format,
+  setFormat,
+  setHover,
+}: {
+  format: Typography;
+  setFormat: (format: Typography) => void;
+  setHover: Dispatch<SetStateAction<Typography["style"]>>;
+}) {
+  const menu = useRef<HTMLDetailsElement>(null);
+  return (
+    <details
+      className="text-style-menu"
+      ref={menu}
+      onToggle={() => {
+        if (!menu.current?.open) setHover(undefined);
+      }}
+    >
+      <summary>Style: {format.style ?? "default"}</summary>
+      <div role="group" aria-label="Text styles" onPointerLeave={() => setHover(undefined)}>
+        {typographyOptions.style.map((style) => (
+          <button
+            key={style}
+            type="button"
+            aria-pressed={format.style === style}
+            onPointerEnter={() => setHover(style)}
+            onFocus={() => setHover(style)}
+            onClick={() => {
+              setFormat({ style });
+              setHover(undefined);
+              menu.current?.removeAttribute("open");
+            }}
+          >
+            <TypographicText
+              text={style}
+              typography={[{ start: 0, end: style.length, format: { style } }]}
+            />
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }

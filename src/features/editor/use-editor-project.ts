@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
 import { compileInWorker } from "./compile-client.ts";
@@ -9,139 +10,65 @@ import { refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
 import { addIllustrationLibrary } from "./illustration-pack.ts";
 import { loadDefaultProject, readActiveProject } from "./default-project.ts";
 
+type Versions = NonNullable<Awaited<ReturnType<typeof readEditorRecord>>>["history"];
+
+interface Session {
+  latest: StoryProject | null;
+  revision: number;
+  serial: Promise<void>;
+  change: number;
+  lastEvent: string;
+  dirty: boolean;
+  mounted: boolean;
+  ui: EditorUi;
+}
+
+interface EditorUi {
+  setProject(project: StoryProject): void;
+  setStatus(status: string): void;
+  setIssues(issues: string[]): void;
+  setVersions(versions: Versions): void;
+  setIllustrationPack(project: StoryProject): void;
+}
+
 export function useEditorProject() {
   const [project, setProject] = useState<StoryProject | null>(null);
   const [status, setStatus] = useState("Loading story project…");
   const [issues, setIssues] = useState<string[]>([]);
-  const [versions, setVersions] = useState<
-    NonNullable<Awaited<ReturnType<typeof readEditorRecord>>>["history"]
-  >([]);
-  const latest = useRef<StoryProject | null>(null);
-  const revision = useRef(0);
-  const serial = useRef(Promise.resolve());
-  const change = useRef(0);
-  const lastEvent = useRef("Original story");
-  const dirty = useRef(false);
-  const mounted = useRef(true);
-  const [history] = useState(() => new ProjectHistory());
+  const [versions, setVersions] = useState<Versions>([]);
   const [illustrationPack, setIllustrationPack] = useState<StoryProject | null>(null);
+  const [history] = useState(() => new ProjectHistory());
+  const session = useRef(
+    createSession({ setProject, setStatus, setIssues, setVersions, setIllustrationPack }),
+  );
 
   useEffect(() => {
-    mounted.current = true;
+    const current = session.current;
+    current.mounted = true;
     const scope = new AbortController();
-    async function load() {
-      const record = await readActiveProject(scope.signal);
-      const built = await loadDefaultProject(record?.draft, scope.signal);
-      const raw = record?.draft ?? built!;
-      const seed = withMediaReferences(
-        addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
-      );
-      await loadAce();
-      if (scope.signal.aborted) return;
-      setIllustrationPack(built);
-      const initialized = record ?? (await writeEditorRecord(seed, 0, "Original story"));
-      if (scope.signal.aborted) return;
-      revision.current = initialized.revision;
-      latest.current = seed;
-      dirty.current =
-        JSON.stringify(initialized.draft) !== JSON.stringify(seed) ||
-        !initialized.published ||
-        initialized.published.revision < initialized.revision;
-      setProject(seed);
-      setVersions(initialized.history);
-      setStatus(record ? "Saved project loaded" : "Original story loaded · autosave ready");
-    }
-    void load().catch((error) => {
+    void loadSession(current, scope.signal).catch((error) => {
       if (!scope.signal.aborted)
         setStatus(`Load failed: ${message(error)}. Stored data has been kept.`);
     });
-    const unload = (event: BeforeUnloadEvent) => {
-      if (dirty.current) {
-        event.preventDefault();
-        event.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", unload);
     return () => {
-      mounted.current = false;
+      current.mounted = false;
       scope.abort();
-      window.removeEventListener("beforeunload", unload);
     };
   }, []);
+  useLeaveGuard(session);
 
   function update(next: StoryProject, label: string) {
-    next = refreshDefaultArtwork(next, latest.current);
-    next = withMediaReferences(next);
-    if (!latest.current || next === latest.current) return;
-    history.record(latest.current, next, label);
-    replaceProject(next, label);
+    const latest = session.current.latest;
+    next = withMediaReferences(refreshDefaultArtwork(next, latest));
+    if (!latest || next === latest) return;
+    history.record(latest, next, label);
+    replaceProject(session.current, next, label);
   }
-  function replaceProject(next: StoryProject | undefined, label: string) {
-    if (!next) return;
-    lastEvent.current = label;
-    latest.current = next;
-    change.current++;
-    dirty.current = true;
-    setProject(next);
-    setStatus("Unsaved changes");
-  }
-
-  function save(label = "Save project") {
-    const source = latest.current;
-    const generation = change.current;
-    const eventLabel = lastEvent.current;
-    if (!source) return Promise.resolve(false);
-    const operation = serial.current
-      .catch(() => {})
-      .then(async () => {
-        setStatus("Saving draft…");
-        const draft = await writeEditorRecord(
-          source,
-          revision.current,
-          label,
-          undefined,
-          eventLabel,
-        );
-        revision.current = draft.revision;
-        if (!mounted.current) return;
-        setVersions(draft.history);
-        if (generation === change.current) dirty.current = false;
-        try {
-          const bundles = await compileInWorker(source);
-          if (generation !== change.current || !mounted.current) return;
-          const published = await writeEditorRecord(source, revision.current, "Autosave", {
-            revision: revision.current + 1,
-            bundles,
-            defaults: Object.fromEntries(
-              Object.entries(source.languages).map(([locale, language]) => [
-                locale,
-                language.defaults,
-              ]),
-            ),
-          });
-          revision.current = published.revision;
-          setVersions(published.history);
-          setIssues([]);
-          setStatus("Saved · reader updated");
-        } catch (error) {
-          if (generation !== change.current) return;
-          setIssues([message(error)]);
-          setStatus("Draft saved · fix issues to update the reader");
-        }
-      });
-    serial.current = operation;
-    return operation
-      .then(() => true)
-      .catch((error) => {
-        setStatus(`Save failed: ${message(error)}`);
-        setIssues([message(error)]);
-        return false;
-      });
-  }
+  const save = (label = "Save project") => saveSession(session.current, label);
   useEffect(() => {
-    if (!project || !dirty.current) return;
+    if (!project || !session.current.dirty) return;
     const timer = setTimeout(() => {
-      void save("Autosave");
+      void saveSession(session.current, "Autosave");
     }, 1200);
     return () => clearTimeout(timer);
   }, [project]);
@@ -154,12 +81,123 @@ export function useEditorProject() {
     issues,
     setIssues,
     versions,
-    undo: () => replaceProject(history.undo(), "Undid an editing change"),
-    redo: () => replaceProject(history.redo(), "Redid an editing change"),
+    undo: () => replaceProject(session.current, history.undo(), "Undid an editing change"),
+    redo: () => replaceProject(session.current, history.redo(), "Redid an editing change"),
     illustrationPack,
     canUndo: history.canUndo,
     canRedo: history.canRedo,
   };
+}
+
+function createSession(ui: EditorUi): Session {
+  return {
+    ui,
+    latest: null,
+    revision: 0,
+    serial: Promise.resolve(),
+    change: 0,
+    lastEvent: "Original story",
+    dirty: false,
+    mounted: true,
+  };
+}
+
+function useLeaveGuard(session: RefObject<Session>) {
+  useEffect(() => {
+    const unload = (event: BeforeUnloadEvent) => {
+      if (!session.current.dirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", unload);
+    return () => window.removeEventListener("beforeunload", unload);
+  }, [session]);
+}
+
+async function loadSession(session: Session, signal: AbortSignal) {
+  const record = await readActiveProject(signal);
+  const built = await loadDefaultProject(record?.draft, signal);
+  const raw = record?.draft ?? built!;
+  const seed = withMediaReferences(
+    addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
+  );
+  await loadAce();
+  if (signal.aborted) return;
+  session.ui.setIllustrationPack(built!);
+  const initialized = record ?? (await writeEditorRecord(seed, 0, "Original story"));
+  if (signal.aborted) return;
+  session.revision = initialized.revision;
+  session.latest = seed;
+  session.dirty =
+    JSON.stringify(initialized.draft) !== JSON.stringify(seed) ||
+    !initialized.published ||
+    initialized.published.revision < initialized.revision;
+  session.ui.setProject(seed);
+  session.ui.setVersions(initialized.history);
+  session.ui.setStatus(record ? "Saved project loaded" : "Original story loaded · autosave ready");
+}
+
+function replaceProject(session: Session, next: StoryProject | undefined, label: string) {
+  if (!next) return;
+  session.lastEvent = label;
+  session.latest = next;
+  session.change++;
+  session.dirty = true;
+  session.ui.setProject(next);
+  session.ui.setStatus("Unsaved changes");
+}
+
+function saveSession(session: Session, label: string) {
+  const source = session.latest;
+  if (!source) return Promise.resolve(false);
+  const generation = session.change;
+  const eventLabel = session.lastEvent;
+  const operation = session.serial
+    .catch(() => {})
+    .then(() => writeAndPublish(session, source, generation, label, eventLabel));
+  session.serial = operation;
+  return operation
+    .then(() => true)
+    .catch((error) => {
+      session.ui.setStatus(`Save failed: ${message(error)}`);
+      session.ui.setIssues([message(error)]);
+      return false;
+    });
+}
+
+async function writeAndPublish(
+  session: Session,
+  source: StoryProject,
+  generation: number,
+  label: string,
+  eventLabel: string,
+) {
+  session.ui.setStatus("Saving draft…");
+  const draft = await writeEditorRecord(source, session.revision, label, undefined, eventLabel);
+  session.revision = draft.revision;
+  if (!session.mounted) return;
+  session.ui.setVersions(draft.history);
+  if (generation === session.change) session.dirty = false;
+  try {
+    const bundles = await compileInWorker(source);
+    if (generation !== session.change || !session.mounted) return;
+    const defaults = Object.fromEntries(
+      Object.entries(source.languages).map(([locale, language]) => [locale, language.defaults]),
+    );
+    const published = await writeEditorRecord(source, session.revision, "Autosave", {
+      revision: session.revision + 1,
+      bundles,
+      defaults,
+    });
+    session.revision = published.revision;
+    session.ui.setVersions(published.history);
+    session.ui.setIssues([]);
+    session.ui.setStatus("Saved · reader updated");
+  } catch (error) {
+    if (generation !== session.change) return;
+    session.ui.setIssues([message(error)]);
+    session.ui.setStatus("Draft saved · fix issues to update the reader");
+  }
 }
 
 export function message(error: unknown) {

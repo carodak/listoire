@@ -30,17 +30,7 @@ export function ReadingControls({
 }: Props) {
   const { t } = useTranslation();
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
-  const voices = presentation.voices;
-  const allowDeviceVoices = !["disabled", "human", "ai-pregenerated"].includes(
-    bundle.narrationMode ?? "",
-  );
-  const deviceVoices = useDeviceVoices(bundle.locale, allowDeviceVoices).map((voice) => ({
-    id: `device:${voice.voiceURI}`,
-    label: `${voice.name} (${voice.lang})`,
-  }));
-  const availableVoices = voices.concat(
-    deviceVoices.filter((voice) => !voices.some((item) => item.id === voice.id)),
-  );
+  const availableVoices = useReaderVoices(presentation, bundle);
   return (
     <aside className="reading-controls">
       <label className="reader-master-volume" title={t("masterVolume")}>
@@ -80,6 +70,19 @@ export function ReadingControls({
         />
       )}
     </aside>
+  );
+}
+function useReaderVoices(presentation: PresentationSession, bundle: StoryBundle) {
+  const voices = presentation.voices;
+  const allowDeviceVoices = !["disabled", "human", "ai-pregenerated"].includes(
+    bundle.narrationMode ?? "",
+  );
+  const deviceVoices = useDeviceVoices(bundle.locale, allowDeviceVoices).map((voice) => ({
+    id: `device:${voice.voiceURI}`,
+    label: `${voice.name} (${voice.lang})`,
+  }));
+  return voices.concat(
+    deviceVoices.filter((voice) => !voices.some((item) => item.id === voice.id)),
   );
 }
 function PreferencesPanel({

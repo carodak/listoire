@@ -1,4 +1,5 @@
 import type { CombatOption } from "../../contracts/game.ts";
+import type { StoryBundle } from "../../contracts/story.ts";
 
 export function chanceLabel(probability: number, french: boolean) {
   return `${french ? "Réussite" : "Success"} : ${percentage(probability, french)}`;
@@ -9,15 +10,21 @@ function percentage(probability: number, french: boolean) {
     maximumFractionDigits: 0,
   }).format(probability);
 }
+export function optionName(bundle: StoryBundle, option: CombatOption) {
+  const move = option.move;
+  if (move.kind !== "ability" && move.kind !== "item") return undefined;
+  const entries = move.kind === "ability" ? bundle.game?.abilities : bundle.game?.items;
+  return entries?.find((entry) => entry.id === move.id)?.name;
+}
 export function CombatOptionDetails({
+  bundle,
   option,
-  name,
-  french,
 }: {
+  bundle: StoryBundle;
   option: CombatOption;
-  name?: string;
-  french: boolean;
 }) {
+  const french = bundle.locale === "fr";
+  const name = optionName(bundle, option);
   const kind = option.move.kind;
   return (
     <section className="combat-option-details">

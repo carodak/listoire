@@ -79,41 +79,7 @@ function SampleIcon() {
 
 export function PaperPalette({ color = "#f5ead7", onChange }: PaperPaletteProps) {
   const { t } = useTranslation();
-  const [sampling, setSampling] = useState(false);
-  const [sampleError, setSampleError] = useState(false);
-  useEffect(() => {
-    if (!sampling) return;
-    document.documentElement.classList.add("sampling-paper-color");
-    const pick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      // One deliberate click inside the book or its images, never a toolbar control.
-      if (
-        !target.closest(".reader") ||
-        target.closest(".reader-toolbar, .reader-sidebar, .reader-modal")
-      )
-        return;
-      event.preventDefault();
-      event.stopPropagation();
-      const sampled = samplePageColor(target, event.clientX, event.clientY);
-      setSampling(false);
-      setSampleError(!sampled);
-      if (sampled) onChange(sampled);
-    };
-    const cancel = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setSampling(false);
-      }
-    };
-    document.addEventListener("click", pick, true);
-    document.addEventListener("keydown", cancel, true);
-    return () => {
-      document.removeEventListener("click", pick, true);
-      document.removeEventListener("keydown", cancel, true);
-      document.documentElement.classList.remove("sampling-paper-color");
-    };
-  }, [sampling, onChange]);
+  const { sampling, setSampling, sampleError, setSampleError } = usePageColorSampler(onChange);
   return (
     <fieldset className="paper-palette">
       <legend>{t("paperColor")}</legend>
@@ -158,6 +124,45 @@ export function PaperPalette({ color = "#f5ead7", onChange }: PaperPaletteProps)
       {sampleError && <small role="status">{t("samplePaperUnavailable")}</small>}
     </fieldset>
   );
+}
+
+function usePageColorSampler(onChange: (color: string) => void) {
+  const [sampling, setSampling] = useState(false);
+  const [sampleError, setSampleError] = useState(false);
+  useEffect(() => {
+    if (!sampling) return;
+    document.documentElement.classList.add("sampling-paper-color");
+    const pick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      // One deliberate click inside the book or its images, never a toolbar control.
+      if (
+        !target.closest(".reader") ||
+        target.closest(".reader-toolbar, .reader-sidebar, .reader-modal")
+      )
+        return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sampled = samplePageColor(target, event.clientX, event.clientY);
+      setSampling(false);
+      setSampleError(!sampled);
+      if (sampled) onChange(sampled);
+    };
+    const cancel = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setSampling(false);
+      }
+    };
+    document.addEventListener("click", pick, true);
+    document.addEventListener("keydown", cancel, true);
+    return () => {
+      document.removeEventListener("click", pick, true);
+      document.removeEventListener("keydown", cancel, true);
+      document.documentElement.classList.remove("sampling-paper-color");
+    };
+  }, [sampling, onChange]);
+  return { sampling, setSampling, sampleError, setSampleError };
 }
 
 function sampleImageColor(img: HTMLImageElement, x: number, y: number): string | null {

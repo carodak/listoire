@@ -14,6 +14,8 @@ import { ReaderMediaFigure } from "./ReaderMediaFigure.tsx";
 import { TypographicText } from "../presentation/TypographicText.tsx";
 import type { CheckOption } from "../../contracts/game.ts";
 
+type MediaBlock = Extract<PresentationBlock, { kind: "media" }>;
+
 interface PassageTextProps {
   frame: Frame;
   instant: boolean;
@@ -28,43 +30,28 @@ interface PassageTextProps {
   children: React.ReactNode;
 }
 
-export function PassageText({
-  frame,
-  instant,
-  disabled,
-  onChoose,
-  resumeCombat,
-  checkOptions,
-  media,
-  bundle,
-  presentation,
-  heading,
-  children,
-}: PassageTextProps) {
+export function PassageText(props: PassageTextProps) {
+  const { frame, media, bundle, presentation, disabled, onChoose } = props;
   const notice = bundle.scenes?.[frame.passageId]?.notice;
-  const reveal = useTextReveal(frame, instant || media.revealAll, {
+  const reveal = useTextReveal(frame, props.instant || media.revealAll, {
     ...media,
     paused: media.paused || media.blocking || media.exiting,
   });
   const blocks = presentationBlocks(bundle, frame);
   const reached = reachedBlocks(blocks, reveal.paragraphs, media.completedBlocks, media.skipMedia);
-  const illustration = (block: Extract<PresentationBlock, { kind: "media" }>) => (
+  const illustration = (block: MediaBlock) => (
     <ReaderIllustration
       key={block.id}
       {...{ block, bundle, frame, presentation, media, disabled, onChoose }}
     />
   );
   const layout = bookMediaLayout(bundle, blocks, reached, media);
-  const finish = () => {
-    reveal.finish();
-    presentation.revealRemaining();
-  };
   const choices =
     reveal.complete && !media.blocking ? (
       <ChoiceList
         key="choices"
-        resumeCombat={resumeCombat}
-        checkOptions={checkOptions}
+        resumeCombat={props.resumeCombat}
+        checkOptions={props.checkOptions}
         bundle={bundle}
         frame={frame}
         locale={bundle.locale}
@@ -75,29 +62,56 @@ export function PassageText({
   return (
     <div className="reader-scene" data-illustrated={layout.illustrated}>
       <div className="reader-copy">
-        {heading}
-        <div className="narrative-blocks prose">
-          {reached.map((block) => {
-            if (block.kind === "text") {
-              const segment = reveal.paragraphs.find((segment) => segment.id === block.segmentId);
-              return (
-                <NarrativeParagraph
-                  key={block.segmentId}
-                  onClick={finish}
-                  presentation={presentation}
-                  segment={segment}
-                />
-              );
-            }
-            if (block.kind === "media")
-              return block.layout === "right" ? null : illustration(block);
-            return choices;
-          })}
-        </div>
+        {props.heading}
+        <NarrativeBlocks
+          blocks={reached}
+          paragraphs={reveal.paragraphs}
+          presentation={presentation}
+          onFinish={() => {
+            reveal.finish();
+            presentation.revealRemaining();
+          }}
+          illustration={illustration}
+          choices={choices}
+        />
         {reveal.complete && notice && <p className="story-notice">{notice}</p>}
-        {children}
+        {props.children}
       </div>
       <ReaderArtwork layout={layout} locale={bundle.locale} illustration={illustration} />
+    </div>
+  );
+}
+
+function NarrativeBlocks({
+  blocks,
+  paragraphs,
+  presentation,
+  onFinish,
+  illustration,
+  choices,
+}: {
+  blocks: PresentationBlock[];
+  paragraphs: NonNullable<NarrativeParagraphProps["segment"]>[];
+  presentation: PresentationSession;
+  onFinish: () => void;
+  illustration: (block: MediaBlock) => React.ReactNode;
+  choices: React.ReactNode;
+}) {
+  return (
+    <div className="narrative-blocks prose">
+      {blocks.map((block) => {
+        if (block.kind === "text")
+          return (
+            <NarrativeParagraph
+              key={block.segmentId}
+              onClick={onFinish}
+              presentation={presentation}
+              segment={paragraphs.find((segment) => segment.id === block.segmentId)}
+            />
+          );
+        if (block.kind === "media") return block.layout === "right" ? null : illustration(block);
+        return choices;
+      })}
     </div>
   );
 }
@@ -109,7 +123,7 @@ function ReaderArtwork({
 }: {
   layout: ReturnType<typeof bookMediaLayout>;
   locale: string;
-  illustration: (block: Extract<PresentationBlock, { kind: "media" }>) => React.ReactNode;
+  illustration: (block: MediaBlock) => React.ReactNode;
 }) {
   if (!layout.illustrated) return null;
   return (
@@ -159,7 +173,7 @@ function NarrativeParagraph({ presentation, segment, onClick }: NarrativeParagra
 }
 
 interface ReaderIllustrationProps {
-  block: Extract<PresentationBlock, { kind: "media" }>;
+  block: MediaBlock;
   bundle: StoryBundle;
   frame: Frame;
   presentation: PresentationSession;

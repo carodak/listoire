@@ -38,42 +38,51 @@ export function magicCues(id: string, sound: Sound): NarrativeEvent[] {
       ["score", "oree.wonder", "music", 0.6, 3, true],
     ],
   };
-  const events: NarrativeEvent[] = (Object.hasOwn(cues, id) ? cues[id] : []).map(
-    ([suffix, assetId, channel, volume, segment, loop]) => ({
-      id: `${id}.${suffix}`,
-      trigger: { kind: "segment", segmentId: `${id}.p${segment}` },
-      blocking: false,
-      action: {
-        kind: "audio",
-        assetId,
-        channel,
-        volume,
-        loop,
-        fadeMs: channel === "sfx" ? 80 : 1400,
-      },
-    }),
-  );
   return [
-    ...events,
-    ...(Object.hasOwn(visualCues, id) ? visualCues[id] : []).map(
-      ([suffix, segment, effect, duration, intensity, color]) => ({
-        id: `${id}.${suffix}`,
-        blockId: "page",
-        trigger: { kind: "segment" as const, segmentId: `${id}.p${segment}` },
-        blocking: false,
-        action: {
-          kind: "effect" as const,
-          effect: {
-            id: effect,
-            duration,
-            intensity,
-            target: "canvas" as const,
-            ...(color ? { color } : {}),
-          },
-        },
-      }),
-    ),
+    ...(Object.hasOwn(cues, id) ? cues[id]! : []).map((cue) => audioEvent(id, cue)),
+    ...(Object.hasOwn(visualCues, id) ? visualCues[id]! : []).map((cue) => visualEvent(id, cue)),
   ];
+}
+
+function audioEvent(
+  id: string,
+  [suffix, assetId, channel, volume, segment, loop]: Cue,
+): NarrativeEvent {
+  return {
+    id: `${id}.${suffix}`,
+    trigger: { kind: "segment", segmentId: `${id}.p${segment}` },
+    blocking: false,
+    action: {
+      kind: "audio",
+      assetId,
+      channel,
+      volume,
+      loop,
+      fadeMs: channel === "sfx" ? 80 : 1400,
+    },
+  };
+}
+
+function visualEvent(
+  id: string,
+  [suffix, segment, effect, duration, intensity, color]: VisualCue,
+): NarrativeEvent {
+  return {
+    id: `${id}.${suffix}`,
+    blockId: "page",
+    trigger: { kind: "segment", segmentId: `${id}.p${segment}` },
+    blocking: false,
+    action: {
+      kind: "effect",
+      effect: {
+        id: effect,
+        duration,
+        intensity,
+        target: "canvas",
+        ...(color ? { color } : {}),
+      },
+    },
+  };
 }
 
 type VisualCue = [

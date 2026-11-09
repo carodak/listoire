@@ -101,10 +101,17 @@ export class ScenePlayback {
       if (this.targets.get(blockId) === targets) this.targets.delete(blockId);
     };
   }
+  private get blocks() {
+    return this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks ?? [];
+  }
+  private mediaBlock(id: string | undefined) {
+    return this.blocks.find((block) => block.kind === "media" && block.id === id);
+  }
+  private mediaIds() {
+    return this.blocks.filter((block) => block.kind === "media").map((block) => block.id);
+  }
   private mediaVisible(id: string) {
-    const block = this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks?.find(
-      (block) => block.kind === "media" && block.id === id,
-    );
+    const block = this.mediaBlock(id);
     return block?.kind === "media"
       ? mediaIsVisible(block, this.context.state)
       : !this.context.state.expiredMedia.includes(id);
@@ -157,8 +164,7 @@ export class ScenePlayback {
     );
   }
   showSegmentMedia(id: string) {
-    for (const block of this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks ??
-      [])
+    for (const block of this.blocks)
       if (block.kind === "media" && block.show?.kind === "segment" && block.show.segmentId === id)
         this.showMedia(block.id, block.show.delayMs ?? 0);
   }
@@ -172,9 +178,7 @@ export class ScenePlayback {
   }
   private startPersistence(id: string) {
     if (!this.targets.has(id) || this.issued.has(`expire:${id}`)) return;
-    const block = this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks?.find(
-      (block) => block.kind === "media" && block.id === id,
-    );
+    const block = this.mediaBlock(id);
     if (block?.kind !== "media" || !block.durationMs || block.layout === "fullscreen") return;
     this.issued.add(`expire:${id}`);
     this.clock.schedule(() => {
@@ -299,9 +303,7 @@ export class ScenePlayback {
       !event.blockId
     )
       return false;
-    const block = this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks?.find(
-      (candidate) => candidate.kind === "media" && candidate.id === event.blockId,
-    );
+    const block = this.mediaBlock(event.blockId);
     if (block?.kind !== "media") return false;
     if (block.illustration?.layers.length || block.motion?.layers.length) return false;
     const asset = this.context.bundle.assets?.find((asset) => asset.id === block.image);
@@ -319,19 +321,13 @@ export class ScenePlayback {
       skipMedia: true,
       layers: [],
       previousImage: undefined,
-      completedBlocks:
-        this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks
-          ?.filter((block) => block.kind === "media")
-          .map((block) => block.id) ?? [],
+      completedBlocks: this.mediaIds(),
     });
   };
   revealRemaining = () => {
     this.context.publish({ revealAll: true });
     this.context.publish({
-      visibleMedia:
-        this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks
-          ?.filter((b) => b.kind === "media")
-          .map((b) => b.id) ?? [],
+      visibleMedia: this.mediaIds(),
     });
   };
   cancel() {

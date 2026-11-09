@@ -22,26 +22,7 @@ export function renderDie(
   settled: () => void,
 ) {
   const data = sides === 6 ? six : twenty;
-  const renderer = new Renderer({
-    canvas,
-    alpha: true,
-    antialias: true,
-    dpr: Math.min(2, devicePixelRatio || 1),
-    width: 112,
-    height: 112,
-  });
-  const gl = renderer.gl;
-  const camera = new Camera(gl, { fov: 32, aspect: 1 });
-  camera.position.z = 4.5;
-  const geometry = new Geometry(gl, {
-    position: { size: 3, data: new Float32Array(data.position) },
-    normal: { size: 3, data: new Float32Array(data.normal) },
-    uv: { size: 2, data: new Float32Array(data.uv) },
-  });
-  const texture = new Texture(gl);
-  const program = new Program(gl, { vertex, fragment, uniforms: { map: { value: texture } } });
-  const mesh = new Mesh(gl, { geometry, program });
-  mesh.matrixAutoUpdate = false;
+  const { renderer, camera, texture, mesh, release } = createDieScene(canvas, data);
   const pose = data.poses.find((pose) => pose.value === value);
   if (!pose) throw new Error("Unknown die face");
   const landing = new Mat4().fromArray(pose.matrix);
@@ -65,14 +46,7 @@ export function renderDie(
     const draw = (now: number) => {
       if (disposed) return;
       const progress = animate ? Math.min(1, (now - start) / 850) : 1;
-      const spin = Math.pow(1 - progress, 2);
-      mesh.matrix
-        .identity()
-        .translate(new Vec3(0, Math.sin(progress * Math.PI * 3) * spin * 0.3, 0))
-        .rotate(-0.35 + spin * Math.PI * 6, new Vec3(1, 0, 0))
-        .rotate(0.42 + spin * Math.PI * 8, new Vec3(0, 1, 0))
-        .multiply(landing);
-      mesh.worldMatrixNeedsUpdate = true;
+      poseDie(mesh, landing, progress);
       renderer.render({ scene: mesh, camera });
       if (progress < 1) frame = requestAnimationFrame(draw);
       else finish();
@@ -95,9 +69,47 @@ export function renderDie(
     canvas.removeEventListener("webglcontextlost", lost);
     image.onload = image.onerror = null;
     image.src = "";
+    release();
+  };
+}
+
+function createDieScene(canvas: HTMLCanvasElement, data: typeof six) {
+  const renderer = new Renderer({
+    canvas,
+    alpha: true,
+    antialias: true,
+    dpr: Math.min(2, devicePixelRatio || 1),
+    width: 112,
+    height: 112,
+  });
+  const gl = renderer.gl;
+  const camera = new Camera(gl, { fov: 32, aspect: 1 });
+  camera.position.z = 4.5;
+  const geometry = new Geometry(gl, {
+    position: { size: 3, data: new Float32Array(data.position) },
+    normal: { size: 3, data: new Float32Array(data.normal) },
+    uv: { size: 2, data: new Float32Array(data.uv) },
+  });
+  const texture = new Texture(gl);
+  const program = new Program(gl, { vertex, fragment, uniforms: { map: { value: texture } } });
+  const mesh = new Mesh(gl, { geometry, program });
+  mesh.matrixAutoUpdate = false;
+  const release = () => {
     geometry.remove();
     program.remove();
     gl.deleteTexture(texture.texture);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
   };
+  return { renderer, camera, texture, mesh, release };
+}
+
+function poseDie(mesh: Mesh, landing: Mat4, progress: number) {
+  const spin = Math.pow(1 - progress, 2);
+  mesh.matrix
+    .identity()
+    .translate(new Vec3(0, Math.sin(progress * Math.PI * 3) * spin * 0.3, 0))
+    .rotate(-0.35 + spin * Math.PI * 6, new Vec3(1, 0, 0))
+    .rotate(0.42 + spin * Math.PI * 8, new Vec3(0, 1, 0))
+    .multiply(landing);
+  mesh.worldMatrixNeedsUpdate = true;
 }

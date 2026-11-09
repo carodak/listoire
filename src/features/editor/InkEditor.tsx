@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import type { AceEditor } from "./ace.ts";
 import { loadAce } from "./ace.ts";
 
@@ -28,44 +29,7 @@ export function InkEditor({ value, onChange, onReady, onError, onCursor }: InkEd
         editor.current = instance;
         resize = new ResizeObserver(() => instance.resize());
         resize.observe(element.current!);
-        instance.setOptions({
-          fontSize: 14,
-          showPrintMargin: false,
-          wrap: true,
-          tabSize: 2,
-          useWorker: false,
-        });
-        instance.session.setMode(new window.ListoireInkMode());
-        instance.setValue(latest.current.value, -1);
-        instance.session.setUndoManager({
-          execute() {},
-          undo() {},
-          redo() {},
-          reset() {},
-          hasUndo: () => false,
-          hasRedo: () => false,
-        });
-        instance.on("change", () => {
-          if (!updating.current) latest.current.onChange(instance.getValue());
-        });
-        instance.on("changeSelection", () => {
-          if (!updating.current) latest.current.onCursor?.(instance.getCursorPosition().row);
-        });
-        const Range = ace.require("ace/range").Range;
-        let marker: number | undefined;
-        instance.highlight = (line) => {
-          if (marker !== undefined) instance.session.removeMarker(marker);
-          marker = undefined;
-          if (line === null) return;
-          instance.scrollToLine(line, true, false);
-          marker = instance.session.addMarker(
-            new Range(line, 0, line, 1),
-            "editor-media-highlight",
-            "fullLine",
-          );
-        };
-        const { SearchBox } = ace.require("ace/ext/searchbox");
-        new SearchBox(instance).hide();
+        configureInstance(ace, instance, latest, updating);
         latest.current.onReady(instance);
       })
       .catch((error) => latest.current.onError(error));
@@ -87,4 +51,52 @@ export function InkEditor({ value, onChange, onReady, onError, onCursor }: InkEd
     latest.current.onCursor?.(instance.getCursorPosition().row);
   }, [value]);
   return <div ref={element} className="ink-editor" aria-label="Ink script editor" />;
+}
+
+type Ace = Awaited<ReturnType<typeof loadAce>>;
+
+function configureInstance(
+  ace: Ace,
+  instance: AceEditor,
+  latest: RefObject<Pick<InkEditorProps, "value" | "onChange" | "onCursor">>,
+  updating: RefObject<boolean>,
+) {
+  instance.setOptions({
+    fontSize: 14,
+    showPrintMargin: false,
+    wrap: true,
+    tabSize: 2,
+    useWorker: false,
+  });
+  instance.session.setMode(new window.ListoireInkMode());
+  instance.setValue(latest.current.value, -1);
+  instance.session.setUndoManager({
+    execute() {},
+    undo() {},
+    redo() {},
+    reset() {},
+    hasUndo: () => false,
+    hasRedo: () => false,
+  });
+  instance.on("change", () => {
+    if (!updating.current) latest.current.onChange(instance.getValue());
+  });
+  instance.on("changeSelection", () => {
+    if (!updating.current) latest.current.onCursor?.(instance.getCursorPosition().row);
+  });
+  const Range = ace.require("ace/range").Range;
+  let marker: number | undefined;
+  instance.highlight = (line) => {
+    if (marker !== undefined) instance.session.removeMarker(marker);
+    marker = undefined;
+    if (line === null) return;
+    instance.scrollToLine(line, true, false);
+    marker = instance.session.addMarker(
+      new Range(line, 0, line, 1),
+      "editor-media-highlight",
+      "fullLine",
+    );
+  };
+  const { SearchBox } = ace.require("ace/ext/searchbox");
+  new SearchBox(instance).hide();
 }

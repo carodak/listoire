@@ -5,18 +5,27 @@ interface SpeechControls {
   pause: () => void;
   resume: () => void;
 }
-interface Track {
+interface PlayOptions {
+  url: string;
   channel: AudioChannel;
-  audio: HTMLAudioElement;
-  gain: number;
-  paused: boolean;
-  stop: () => void;
-  pause: () => void;
-  resume: () => void;
+  signal: AbortSignal;
+  loop?: boolean;
+  rate?: number;
+  onTime?: (seconds: number) => void;
+  replace?: boolean;
+  maxMs?: number;
+  gain?: number;
+  fadeMs?: number;
 }
+interface TrackHost {
+  isPaused: () => boolean;
+  applyVolumes: () => void;
+  settle: (result: PlaybackResult) => void;
+}
+const clampRate = (rate: number) => Math.max(0.5, Math.min(2, rate));
 
 export class AudioManager {
-  private readonly tracks = new Set<Track>();
+  private readonly tracks = new Set<PlayingTrack>();
   private readonly volumes: Record<AudioChannel, number> = {
     sfx: 0.65,
     ambience: 0.3,
@@ -72,129 +81,36 @@ export class AudioManager {
     tick();
   }
   setRate(rate: number) {
-    this.narrationRate = Math.max(0.5, Math.min(2, rate));
+    this.narrationRate = clampRate(rate);
     for (const track of this.tracks)
       if (track.channel === "narration") track.audio.playbackRate = this.narrationRate;
   }
 
-  play({
-    url,
-    channel,
-    signal,
-    loop = false,
-    rate = 1,
-    onTime,
-    replace = true,
-    maxMs = 120000,
-    gain = 1,
-    fadeMs = 0,
-  }: {
-    url: string;
-    channel: AudioChannel;
-    signal: AbortSignal;
-    loop?: boolean;
-    rate?: number;
-    onTime?: (seconds: number) => void;
-    replace?: boolean;
-    maxMs?: number;
-    gain?: number;
-    fadeMs?: number;
-  }): Promise<PlaybackResult> {
+  play(options: PlayOptions): Promise<PlaybackResult> {
+    const { channel, replace = true, rate = 1 } = options;
     if (replace && channel !== "sfx") this.stopChannel(channel);
     const existing = [...this.tracks].filter((track) => track.channel === channel);
     if (existing.length >= (channel === "sfx" ? 4 : 2)) existing[0]?.stop();
-    let resolve!: (result: PlaybackResult) => void;
-    const finished = new Promise<PlaybackResult>((done) => {
-      resolve = done;
-    });
     let audio: HTMLAudioElement;
     try {
-      audio = this.factory(url);
+      audio = this.factory(options.url);
     } catch {
-      resolve("unavailable");
-      return finished;
+      return Promise.resolve("unavailable");
     }
-    let settled = false;
-    const finish = (result: PlaybackResult) => {
-      if (settled) return;
-      settled = true;
-      track.pause();
-      signal.removeEventListener("abort", abort);
-      audio.removeEventListener("ended", ended);
-      audio.removeEventListener("error", error);
-      audio.removeEventListener("timeupdate", time);
-      this.tracks.delete(track);
-      resolve(result);
-    };
-    const attempt = () => {
-      if (settled || this.paused) return;
-      startTimer = setTimeout(() => finish("timeout"), 4000);
-      if (!loop)
-        deadline = setTimeout(() => finish("timeout"), Math.max(1000, Math.min(180000, maxMs)));
-      if (fadeMs) envelope = setInterval(updateGain, 32);
-      void audio
-        .play()
-        .then(() => {
-          clearTimeout(startTimer);
-          if (settled || track.paused) audio.pause();
-          else if (onTime) {
-            clearInterval(progressTimer);
-            time();
-            progressTimer = setInterval(time, 40);
-          }
-        })
-        .catch(() => finish("blocked"));
-    };
-    const abort = () => finish("aborted");
-    const ended = () => finish("ended");
-    const error = () => finish("error");
-    const time = () => onTime?.(audio.currentTime);
-    const updateGain = () => {
-      const remaining =
-        Number.isFinite(audio.duration) && !loop
-          ? Math.max(0, audio.duration - audio.currentTime)
-          : Infinity;
-      track.gain =
-        gain * Math.min(1, (audio.currentTime * 1000) / fadeMs, (remaining * 1000) / fadeMs);
+    return new Promise((resolve) => {
+      const track = new PlayingTrack(audio, options, {
+        isPaused: () => this.paused,
+        applyVolumes: () => this.applyVolumes(),
+        settle: (result) => {
+          this.tracks.delete(track);
+          resolve(result);
+        },
+      });
+      audio.playbackRate = clampRate(channel === "narration" ? (this.narrationRate ?? rate) : rate);
+      this.tracks.add(track);
       this.applyVolumes();
-    };
-    const track: Track = {
-      channel,
-      audio,
-      gain: fadeMs ? 0 : gain,
-      paused: this.paused,
-      stop: abort,
-      pause: () => {
-        track.paused = true;
-        clearTimeout(startTimer);
-        clearTimeout(deadline);
-        clearInterval(envelope);
-        clearInterval(progressTimer);
-        audio.pause();
-      },
-      resume: () => {
-        track.paused = false;
-        attempt();
-      },
-    };
-    let startTimer: ReturnType<typeof setTimeout> | undefined;
-    let deadline: ReturnType<typeof setTimeout> | undefined;
-    let envelope: ReturnType<typeof setInterval> | undefined;
-    let progressTimer: ReturnType<typeof setInterval> | undefined;
-    audio.loop = loop;
-    audio.playbackRate = Math.max(
-      0.5,
-      Math.min(2, channel === "narration" ? (this.narrationRate ?? rate) : rate),
-    );
-    this.tracks.add(track);
-    this.applyVolumes();
-    audio.addEventListener("ended", ended);
-    audio.addEventListener("error", error);
-    audio.addEventListener("timeupdate", time);
-    signal.addEventListener("abort", abort, { once: true });
-    if (signal.aborted) abort();
-    else attempt();
-    return finished;
+      track.start();
+    });
   }
 
   crossfade(
@@ -258,70 +174,31 @@ export class AudioManager {
     utterance.voice = voice;
     utterance.lang = locale;
     utterance.pitch = Math.pow(2, (selection?.pitch ?? 0) / 12);
-    utterance.rate = this.narrationRate ?? Math.max(0.5, Math.min(2, rate));
-    let resolve!: (result: PlaybackResult) => void;
-    let settled = false;
-    const finished = new Promise<PlaybackResult>((done) => {
-      resolve = done;
+    utterance.rate = this.narrationRate ?? clampRate(rate);
+    const timeoutMs = Math.min(180000, Math.max(12000, text.length * 200));
+    return new Promise((resolve) => {
+      const transport = speechTransport(
+        synth,
+        utterance,
+        signal,
+        onBoundary,
+        timeoutMs,
+        (result) => {
+          this.speech = null;
+          this.utterance = null;
+          resolve(result);
+        },
+      );
+      this.speech = transport;
+      try {
+        // Browsers can retain their paused flag after canceling the previous page.
+        if (!this.paused) synth.resume();
+        synth.speak(utterance);
+        if (this.paused) transport.pause();
+      } catch {
+        transport.settle("blocked");
+      }
     });
-    const cleanup = (result: PlaybackResult) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal.removeEventListener("abort", stop);
-      utterance.onboundary = null;
-      utterance.onend = null;
-      utterance.onerror = null;
-      this.speech = null;
-      this.utterance = null;
-      resolve(result);
-    };
-    const stop = () => {
-      if (settled) return;
-      cleanup("aborted");
-      synth.cancel();
-    };
-    let remaining = Math.min(180000, Math.max(12000, text.length * 200));
-    let started = performance.now();
-    let paused = false;
-    const timeout = () => {
-      cleanup("timeout");
-      synth.cancel();
-    };
-    let timer = setTimeout(timeout, remaining);
-    utterance.onboundary = (event) => {
-      if (!settled) onBoundary(event.charIndex, event.charLength || 0);
-    };
-    utterance.onend = () => cleanup("ended");
-    utterance.onerror = () => cleanup("error");
-    signal.addEventListener("abort", stop, { once: true });
-    const transport = {
-      stop,
-      pause: () => {
-        if (paused || settled) return;
-        paused = true;
-        remaining -= performance.now() - started;
-        clearTimeout(timer);
-        synth.pause();
-      },
-      resume: () => {
-        if (!paused || settled) return;
-        paused = false;
-        started = performance.now();
-        timer = setTimeout(timeout, Math.max(1, remaining));
-        synth.resume();
-      },
-    };
-    this.speech = transport;
-    try {
-      // Browsers can retain their paused flag after canceling the previous page.
-      if (!this.paused) synth.resume();
-      synth.speak(utterance);
-      if (this.paused) transport.pause();
-    } catch {
-      cleanup("blocked");
-    }
-    return finished;
   }
 
   pause() {
@@ -347,4 +224,155 @@ export class AudioManager {
     this.stopAll();
     clearTimeout(this.duckTimer);
   }
+}
+
+class PlayingTrack {
+  readonly channel: AudioChannel;
+  gain: number;
+  paused: boolean;
+  private settled = false;
+  private startTimer: ReturnType<typeof setTimeout> | undefined;
+  private deadline: ReturnType<typeof setTimeout> | undefined;
+  private envelope: ReturnType<typeof setInterval> | undefined;
+  private progressTimer: ReturnType<typeof setInterval> | undefined;
+
+  constructor(
+    readonly audio: HTMLAudioElement,
+    private readonly options: PlayOptions,
+    private readonly host: TrackHost,
+  ) {
+    this.channel = options.channel;
+    this.gain = options.fadeMs ? 0 : (options.gain ?? 1);
+    this.paused = host.isPaused();
+    audio.loop = options.loop ?? false;
+  }
+
+  start() {
+    this.audio.addEventListener("ended", this.ended);
+    this.audio.addEventListener("error", this.error);
+    this.audio.addEventListener("timeupdate", this.time);
+    this.options.signal.addEventListener("abort", this.stop, { once: true });
+    if (this.options.signal.aborted) this.stop();
+    else this.attempt();
+  }
+  readonly stop = () => this.finish("aborted");
+  private readonly ended = () => this.finish("ended");
+  private readonly error = () => this.finish("error");
+  private readonly time = () => this.options.onTime?.(this.audio.currentTime);
+
+  pause() {
+    this.paused = true;
+    clearTimeout(this.startTimer);
+    clearTimeout(this.deadline);
+    clearInterval(this.envelope);
+    clearInterval(this.progressTimer);
+    this.audio.pause();
+  }
+  resume() {
+    this.paused = false;
+    this.attempt();
+  }
+
+  private finish(result: PlaybackResult) {
+    if (this.settled) return;
+    this.settled = true;
+    this.pause();
+    this.options.signal.removeEventListener("abort", this.stop);
+    this.audio.removeEventListener("ended", this.ended);
+    this.audio.removeEventListener("error", this.error);
+    this.audio.removeEventListener("timeupdate", this.time);
+    this.host.settle(result);
+  }
+
+  private attempt() {
+    if (this.settled || this.host.isPaused()) return;
+    const { loop, maxMs = 120000, fadeMs, onTime } = this.options;
+    this.startTimer = setTimeout(() => this.finish("timeout"), 4000);
+    if (!loop)
+      this.deadline = setTimeout(
+        () => this.finish("timeout"),
+        Math.max(1000, Math.min(180000, maxMs)),
+      );
+    if (fadeMs) this.envelope = setInterval(this.updateGain, 32);
+    void this.audio
+      .play()
+      .then(() => {
+        clearTimeout(this.startTimer);
+        if (this.settled || this.paused) this.audio.pause();
+        else if (onTime) {
+          clearInterval(this.progressTimer);
+          this.time();
+          this.progressTimer = setInterval(this.time, 40);
+        }
+      })
+      .catch(() => this.finish("blocked"));
+  }
+
+  private readonly updateGain = () => {
+    const { audio } = this;
+    const { loop, gain = 1, fadeMs = 0 } = this.options;
+    const remaining =
+      Number.isFinite(audio.duration) && !loop
+        ? Math.max(0, audio.duration - audio.currentTime)
+        : Infinity;
+    this.gain =
+      gain * Math.min(1, (audio.currentTime * 1000) / fadeMs, (remaining * 1000) / fadeMs);
+    this.host.applyVolumes();
+  };
+}
+
+function speechTransport(
+  synth: SpeechSynthesis,
+  utterance: SpeechSynthesisUtterance,
+  signal: AbortSignal,
+  onBoundary: (index: number, length: number) => void,
+  timeoutMs: number,
+  resolve: (result: PlaybackResult) => void,
+) {
+  let settled = false;
+  let paused = false;
+  let remaining = timeoutMs;
+  let started = performance.now();
+  const settle = (result: PlaybackResult) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    signal.removeEventListener("abort", stop);
+    utterance.onboundary = null;
+    utterance.onend = null;
+    utterance.onerror = null;
+    resolve(result);
+  };
+  const cancel = (result: PlaybackResult) => {
+    if (settled) return;
+    settle(result);
+    synth.cancel();
+  };
+  const stop = () => cancel("aborted");
+  const timeout = () => cancel("timeout");
+  let timer = setTimeout(timeout, remaining);
+  utterance.onboundary = (event) => {
+    if (!settled) onBoundary(event.charIndex, event.charLength || 0);
+  };
+  utterance.onend = () => settle("ended");
+  utterance.onerror = () => settle("error");
+  signal.addEventListener("abort", stop, { once: true });
+  return {
+    stop,
+    settle,
+    pause: () => {
+      if (paused || settled) return;
+      paused = true;
+      remaining -= performance.now() - started;
+      clearTimeout(timer);
+      synth.pause();
+    },
+    resume: () => {
+      if (!paused || settled) return;
+      paused = false;
+      started = performance.now();
+      timer = setTimeout(timeout, Math.max(1, remaining));
+      synth.resume();
+    },
+  };
 }

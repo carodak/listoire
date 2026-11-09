@@ -52,29 +52,9 @@ export async function buildEditorProject(root: URL) {
     JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),
   );
   const curated = JSON.parse(await readFile(new URL("assets/catalog/curated.json", root), "utf8"));
-  project.mediaLibrary = curated.entries.map(
-    (entry: {
-      id: string;
-      title: string;
-      sourceCollection: string;
-      category?: string;
-      suggested: { themes: string[]; roles: string[]; layerRoles?: string[] };
-    }) => ({
-      id: entry.id,
-      title: entry.title,
-      category: entry.category ?? entry.sourceCollection,
-      themes: entry.suggested.themes,
-      usage: entry.suggested.roles,
-      layerRoles: entry.suggested.layerRoles,
-    }),
-  );
+  project.mediaLibrary = curated.entries.map(libraryEntry);
   const bundles = await compileProject(project);
-  const publication = await readFile(new URL("stories/house/narration.json", root), "utf8")
-    .then(JSON.parse)
-    .catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
-      return null;
-    });
+  const publication = await readPublication(root);
   const output = new URL("public/stories/house/", root);
   await mkdir(new URL("media/", output), { recursive: true });
   const copied = new Map<string, string>();
@@ -107,6 +87,33 @@ export async function buildEditorProject(root: URL) {
   for (const file of await readdir(new URL("media/", output)))
     if (/^[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/.test(file) && !referenced.has(file))
       await rm(new URL(`media/${file}`, output));
+}
+
+function libraryEntry(entry: {
+  id: string;
+  title: string;
+  sourceCollection: string;
+  category?: string;
+  suggested: { themes: string[]; roles: string[]; layerRoles?: string[] };
+}) {
+  return {
+    id: entry.id,
+    title: entry.title,
+    category: entry.category ?? entry.sourceCollection,
+    themes: entry.suggested.themes,
+    usage: entry.suggested.roles,
+    layerRoles: entry.suggested.layerRoles,
+  };
+}
+
+/** Published narration is optional; only a missing file means "none yet". */
+function readPublication(root: URL) {
+  return readFile(new URL("stories/house/narration.json", root), "utf8")
+    .then(JSON.parse)
+    .catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+      return null;
+    });
 }
 
 function mergeGeneratedClips(

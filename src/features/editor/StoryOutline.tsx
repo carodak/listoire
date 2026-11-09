@@ -43,43 +43,10 @@ export function StoryOutline({
         ))}
       </div>
       {tab === "Files" && (
-        <div className="project-files">
-          <p className="outline-heading">▾ house</p>
-          {locales.map((code) => (
-            <button
-              key={code}
-              aria-current={code === locale ? "page" : undefined}
-              className={code === locale ? "selected" : ""}
-              title={`Edit the complete ${code} Ink story`}
-              onClick={() => onLocale(code)}
-            >
-              ▤ {code}.ink
-            </button>
-          ))}
-          <button
-            title="Edit the shared story configuration"
-            onClick={() => onDialog("Project Properties")}
-          >
-            ⚙ story.json
-          </button>
-        </div>
+        <ProjectFiles locale={locale} locales={locales} onLocale={onLocale} onDialog={onDialog} />
       )}
       {tab === "Story Outline" && (
-        <div>
-          <p className="editor-hint">Knots are main sections; Stitches are sections within them.</p>
-          {outlineEntries(language.script).map((entry) => (
-            <button
-              key={entry.path}
-              title={`Go to ${entry.kind}: ${entry.path}`}
-              className={entry.kind === "Stitch" ? "outline-stitch" : undefined}
-              onClick={() => onNavigate(entry.path)}
-            >
-              <span>{entry.kind === "Knot" ? "§" : "¶"}</span>
-              {entry.name}
-              <small>{entry.kind}</small>
-            </button>
-          ))}
-        </div>
+        <ScriptOutline script={language.script} onNavigate={onNavigate} />
       )}
       {tab === "Scene Media" && (
         <SceneMedia
@@ -93,16 +60,67 @@ export function StoryOutline({
     </aside>
   );
 }
+function ProjectFiles({
+  locale,
+  locales,
+  onLocale,
+  onDialog,
+}: Pick<StoryOutlineProps, "locale" | "locales" | "onLocale" | "onDialog">) {
+  return (
+    <div className="project-files">
+      <p className="outline-heading">▾ house</p>
+      {locales.map((code) => (
+        <button
+          key={code}
+          aria-current={code === locale ? "page" : undefined}
+          className={code === locale ? "selected" : ""}
+          title={`Edit the complete ${code} Ink story`}
+          onClick={() => onLocale(code)}
+        >
+          ▤ {code}.ink
+        </button>
+      ))}
+      <button
+        title="Edit the shared story configuration"
+        onClick={() => onDialog("Project Properties")}
+      >
+        ⚙ story.json
+      </button>
+    </div>
+  );
+}
+function ScriptOutline({
+  script,
+  onNavigate,
+}: {
+  script: string;
+  onNavigate: (path: string) => void;
+}) {
+  return (
+    <div>
+      <p className="editor-hint">Knots are main sections; Stitches are sections within them.</p>
+      {outlineEntries(script).map((entry) => (
+        <button
+          key={entry.path}
+          title={`Go to ${entry.kind}: ${entry.path}`}
+          className={entry.kind === "Stitch" ? "outline-stitch" : undefined}
+          onClick={() => onNavigate(entry.path)}
+        >
+          <span>{entry.kind === "Knot" ? "§" : "¶"}</span>
+          {entry.name}
+          <small>{entry.kind}</small>
+        </button>
+      ))}
+    </div>
+  );
+}
 function SceneMedia({
   language,
   selectedScene,
   onDialog,
   onMedia,
   onHover,
-}: Pick<
-  Parameters<typeof StoryOutline>[0],
-  "language" | "selectedScene" | "onDialog" | "onMedia" | "onHover"
->) {
+}: Pick<StoryOutlineProps, "language" | "selectedScene" | "onDialog" | "onMedia" | "onHover">) {
   const entries = sceneMediaEntries(language, selectedScene);
   return (
     <div>

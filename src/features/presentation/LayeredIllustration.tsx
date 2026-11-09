@@ -17,6 +17,25 @@ interface LayeredIllustrationProps {
   motion?: Cinematic;
 }
 
+const PULLBACK_PRESETS = new Set<string>([
+  "dolly-pullback",
+  "deep-pullback",
+  "low-diagonal-pullback",
+  "high-arrival-hold-pullback",
+]);
+
+/** A single untransformed image can render without the multiplane camera rig. */
+function isFlat({ base, layers }: Illustration) {
+  return (
+    !layers.length &&
+    base.role !== "background" &&
+    base.x === 0 &&
+    base.y === 0 &&
+    base.scale === 1 &&
+    !base.rotation
+  );
+}
+
 export function LayeredIllustration({
   image,
   illustration,
@@ -26,16 +45,8 @@ export function LayeredIllustration({
   moving = false,
   motion,
 }: LayeredIllustrationProps) {
-  const base = illustration.base;
-  const flat =
-    !illustration.layers.length &&
-    !moving &&
-    base.role !== "background" &&
-    base.x === 0 &&
-    base.y === 0 &&
-    base.scale === 1 &&
-    !base.rotation;
-  const asset = flat ? assets.find((asset) => asset.id === image) : undefined;
+  const asset =
+    !moving && isFlat(illustration) ? assets.find((asset) => asset.id === image) : undefined;
   if (asset)
     return (
       <SolitaryImage
@@ -53,16 +64,7 @@ export function LayeredIllustration({
       data-solitary={!illustration.layers.length}
       style={
         {
-          "--camera-overscan":
-            motion &&
-            [
-              "dolly-pullback",
-              "deep-pullback",
-              "low-diagonal-pullback",
-              "high-arrival-hold-pullback",
-            ].includes(motion.preset)
-              ? 2
-              : 1.3,
+          "--camera-overscan": motion && PULLBACK_PRESETS.has(motion.preset) ? 2 : 1.3,
         } as CSSProperties
       }
     >

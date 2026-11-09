@@ -74,17 +74,7 @@ export function MediaDialog(props: MediaDialogProps) {
       patch({ error: error instanceof Error ? error.message : String(error) });
     }
   }
-  const fields = {
-    kind,
-    project,
-    locale,
-    form,
-    initial,
-    context,
-    patch,
-    previewTarget,
-    selectedId,
-  };
+  const fields: FormProps = { ...props, form, initial, context, patch, previewTarget };
   return (
     <EditorDialog title={`${selectedId ? "Edit" : "Add"} ${kind}`} onClose={onClose}>
       <form onSubmit={apply} key={form.sceneId}>

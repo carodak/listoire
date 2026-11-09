@@ -129,31 +129,7 @@ export function inspectGlb(bytes: Uint8Array) {
   const length = view.getUint32(12, true);
   if (length > 2_000_000 || length + 20 > bytes.length) throw new Error("Invalid GLB metadata.");
   const data = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + length)));
-  const json = z
-    .object({
-      asset: z.object({ version: z.literal("2.0") }),
-      buffers: z.array(z.object({ uri: z.string().optional() })).default([]),
-      images: z.array(z.object({ uri: z.string().optional() })).default([]),
-      nodes: z
-        .array(z.object({ children: z.array(z.number().int().nonnegative()).optional() }))
-        .max(500)
-        .default([]),
-      accessors: z
-        .array(z.object({ count: z.number().int().nonnegative() }))
-        .max(2000)
-        .default([]),
-      meshes: z
-        .array(
-          z.object({
-            primitives: z.array(
-              z.object({ attributes: z.object({ POSITION: z.number().int().nonnegative() }) }),
-            ),
-          }),
-        )
-        .max(200),
-      extensionsRequired: z.array(z.string()).default([]),
-    })
-    .parse(data);
+  const json = GltfJsonSchema.parse(data);
   for (const resource of [...json.buffers, ...json.images])
     if (resource.uri && !/^data:[a-z0-9/+.-]+;base64,[a-zA-Z0-9+/]+=*$/.test(resource.uri))
       throw new Error("GLB resources must be embedded; external URLs are not allowed.");
@@ -168,18 +144,47 @@ export function inspectGlb(bytes: Uint8Array) {
       0,
     );
   if (vertices > 250000) throw new Error("Reduce the model to at most 250,000 vertices.");
+  checkHierarchy(json.nodes);
+  return data;
+}
+
+const GltfJsonSchema = z.object({
+  asset: z.object({ version: z.literal("2.0") }),
+  buffers: z.array(z.object({ uri: z.string().optional() })).default([]),
+  images: z.array(z.object({ uri: z.string().optional() })).default([]),
+  nodes: z
+    .array(z.object({ children: z.array(z.number().int().nonnegative()).optional() }))
+    .max(500)
+    .default([]),
+  accessors: z
+    .array(z.object({ count: z.number().int().nonnegative() }))
+    .max(2000)
+    .default([]),
+  meshes: z
+    .array(
+      z.object({
+        primitives: z.array(
+          z.object({ attributes: z.object({ POSITION: z.number().int().nonnegative() }) }),
+        ),
+      }),
+    )
+    .max(200),
+  extensionsRequired: z.array(z.string()).default([]),
+});
+
+/** Rejects cycles, dangling children and hierarchies deeper than 64 levels. */
+function checkHierarchy(nodes: z.infer<typeof GltfJsonSchema>["nodes"]) {
   const depths = new Map<number, number>();
   const visit = (at: number, parents: Set<number>): number => {
-    if (!json.nodes[at] || parents.has(at)) throw new Error("Invalid model hierarchy.");
+    if (!nodes[at] || parents.has(at)) throw new Error("Invalid model hierarchy.");
     if (depths.has(at)) return depths.get(at)!;
     if (parents.size > 64) throw new Error("Model hierarchy exceeds 64 levels.");
     const next = new Set(parents).add(at);
     const depth =
-      1 + Math.max(0, ...(json.nodes[at]!.children ?? []).map((child) => visit(child, next)));
+      1 + Math.max(0, ...(nodes[at]!.children ?? []).map((child) => visit(child, next)));
     if (depth > 64) throw new Error("Model hierarchy exceeds 64 levels.");
     depths.set(at, depth);
     return depth;
   };
-  json.nodes.forEach((_, at) => visit(at, new Set()));
-  return data;
+  nodes.forEach((_, at) => visit(at, new Set()));
 }

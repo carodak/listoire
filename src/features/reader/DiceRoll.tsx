@@ -44,32 +44,51 @@ export function DiceRoll({
       aria-label={french ? "Résultat des dés" : "Dice results"}
     >
       {result.dice.map((die, index) => (
-        <div
-          className="dice-result"
-          data-sides={die.sides}
+        <DieFace
           key={index}
-          aria-label={
-            rolling ? (french ? "Dé en mouvement" : "Rolling die") : `d${die.sides}: ${die.value}`
-          }
-        >
-          <small>d{die.sides}</small>
-          {die.sides === 6 || die.sides === 20 ? (
-            <Suspense fallback={<span className="die-model die-loading" aria-hidden="true" />}>
-              <DiceModel
-                sides={die.sides}
-                value={die.value}
-                animate={!instant && !reduced}
-                onSettled={finishModel}
-              />
-            </Suspense>
-          ) : (
-            <span className="die-model die-unavailable" aria-hidden="true">
-              {die.value}
-            </span>
-          )}
-          <strong className="die-value">{rolling ? "" : die.value}</strong>
-        </div>
+          die={die}
+          rolling={rolling}
+          french={french}
+          animate={!instant && !reduced}
+          onSettled={finishModel}
+        />
       ))}
+    </div>
+  );
+}
+
+function DieFace({
+  die,
+  rolling,
+  french,
+  animate,
+  onSettled,
+}: {
+  die: NonNullable<NonNullable<GameState["lastResult"]>["dice"]>[number];
+  rolling: boolean;
+  french: boolean;
+  animate: boolean;
+  onSettled: () => void;
+}) {
+  return (
+    <div
+      className="dice-result"
+      data-sides={die.sides}
+      aria-label={
+        rolling ? (french ? "Dé en mouvement" : "Rolling die") : `d${die.sides}: ${die.value}`
+      }
+    >
+      <small>d{die.sides}</small>
+      {die.sides === 6 || die.sides === 20 ? (
+        <Suspense fallback={<span className="die-model die-loading" aria-hidden="true" />}>
+          <DiceModel sides={die.sides} value={die.value} animate={animate} onSettled={onSettled} />
+        </Suspense>
+      ) : (
+        <span className="die-model die-unavailable" aria-hidden="true">
+          {die.value}
+        </span>
+      )}
+      <strong className="die-value">{rolling ? "" : die.value}</strong>
     </div>
   );
 }

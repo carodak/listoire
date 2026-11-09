@@ -178,49 +178,11 @@ function CharacterStats({
 
 function ReaderNotesDialog({ port, onDismiss }: { port?: ReaderNotesPort; onDismiss: () => void }) {
   const { t } = useTranslation();
-  const [text, setText] = useState("");
-  const [saved, setSaved] = useState("");
-  const [ready, setReady] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  useEffect(() => {
-    let active = true;
-    void (port?.read() ?? Promise.resolve(""))
-      .then((value) => {
-        if (active) {
-          setText(value);
-          setSaved(value);
-          setReady(true);
-        }
-      })
-      .catch(() => {
-        if (active) setError(t("notesLoadError"));
-      });
-    return () => {
-      active = false;
-    };
-  }, [port, t]);
-  const dirty = text !== saved;
+  const { text, edit, dirty, ready, saving, error, notice, save } = useReaderNotes(port);
   const close = () => {
     if (saving) return;
     if (dirty && !window.confirm(t("notesDiscardConfirm"))) return;
     onDismiss();
-  };
-  const save = async () => {
-    if (!port || !ready || saving || !dirty) return;
-    setSaving(true);
-    setError("");
-    setNotice("");
-    try {
-      await port.write(text);
-      setSaved(text);
-      setNotice(t("notesSaved"));
-    } catch {
-      setError(t("notesSaveError"));
-    } finally {
-      setSaving(false);
-    }
   };
   return (
     <ReaderModal
@@ -246,16 +208,61 @@ function ReaderNotesDialog({ port, onDismiss }: { port?: ReaderNotesPort; onDism
           maxLength={20000}
           disabled={!ready || !port}
           value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            setNotice("");
-          }}
+          onChange={(event) => edit(event.target.value)}
         />
         {notice && <p role="status">{notice}</p>}
         {error && <p role="alert">{error}</p>}
       </div>
     </ReaderModal>
   );
+}
+
+function useReaderNotes(port: ReaderNotesPort | undefined) {
+  const { t } = useTranslation();
+  const [text, setText] = useState("");
+  const [saved, setSaved] = useState("");
+  const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  useEffect(() => {
+    let active = true;
+    void (port?.read() ?? Promise.resolve(""))
+      .then((value) => {
+        if (active) {
+          setText(value);
+          setSaved(value);
+          setReady(true);
+        }
+      })
+      .catch(() => {
+        if (active) setError(t("notesLoadError"));
+      });
+    return () => {
+      active = false;
+    };
+  }, [port, t]);
+  const dirty = text !== saved;
+  const save = async () => {
+    if (!port || !ready || saving || !dirty) return;
+    setSaving(true);
+    setError("");
+    setNotice("");
+    try {
+      await port.write(text);
+      setSaved(text);
+      setNotice(t("notesSaved"));
+    } catch {
+      setError(t("notesSaveError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const edit = (value: string) => {
+    setText(value);
+    setNotice("");
+  };
+  return { text, edit, dirty, ready, saving, error, notice, save };
 }
 
 function Encounter({ person }: { person: { id: string; name: string; description: string } }) {
@@ -284,36 +291,12 @@ function InventoryContents({
   ];
   return (
     <>
-      <div
-        className="inventory-tabs"
-        role="tablist"
-        aria-label={t("inventory")}
-        onKeyDown={(event) => {
-          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-          event.preventDefault();
-          const tabs: InventoryTab[] = ["equipment", "consumables", "objects"];
-          const direction = event.key === "ArrowRight" ? 1 : -1;
-          const next = (tabs.indexOf(inventoryTab) + direction + tabs.length) % tabs.length;
-          setInventoryTab(tabs[next]!);
-          event.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
-        }}
-      >
-        {(["equipment", "consumables", "objects"] as const).map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            role="tab"
-            aria-selected={inventoryTab === kind}
-            tabIndex={inventoryTab === kind ? 0 : -1}
-            className={inventoryTab === kind ? "active" : ""}
-            onClick={() => setInventoryTab(kind)}
-          >
-            {bundle.locale === "fr"
-              ? { equipment: "Équipement", consumables: "Consommables", objects: "Objets" }[kind]
-              : { equipment: "Equipment", consumables: "Consumables", objects: "Items" }[kind]}
-          </button>
-        ))}
-      </div>
+      <InventoryTabs
+        label={t("inventory")}
+        locale={bundle.locale}
+        tab={inventoryTab}
+        onTab={setInventoryTab}
+      />
       <div role="tabpanel" className="inventory-tab-panel" aria-label={inventoryTab}>
         {inventory
           .filter(
@@ -336,6 +319,51 @@ function InventoryContents({
         )}
       </div>
     </>
+  );
+}
+
+function InventoryTabs({
+  label,
+  locale,
+  tab,
+  onTab,
+}: {
+  label: string;
+  locale: string;
+  tab: InventoryTab;
+  onTab: (tab: InventoryTab) => void;
+}) {
+  return (
+    <div
+      className="inventory-tabs"
+      role="tablist"
+      aria-label={label}
+      onKeyDown={(event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const tabs: InventoryTab[] = ["equipment", "consumables", "objects"];
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        const next = (tabs.indexOf(tab) + direction + tabs.length) % tabs.length;
+        onTab(tabs[next]!);
+        event.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
+      }}
+    >
+      {(["equipment", "consumables", "objects"] as const).map((kind) => (
+        <button
+          key={kind}
+          type="button"
+          role="tab"
+          aria-selected={tab === kind}
+          tabIndex={tab === kind ? 0 : -1}
+          className={tab === kind ? "active" : ""}
+          onClick={() => onTab(kind)}
+        >
+          {locale === "fr"
+            ? { equipment: "Équipement", consumables: "Consommables", objects: "Objets" }[kind]
+            : { equipment: "Equipment", consumables: "Consumables", objects: "Items" }[kind]}
+        </button>
+      ))}
+    </div>
   );
 }
 

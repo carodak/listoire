@@ -17,11 +17,7 @@ export function CheckRoll({
 }: {
   bundle: StoryBundle;
   director: ReaderController;
-  state: ReaderSnapshot & {
-    frame: Frame;
-    game: GameState;
-    occurrenceId: string;
-  };
+  state: ReaderSnapshot & { frame: Frame; game: GameState; occurrenceId: string };
   presentation?: PresentationSession;
 }) {
   const pending = state.game.pendingCheck!;
@@ -63,9 +59,7 @@ export function CheckRoll({
       <button
         className="reader-modal-primary"
         disabled={state.busy || !pending.rolled || !settled}
-        onClick={() => {
-          void director.finishCheck(state.occurrenceId);
-        }}
+        onClick={() => void director.finishCheck(state.occurrenceId)}
       >
         {labels.continue}
       </button>
