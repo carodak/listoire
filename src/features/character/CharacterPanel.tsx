@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,16 +62,14 @@ export function CharacterPanel(props: Props) {
         <span>{t("myCharacter")}</span>
       </button>
       {props.open && (
-        <aside
+        <ReaderSidebar
           id="character-content"
-          className="reader-sidebar character-sidebar"
-          aria-label={t("myCharacter")}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && event.target === event.currentTarget) props.onToggle();
-          }}
+          className="character-sidebar"
+          label={t("myCharacter")}
+          onClose={props.onToggle}
         >
           <CharacterSheet {...props} onClose={props.onToggle} />
-        </aside>
+        </ReaderSidebar>
       )}
     </div>
   );

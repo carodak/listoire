@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
@@ -100,13 +101,11 @@ function PreferencesPanel({
   }) {
   const { t } = useTranslation();
   return (
-    <aside
+    <ReaderSidebar
       id="reading-preferences-panel"
-      className="reader-sidebar reading-sidebar"
-      aria-label={t("readingPreferences")}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
+      className="reading-sidebar"
+      label={t("readingPreferences")}
+      onClose={onClose}
     >
       <header>
         <h2>{t("readingPreferences")}</h2>
@@ -126,7 +125,7 @@ function PreferencesPanel({
         />
         <AudioVolumes preferences={preferences} onChange={onChange} />
       </div>
-    </aside>
+    </ReaderSidebar>
   );
 }
 interface ReadingTransportProps {

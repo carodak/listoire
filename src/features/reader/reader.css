@@ -44,6 +44,10 @@
     15px/1.55 system-ui,
     sans-serif;
 }
+/* Focus moves to the panel itself when it opens; its controls keep their focus rings. */
+.reader-sidebar:focus {
+  outline: none;
+}
 .reader-sidebar > header {
   display: flex;
   justify-content: space-between;
