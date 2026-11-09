@@ -1,12 +1,16 @@
 import { expect, test } from "./test.ts";
+import { playStory, readTo, withExaminationReverse } from "./oree.ts";
 test("the photograph magnifier samples pointer/touch coordinates and supports keyboard control", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await withExaminationReverse(page, "Do not tell her your name.");
   await page.goto("/");
-  await page.getByRole("button", { name: "Play an existing story" }).click();
-  await page.getByRole("button", { name: "Examine the photograph", exact: true }).click();
-  const viewer = page.getByRole("dialog", { name: "The photograph", exact: true });
+  await playStory(page);
+  await readTo(page, "messagere");
+  const examine = page.getByRole("button", { name: "Examine Nour", exact: true });
+  await examine.click();
+  const viewer = page.getByRole("dialog", { name: "Nour", exact: true });
   await page.getByRole("button", { name: "Zoom in", exact: true }).click();
   const surface = viewer.locator(".magnified-image");
   const image = surface.locator(":scope > img");
@@ -29,10 +33,9 @@ test("the photograph magnifier samples pointer/touch coordinates and supports ke
   await expect(image).toHaveCSS("transform", "none");
   await page.getByRole("button", { name: "Turn over", exact: true }).click();
   await expect(viewer.locator(".photo-reverse")).toBeVisible();
-  await page.getByRole("button", { name: "Reset view", exact: true }).click();
+  // Turning resets the view (the separate "Reset view" control was removed).
+  await page.getByRole("button", { name: "Turn over", exact: true }).click();
   await expect(lens).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await expect(
-    page.getByRole("button", { name: "Examine the photograph", exact: true }),
-  ).toBeFocused();
+  await expect(examine).toBeFocused();
 });
