@@ -41,31 +41,18 @@ export function ImageLayers(props: Props) {
     <>
       {props.previewTarget ? createPortal(preview, props.previewTarget) : preview}
       {layered && (
-        <>
-          <LayerList
-            image={image}
-            value={value}
-            assets={language.configuration.assets ?? []}
-            selected={selected}
-            onSelect={select}
-            onRemove={(index) => {
-              onChange({ ...value, layers: value.layers.filter((_, at) => at !== index) });
-              select(-1);
-            }}
-          />
-          <div className="layer-gallery-actions">
-            {illustrationRoles.map((role) => (
-              <button
-                type="button"
-                key={role}
-                disabled={value.layers.length >= 11}
-                onClick={() => setGallery(role)}
-              >
-                + {role === "midground" ? "Middleground / character" : role}
-              </button>
-            ))}
-          </div>
-        </>
+        <LayerList
+          image={image}
+          value={value}
+          assets={language.configuration.assets ?? []}
+          selected={selected}
+          onSelect={select}
+          onRemove={(index) => {
+            onChange({ ...value, layers: value.layers.filter((_, at) => at !== index) });
+            select(-1);
+          }}
+          onAdd={setGallery}
+        />
       )}
       <LayerTransform layer={layer} onChange={update} />
       {gallery && (
@@ -187,39 +174,55 @@ interface LayerListProps {
   selected: number;
   onSelect: (index: number) => void;
   onRemove: (index: number) => void;
+  onAdd: (role: Illustration["base"]["role"]) => void;
 }
 
-function LayerList({ image, value, assets, selected, onSelect, onRemove }: LayerListProps) {
+function LayerList(props: LayerListProps) {
+  const { image, value, assets, selected, onSelect, onRemove, onAdd } = props;
   return (
-    <div className="image-layer-list" aria-label="Image instances">
-      {[{ image, ...value.base }, ...value.layers].map((item, index) => {
-        const asset = assets.find((asset) => asset.id === item.image);
-        return (
-          <div key={index}>
-            <button
-              type="button"
-              aria-pressed={selected === index - 1}
-              onClick={() => onSelect(index - 1)}
-            >
-              {asset && <VisualPreview asset={asset} />}
-              <span>
-                {index === 0 ? "Base" : `${item.role} · ${index}`}
-                <small>{asset?.alt || "Choose an image"}</small>
-              </span>
-            </button>
-            {index > 0 && (
+    <>
+      <div className="image-layer-list" aria-label="Image instances">
+        {[{ image, ...value.base }, ...value.layers].map((item, index) => {
+          const asset = assets.find((asset) => asset.id === item.image);
+          return (
+            <div key={index}>
               <button
                 type="button"
-                aria-label={`Remove ${item.role} layer ${index}`}
-                title="Remove this instance; the catalogue file remains unchanged."
-                onClick={() => onRemove(index - 1)}
+                aria-pressed={selected === index - 1}
+                onClick={() => onSelect(index - 1)}
               >
-                ×
+                {asset && <VisualPreview asset={asset} />}
+                <span>
+                  {index === 0 ? "Base" : `${item.role} · ${index}`}
+                  <small>{asset?.alt || "Choose an image"}</small>
+                </span>
               </button>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              {index > 0 && (
+                <button
+                  type="button"
+                  aria-label={`Remove ${item.role} layer ${index}`}
+                  title="Remove this instance; the catalogue file remains unchanged."
+                  onClick={() => onRemove(index - 1)}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="layer-gallery-actions">
+        {illustrationRoles.map((role) => (
+          <button
+            type="button"
+            key={role}
+            disabled={value.layers.length >= 11}
+            onClick={() => onAdd(role)}
+          >
+            + {role === "midground" ? "Middleground / character" : role}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
