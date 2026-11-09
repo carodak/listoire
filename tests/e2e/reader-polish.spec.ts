@@ -1,23 +1,27 @@
 import { expect, test } from "./test.ts";
+import { firstChoice, onPage, playStory, readTo, withExaminationReverse } from "./oree.ts";
 
 test("text reaches its media before choices and the compact toolbar follows scrolling", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/");
-  await page.getByRole("button", { name: "Play an existing story" }).click();
-  await expect(page.getByRole("heading", { name: "The Girl in the Photograph" })).toBeVisible();
+  await playStory(page);
+  await onPage(page, "matin-ville");
+  const preferences = page.getByRole("button", { name: "Reading preferences", exact: true });
+  await preferences.click();
+  await page.getByLabel("Text display", { exact: true }).selectOption("progressive");
+  await preferences.click();
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
   await expect(page.locator(".choices")).toHaveCount(0);
   await expect(page.locator(".prose .narrative-media")).toHaveCount(0);
   await page.getByRole("button", { name: "Show all text", exact: true }).click();
-  const photo = page.locator(".prose .narrative-media img").first();
-  await expect(photo).toHaveAttribute("src", /house\.night\.webp$/);
-  const secondParagraph = await page.locator(".prose > p").nth(1).boundingBox();
-  expect((await photo.boundingBox())!.y).toBeGreaterThan(
-    secondParagraph!.y + secondParagraph!.height,
-  );
-  await expect(page.getByRole("button", { name: "Continue reading", exact: true })).toBeVisible();
-  const preferences = page.getByText("Reading preferences", { exact: true });
+  const picture = page.locator('.prose [data-block="matin-ville.illustration"]');
+  await expect(picture).toBeVisible();
+  const paragraph = await page.locator('[data-segment="matin-ville.p1"]').boundingBox();
+  expect((await picture.boundingBox())!.y).toBeGreaterThan(paragraph!.y + paragraph!.height);
+  await expect(firstChoice(page)).toBeVisible();
   const character = page.getByRole("button", { name: /My Character/ });
   expect((await character.boundingBox())!.x).toBeGreaterThan((await preferences.boundingBox())!.x);
   await page.evaluate(() => scrollTo(0, 350));
@@ -26,15 +30,18 @@ test("text reaches its media before choices and the compact toolbar follows scro
   expect((await page.locator(".reader-toolbar").boundingBox())!.y).toBeLessThan(5);
 });
 
-test("photograph keeps its dimensions, zooms from the center and writes on its reverse", async ({
+test("examined image keeps its dimensions, zooms from the center and writes on its reverse", async ({
   page,
 }, info) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await withExaminationReverse(page, "Do not tell her your name.");
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/");
-  await page.getByRole("button", { name: "Play an existing story" }).click();
+  await playStory(page);
   await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Examine the photograph", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "The photograph", exact: true });
+  await readTo(page, "messagere");
+  await page.getByRole("button", { name: "Examine Nour", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nour", exact: true });
   const window = dialog.locator(".photo-window");
   const surface = dialog.locator(".magnified-image");
   await expect(surface.locator(":scope > img")).toHaveJSProperty("complete", true);
@@ -53,7 +60,9 @@ test("photograph keeps its dimensions, zooms from the center and writes on its r
   expect(after!.height).toBeCloseTo(before!.height, 0);
   expect((await window.boundingBox())!.height).toBeCloseTo(area!.height, 0);
   await expect(dialog.locator(".photo-reverse text").first()).toHaveAttribute("fill", "white");
-  await expect(dialog.locator(".photo-caption")).not.toContainText("do not tell her your name");
+  await expect(dialog.locator(".photo-caption")).not.toContainText("do not tell her your name", {
+    ignoreCase: true,
+  });
   if (["chromium", "mobile"].includes(info.project.name))
     await page.screenshot({ path: info.outputPath("photograph-reverse.png"), fullPage: true });
 });
