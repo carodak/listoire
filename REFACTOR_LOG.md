@@ -371,3 +371,100 @@ were left for review. A final derived-state scan (effects that only copy into st
 | `fallow security`                                      | 48     | **10** (all traced false positives)                      |
 | Secret scans (`hardcoded-secret`, `secret-to-network`) | —      | 0 findings                                               |
 | `npm audit` (all / production)                         | —      | 0 vulnerabilities                                        |
+
+## Pass 4
+
+Port 4173 was **still held by the old server (PID 37140)** at the start of this pass.
+Not reused: all app checks below ran against my own `npm run dev` on port 4174, which
+I stopped afterwards.
+
+### Task 1 — Triage of the 24 pre-existing e2e failures (report only, nothing changed)
+
+Method: failure output from a fresh-server chromium run (and the long-lived-server run
+for 3 tests that hit a cold-start `page.goto` timeout on the fresh server); the
+running app probed with Playwright on 4174; `git log -S` to find when the app
+stopped matching each expectation. **Every app-side change dates to `9f1afcd`
+("before claude", 2026-11-09)**, which also edited several of these spec files,
+so the specs were only partly updated.
+
+| #     | Test (chromium; same in all 4 browsers)             | Test expects                                                                                | App does now                                                                                                                                                                                                                           | Verdict                                        | Proposed fix                                                                                                                                                                                                                                            |
+| ----- | --------------------------------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–5   | `house.spec` :12, :53, :106, :131, :176             | heading "The Girl in the Photograph" (old house story), then its photograph, branches, etc. | serves the Orée story; first page "The morning errands". "Girl in the Photograph" survives only in `stories/house/metadata.json` (the foundation fixture used by unit tests)                                                           | outdated test                                  | Retarget each test at the Orée page that has the feature (photograph/examination, failed audio, resource requests) or at a dedicated fixture story. Some may need deleting if the feature isn't in Orée.                                                |
+| 6–12  | `reader.spec` :18, :52, :78, :106, :124, :147, :229 | first choice "Continue reading", prose "On the back…"                                       | first choice is "Get back before the kettle boils over"                                                                                                                                                                                | outdated test                                  | Replace the old story's choice/prose with Orée's (shared helper for "first choice").                                                                                                                                                                    |
+| 13    | `reader.spec` :178                                  | `.eyebrow` with "The House That Remembered"                                                 | no `.eyebrow` element (removed in `9f1afcd`)                                                                                                                                                                                           | outdated test                                  | Drop or retarget the eyebrow assertion; keep the layout assertions.                                                                                                                                                                                     |
+| 14    | `reader.spec` :212                                  | right-page art `paper.modern-male-character.webp`                                           | that asset is no longer in the story/catalog                                                                                                                                                                                           | outdated test                                  | Assert against the art Orée actually uses on that page.                                                                                                                                                                                                 |
+| 15    | `reader-polish.spec` :3                             | heading "The Girl in the Photograph"                                                        | Orée heading                                                                                                                                                                                                                           | outdated test                                  | As #1–5.                                                                                                                                                                                                                                                |
+| 16    | `character.spec` :2                                 | `.character-stats dt` = "Health", "STR", "DEX", "WIL"                                       | "♡Health": a decorative `<span aria-hidden="true">♡</span>` was added in `9f1afcd`                                                                                                                                                     | outdated test                                  | Match `/Health$/` (the accessible text is still "Health").                                                                                                                                                                                              |
+| 17    | `welcome.spec` :3                                   | exactly one `svg` in the language button                                                    | two: `.language-flag` and `.language-chevron` (chevron added in `9f1afcd`)                                                                                                                                                             | outdated test                                  | `locator("svg.language-flag")`.                                                                                                                                                                                                                         |
+| 18–19 | `narration.spec` :4 (en, fr)                        | visible text "Reading preferences" / "Préférences de lecture"                               | it's now an icon button with that `aria-label`                                                                                                                                                                                         | outdated test                                  | `getByRole("button", { name: … })`.                                                                                                                                                                                                                     |
+| 20    | `magnifier.spec` :2                                 | "Examine the photograph" button on the opening page                                         | Orée's opening page has no examinable photograph (the feature still exists)                                                                                                                                                            | outdated test                                  | Navigate to an Orée page with an examination, or use a fixture story.                                                                                                                                                                                   |
+| 21    | `media-workspace.spec` :3                           | library asset `paper.modern-male-character`                                                 | no longer in the catalog                                                                                                                                                                                                               | outdated test                                  | Use an asset id that exists.                                                                                                                                                                                                                            |
+| 22–24 | `welcome.spec` :26, :94; `reader-polish.spec` :29   | a "Show all text" button after entering the story                                           | **removed** from `ReadingControls` in `9f1afcd`; its i18n key `revealAll` is still defined but unused. The only remaining way to skip the typewriter reveal is clicking a paragraph (`<p onClick>`), which keyboard users can't reach. | **unclear: possible accessibility regression** | Decide: (a) intentional → update tests to click the text, and delete the orphan `revealAll` strings; or (b) restore a keyboard-reachable control (app fix). Affects only users without reduced motion (with reduced motion the text appears instantly). |
+
+Summary: 21 outdated tests (story content and UI redesigned on purpose in `9f1afcd`),
+3 unclear (the removed "Show all text" control). No fix applied; each needs your approval.
+
+### Task 2 — Error-message helper (first attempt: measured, reverted, asked)
+
+The 9 copies plus the 4 existing `message()` users make 13 importers; the coupling
+threshold is fan-in > 11. Measured options: new `src/contracts/error-message.ts` →
+94.8 (coupling −2.4); next to `ReaderFailure` in `story.ts` → 95.0. Decision received:
+use `src/contracts/error-message.ts` and accept 94.8 as the new floor (done in Pass 5).
+
+### Task 3 — Security CI gate: committed `c09123e`
+
+"Security regression gate" step after the changed-code audit in
+`.github/workflows/quality.yml`: `npx --no-install fallow security --gate new
+--changed-since "$AUDIT_BASE" --format json --quiet` (PRs only). Local check: exit 0.
+
+### Task 4 — UI primitive inventory by behavior
+
+Method: grep by behavior (`<dialog`/`showModal`, `role="dialog"`, Escape handlers,
+close glyphs, backdrop `target === currentTarget`, `createPortal`, focus calls,
+`role="tab"`, `<details>`, `aria-expanded`, `role="status"/"alert"`, raw form controls).
+
+**W. Windows / modals / panels**
+
+| #   | Implementation                                                               | Kind                        | Behavior / a11y                                                                                                   | Shared base?    |
+| --- | ---------------------------------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------- |
+| W1  | `src/shared/Dialog.tsx:5`                                                    | modal base                  | native `<dialog>` + `showModal()` (focus trap, inert page), Escape via `onCancel`, backdrop click, focus restored | base            |
+| W2  | `src/shared/ReaderModal.tsx:15` (CharacterPanel ×2, CheckRoll, GamePanel ×2) | reader modal                | header (eyebrow, h2, SVG ×), content, footer close action                                                         | W1              |
+| W3  | `src/features/editor/EditorDialog.tsx:12` (12 uses)                          | editor modal / docked panel | header (h2, actions, text × "Close dialog" + title); `docked` = non-modal `section role=region`                   | W1 (docked: no) |
+| W4  | `src/features/reader/PhotographViewer.tsx:38`                                | modal                       | own heading, ✕ in aria-hidden span                                                                                | W1              |
+| W5  | `src/features/presentation/SceneIllustration.tsx:204`                        | full-screen cinematic       | no header; Escape/backdrop = skip                                                                                 | W1              |
+| W6  | `src/features/reader/ReadingControls.tsx:100`                                | non-modal side panel        | `aside.reader-sidebar`; Escape anywhere inside closes; text ×                                                     | no              |
+| W7  | `src/features/character/CharacterPanel.tsx:62/97`                            | non-modal side panel        | `aside.reader-sidebar`; Escape only when the aside itself has focus; text ×                                       | no              |
+| W8  | `src/features/editor/MediaLibrary.tsx` `LibraryFrame`                        | docked panel                | section + "Close gallery" text button                                                                             | no              |
+| W9  | `src/app/EditorRoute.tsx:85`                                                 | preview page chrome         | text × "Close preview"                                                                                            | n/a             |
+| W10 | `src/shared/LanguageSetting.tsx:40`                                          | popover menu                | `<details>`, Escape + refocus summary                                                                             | n/a             |
+
+Every modal already goes through the one native `Dialog`; no hand-made overlay,
+focus trap or portal window exists. The non-modal reader side panels (W6, W7) are one
+primitive built twice with different Escape rules (fixed in Pass 5, 3b).
+
+**C. Close buttons:** 7 implementations, 4 glyphs (text ×, ✕, inline SVG, text
+"Close gallery"), names "Close dialog" / closeLabel / t("close") / "Close preview".
+No shared component (added in Pass 5, 3a).
+
+**B. Buttons:** `ToolbarGlyph` already shared for icon toolbar buttons. Primary buttons
+use two deliberate CSS families (editor `.primary`, reader `.reader-modal-primary`);
+no duplicated component. No change.
+
+**F. Form fields:** editor `Fields.tsx` is the base. Raw `<select>`: 4 plain ones
+(`NarrationRecorder`, `MediaDialog`, `DeviceVoices`, `EditorHeader.LanguageSelect`)
+convertible to `SelectField`; 2 need disabled options (`ImageComposition`,
+`VoiceDesigner`); 2 index pickers (`GameCatalog`, `GameEditor`) belong to the
+game-definition merge. Reader `ReadingControls` keeps its own controls (reader may
+not import editor). Deferred per decision unless a file is rewritten anyway.
+
+**S. Loading/empty/error:** ~25 sites, all `<p role="status|alert">` and plain text.
+Consistent; a wrapper would be a thin wrapper. No change.
+
+**T. Tabs / collapsibles:** `InventoryTabs` (CharacterPanel) has the full pattern
+(arrow keys, roving tabIndex, tabpanel). `Ribbon` lacks arrow keys; `StoryOutline` lacks
+arrow keys and tabpanel (fixed in Pass 5, 3c). Collapsibles use native `<details>`
+(8 sites + shared `Info`). Consistent.
+
+**Planned look-alike merges (not approved yet):** `EditorFormDialog` for 5 form
+dialogs (~35 LOC, medium); game-definition editor for Ability/Encounter/Item fields
+(~20–25 LOC, medium).
