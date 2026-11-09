@@ -301,6 +301,48 @@ it("restarts image timing on replay and cancels an earlier page timer", async ()
   session.dispose();
 });
 
+it("still shows and expires delayed images after a cinematic is skipped (REVIEW #9)", async () => {
+  vi.useFakeTimers();
+  const bundle = {
+    ...fixtureBundle(),
+    authored: true,
+    scenes: {
+      threshold: {
+        title: "Threshold",
+        progress: 0,
+        blocks: [
+          { kind: "text" as const, segmentId: "threshold.key" },
+          {
+            kind: "media" as const,
+            id: "delayed",
+            image: "portrait",
+            layout: "inline" as const,
+            show: { kind: "delay" as const, delayMs: 100 },
+            durationMs: 200,
+          },
+          { kind: "choices" as const },
+        ],
+      },
+    },
+  };
+  const session = new PresentationSession(bundle, {
+    ...defaultReadingPreferences,
+    reveal: "progressive",
+  });
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "first",
+    false,
+  );
+  session.skipCinematic();
+  await vi.advanceTimersByTimeAsync(100);
+  expect(session.getSnapshot().visibleMedia).toContain("delayed");
+  session.bind({ canvas: {} as HTMLElement }, "delayed");
+  await vi.advanceTimersByTimeAsync(200);
+  expect(session.getSnapshot().expiredMedia).toContain("delayed");
+  session.dispose();
+});
+
 it("keeps the same music track across authored pages and cancels it when the player is disposed", async () => {
   vi.useFakeTimers();
   const audio = new AudioManager();

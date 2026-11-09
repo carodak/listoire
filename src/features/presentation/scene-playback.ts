@@ -22,6 +22,8 @@ export class ScenePlayback {
   private readonly sceneAudio: SceneAudio;
   private readonly effects = new EffectsEngine();
   private readonly clock = new PresentationClock();
+  /** Image show/expiry timers: page layout, so skipping a cinematic must not drop them. */
+  private readonly layout = new PresentationClock();
   private readonly targets = new Map<string, EffectTargets>();
   private readonly pendingBlocks = new Map<string, number>();
   private readonly issued = new Set<string>();
@@ -56,6 +58,7 @@ export class ScenePlayback {
     this.videos.forEach((video) => video.pause());
     this.effects.pause();
     this.clock.pause();
+    this.layout.pause();
     this.audio.pause();
     this.audio.setDucking(false);
     const voice = this.context.state.voice;
@@ -72,6 +75,7 @@ export class ScenePlayback {
         void target.video.play().catch(() => {});
     this.effects.resume();
     this.clock.resume();
+    this.layout.resume();
     this.audio.resume();
     const voice = this.context.state.voice === "paused" ? "playing" : this.context.state.voice;
     this.audio.setDucking(voice === "playing");
@@ -81,6 +85,7 @@ export class ScenePlayback {
     this.sceneAudio.reset();
     this.audio.resume();
     this.clock.resume();
+    this.layout.resume();
   }
   dispose() {
     this.sceneAudio.dispose();
@@ -207,7 +212,7 @@ export class ScenePlayback {
   showMedia(id: string, delay: number) {
     if (this.issued.has(`show:${id}`)) return;
     this.issued.add(`show:${id}`);
-    this.clock.schedule(() => {
+    this.layout.schedule(() => {
       this.context.publish({ visibleMedia: [...this.context.state.visibleMedia, id] });
       this.queueTarget(id);
     }, delay);
@@ -217,7 +222,7 @@ export class ScenePlayback {
     const block = this.mediaBlock(id);
     if (block?.kind !== "media" || !block.durationMs || block.layout === "fullscreen") return;
     this.issued.add(`expire:${id}`);
-    this.clock.schedule(() => {
+    this.layout.schedule(() => {
       this.targets.get(id)?.video?.pause();
       this.context.publish({ expiredMedia: [...this.context.state.expiredMedia, id] });
     }, block.durationMs);
@@ -373,6 +378,7 @@ export class ScenePlayback {
     this.context.generation++;
     this.context.scope.abort();
     this.clock.clear();
+    this.layout.clear();
     this.effects.stop();
     this.sceneAudio.cancelPage();
     this.targets.clear();
