@@ -669,3 +669,49 @@ Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow hea
 - **Not verified in a browser:** in Orée, only Dawnstroke applies an effect and no
   first-choice path learns it, so I could not reach a live effect (12 seeds tried). A fixture
   story with an effect ability would let an e2e check the fade.
+
+### 1c — Design note: scroll-driven media entrances (instant text)
+
+**How it works today.** On each page `PresentationSession.start` schedules every media block:
+`show.kind` page/delay → `showMedia(id, show.delayMs)` on the presentation clock; segment →
+when the typewriter or the narration reaches that segment. In instant text mode (the default),
+`revealAll` is true, so `mediaIsVisible` ignores `show` and every image is visible at once.
+When a media component mounts, `ScenePlayback.bind` → `queueTarget(id)` (once its images have
+loaded) starts everything tied to that block: its `block`-triggered events (entrance effect
+such as `cinematic-camera`, sound cues, with their `delayMs`), its video, and its `durationMs`
+expiry timer. So in instant mode an illustration below the fold plays its entrance while the
+reader is still reading the text above it, and has often finished by the time it is seen.
+
+**Proposed.** Same page layout; the reader scrolls. In instant mode (`revealAll`, not a restored
+page), an in-flow media block (`inline`, `wide`, `right`) starts when it scrolls into view: one
+`IntersectionObserver` per bound block (root = viewport, threshold 0, disconnected after the
+first entry) marks it entered and calls the existing `queueTarget`. Until then `queueTarget`
+and `effectReady` treat the block as not ready, so passage/segment events that target it wait
+too. Nothing else changes: same effects engine, same clock, same events.
+
+- `show.delay` / `show.segment`: still ignored in instant mode (as today); scroll entry replaces
+  them as the trigger. In typewriter mode they keep driving visibility, unchanged.
+- `durationMs`: its timer starts on entry instead of on page load, so the reader sees the image
+  for its authored duration.
+- Event `delayMs` (cue timing) is kept, counted from entry.
+- Not affected: `fullscreen` (ordered blocking cinematic dialog) and `background` blocks, restored
+  pages (no entrance today either), page/scene effects, typewriter mode.
+- Mobile: single column, the page scrolls; the observer uses the viewport, so window and nested
+  scrolling both work. A media block already in view on load starts at once, as today.
+- Reduced motion: unchanged: media shown immediately without animation (the effects engine
+  already resolves effects instantly); its cues still wait for entry.
+- No `IntersectionObserver` (old browser, unit tests): treated as entered immediately = today.
+
+**Risks.**
+
+- An entrance effect whose first keyframe differs from the resting image (e.g. a fade-in) shows
+  the resting image at the viewport edge for a moment before it starts. Orée only uses
+  `cinematic-camera`, which starts near rest. Follow-up if needed: hold awaiting media at their
+  first keyframe.
+- A block the reader never scrolls to never plays its cues (intended), and a blocking event on an
+  in-flow block would wait for it (only fullscreen blocks are blocking in Orée and the editor).
+- Re-binding: replay and page changes must re-bind media (they do: `useLayoutEffect` keyed on
+  page/block); the existing "plays instant-text illustrations from the beginning" e2e covers it.
+
+No decision needed from you to build it: fullscreen/cinematic media are excluded, so it does not
+conflict with them.
