@@ -766,3 +766,49 @@ small fixture story served only to e2e.
 with `git stash` during a run, Vite kept serving "Failed to fetch dynamically imported module
 EditorRoute.tsx" and 24 editor/typography/image tests failed. A restarted server passes them all.
 A fresh server also needs one warm-up page load (~60 s) or the first test times out.
+
+### Task 3 — Audio
+
+| Commit    | Item                                          | Ponytail step                                      | Prod LOC Δ |
+| --------- | --------------------------------------------- | -------------------------------------------------- | ---------- |
+| `18a938d` | Narration stops/never starts (REVIEW #13)     | 1 delete (fixed timers) + 6 minimal (one watchdog) | +5         |
+| `743031b` | Skip cinematic drops image timers (REVIEW #9) | 6 minimal (second clock)                           | +6         |
+| `0c2cd0d` | Audio on from the first gesture               | 3 platform (AudioContext) + data default           | +14        |
+
+**Root cause of "narration sometimes starts, sometimes stops":** every `PlayingTrack` had
+(1) a fixed 4 s timer racing `play()`: on a slow start the track was settled as `timeout` and
+paused just as it began; (2) a wall-clock deadline fixed at start (`clip / rate + 5 s`): slowing
+the voice mid-clip, or a buffering pause, cut it off before the end; (3) clips had 5 s in total
+to download (up to 10 MB). Fix: one watchdog that gives up only when the media position stops
+moving for 15 s (paused time excluded); `maxMs` deleted; the download allowance is
+`10 s + clip duration`. Tests that failed before: slow start, a 200 s track still advancing,
+stall-but-not-while-paused (`audio-manager.test.ts`), 60 s clip download allowance
+(`narration-clips.test.ts`). Updated assertion: the existing "never-starting playback" test
+now waits 15 s instead of 4 s (intended change).
+
+**REVIEW #9:** image show/expiry timers moved to their own clock that `skipCinematic` leaves alone;
+new test "still shows and expires delayed images after a cinematic is skipped" (failed before).
+
+**Audio initialization — design choices to review:**
+
+- The app had no AudioContext (all story audio is `HTMLAudioElement` + `speechSynthesis`).
+  `unlockAudio()` creates/resumes one inside the first click/key press of the page (installed in
+  `main.tsx`), which covers "Play an existing story" (mouse or Enter) and the editor (the landing's
+  editor link is a full page load, so its click can't carry over; the editor's first click does).
+  In Chromium/Firefox the gesture itself already allows `HTMLAudioElement.play()`; **on iOS Safari
+  per-element unlocking is not guaranteed by this and was not tested on a device.**
+- What actually kept sound off was data: `sound: false` in the app default and in Orée's en/fr
+  reading defaults (the editor preview uses the same). Both are now `true`; a reader's saved
+  choice still wins. Existing editor drafts in IndexedDB keep their old default.
+- New e2e `audio-start.spec`: Play creates and resumes a context during the click, "Story sound
+  effects" is on, the page-4 sound effect plays without touching settings; the editor starts audio
+  on its first click. Full chromium suite: 84/84 (incl. the blocked-audio tests).
+
+**Health score — needs your decision:** 95.0 → **91.6** after `743031b`. Not code quality:
+Fallow's hotspot penalty counts files with a hotspot score ≥ 50 (churn × complexity, 6 months).
+`scene-playback.ts` reached 56.3 because three requested changes touched it this pass (1c, #9;
+it already had 3 commits). One hotspot = `1 / ceil(273 × 1%) × 10` = 3.3 points; every other
+penalty is unchanged. I tried moving its stateless rules to a helper file: 55.2 and coupling
++0.2, so I reverted it. Options: (a) accept until the churn ages out; (b) split `ScenePlayback`
+(media timers / scroll gate / effect dispatch) as a planned refactor — note this would stop 1c
+from reverting on its own; (c) a Fallow hotspot exclusion for that file (I did not add one).
