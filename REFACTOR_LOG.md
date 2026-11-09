@@ -635,10 +635,12 @@ Own dev server on port 4175 (`playwright.local.config.ts`); 4173/4180 not used.
 Baseline (`8a78885`): score 94.8, prod LOC 20,712, 397 unit tests, 10 security candidates.
 Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow health, `fallow security`.
 
-| Commit    | Item                                                           | Ponytail step            | Prod LOC Δ | Score |
-| --------- | -------------------------------------------------------------- | ------------------------ | ---------- | ----- |
-| `a79eaba` | Escape, defeat and charm end in the combat window like victory | 2 reuse (victory window) | +15        | 94.8  |
-| (1b)      | Ended combat effects fade out; effect names translated         | 6 minimal new code       | +60        | 94.9  |
+| Commit    | Item                                                                         | Ponytail step                                             | Prod LOC Δ | Score |
+| --------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- | ---------- | ----- |
+| `a79eaba` | Escape, defeat and charm end in the combat window like victory               | 2 reuse (victory window)                                  | +15        | 94.8  |
+| `9ff0ded` | Ended combat effects fade out; effect names translated                       | 6 minimal new code                                        | +60        | 94.9  |
+| `a03b7a0` | 1c design note                                                               | —                                                         | 0          | 94.9  |
+| (1c)      | Instant text: in-flow media start on scroll entry (revert this commit alone) | 3 platform (IntersectionObserver) + 2 reuse (queueTarget) | +37        | 94.9  |
 
 **1a notes**
 
@@ -715,3 +717,19 @@ too. Nothing else changes: same effects engine, same clock, same events.
 
 No decision needed from you to build it: fullscreen/cinematic media are excluded, so it does not
 conflict with them.
+
+**1c result**
+
+- Implemented as designed in `ScenePlayback` (`awaitsEntry` / `observeEntry`, one observer per
+  bound in-flow media block, gate in `queueTarget`, `effectReady` and `resume`).
+- Measured (1280×340 viewport, first page, layered illustration below the fold, 4 s wait, then
+  scroll to it): **before** its animation was already 3,983 ms in when it came into view;
+  **after** no animation runs until the scroll, and it is 267 ms in 300 ms after.
+- Screenshots and recording (untracked): `review-screenshots/before|after/1c-above-fold.png`,
+  `1c-scrolled.png`, `1c-scroll.webm`. Scripts: `review-screenshots/scroll.spec.ts`
+  (`SHOTS=after npx playwright test -c review-screenshots/shots.config.ts scroll.spec.ts --project=desktop`).
+- New e2e "starts an instant-text illustration below the fold only when it scrolls into view"
+  (fails before: 2 animations already running). Existing instant-text and fullscreen-cinematic
+  tests still pass (chromium and mobile).
+- Found while testing (fail without this change, triaged in task 2): `image-composition`
+  :91 and :168, `reader-request` "updates an old active Orée draft".
