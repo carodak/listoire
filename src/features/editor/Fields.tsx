@@ -1,4 +1,9 @@
-import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type {
+  ChangeEvent,
+  InputHTMLAttributes,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 
 export function Field({
   label,
@@ -70,4 +75,16 @@ export function SelectField<T extends string>({
       </select>
     </label>
   );
+}
+
+/** A file input's onChange: uploads the chosen file, then clears the input so it can be chosen again. */
+export function uploadChosenFile(upload: (file: File) => Promise<unknown>) {
+  return (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (file)
+      void upload(file).finally(() => {
+        input.value = "";
+      });
+  };
 }

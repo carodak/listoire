@@ -5,7 +5,7 @@ import { storeUploadedMedia } from "../../persistence/media-store.ts";
 import { audioDuration } from "./narration-authoring.ts";
 import { DurationField } from "./DurationField.tsx";
 import { sha256 } from "../../contracts/digest.ts";
-import { Field } from "./Fields.tsx";
+import { Field, uploadChosenFile } from "./Fields.tsx";
 export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => void }) {
   const [draft, setDraft] = useState({ rights: "", error: "", busy: false, duration: 0 });
   async function upload(file: File) {
@@ -46,14 +46,7 @@ export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => voi
         type="file"
         accept="video/mp4,video/webm,.mp4,.webm"
         disabled={draft.busy}
-        onChange={(event) => {
-          const input = event.currentTarget;
-          const file = input.files?.[0];
-          if (file)
-            void upload(file).finally(() => {
-              input.value = "";
-            });
-        }}
+        onChange={uploadChosenFile(upload)}
       />
       {draft.busy && <p role="status">Verifying and storing video…</p>}
       {draft.error && <p role="alert">{draft.error}</p>}

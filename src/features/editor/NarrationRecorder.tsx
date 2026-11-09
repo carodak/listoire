@@ -3,7 +3,7 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import { attachNarration } from "./narration-authoring.ts";
 import { generateNarrationPreview, readHumanRecording } from "./narration-sources.ts";
-import { Field, TextareaField } from "./Fields.tsx";
+import { Field, TextareaField, uploadChosenFile } from "./Fields.tsx";
 type Language = StoryProject["languages"][string];
 interface Props {
   storyId: string;
@@ -223,14 +223,7 @@ function HumanRecordingFields({
         label="Upload MP3"
         type="file"
         accept="audio/mpeg,.mp3"
-        onChange={(e) => {
-          const input = e.currentTarget;
-          const file = input.files?.[0];
-          if (file)
-            void upload(file).finally(() => {
-              input.value = "";
-            });
-        }}
+        onChange={uploadChosenFile(upload)}
       />
       <Field
         label="Duration in seconds (optional override)"

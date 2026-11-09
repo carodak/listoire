@@ -1,4 +1,5 @@
 import { useRef, useReducer, useEffect } from "react";
+import { uploadChosenFile } from "./Fields.tsx";
 import type { ReactNode } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
@@ -136,14 +137,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         type="file"
         accept=".ink,.json"
         hidden
-        onChange={(event) => {
-          const input = event.currentTarget,
-            selected = input.files?.[0];
-          if (selected)
-            void actions.importFile(selected).finally(() => {
-              input.value = "";
-            });
-        }}
+        onChange={uploadChosenFile(actions.importFile)}
       />
     </div>
   );

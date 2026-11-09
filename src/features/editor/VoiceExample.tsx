@@ -3,7 +3,7 @@ import type { VoiceProfile } from "../../contracts/speech.ts";
 import { VoiceProfileSchema } from "../../contracts/speech.ts";
 import { audioDuration } from "./narration-authoring.ts";
 import { DurationField } from "./DurationField.tsx";
-import { Field } from "./Fields.tsx";
+import { Field, uploadChosenFile } from "./Fields.tsx";
 interface Draft {
   name: string;
   rights: string;
@@ -105,14 +105,7 @@ function ExampleFields({
         label="Voice example (MP3 / WAV, max 5 MB)"
         type="file"
         accept="audio/mpeg,audio/wav,.mp3,.wav"
-        onChange={(event) => {
-          const input = event.currentTarget,
-            file = input.files?.[0];
-          if (file)
-            void onUpload(file).finally(() => {
-              input.value = "";
-            });
-        }}
+        onChange={uploadChosenFile(onUpload)}
       />
     </fieldset>
   );
