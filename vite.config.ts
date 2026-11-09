@@ -10,9 +10,10 @@ export default defineConfig({
     react(),
     ...(existsSync(resolve(process.cwd(), "assets/catalog/curated.json")) ? [editorLibrary] : []),
   ],
-  // ogl is only reached through lazy imports (dice, react-bits effects). Pre-bundle it so a
-  // fresh dev server does not re-optimize and reload the page the first time dice appear.
-  optimizeDeps: { include: ["ogl"] },
+  // Reached only through lazy imports or the compile worker, which Vite's startup scan
+  // misses: ogl (dice, react-bits effects) and inkjs/full (editor compiler). Pre-bundle them
+  // so a fresh dev server does not re-optimize and invalidate in-flight imports mid-page.
+  optimizeDeps: { include: ["ogl", "inkjs/full"] },
   server: {
     host: "127.0.0.1",
     proxy: {
