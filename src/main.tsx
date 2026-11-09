@@ -5,6 +5,7 @@ import { App } from "./app/App.tsx";
 import { i18n } from "./i18n/i18n.ts";
 import { createIndexedDbStore } from "./persistence/indexeddb-store.ts";
 import { SaveManager } from "./persistence/save-manager.ts";
+import { unlockAudio } from "./features/media/audio-unlock.ts";
 import "./app/app.css";
 
 const saves = new SaveManager(createIndexedDbStore());
@@ -14,6 +15,9 @@ const initialSettings = await saves.settings().catch(() => ({
   welcomeSound: true,
 }));
 await i18n.changeLanguage(initialSettings.language);
+// Browsers allow sound only after a gesture: start audio on the first one (Play, or in the editor).
+for (const type of ["click", "keydown"])
+  addEventListener(type, unlockAudio, { capture: true, once: true });
 const EditorRoute = lazy(() => import("./app/EditorRoute.tsx"));
 if (window.location.pathname === "/editor/") window.history.replaceState(null, "", "/editor");
 createRoot(document.getElementById("root")!).render(
