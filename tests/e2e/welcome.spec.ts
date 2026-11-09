@@ -6,7 +6,7 @@ test("language choices display flags and support keyboard selection and Escape",
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const language = page.getByRole("button", { name: "Language: English", exact: true });
-  await expect(language.locator("svg")).toBeVisible();
+  await expect(language.locator("svg.language-flag")).toBeVisible();
   await language.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByText("Change language", { exact: true })).toBeVisible();
