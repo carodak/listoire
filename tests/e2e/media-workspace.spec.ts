@@ -19,13 +19,17 @@ test("keeps the illustration visible while choosing duplicate layer instances in
   expect(Math.abs(withGallery.width - beforeGallery.width)).toBeLessThan(2);
   expect(Math.abs(withGallery.height - beforeGallery.height)).toBeLessThan(2);
   await gallery.getByLabel("Library depth layer").selectOption("");
-  await gallery.getByLabel("Search media", { exact: true }).fill("paper.modern-male-character");
   await gallery
-    .locator('article[data-asset="paper.modern-male-character"]')
+    .getByLabel("Search media", { exact: true })
+    .fill("sketch.curly-haired-woman-standing-001");
+  await gallery
+    .locator('article[data-asset="sketch.curly-haired-woman-standing-001"]')
     .getByRole("button", { name: "Use this media", exact: true })
     .click();
   await expect(gallery).toHaveCount(0);
-  const planes = dialog.locator('.multiplane-plane[data-image="paper.modern-male-character"]');
+  const planes = dialog.locator(
+    '.multiplane-plane[data-image="sketch.curly-haired-woman-standing-001"]',
+  );
   await expect(planes).toHaveCount(2);
   await dialog.getByLabel("Rotation (degrees)", { exact: true }).press("ArrowRight");
   const data = JSON.parse(await dialog.locator('input[name="illustration"]').inputValue());
