@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
@@ -28,7 +29,7 @@ export function NarrationDialog({ project, locale, onApply, onClose }: Props) {
             );
             onClose();
           } catch (error) {
-            setError(error instanceof Error ? error.message : String(error));
+            setError(message(error));
           }
         }}
       >

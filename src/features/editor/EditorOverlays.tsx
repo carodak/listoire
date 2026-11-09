@@ -10,7 +10,7 @@ import { NarrationDialog } from "./NarrationDialog.tsx";
 import { MediaDialog } from "./MediaDialog.tsx";
 import { CommandDialog } from "./CommandDialog.tsx";
 import { JsonProperties } from "./JsonProperties.tsx";
-import { message } from "./use-editor-project.ts";
+import { message } from "../../contracts/error-message.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
 import { download } from "./downloads.ts";
 import { exportProjectArchive } from "./project-archive.ts";

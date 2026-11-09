@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import { attachNarration } from "./narration-authoring.ts";
@@ -111,8 +112,7 @@ function useNarrationPreview(language: Language, onChange: Props["onChange"]) {
           : "Preview cached in this project. Human listening review is required before publication.",
       });
     } catch (error) {
-      if (isCurrent(request))
-        patch({ status: error instanceof Error ? error.message : String(error) });
+      if (isCurrent(request)) patch({ status: message(error) });
     } finally {
       if (isCurrent(request)) patch({ busy: false });
     }

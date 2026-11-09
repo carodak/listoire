@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { buildInkCommand } from "./ink-commands.ts";
 import { knotNames } from "./ink-outline.ts";
@@ -40,7 +41,7 @@ export function CommandDialog({ command, script, onInsert, onClose }: CommandDia
       onInsert(buildInkCommand(command, commandInput(data), knots, id), true);
       onClose();
     } catch (error) {
-      setError(error instanceof Error ? error.message : String(error));
+      setError(message(error));
     }
   }
   return (

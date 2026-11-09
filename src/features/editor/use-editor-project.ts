@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
@@ -198,8 +199,4 @@ async function writeAndPublish(
     session.ui.setIssues([message(error)]);
     session.ui.setStatus("Draft saved · fix issues to update the reader");
   }
-}
-
-export function message(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
 }

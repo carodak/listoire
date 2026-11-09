@@ -7,7 +7,7 @@ import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
 import { SaveManager } from "../persistence/save-manager.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
-import { message } from "../features/editor/use-editor-project.ts";
+import { message } from "../contracts/error-message.ts";
 
 export default function EditorRoute() {
   return (

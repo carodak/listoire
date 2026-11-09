@@ -3,7 +3,7 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { AceEditor, AceRange } from "./ace.ts";
 import type { EditorView } from "./editor-view.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
-import { message } from "./use-editor-project.ts";
+import { message } from "../../contracts/error-message.ts";
 import { importProjectArchive } from "./project-archive.ts";
 import { compileInWorker } from "./compile-client.ts";
 import { insertLocalized } from "./localized-insertion.ts";

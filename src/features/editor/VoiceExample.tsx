@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import type { VoiceProfile } from "../../contracts/speech.ts";
 import { VoiceProfileSchema } from "../../contracts/speech.ts";
 import { audioDuration } from "./narration-authoring.ts";
@@ -45,7 +46,7 @@ export function VoiceExample({ model, count, onAdd, onBusy }: Props) {
       setDraft((current) => ({
         ...current,
         busy: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: message(error),
       }));
     } finally {
       onBusy(false);
