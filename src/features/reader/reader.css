@@ -1757,6 +1757,10 @@
 .reader-toolbar .language-picker {
   min-width: 0;
 }
+/* On narrow screens the title ellipsizes; the language button keeps its flag, name and chevron. */
+.reader-toolbar .language-controls {
+  flex-shrink: 0;
+}
 .reader-toolbar .language-controls .language-picker summary,
 .reader-toolbar .language-controls-compact .language-picker summary {
   font:
