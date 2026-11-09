@@ -27,5 +27,10 @@ jobs:
         env:
           AUDIT_BASE: ${{ github.event.pull_request.base.sha }}
         run: npx --no-install fallow audit --base "$AUDIT_BASE" --format json --quiet --explain
+      - name: Security regression gate
+        if: github.event_name == 'pull_request'
+        env:
+          AUDIT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: npx --no-install fallow security --gate new --changed-since "$AUDIT_BASE" --format json --quiet
       - run: npx --no-install playwright install --with-deps chromium firefox webkit
       - run: npm run test:e2e
