@@ -468,3 +468,64 @@ arrow keys and tabpanel (fixed in Pass 5, 3c). Collapsibles use native `<details
 **Planned look-alike merges (not approved yet):** `EditorFormDialog` for 5 form
 dialogs (~35 LOC, medium); game-definition editor for Ability/Encounter/Item fields
 (~20–25 LOC, medium).
+
+## Pass 5 — branch `features/reader-combat-editor` (unattended)
+
+E2E runs use an untracked `playwright.local.config.ts` (listed in `.git/info/exclude`)
+that reuses **my own** dev server on port 4175. Port 4173 is still held by PID 37140;
+4173/4180 were not used. A fresh Vite server needs ~60 s for its first page, so I warm it
+once before a run instead of raising test timeouts.
+
+| Commit    | Item                                                                  | Problem                      | Ponytail step       | Prod LOC Δ | Score                 |
+| --------- | --------------------------------------------------------------------- | ---------------------------- | ------------------- | ---------- | --------------------- |
+| `ee22970` | Log: e2e triage + primitive inventory                                 | —                            | —                   | 0          | 95.0                  |
+| `3f1e0fc` | 0.2 `message()` → `src/contracts/error-message.ts`, 9 copies replaced | duplicated error text        | 2 reuse             | +5         | 94.8 (accepted floor) |
+| `d2e3466` | 0.3a `CloseButton` (`src/shared/`) for 7 close controls               | 4 glyphs, inconsistent names | 6 minimal component | −25        | 94.9                  |
+
+### Design choices to review
+
+- **Close-button labels:** reader/character use the translated `t("close")`; the
+  English-only editor keeps "Close dialog" / "Close preview" / "Close gallery",
+  because its e2e tests and its other strings are English and not in i18n.
+  The glyph is now ReaderModal's SVG × everywhere, so "Close gallery" became an icon button.
+
+| `7eabfd4` | 0.3b `ReaderSidebar` (`src/shared/`) for reading preferences + character panel | two copies, different Escape rules, no focus handling | 6 minimal component | −2 | 94.9 |
+| `b0d8e38` | 0.3c ARIA tab pattern for Ribbon + StoryOutline via `arrowKeyTabs` (from InventoryTabs) | editor tabs had no arrow keys / roving tabIndex; outline had no tabpanel | 2 reuse (moved helper) | +21 | 94.8 |
+| `877e721` | `RibbonTabs` component | `Ribbon` grew to 64 lines with the tab pattern | 5 small change | +4 | 95.0 |
+| `2750351` | 0.1 `welcome.spec:3` targets `svg.language-flag` | outdated test (chevron added in `9f1afcd`) | — | 0 | 95.0 |
+| `7360891` | 1.1 text instant by default; typewriter opt-in; "Show all text" control restored | typewriter forced on everyone; no keyboard way to skip it | 1 delete (pinned default) + 2 reuse (strings, glyph) | +12 | 95.0 |
+
+New tests: `tests/e2e/side-panels.spec.ts` (3), `tests/e2e/editor-tabs.spec.ts` (1),
+`tests/e2e/typewriter.spec.ts` (2).
+
+Test assertions updated because this pass changed the behavior on purpose:
+
+- `welcome.spec` "original welcome…" and "blocked audio…": instead of clicking
+  "Show all text", assert it is absent and the page's first choice is visible
+  (Orée's first choice replaces the old story's "Continue reading": Part 0.1).
+- `reader-polish.spec` "photograph keeps its dimensions…": the "Show all text" click
+  became an absence check; the rest of the test still targets the old story (Part 0.1).
+- `presentation-session.test` "resumes only visible videos…": constructs the session
+  with `reveal: "progressive"` (it relied on that being the default). Assertions unchanged.
+
+### Design choices to review (continued)
+
+- **Side-panel Escape rule:** Escape closes from anywhere inside the panel except
+  inside a nested `<dialog>` or when another handler already called
+  `preventDefault` (the colour sampler does). Focus goes to the panel container on
+  open (`tabIndex=-1`, no outline) and back to the opener on close.
+- **Ribbon tabpanel name:** now `aria-labelledby` its tab ("Text") instead of
+  `aria-label="Text commands"`, per the ARIA tab pattern.
+- **Reveal control:** an icon button in the transport bar (existing `reveal` glyph,
+  `t("revealAll")` as name and tooltip), shown only when the typewriter is on and
+  the page is still revealing. Old condition kept (`!revealAll && !textComplete`).
+- **Instant text and timed media:** in instant mode the existing `revealAll` logic
+  also shows delayed media at once (as "instant" already did before it became the
+  default).
+
+### Found while testing (not caused by this branch)
+
+- With a **fresh** dev server, 5 `reader-request.spec` tests fail (`.reader` missing
+  after a combat: `:108`, `:215`, `:328`, `:350`, `:583`). Bisected: they fail the same
+  way on `ee22970` (identical to `main`'s code), so they predate this branch. They passed
+  last night only against the long-lived 4173 server. To investigate with Part 1.3.
