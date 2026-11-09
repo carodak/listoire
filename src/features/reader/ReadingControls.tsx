@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { useTranslation } from "react-i18next";
@@ -109,9 +110,7 @@ function PreferencesPanel({
     >
       <header>
         <h2>{t("readingPreferences")}</h2>
-        <button onClick={onClose} aria-label={t("close")}>
-          ×
-        </button>
+        <CloseButton onClick={onClose} />
       </header>
       <div className="reading-popover">
         <PaperPalette

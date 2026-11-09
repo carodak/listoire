@@ -1,4 +1,5 @@
 import { Dialog } from "../../shared/Dialog.tsx";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 
 interface EditorDialogProps {
@@ -21,9 +22,7 @@ export function EditorDialog({
       <header>
         <h2>{title}</h2>
         {actions}
-        <button type="button" title="Close this dialog" aria-label="Close dialog" onClick={onClose}>
-          ×
-        </button>
+        <CloseButton label="Close dialog" title="Close this dialog" onClick={onClose} />
       </header>
       {children}
     </>

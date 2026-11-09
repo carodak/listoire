@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { CharacterProfile, AttributeDetails } from "../../contracts/character.ts";
@@ -96,11 +97,7 @@ function CharacterSheet({
     <div className={`character-sheet${combat ? " character-sheet-combat" : ""}`}>
       <header className="character-sheet-heading">
         <h2>{t("myCharacter")}</h2>
-        {onClose && (
-          <button className="character-close" onClick={onClose} aria-label={t("close")}>
-            ×
-          </button>
-        )}
+        {onClose && <CloseButton className="character-close" onClick={onClose} />}
       </header>
       <CharacterIdentity bundle={bundle} xp={combat ? undefined : (game?.xp ?? 0)} />
       <CharacterPortrait bundle={bundle} health={profile.health.current} combat={combat} />
