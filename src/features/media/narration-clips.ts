@@ -70,9 +70,10 @@ export async function playRecording(
   if (clip.marks.some((mark) => mark.character > text.length)) return "unavailable";
   let url: string | undefined;
   try {
+    // Download allowance grows with the clip (about 1 s per second of audio) for slow mobile links.
     const response = await sameOriginFetch(audioUrl, {
       signal,
-      timeoutMs: 5000,
+      timeoutMs: 10000 + clip.durationMs,
       maxBytes: 10000000,
     });
     if (!response.ok) return "error";
@@ -87,7 +88,6 @@ export async function playRecording(
       channel: "narration",
       signal,
       rate,
-      maxMs: clip.durationMs / rate + 5000,
       onTime: (seconds) => {
         onProgress({
           segmentId: clip.segmentId,
