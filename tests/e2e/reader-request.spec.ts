@@ -746,6 +746,31 @@ test("plays instant-text illustrations from the beginning and keeps them running
     .toBe(times.length);
 });
 
+test("starts an instant-text illustration below the fold only when it scrolls into view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 340 });
+  await enter(page, false, false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  const planes = () =>
+    page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.effect instanceof KeyframeEffect &&
+              animation.effect.target instanceof Element &&
+              animation.effect.target.classList.contains("multiplane-plane"),
+          ).length,
+    );
+  await page.waitForTimeout(1500);
+  expect(await planes()).toBe(0);
+  await page.locator(".narrative-media").first().scrollIntoViewIfNeeded();
+  await expect.poll(planes).toBeGreaterThan(0);
+});
+
 test("plays an ordered fullscreen illustration even when the text display is instant", async ({
   page,
 }) => {

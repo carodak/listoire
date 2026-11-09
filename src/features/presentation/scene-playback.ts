@@ -26,6 +26,8 @@ export class ScenePlayback {
   private readonly pendingBlocks = new Map<string, number>();
   private readonly issued = new Set<string>();
   private readonly videos = new Set<HTMLVideoElement>();
+  /** In-flow media blocks that have scrolled into view on this page. */
+  private readonly entered = new Set<string>();
   private blocking = 0;
   constructor(context: PlaybackContext, audio: AudioManager) {
     this.context = context;
@@ -35,6 +37,7 @@ export class ScenePlayback {
   beginFrame() {
     this.issued.clear();
     this.pendingBlocks.clear();
+    this.entered.clear();
     this.blocking = 0;
   }
   configure(preferences: ReadingPreferences, wasEnabled: boolean | undefined) {
@@ -60,7 +63,12 @@ export class ScenePlayback {
   }
   resume() {
     for (const [id, target] of this.targets)
-      if (target.video && this.mediaVisible(id) && (!target.silentVideo || !this.reducedMotion()))
+      if (
+        target.video &&
+        this.mediaVisible(id) &&
+        !this.awaitsEntry(id) &&
+        (!target.silentVideo || !this.reducedMotion())
+      )
         void target.video.play().catch(() => {});
     this.effects.resume();
     this.clock.resume();
@@ -91,7 +99,9 @@ export class ScenePlayback {
         });
     }
     if (!this.context.restored || targets.silentVideo) this.queueTarget(blockId);
+    const observer = this.observeEntry(targets.canvas, blockId);
     return () => {
+      observer?.disconnect();
       targets.canvas.removeEventListener?.("load", loaded, true);
       if (targets.video) {
         targets.video.removeEventListener("loadeddata", loaded);
@@ -110,6 +120,32 @@ export class ScenePlayback {
   private mediaIds() {
     return this.blocks.filter((block) => block.kind === "media").map((block) => block.id);
   }
+  /** Instant text: an in-flow image starts its entrance, cues and duration once it scrolls into view. */
+  private awaitsEntry(id: string) {
+    const block = this.mediaBlock(id);
+    return (
+      block?.kind === "media" &&
+      block.layout !== "fullscreen" &&
+      block.layout !== "background" &&
+      this.context.state.revealAll &&
+      !this.context.restored &&
+      typeof IntersectionObserver !== "undefined" &&
+      !this.entered.has(id)
+    );
+  }
+  private observeEntry(element: HTMLElement, id: string) {
+    if (typeof IntersectionObserver === "undefined" || this.mediaBlock(id)?.kind !== "media")
+      return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      const waited = this.awaitsEntry(id);
+      this.entered.add(id);
+      if (waited) this.queueTarget(id);
+    });
+    observer.observe(element);
+    return observer;
+  }
   private mediaVisible(id: string) {
     const block = this.mediaBlock(id);
     return block?.kind === "media"
@@ -117,7 +153,7 @@ export class ScenePlayback {
       : !this.context.state.expiredMedia.includes(id);
   }
   private queueTarget(id: string) {
-    if (!this.mediaVisible(id)) return;
+    if (!this.mediaVisible(id) || this.awaitsEntry(id)) return;
     const target = this.targets.get(id);
     if (target && !this.imagesReady(target)) return;
     if (!this.context.restored) this.startPersistence(id);
@@ -205,6 +241,7 @@ export class ScenePlayback {
     return Boolean(
       target &&
       this.mediaVisible(id) &&
+      !this.awaitsEntry(id) &&
       this.imagesReady(target) &&
       (!target.video || target.video.readyState >= 2),
     );
