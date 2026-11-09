@@ -49,7 +49,12 @@ const en = {
   inventory: "Inventory",
   combat: {
     title: "Combat",
-    victory: "Victory!",
+    outcome: {
+      victory: "Victory!",
+      escaped: "Escaped",
+      defeat: "Defeated",
+      charmed: "Charmed",
+    },
     continue: "Continue reading",
     saveFailed: "Could not save. Please retry.",
     log: "Combat log",
@@ -181,7 +186,12 @@ const fr: typeof en = {
   inventory: "Inventaire",
   combat: {
     title: "Combat",
-    victory: "Victoire !",
+    outcome: {
+      victory: "Victoire !",
+      escaped: "Fuite réussie",
+      defeat: "Défaite",
+      charmed: "Adversaire charmé",
+    },
     continue: "Continuer la lecture",
     saveFailed: "Sauvegarde impossible. Réessayez.",
     log: "Journal du combat",

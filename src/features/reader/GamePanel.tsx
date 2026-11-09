@@ -31,7 +31,7 @@ export function GamePanel({
 }: GamePanelProps) {
   if (!state.game || !state.character || !state.occurrenceId) return null;
   const active = { ...state, game: state.game, occurrenceId: state.occurrenceId };
-  const victory = isVictory(state.game);
+  const ending = combatEnding(state.game);
   return (
     <>
       {state.game.pendingCheck && (
@@ -45,8 +45,9 @@ export function GamePanel({
           presentation={presentation}
         />
       )}
-      {victory && (
-        <CombatVictory
+      {ending && (
+        <CombatEnding
+          outcome={ending}
           bundle={bundle}
           director={director}
           state={state}
@@ -81,20 +82,24 @@ function CombatEncounter({
     </ReaderModal>
   );
 }
-/** A won encounter waits on its story event; the combat window announces it. */
-function isVictory(game: ReaderSnapshot["game"]) {
-  return Boolean(game?.pendingEvent && game.lastResult?.outcome === "victory");
+/** A finished encounter waits on its story event; the combat window announces how it ended. */
+function combatEnding(game: ReaderSnapshot["game"]) {
+  return game?.pendingEvent ? game.lastResult?.outcome : undefined;
 }
+type CombatOutcome = NonNullable<ReturnType<typeof combatEnding>>;
 
-/** Time to read "Victory!" and the last blow before the story moves on. */
-const VICTORY_HOLD_MS = 2000;
+/** Time to read the outcome and the last turn before the story moves on. */
+const ENDING_HOLD_MS = 2000;
 
-function CombatVictory({
+function CombatEnding({
+  outcome,
   bundle,
   director,
   state,
   presentation,
-}: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation">) {
+}: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation"> & {
+  outcome: CombatOutcome;
+}) {
   useModalPause(presentation);
   const { t } = useTranslation();
   const result = state.game!.lastResult!;
@@ -106,18 +111,18 @@ function CombatVictory({
   );
   useEffect(() => {
     if (!settled || state.failure) return;
-    const timer = setTimeout(finish, VICTORY_HOLD_MS);
+    const timer = setTimeout(finish, ENDING_HOLD_MS);
     return () => clearTimeout(timer);
   }, [settled, state.failure, finish]);
   return (
     <ReaderModal
-      className="reader-combat-modal combat-victory"
+      className="reader-combat-modal combat-ending"
       title={t("combat.title")}
       closeLabel={t("combat.continue")}
       onDismiss={state.failure ? finish : undefined}
     >
-      <p className="combat-victory-title" role="status">
-        {t("combat.victory")}
+      <p className="combat-ending-title" data-outcome={outcome} role="status">
+        {t(`combat.outcome.${outcome}`)}
       </p>
       <ol className="combat-feedback combat-log" aria-label={t("combat.log")}>
         {combatLines(result, t).map((line, index) => (
@@ -146,7 +151,7 @@ function GameNotifications({ bundle, director, state, seenResults, presentation 
     (state.restored && !game?.pendingEvent) ||
     result === dismissed ||
     seenResults?.has(result) ||
-    isVictory(game)
+    combatEnding(game)
   )
     return null;
   const received = bundle.game?.items.find((item) => item.id === result.itemId);

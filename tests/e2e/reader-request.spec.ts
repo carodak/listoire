@@ -22,6 +22,17 @@ async function enter(page: Page, french = false, skipIntro = true) {
   if (skipIntro) for (let index = 0; index < 3; index++) await next(page);
 }
 
+/** Fixed character rolls (all 6) and dice seed, so a fight always ends the same way. */
+async function fixDice(page: Page, seed: number) {
+  await page.addInitScript((seed) => {
+    crypto.getRandomValues = <T extends ArrayBufferView | null>(values: T) => {
+      if (values instanceof Uint8Array) values.fill(251);
+      if (values instanceof Uint32Array) values.fill(seed);
+      return values;
+    };
+  }, seed);
+}
+
 async function dismissNotice(page: Page) {
   const check = page.locator(".check-roll-modal");
   if (await check.count()) {
@@ -109,6 +120,7 @@ test("completes the French magic chapter with two combats and visible saved dice
   page,
 }, info) => {
   test.setTimeout(90000);
+  await fixDice(page, 1); // this seed wins both duels
   await enter(page, true);
   let encounters = 0;
   let rolls = 0;
@@ -153,16 +165,16 @@ test("completes the French magic chapter with two combats and visible saved dice
         );
       }
       for (let turn = 0; (await combat.count()) && turn < 30; turn++) {
-        if (await combat.locator(".combat-victory-title").count()) break;
+        if (await combat.locator(".combat-ending-title").count()) break;
         await combat.getByRole("button", { name: "Attaque simple", exact: true }).click();
         await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
         await expect(page.locator(".dice-roll")).toBeVisible();
         await expect(page.locator(".dice-result small").first()).toHaveText("d6");
         const log = combat.locator(".combat-log li");
         await expect(log.last()).toBeVisible();
-        if (await page.locator(".combat-victory-title").count()) {
+        if (await page.locator(".combat-ending-title").count()) {
           // A won fight announces itself in the combat window, then continues on its own.
-          await expect(page.locator(".combat-victory-title")).toHaveText("Victoire !");
+          await expect(page.locator(".combat-ending-title")).toHaveText("Victoire !");
           await expect(log.last()).toContainText("Vous attaquez…");
           victories++;
         } else {
@@ -173,7 +185,7 @@ test("completes the French magic chapter with two combats and visible saved dice
         await expect(combat.locator(".combatant-hit")).toHaveCount(0); // reduced motion
         rolls++;
       }
-      await expect(page.locator(".combat-victory")).toHaveCount(0, { timeout: 15000 });
+      await expect(page.locator(".combat-ending")).toHaveCount(0, { timeout: 15000 });
     }
     await dismissNotice(page);
     if (await page.locator(".ending").count()) break;
@@ -185,6 +197,36 @@ test("completes the French magic chapter with two combats and visible saved dice
   expect(rolls).toBeGreaterThanOrEqual(2);
   await expect(page.locator(".reader-copy h1")).toHaveText("Laisser une lumière");
 });
+
+for (const { title, seed, move, line } of [
+  { title: "Defeated", seed: 3, move: "Basic attack", line: "damage received." }, // seed 3 loses
+  { title: "Escaped", seed: 1, move: "Flee", line: "You escape!" },
+]) {
+  test(`announces "${title}" in the combat window, then continues on its own`, async ({ page }) => {
+    test.setTimeout(90000);
+    await fixDice(page, seed);
+    await enter(page);
+    const combat = page.locator(".reader-combat-modal");
+    for (let step = 0; step < 42 && !(await combat.count()); step++) {
+      await dismissNotice(page);
+      await next(page);
+    }
+    for (
+      let turn = 0;
+      turn < 30 && !(await combat.locator(".combat-ending-title").count());
+      turn++
+    ) {
+      await combat.getByRole("button", { name: move, exact: true }).click();
+      await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
+    }
+    const ending = page.locator(".combat-ending");
+    await expect(ending.locator(".combat-ending-title")).toHaveText(title);
+    await expect(ending.locator(".combat-log li").last()).toContainText(line);
+    await expect(ending.getByRole("button", { name: "Continue reading" })).toHaveCount(0);
+    await expect(ending).toHaveCount(0, { timeout: 15000 });
+    await expect(page.locator(".reader-modal")).toHaveCount(0);
+  });
+}
 
 test("dissolves words upward while keeping the page color fixed", async ({ page }) => {
   await enter(page);

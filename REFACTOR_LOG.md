@@ -628,3 +628,31 @@ Test assertions updated because this pass changed the behavior on purpose (conti
   the victory window appears, asserts "Victoire !", the chronological log, the localized item
   line and that no hit effect plays under reduced motion; it waits for the auto-continue
   instead of dismissing a notice.
+
+## Pass 6 — combat endings, scroll-driven media, e2e, audio, visuals
+
+Own dev server on port 4175 (`playwright.local.config.ts`); 4173/4180 not used.
+Baseline (`8a78885`): score 94.8, prod LOC 20,712, 397 unit tests, 10 security candidates.
+Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow health, `fallow security`.
+
+| Commit | Item | Ponytail step | Prod LOC Δ | Score |
+| ------ | ---- | ------------- | ---------- | ----- |
+| (1a) | Escape, defeat and charm end in the combat window like victory | 2 reuse (victory window) | +15 | 94.8 |
+
+**1a notes**
+
+- `CombatVictory` became `CombatEnding`: one window for every outcome the rules return
+  (`victory`, `escaped`, `defeat`, `charmed`), same 2 s hold after the dice, Continue only
+  when saving fails. Titles: `combat.outcome.*` (en: Victory! / Escaped / Defeated / Charmed;
+  fr: Victoire ! / Fuite réussie / Défaite / Adversaire charmé — nouns, to avoid gendered
+  participles). `combat.victory` moved into that group.
+- **Design choice to review:** charm also moved into the window (the prompt named flee and
+  defeat; the heading said "all combat endings").
+- Classes renamed `combat-victory*` → `combat-ending*` (+ `data-outcome`).
+- **Found: the French combat e2e was random.** Character stats and the dice seed come from
+  `crypto.getRandomValues`; about half of the seeds I tried lose the first duel, which already
+  failed the test before this change (it expects two victories). The test now pins both
+  (`fixDice(page, 1)`), nothing else in it changed.
+- Tests: new `combat-ending.test.ts` (5 cases, en/fr; fails on the previous GamePanel);
+  new e2e "announces Defeated/Escaped in the combat window" (seeded). Updated assertions:
+  `reader-request` French chapter — selector rename only, plus the fixed seed.
