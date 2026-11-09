@@ -262,3 +262,13 @@ input:focus-visible {
   box-shadow: none;
   background: transparent;
 }
+
+/*
+ * Portraits sit on the page like its illustrations: their paper takes the page colour
+ * (multiply on light pages, screen over inverted ink on dark ones). readerTheme() sets both
+ * variables on the reader, so a page-colour change applies at once.
+ */
+.themed-art {
+  mix-blend-mode: var(--illustration-mix, multiply);
+  filter: var(--ink-filter, none);
+}

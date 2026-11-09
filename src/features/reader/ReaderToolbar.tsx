@@ -10,6 +10,7 @@ import { GameInventory } from "./GamePanel.tsx";
 import { CharacterPanel } from "../character/CharacterPanel.tsx";
 import { LanguageSetting } from "../../shared/LanguageSetting.tsx";
 import { ToolbarGlyph } from "../../shared/ToolbarGlyph.tsx";
+import { useAssetSource } from "../presentation/use-asset-source.ts";
 
 export interface StoryPlayerProps {
   bundle: StoryBundle;
@@ -40,30 +41,11 @@ export function ReaderToolbar({
 }: ReaderToolbarProps) {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const { bundle, director, presentation, preferences, onPreferencesChange } = player;
-  const { t } = useTranslation();
+  const portrait = bundle.assets?.find((asset) => asset.id === bundle.character?.portrait);
+  const portraitSource = useAssetSource(portrait, presentation.resolveAsset);
   return (
     <div className="reader-toolbar">
-      <div className="reader-toolbar-start">
-        {player.onHome && (
-          <button
-            className="reader-home-button"
-            type="button"
-            onClick={player.onHome}
-            aria-label={t("home")}
-            title={t("home")}
-          >
-            <ToolbarGlyph name="home" width={24} height={24} strokeWidth={1.75} />
-          </button>
-        )}
-        <span className="reader-story-title">{bundle.title}</span>
-        {player.onLanguageChange && (
-          <LanguageSetting
-            language={bundle.locale}
-            busy={Boolean(player.languageBusy)}
-            onChange={player.onLanguageChange}
-          />
-        )}
-      </div>
+      <ToolbarStart player={player} />
       <div className="reader-toolbar-end">
         <ReadingControls
           {...{ preferences, presentation, bundle }}
@@ -77,6 +59,7 @@ export function ReaderToolbar({
         />
         <CharacterPanel
           {...{ bundle, notes: player.notes, attributeDetails: state.attributeDetails }}
+          portraitSource={portraitSource || undefined}
           frame={state.frame}
           profile={state.character}
           game={state.game}
@@ -88,6 +71,34 @@ export function ReaderToolbar({
           }}
         />
       </div>
+    </div>
+  );
+}
+
+/** Home, story title and language. */
+function ToolbarStart({ player }: Pick<ReaderToolbarProps, "player">) {
+  const { t } = useTranslation();
+  return (
+    <div className="reader-toolbar-start">
+      {player.onHome && (
+        <button
+          className="reader-home-button"
+          type="button"
+          onClick={player.onHome}
+          aria-label={t("home")}
+          title={t("home")}
+        >
+          <ToolbarGlyph name="home" width={24} height={24} strokeWidth={1.75} />
+        </button>
+      )}
+      <span className="reader-story-title">{player.bundle.title}</span>
+      {player.onLanguageChange && (
+        <LanguageSetting
+          language={player.bundle.locale}
+          busy={Boolean(player.languageBusy)}
+          onChange={player.onLanguageChange}
+        />
+      )}
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { useCallback } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { useAssetSource } from "../presentation/use-asset-source.ts";
 import { useSmartCrop } from "../presentation/smart-crop.ts";
+
+/** Without a presentation session there is nothing to resolve media through. */
+const unresolved = () => Promise.reject(new Error("No presentation session"));
 
 export function Combatant({
   label,
@@ -28,19 +30,12 @@ export function Combatant({
   hit?: number;
 }) {
   const asset = bundle.assets?.find((asset) => asset.id === portrait);
-  const fallback = useCallback(
-    async (asset: NonNullable<typeof bundle.assets>[number]) => ({
-      url: `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
-      dispose() {},
-    }),
-    [bundle.storyId],
-  );
-  const source = useAssetSource(asset, presentation?.resolveAsset ?? fallback);
+  const source = useAssetSource(asset, presentation?.resolveAsset ?? unresolved);
   const cropped = useSmartCrop(source || undefined, true);
   return (
     <section className="combatant">
       <div className="combatant-portrait">
-        {cropped && <img src={cropped} alt={name} />}
+        {cropped && <img className="themed-art" src={cropped} alt={name} />}
         {hit !== undefined && <span key={hit} className="combatant-hit" aria-hidden="true" />}
       </div>
       <span className="combatant-label">{label}</span>

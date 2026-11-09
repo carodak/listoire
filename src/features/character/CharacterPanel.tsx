@@ -30,6 +30,8 @@ interface Props {
   attributeDetails?: AttributeDetails | null;
   inventoryControls?: ReactNode;
   notes?: ReaderNotesPort;
+  /** Resolved by the reader (published file or uploaded media). */
+  portraitSource?: string;
   open: boolean;
   onToggle: () => void;
 }
@@ -74,6 +76,7 @@ function CharacterSheet({
   attributeDetails,
   inventoryControls,
   notes,
+  portraitSource,
   onClose,
   combat = false,
 }: SheetProps) {
@@ -89,7 +92,12 @@ function CharacterSheet({
         {onClose && <CloseButton className="character-close" onClick={onClose} />}
       </header>
       <CharacterIdentity bundle={bundle} xp={combat ? undefined : (game?.xp ?? 0)} />
-      <CharacterPortrait bundle={bundle} health={profile.health.current} combat={combat} />
+      <CharacterPortrait
+        bundle={bundle}
+        source={portraitSource}
+        health={profile.health.current}
+        combat={combat}
+      />
       <CharacterStats profile={profile} details={attributeDetails} showHealth={!combat} />
       {!combat && (
         <nav className="character-actions" aria-label={t("myCharacter")}>
@@ -348,10 +356,12 @@ function InventoryTabs({
 
 function CharacterPortrait({
   bundle,
+  source,
   health,
   combat,
 }: {
   bundle: StoryBundle;
+  source?: string;
   health: number;
   combat: boolean;
 }) {
@@ -377,12 +387,8 @@ function CharacterPortrait({
   const portrait = bundle.assets?.find((asset) => asset.id === bundle.character?.portrait);
   return (
     <div className={`character-portrait-area${damage ? " character-hit" : ""}`}>
-      {portrait && (
-        <img
-          className="character-portrait"
-          src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${portrait.path}`}
-          alt={portrait.alt}
-        />
+      {portrait && source && (
+        <img className="character-portrait themed-art" src={source} alt={portrait.alt} />
       )}
       {damage && (
         <strong key={damage.key} className="character-damage" aria-live="assertive">
