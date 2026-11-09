@@ -20,7 +20,7 @@ export function HandwrittenText({ text }: { text: string }) {
       scope.signal,
       reduce.matches,
     );
-    void playback.finished.then(() => {
+    void playback.then(() => {
       if (!scope.signal.aborted) setReady(true);
     });
     return () => scope.abort();

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
 import { resolveMediaAsset } from "../../persistence/media-store.ts";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
+import { Field, SelectField } from "./Fields.tsx";
 type Language = StoryProject["languages"][string];
 type Entry = NonNullable<StoryProject["mediaLibrary"]>[number];
 type Facet = "category" | "theme" | "usage";
@@ -45,66 +46,39 @@ export function MediaLibrary({
     const node = root.current;
     return () => node?.querySelectorAll("audio").forEach((audio) => audio.pause());
   }, []);
-  const assets = (language.configuration.assets ?? []).filter((asset) => {
-    const meta = library.find((entry) => entry.id === asset.id);
-    const text = [
-      asset.id,
-      asset.alt,
-      meta?.title,
-      meta?.category,
-      ...(meta?.themes ?? []),
-      ...(meta?.usage ?? []),
-    ].join(" ");
-    return (
-      Boolean(meta || asset.upload || asset.id.startsWith("recording.")) &&
-      (kind === "scene3d" ? Boolean(asset.scene3d) : asset.type === kind) &&
-      (!selectedRole || !meta?.layerRoles?.length || meta.layerRoles.includes(selectedRole)) &&
-      searchable(text).includes(searchable(search)) &&
-      (["category", "theme", "usage"] as const).every(
-        (facet) => !filters[facet] || Boolean(meta && values(meta, facet).includes(filters[facet])),
-      )
-    );
-  });
+  const catalogue = new Map(library.map((entry) => [entry.id, entry]));
+  const assets = (language.configuration.assets ?? []).filter((asset) =>
+    matchesLibraryAsset(asset, catalogue.get(asset.id), kind, selectedRole, search, filters),
+  );
   const content = (
-    <>
-      <div ref={root} className="media-library">
-        <label>
-          Search media
-          <input
-            autoFocus
-            type="search"
-            placeholder="Name, theme, description, usage…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+    <div ref={root} className="media-library">
+      <Field
+        label="Search media"
+        autoFocus
+        type="search"
+        placeholder="Name, theme, description, usage…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <LibraryFilters {...{ kind, library, selectedRole, setSelectedRole, filters, setFilters }} />
+      <p>{assets.length} media · licensed story resources</p>
+      <div className="media-library-grid">
+        {assets.map((asset) => (
+          <MediaCard
+            key={asset.id}
+            asset={asset}
+            entry={catalogue.get(asset.id)}
+            audio={language.configuration.embeddedAudio?.[asset.id]}
+            kind={kind}
+            onChoose={(id) => {
+              onChoose(id);
+              onClose();
+            }}
           />
-        </label>
-        <LibraryFilters
-          kind={kind}
-          library={library}
-          selectedRole={selectedRole}
-          setSelectedRole={setSelectedRole}
-          filters={filters}
-          setFilters={setFilters}
-        />
-        <p>{assets.length} media · licensed story resources</p>
-        <div className="media-library-grid">
-          {assets.map((asset) => (
-            <MediaCard
-              key={asset.id}
-              asset={asset}
-              entry={library.find((entry) => entry.id === asset.id)}
-              audio={language.configuration.embeddedAudio?.[asset.id]}
-              kind={kind}
-              onChoose={(id) => {
-                onChoose(id);
-                onClose();
-              }}
-            />
-          ))}
-        </div>
-        {!assets.length && <p>No media match this search.</p>}
+        ))}
       </div>
-    </>
+      {!assets.length && <p>No media match this search.</p>}
+    </div>
   );
   return embedded ? (
     <section className="embedded-media-library" aria-label="Media library">
@@ -120,6 +94,34 @@ export function MediaLibrary({
     <EditorDialog title="Media library" onClose={onClose}>
       {content}
     </EditorDialog>
+  );
+}
+function matchesLibraryAsset(
+  asset: MediaAsset,
+  meta: Entry | undefined,
+  kind: MediaLibraryProps["kind"],
+  selectedRole: string,
+  search: string,
+  filters: Filters,
+) {
+  const text = [
+    asset.id,
+    asset.alt,
+    meta?.title,
+    meta?.category,
+    ...(meta?.themes ?? []),
+    ...(meta?.usage ?? []),
+  ].join(" ");
+  return (
+    Boolean(meta || asset.upload || asset.id.startsWith("recording.")) &&
+    (kind === "scene3d" ? Boolean(asset.scene3d) : asset.type === kind) &&
+    (!selectedRole ||
+      !meta?.layerRoles?.length ||
+      meta.layerRoles.some((role) => role === selectedRole)) &&
+    searchable(text).includes(searchable(search)) &&
+    (["category", "theme", "usage"] as const).every(
+      (facet) => !filters[facet] || Boolean(meta && values(meta, facet).includes(filters[facet])),
+    )
   );
 }
 type Filters = Record<Facet, string>;
@@ -141,34 +143,25 @@ function LibraryFilters({
   return (
     <div className="asset-filters">
       {kind === "image" && (
-        <label>
-          Depth layer
-          <select
-            aria-label="Library depth layer"
-            value={selectedRole}
-            onChange={(event) => setSelectedRole(event.target.value as typeof selectedRole)}
-          >
-            <option value="">All layers</option>
-            {["background", "midground", "foreground"].map((role) => (
-              <option key={role}>{role}</option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="Depth layer"
+          aria-label="Library depth layer"
+          value={selectedRole}
+          onChange={setSelectedRole}
+          options={["", "background", "midground", "foreground"] as const}
+          labels={{ "": "All layers" }}
+        />
       )}
       {(["category", "theme", "usage"] as const).map((facet) => (
-        <label key={facet}>
-          {facet}
-          <select
-            aria-label={`Media ${facet}`}
-            value={filters[facet]}
-            onChange={(e) => setFilters({ ...filters, [facet]: e.target.value })}
-          >
-            <option value="">All</option>
-            {[...new Set(library.flatMap((entry) => values(entry, facet)))].sort().map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          key={facet}
+          label={facet}
+          aria-label={`Media ${facet}`}
+          value={filters[facet]}
+          onChange={(value) => setFilters({ ...filters, [facet]: value })}
+          options={["", ...new Set(library.flatMap((entry) => values(entry, facet)))].sort()}
+          labels={{ "": "All" }}
+        />
       ))}
     </div>
   );

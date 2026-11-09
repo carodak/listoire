@@ -1,5 +1,6 @@
 import { NarrationClipSchema } from "../../contracts/media.ts";
-import type { NarrationClip, VoiceProfile, SpeechSettings } from "../../contracts/media.ts";
+import type { NarrationClip } from "../../contracts/media.ts";
+import type { VoiceProfile, SpeechSettings } from "../../contracts/speech.ts";
 
 export async function requestLocalNarration(
   request: {

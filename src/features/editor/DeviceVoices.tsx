@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
+import { useDeviceVoices } from "../presentation/use-device-voices.ts";
 
 type Language = StoryProject["languages"][string];
 interface DeviceVoicesProps {
@@ -9,8 +10,12 @@ interface DeviceVoicesProps {
 }
 
 export function DeviceVoices({ language, locale, onChange }: DeviceVoicesProps) {
+  useEffect(() => () => globalThis.speechSynthesis?.cancel(), []);
   const voices = useDeviceVoices(locale);
   const [status, setStatus] = useState("");
+  const selectedVoice = voices.find(
+    (voice) => `device:${voice.voiceURI}` === language.defaults.narratorVoice,
+  );
   const selected = language.defaults.narratorVoice?.startsWith("device:")
     ? language.defaults.narratorVoice.slice(7)
     : "";
@@ -53,43 +58,13 @@ export function DeviceVoices({ language, locale, onChange }: DeviceVoicesProps) 
       <button
         type="button"
         disabled={!selected}
-        onClick={() =>
-          previewVoice(
-            voices.find((voice) => voice.voiceURI === selected),
-            locale,
-            language,
-            setStatus,
-          )
-        }
+        onClick={() => previewVoice(selectedVoice, locale, language, setStatus)}
       >
         Preview selected narrator
       </button>
       <p role="status">{status}</p>
     </details>
   );
-}
-
-function useDeviceVoices(locale: string) {
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  useEffect(() => {
-    const synth = globalThis.speechSynthesis;
-    if (!synth) return;
-    const update = () =>
-      setVoices(
-        synth
-          .getVoices()
-          .filter((voice) =>
-            voice.lang.toLowerCase().startsWith(locale.toLowerCase().split("-")[0]!),
-          ),
-      );
-    update();
-    synth.addEventListener("voiceschanged", update);
-    return () => {
-      synth.removeEventListener("voiceschanged", update);
-      synth.cancel();
-    };
-  }, [locale]);
-  return voices;
 }
 
 function previewVoice(

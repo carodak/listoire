@@ -1,6 +1,6 @@
 import type { CharacterProfile } from "../../contracts/character.ts";
 import type { GameDefinition, GameState } from "../../contracts/game.ts";
-import { attributes } from "../../contracts/game.ts";
+import { attackAttribute } from "./character.ts";
 
 export function damageBonus(score: number) {
   return score >= 18 ? 3 : score >= 14 ? 2 : score >= 10 ? 1 : 0;
@@ -19,12 +19,7 @@ export function enemyProfile(
     hard: [0.75, 0.6],
     boss: [0.9, 0.5],
   }[encounter.difficulty] as [number, number];
-  const weapon = definition.items.find((item) => item.id === game.equipment.weapon);
-  const attribute =
-    weapon?.attribute ??
-    [...attributes].sort(
-      (a, b) => character.attributes[b].current - character.attributes[a].current,
-    )[0]!;
+  const attribute = attackAttribute(character, game, definition);
   const score = character.attributes[attribute];
   const referenceHp = Math.round(6 + (game.baseMaxHp - 6) * scale);
   const referenceStat = Math.round(score.initial + (score.current - score.initial) * scale);

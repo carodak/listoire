@@ -1,5 +1,6 @@
 import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationRoles } from "../../contracts/illustration.ts";
+import { SelectField } from "./Fields.tsx";
 
 const controls = [
   ["x", "Horizontal position (%)", -75, 75, 1],
@@ -16,18 +17,13 @@ export function LayerTransform({ layer, onChange }: LayerTransformProps) {
   return (
     <fieldset className="image-crop-fields">
       <legend>Selected image</legend>
-      <label title="Foreground moves most, middleground half as much, and background moves least.">
-        Layer depth
-        <select
-          aria-label="Layer depth"
-          value={layer.role}
-          onChange={(event) => onChange({ role: event.target.value as typeof layer.role })}
-        >
-          {illustrationRoles.map((role) => (
-            <option key={role}>{role}</option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        label="Layer depth"
+        value={layer.role}
+        options={illustrationRoles}
+        onChange={(role) => onChange({ role })}
+        help="Foreground moves most, middleground half as much, and background moves least."
+      />
       {controls.map(([field, label, min, max, step]) => (
         <label key={field} title={`Adjust only this image instance: ${label.toLowerCase()}.`}>
           {label}

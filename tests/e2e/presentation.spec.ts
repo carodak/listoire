@@ -1,12 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
+import { houseBundles } from "../fixtures/house-project.ts";
 test("voice playback, pause and voice-off leave the committed passage unchanged", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.route("**/api/narration", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.route("**/stories/house/en.json", async (route) => {
-    const response = await route.fetch();
-    const bundle = await response.json();
+    const bundle = structuredClone(houseBundles.en!);
     bundle.narration = [];
     await route.fulfill({ json: bundle });
   });
@@ -14,8 +14,8 @@ test("voice playback, pause and voice-off leave the committed passage unchanged"
     const state = { calls: 0, cancels: 0, pauses: 0, resumes: 0, utterance: null as unknown };
     Object.assign(window, { voiceTest: state });
     Object.defineProperty(window, "speechSynthesis", {
-      value: {
-        getVoices: () => [{ lang: "en-GB", localService: true }],
+      value: Object.assign(new EventTarget(), {
+        getVoices: () => [{ lang: "en-GB", localService: true, voiceURI: "test", name: "Test" }],
         speak: (utterance: unknown) => {
           state.calls++;
           state.utterance = utterance;
@@ -29,7 +29,7 @@ test("voice playback, pause and voice-off leave the committed passage unchanged"
         resume: () => {
           state.resumes++;
         },
-      },
+      }),
     });
     Object.defineProperty(window, "SpeechSynthesisUtterance", {
       value: class {
@@ -44,7 +44,8 @@ test("voice playback, pause and voice-off leave the committed passage unchanged"
   await page.getByRole("button", { name: "Play an existing story" }).click();
   const heading = page.getByRole("heading", { name: "The Girl in the Photograph" });
   await expect(heading).toBeVisible();
-  await page.getByText("Reading preferences", { exact: true }).click();
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByLabel("Narrator", { exact: true }).selectOption("device:test");
   await page.getByLabel("Read aloud", { exact: true }).check();
   await expect
     .poll(() =>
@@ -91,14 +92,16 @@ test("a declarative cinematic can be skipped without changing its story result",
   test.setTimeout(60000);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.route("**/stories/house/en.json", async (route) => {
-    const response = await route.fetch();
-    const bundle = await response.json();
-    bundle.scenes.room.blocks.find(
-      (block: { layout?: string }) => block.layout === "fullscreen",
-    ).durationMs = 100;
-    bundle.scenes.room.events.find(
-      (event: { blocking?: boolean }) => event.blocking,
-    ).action.effect.duration = 5000;
+    const bundle = structuredClone(houseBundles.en!);
+    const room = bundle.scenes!.room!;
+    const block = room.blocks!.find(
+      (block) => block.kind === "media" && block.layout === "fullscreen",
+    );
+    const event = room.events!.find((event) => event.blocking && event.action.kind === "effect");
+    if (block?.kind !== "media" || event?.action.kind !== "effect")
+      throw new Error("Missing cinematic fixture");
+    block.durationMs = 100;
+    event.action.effect.duration = 5000;
     await route.fulfill({ json: bundle });
   });
   await page.goto("/");
@@ -108,17 +111,19 @@ test("a declarative cinematic can be skipped without changing its story result",
   await page.locator(".prose p").first().click();
   await page.getByRole("button", { name: "Ask about the locked room", exact: true }).click();
   const cinematic = page.locator(".cinematic-dialog");
+  const stage = await cinematic.locator(".cinematic-stage").elementHandle();
   await cinematic.getByRole("button", { name: "Pause", exact: true }).click();
   const viewport = page.viewportSize()!;
+  const toolbar = (await page.locator(".reader-toolbar").boundingBox())!;
   const dialogBounds = (await cinematic.boundingBox())!;
   expect(dialogBounds.x).toBe(0);
-  expect(dialogBounds.y).toBe(0);
+  expect(dialogBounds.y).toBeCloseTo(toolbar.y + toolbar.height, 0);
   expect(dialogBounds.width).toBeCloseTo(viewport.width, 0);
-  expect(dialogBounds.height).toBeCloseTo(viewport.height, 0);
-  const image = cinematic.locator('.multiplane-plane[data-role="background"] img');
+  expect(dialogBounds.height).toBeCloseTo(viewport.height - dialogBounds.y, 0);
+  const image = cinematic.locator(".shot-image").first();
   const imageBounds = (await image.boundingBox())!;
   expect(imageBounds.width).toBeGreaterThanOrEqual(viewport.width - 1);
-  expect(imageBounds.height).toBeGreaterThanOrEqual(viewport.height - 1);
+  expect(imageBounds.height).toBeGreaterThanOrEqual(dialogBounds.height - 1);
   await expect(image).toHaveCSS("object-fit", "cover");
   await cinematic.getByRole("button", { name: "Resume", exact: true }).click();
   await cinematic.getByRole("button", { name: "Skip cinematic", exact: true }).focus();
@@ -127,9 +132,8 @@ test("a declarative cinematic can be skipped without changing its story result",
   await page.locator(".prose p").first().click();
   await expect(page.locator(".prose")).toContainText("twenty-nine years");
   await expect(page.getByRole("button", { name: "Continue reading", exact: true })).toBeEnabled();
-  const running = await page
-    .locator(".cinematic-stage")
-    .evaluate((stage) => stage.getAnimations({ subtree: true }).length);
+  const running = await stage!.evaluate((stage) => stage.getAnimations({ subtree: true }).length);
+  await stage!.dispose();
   expect(running).toBe(0);
   await expect(page.locator(".prose .media-fullscreen")).toHaveCount(0);
   await page.getByRole("button", { name: "Replay page", exact: true }).click();

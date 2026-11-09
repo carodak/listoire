@@ -11,7 +11,10 @@ from requirements whose assumed runtime does not exist in this repository.
 2. Select English or French. Edit the actual Ink script, localized title and settings.
    Switching languages preserves every draft. Additional languages start explicitly
    unreviewed and do not inherit another language's recorded narration.
-3. Use Story, Logic, Media, Game and Review ribbons. Game is hidden in Narrative Only.
+3. Use Text, Story, Logic, Media, Game and Review ribbons. Game is hidden in Narrative Only.
+   Text formats selected words with expressive presets, size, font, color, spacing,
+   shape and orientation. Hover or focus a preset to preview it, then Apply to selection.
+   See [the typography contract](typography.md) for source syntax and limits.
    Additional Commands contains all ten upstream Inky Web categories and all longer
    examples. Parameter dialogs supplement, rather than restrict, manual Ink.
 4. Save is automatic after a 1.2-second editing pause. Manual Save also creates a
@@ -58,17 +61,17 @@ randomness stay in application/domain composition, outside React event handlers.
 
 ## Reuse and ownership
 
-| Area                  | Implementation                                                                                                                                              |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Editing               | Pinned Inky Web Ace editor, Ink syntax mode, search/replace extension and complete command definitions/examples                                             |
-| Undo/redo             | Upstream Ace UndoManager stores one project-wide transaction stream, including metadata and translations; typing is coalesced and capped at 30 transactions |
-| Compilation           | Existing installed `inkjs/full`, isolated in short-lived workers with a 15-second timeout                                                                   |
-| Progression           | Existing InkNarrativeEngine behind NarrativeEngine and StoryDirector; authored untagged Ink also works                                                      |
-| Preview               | Existing `createPlayer` and `StoryPlayer`, with isolated SaveManager storage                                                                                |
-| Presentation          | Existing PresentationSession, EffectsEngine, React Bits registry, AudioManager and NarrationManager                                                         |
-| Authoring persistence | `listoire-editor/projects`, with schema validation, serialized writes and optimistic revision checks                                                        |
-| Reader persistence    | Existing `listoire/records`; editor versions never overwrite gameplay checkpoints                                                                           |
-| Source builds         | `build-story.ts` retains foundation fixtures; `build-editor-project.ts` compiles the house project and verifies licensed media bytes                        |
+| Area                  | Implementation                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Editing               | Pinned Inky Web Ace editor, Ink syntax mode, search/replace extension and complete command definitions/examples                                               |
+| Undo/redo             | A bounded list stores complete project versions, including metadata and translations; typing is coalesced and capped at 30 transactions. No Ace delta adapter |
+| Compilation           | Existing installed `inkjs/full`, isolated in short-lived workers with a 15-second timeout                                                                     |
+| Progression           | Existing InkNarrativeEngine behind NarrativeEngine and StoryDirector; authored untagged Ink also works                                                        |
+| Preview               | Existing `createPlayer` and `StoryPlayer`, with isolated SaveManager storage                                                                                  |
+| Presentation          | Existing PresentationSession, EffectsEngine, React Bits registry, AudioManager and NarrationManager                                                           |
+| Authoring persistence | `listoire-editor/projects`, with schema validation, serialized writes and optimistic revision checks                                                          |
+| Reader persistence    | Existing `listoire/records`; editor versions never overwrite gameplay checkpoints                                                                             |
+| Source builds         | `build-story.ts` retains foundation fixtures; `build-editor-project.ts` compiles the house project and verifies licensed media bytes                          |
 
 Native Ink remains editable. Ribbon insertion uses Ace's insertion primitive and the
 upstream examples. Structure commands share IDs and safe source coordinates across
@@ -301,3 +304,11 @@ commercial preset library. Gentle tracking uses depth ratios 1 / .5 / .15; dolly
 projection changes apparent scale differently at each distance, and Character Focus
 keeps the middleground subject stationary while distant layers shift. Duration is
 adjustable, with finite movement rather than scroll-driven or endless camera loops.
+
+The reader consumes the shared `ReaderController` and `ReaderSnapshot` contracts;
+`StoryDirector` implements progression and owns save rollback and cancellation.
+Editor undo/redo returns a project snapshot directly. The project hook owns the
+single state-update path; it does not mirror history availability in React state.
+Command forms use native FormData, and repeated input markup uses the existing
+editor field components. Smart cropping keeps canvas work in `smart-crop.ts` and
+resource cancellation in the React hook, retaining the original-image fallback.

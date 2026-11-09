@@ -2,7 +2,7 @@ import type { ReactNode, CSSProperties } from "react";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
-import { useSmartCrop } from "../presentation/use-smart-crop.ts";
+import { useSmartCrop } from "../presentation/smart-crop.ts";
 import { useAssetSource } from "../presentation/use-asset-source.ts";
 
 type Media = Extract<PresentationBlock, { kind: "media" }>;

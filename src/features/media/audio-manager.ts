@@ -1,11 +1,9 @@
 export type AudioChannel = "sfx" | "ambience" | "music" | "narration";
 export type PlaybackResult = "ended" | "blocked" | "aborted" | "error" | "timeout" | "unavailable";
-export interface Playback {
-  finished: Promise<PlaybackResult>;
+interface SpeechControls {
   stop: () => void;
   pause: () => void;
   resume: () => void;
-  seek: (seconds: number) => void;
 }
 interface Track {
   channel: AudioChannel;
@@ -27,9 +25,11 @@ export class AudioManager {
   };
   private muted = false;
   private ducked = false;
+  private musicGain = 1;
+  private duckTimer: ReturnType<typeof setTimeout> | undefined;
   private paused = false;
   private narrationRate: number | null = null;
-  private speech: Playback | null = null;
+  private speech: SpeechControls | null = null;
   private utterance: SpeechSynthesisUtterance | null = null;
   private readonly factory: (url: string) => HTMLAudioElement;
   constructor(factory: (url: string) => HTMLAudioElement = (url) => new Audio(url)) {
@@ -45,7 +45,7 @@ export class AudioManager {
             1,
             track.gain *
               this.volumes[track.channel] *
-              (this.ducked && ["music", "ambience"].includes(track.channel) ? 0.25 : 1),
+              (["music", "ambience"].includes(track.channel) ? this.musicGain : 1),
           );
   }
   setVolume(channel: AudioChannel, volume: number) {
@@ -57,8 +57,19 @@ export class AudioManager {
     this.applyVolumes();
   }
   setDucking(value: boolean) {
+    if (this.ducked === value) return;
     this.ducked = value;
-    this.applyVolumes();
+    clearTimeout(this.duckTimer);
+    const from = this.musicGain;
+    const to = value ? 0.25 : 1;
+    const start = performance.now();
+    const tick = () => {
+      const fraction = Math.min(1, (performance.now() - start) / 600);
+      this.musicGain = from + (to - from) * (fraction * fraction * (3 - 2 * fraction));
+      this.applyVolumes();
+      if (fraction < 1) this.duckTimer = setTimeout(tick, 24);
+    };
+    tick();
   }
   setRate(rate: number) {
     this.narrationRate = Math.max(0.5, Math.min(2, rate));
@@ -88,7 +99,7 @@ export class AudioManager {
     maxMs?: number;
     gain?: number;
     fadeMs?: number;
-  }): Playback {
+  }): Promise<PlaybackResult> {
     if (replace && channel !== "sfx") this.stopChannel(channel);
     const existing = [...this.tracks].filter((track) => track.channel === channel);
     if (existing.length >= (channel === "sfx" ? 4 : 2)) existing[0]?.stop();
@@ -101,17 +112,13 @@ export class AudioManager {
       audio = this.factory(url);
     } catch {
       resolve("unavailable");
-      return { finished, stop() {}, pause() {}, resume() {}, seek() {} };
+      return finished;
     }
     let settled = false;
     const finish = (result: PlaybackResult) => {
       if (settled) return;
       settled = true;
-      clearTimeout(startTimer);
-      clearTimeout(deadline);
-      clearInterval(envelope);
-      clearInterval(progressTimer);
-      audio.pause();
+      track.pause();
       signal.removeEventListener("abort", abort);
       audio.removeEventListener("ended", ended);
       audio.removeEventListener("error", error);
@@ -187,19 +194,7 @@ export class AudioManager {
     signal.addEventListener("abort", abort, { once: true });
     if (signal.aborted) abort();
     else attempt();
-    return {
-      finished,
-      stop: abort,
-      pause: track.pause,
-      resume: track.resume,
-      seek: (seconds) => {
-        if (!settled && Number.isFinite(seconds))
-          audio.currentTime = Math.max(
-            0,
-            Math.min(Number.isFinite(audio.duration) ? audio.duration : seconds, seconds),
-          );
-      },
-    };
+    return finished;
   }
 
   crossfade(
@@ -215,12 +210,15 @@ export class AudioManager {
     const incoming = [...this.tracks].find(
       (track) => track.channel === channel && !old.includes(track),
     );
+    const startingGains = old.map((track) => track.gain);
     const started = performance.now();
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       const progress = Math.min(1, (performance.now() - started) / Math.max(1, duration));
       if (incoming) incoming.gain = progress * gain;
-      for (const track of old) track.gain = 1 - progress;
+      old.forEach((track, index) => {
+        track.gain = startingGains[index]! * (1 - progress);
+      });
       this.applyVolumes();
       if (progress < 1 && !signal.aborted) timer = setTimeout(tick, 32);
       else old.forEach((track) => track.stop());
@@ -231,7 +229,7 @@ export class AudioManager {
     };
     signal.addEventListener("abort", cancel, { once: true });
     tick();
-    void transport.finished.then(() => {
+    void transport.then(() => {
       cancel();
       signal.removeEventListener("abort", cancel);
     });
@@ -245,7 +243,7 @@ export class AudioManager {
     signal: AbortSignal,
     onBoundary: (index: number, length: number) => void,
     selection?: { uri: string; pitch?: number },
-  ): Playback {
+  ): Promise<PlaybackResult> {
     this.speech?.stop();
     const synth = globalThis.speechSynthesis;
     const available = synth
@@ -253,13 +251,7 @@ export class AudioManager {
       .filter((voice) => voice.lang.toLowerCase().startsWith(locale.toLowerCase()));
     const voice = available?.find((voice) => voice.voiceURI === selection?.uri) ?? available?.[0];
     if (!synth || !voice || typeof SpeechSynthesisUtterance === "undefined" || signal.aborted)
-      return {
-        finished: Promise.resolve("unavailable"),
-        stop() {},
-        pause() {},
-        resume() {},
-        seek() {},
-      };
+      return Promise.resolve("unavailable");
     const utterance = new SpeechSynthesisUtterance(text);
     this.utterance = utterance;
     utterance.volume = this.muted ? 0 : this.volumes.narration;
@@ -304,7 +296,6 @@ export class AudioManager {
     utterance.onerror = () => cleanup("error");
     signal.addEventListener("abort", stop, { once: true });
     const transport = {
-      finished,
       stop,
       pause: () => {
         if (paused || settled) return;
@@ -320,16 +311,17 @@ export class AudioManager {
         timer = setTimeout(timeout, Math.max(1, remaining));
         synth.resume();
       },
-      seek() {},
     };
     this.speech = transport;
     try {
+      // Browsers can retain their paused flag after canceling the previous page.
+      if (!this.paused) synth.resume();
       synth.speak(utterance);
       if (this.paused) transport.pause();
     } catch {
       cleanup("blocked");
     }
-    return transport;
+    return finished;
   }
 
   pause() {
@@ -353,5 +345,6 @@ export class AudioManager {
   }
   dispose() {
     this.stopAll();
+    clearTimeout(this.duckTimer);
   }
 }

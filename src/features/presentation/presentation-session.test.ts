@@ -13,6 +13,59 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
+it("reveals all text without completing or stopping an illustration animation", async () => {
+  vi.useFakeTimers();
+  let finish!: (result: "ended") => void;
+  const play = vi.spyOn(EffectsEngine.prototype, "play").mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  const stop = vi.spyOn(EffectsEngine.prototype, "stop");
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Illustration",
+      progress: 0,
+      events: [
+        {
+          id: "camera",
+          blockId: "picture",
+          trigger: { kind: "block", blockId: "picture" },
+          blocking: false,
+          action: { kind: "effect", effect: { id: "slow-zoom", duration: 2000, scale: 1.1 } },
+        },
+      ],
+    },
+  };
+  const session = new PresentationSession(bundle, {
+    ...defaultReadingPreferences,
+    narration: false,
+    reveal: "instant",
+  });
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "new",
+    false,
+  );
+  session.bind({ canvas: {} as HTMLElement }, "picture");
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledOnce();
+  stop.mockClear();
+  session.revealRemaining();
+  expect(stop).not.toHaveBeenCalled();
+  expect(session.getSnapshot()).toMatchObject({
+    revealAll: true,
+    skipMedia: false,
+    completedBlocks: [],
+  });
+  finish("ended");
+  await Promise.resolve();
+  expect(session.getSnapshot().completedBlocks).toContain("picture");
+  session.skipCinematic();
+  expect(session.getSnapshot().skipMedia).toBe(true);
+  session.dispose();
+});
 it("starts segment sound effects at narration onset, once, and retains them in instant text mode", async () => {
   vi.useFakeTimers();
   const bundle = fixtureBundle();
@@ -40,13 +93,7 @@ it("starts segment sound effects at narration onset, once, and retains them in i
     },
   );
   const audio = new AudioManager();
-  const play = vi.spyOn(audio, "play").mockReturnValue({
-    finished: Promise.resolve("ended"),
-    stop() {},
-    pause() {},
-    resume() {},
-    seek() {},
-  });
+  const play = vi.spyOn(audio, "play").mockReturnValue(Promise.resolve("ended"));
   const session = new PresentationSession(
     bundle,
     { ...defaultReadingPreferences, sound: true, narration: true, reveal: "instant" },
@@ -121,14 +168,11 @@ it("resumes only visible videos and keeps expired or not-yet-visible media silen
 it("waits for video data before starting its bounded fullscreen cue and removes pending listeners on departure", async () => {
   vi.useFakeTimers();
   let finish!: (result: "aborted") => void;
-  const play = vi.spyOn(EffectsEngine.prototype, "play").mockReturnValue({
-    finished: new Promise((resolve) => {
+  const play = vi.spyOn(EffectsEngine.prototype, "play").mockReturnValue(
+    new Promise((resolve) => {
       finish = resolve;
     }),
-    stop() {},
-    pause() {},
-    resume() {},
-  });
+  );
   const bundle = fixtureBundle();
   bundle.scenes = {
     threshold: {
@@ -175,11 +219,9 @@ it("waits for video data before starting its bounded fullscreen cue and removes 
   finish("aborted");
 });
 
-it("runs scene exit transitions on departure, never on entry", async () => {
+it("keeps the paper surface opaque on entry and departure", async () => {
   vi.useFakeTimers();
-  const play = vi
-    .spyOn(EffectsEngine.prototype, "play")
-    .mockReturnValue({ finished: Promise.resolve("ended"), stop() {}, pause() {}, resume() {} });
+  const play = vi.spyOn(EffectsEngine.prototype, "play").mockReturnValue(Promise.resolve("ended"));
   const bundle = fixtureBundle();
   bundle.scenes = {
     threshold: {
@@ -204,9 +246,9 @@ it("runs scene exit transitions on departure, never on entry", async () => {
   );
   session.bindPage({} as HTMLElement);
   await vi.advanceTimersByTimeAsync(1);
-  expect(play.mock.calls.map((call) => call[0].id)).toEqual(["fade-in"]);
+  expect(play).not.toHaveBeenCalled();
   await session.leave();
-  expect(play.mock.calls.at(-1)![0]).toMatchObject({ id: "fade-out", duration: 900 });
+  expect(play).not.toHaveBeenCalled();
   expect(session.getSnapshot().departed).toBe(true);
   session.dispose();
 });
@@ -259,13 +301,7 @@ it("restarts image timing on replay and cancels an earlier page timer", async ()
 it("keeps the same music track across authored pages and cancels it when the player is disposed", async () => {
   vi.useFakeTimers();
   const audio = new AudioManager();
-  const play = vi.spyOn(audio, "play").mockReturnValue({
-    finished: new Promise(() => {}),
-    stop() {},
-    pause() {},
-    resume() {},
-    seek() {},
-  });
+  const play = vi.spyOn(audio, "play").mockReturnValue(new Promise(() => {}));
   const bundle = {
     ...fixtureBundle(),
     authored: true,

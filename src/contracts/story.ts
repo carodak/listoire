@@ -1,8 +1,12 @@
 import { z } from "zod";
+import { TypographySpanSchema, validTypographySpans } from "./typography.ts";
 import { GameDefinitionSchema, GameStateSchema } from "./game.ts";
+import type { GameDefinition, GameState, CombatOption, CheckOption, PlayerMove } from "./game.ts";
 import { validateSceneModels } from "./scene3d.ts";
 import { CharacterDefinitionSchema, CharacterSchema } from "./character.ts";
-import { NarrationClipSchema, SpeechSettingsSchema, VoiceProfileSchema } from "./media.ts";
+import type { CharacterProfile, AttributeDetails } from "./character.ts";
+import { NarrationClipSchema } from "./media.ts";
+import { SpeechSettingsSchema, VoiceProfileSchema } from "./speech.ts";
 import { validateScenePresentation } from "./presentation-validation.ts";
 import {
   ExaminationSchema,
@@ -17,10 +21,15 @@ const variableId = z.string().regex(/^[a-z][a-z0-9._-]*$/);
 export const LocaleSchema = z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/);
 export type Locale = z.infer<typeof LocaleSchema>;
 
-const SegmentSchema = z.object({ id, text: z.string().min(1).max(10_000) }).strict();
+const typography = z.array(TypographySpanSchema).max(500).optional();
+const SegmentSchema = z
+  .object({ id, text: z.string().min(1).max(10_000), typography })
+  .strict()
+  .refine(validTypographySpans);
 const ChoiceSchema = z
-  .object({ id, text: z.string().min(1).max(500), gameAction: id.optional() })
-  .strict();
+  .object({ id, text: z.string().min(1).max(500), typography, gameAction: id.optional() })
+  .strict()
+  .refine(validTypographySpans);
 export const FrameSchema = z
   .object({
     passageId: id,
@@ -97,7 +106,7 @@ export const BundleSchema = z
     const assets = new Map(bundle.assets?.map((asset) => [asset.id, asset]));
     validateCompositions(assets, invalid);
     if (assets.size !== (bundle.assets?.length ?? 0)) invalid("Duplicate asset ID");
-    if (bundle.cover && assets.get(bundle.cover)?.type !== "image") invalid("Unknown cover image");
+    validateImageReferences(bundle.cover, bundle.game?.encounters ?? [], assets, invalid);
     for (const [passageId, scene] of Object.entries(bundle.scenes ?? {})) {
       if (!bundle.passages[passageId]) invalid("Unknown scene passage");
       validateScenePresentation(
@@ -119,6 +128,18 @@ export const BundleSchema = z
         invalid("Invalid narration reference");
   });
 export type StoryBundle = z.infer<typeof BundleSchema>;
+
+function validateImageReferences(
+  cover: string | undefined,
+  encounters: GameDefinition["encounters"],
+  assets: Map<string, { type: string }>,
+  invalid: (message: string) => void,
+) {
+  if (cover && assets.get(cover)?.type !== "image") invalid("Unknown cover image");
+  for (const encounter of encounters)
+    if (encounter.portrait && assets.get(encounter.portrait)?.type !== "image")
+      invalid("Unknown opponent portrait");
+}
 
 export const StoryManifestSchema = z
   .object({
@@ -173,9 +194,37 @@ export type ReaderSettings = z.infer<typeof SettingsSchema>;
 export interface NarrativeEngine {
   advance(): Frame;
   choose(choiceId: string): void;
-  setGameFacts?(facts: Record<string, number | boolean>): void;
+  setGameFacts(facts: Record<string, number | boolean>): void;
   serialize(): string;
   restore(state: string, frame?: Frame): void;
+}
+
+export interface ReaderSnapshot {
+  game: GameState | null;
+  frame: Frame | null;
+  occurrenceId: string | null;
+  busy: boolean;
+  failure: FailureCode | null;
+  restored: boolean;
+  character: CharacterProfile | null;
+  attributeDetails: AttributeDetails | null;
+  canGoBack: boolean;
+  combatOptions: CombatOption[];
+  checkOptions: Record<string, CheckOption>;
+}
+
+export interface ReaderController {
+  load(): Promise<void>;
+  getSnapshot(): ReaderSnapshot;
+  subscribe(listener: () => void): () => void;
+  choose(choiceId: string, occurrenceId: string): Promise<void>;
+  gameTurn(move: PlayerMove, occurrenceId: string): Promise<void>;
+  rollCheck(occurrenceId: string): Promise<void>;
+  finishCheck(occurrenceId: string): Promise<void>;
+  finishEvent(occurrenceId: string): Promise<void>;
+  restart(): Promise<void>;
+  replay(): Promise<void>;
+  back(): Promise<void>;
 }
 
 export type FailureCode =

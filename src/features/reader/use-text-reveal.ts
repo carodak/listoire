@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { narrationLead, advanceReveal, revealParagraphs } from "./text-reveal.ts";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { Frame } from "../../contracts/story.ts";
 
 export function useTextReveal(
-  frame: Frame | null,
+  frame: Frame,
   instant: boolean,
   transport?: {
     paused: boolean;
@@ -11,29 +12,61 @@ export function useTextReveal(
     voice?: string;
   },
 ) {
-  const [count, setCount] = useState(0);
   const [finished, setFinished] = useState(instant);
   if (instant && !finished) setFinished(true);
-  const elapsed = useRef(0);
-  const [floor, setFloor] = useState(0);
   const segments = useMemo(
     () =>
-      frame?.segments.map((segment) => ({
+      frame.segments.map((segment) => ({
         ...segment,
         letters: Array.from(
           new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(segment.text),
           (part) => ({ text: part.segment, end: part.index + part.segment.length }),
         ),
-      })) ?? [],
+      })),
     [frame],
   );
   const total = segments.reduce((sum, segment) => sum + segment.letters.length, 0);
   const paused = transport?.paused ?? false;
   const narrated = transport?.voice === "playing" || transport?.voice === "paused";
+  const finish = useCallback(() => setFinished(true), []);
+  const limit =
+    transport && (transport.synchronized || narrated)
+      ? narrationLead(segments, transport.progress)
+      : total;
+  const visibleCount = useRevealClock(
+    instant,
+    paused,
+    total,
+    finish,
+    limit,
+    Boolean(transport?.synchronized || narrated),
+  );
+  const paragraphs = revealParagraphs(segments, visibleCount, instant || finished);
+  return {
+    complete:
+      instant || finished || paragraphs.every((paragraph) => paragraph.visible === paragraph.text),
+    paragraphs,
+    finish,
+  };
+}
+
+function useRevealClock(
+  instant: boolean,
+  paused: boolean,
+  total: number,
+  finish: () => void,
+  limit: number,
+  narrated: boolean,
+) {
+  const cursor = useRef(0);
+  const target = useRef(limit);
+  useLayoutEffect(() => {
+    target.current = limit;
+  }, [limit]);
+  const [count, setCount] = useState(0);
   useEffect(() => {
-    if (instant || paused || narrated) return;
+    if (instant || paused) return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    const finish = () => setFinished(true);
     const reduce = () => {
       if (motion.matches) finish();
     };
@@ -41,54 +74,23 @@ export function useTextReveal(
       if (document.hidden) finish();
     };
     if (motion.matches || document.hidden) finish();
-    const start = performance.now() - elapsed.current;
+    let previous = performance.now();
     let timer = 0;
-    const tick = () => {
-      elapsed.current = performance.now() - start;
-      const next = Math.floor(elapsed.current / 13);
+    const tick = (now: number) => {
+      cursor.current = advanceReveal(cursor.current, now - previous, target.current, narrated);
+      previous = now;
+      const next = Math.floor(cursor.current);
       setCount(next);
-      if (next < total) timer = window.setTimeout(tick, 32);
+      if (next < total) timer = requestAnimationFrame(tick);
     };
-    tick();
+    timer = requestAnimationFrame(tick);
     motion.addEventListener("change", reduce);
     document.addEventListener("visibilitychange", hide);
     return () => {
-      clearTimeout(timer);
+      cancelAnimationFrame(timer);
       motion.removeEventListener("change", reduce);
       document.removeEventListener("visibilitychange", hide);
     };
-  }, [instant, paused, narrated, total]);
-  const wanted = paused
-    ? floor
-    : transport && (transport.synchronized || narrated)
-      ? segments.reduce(
-          (sum, segment) =>
-            sum +
-            segment.letters.filter((letter) => letter.end <= (transport.progress[segment.id] ?? 0))
-              .length,
-          0,
-        )
-      : count;
-  const visibleCount = Math.max(floor, wanted);
-  if (visibleCount > floor) setFloor(visibleCount);
-  const paragraphs = segments.map((segment, index) => {
-    const start = segments.slice(0, index).reduce((sum, prior) => sum + prior.letters.length, 0);
-    return {
-      id: segment.id,
-      text: segment.text,
-      visible:
-        instant || finished
-          ? segment.text
-          : segment.letters
-              .slice(0, Math.max(0, visibleCount - start))
-              .map((letter) => letter.text)
-              .join(""),
-    };
-  });
-  return {
-    complete:
-      instant || finished || paragraphs.every((paragraph) => paragraph.visible === paragraph.text),
-    paragraphs,
-    finish: () => setFinished(true),
-  };
+  }, [instant, paused, total, finish, narrated]);
+  return count;
 }

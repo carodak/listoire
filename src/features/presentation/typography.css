@@ -1,0 +1,99 @@
+.narrative-type {
+  overflow-wrap: anywhere;
+}
+.type-style-shout,
+.type-style-impact {
+  font-weight: 900;
+}
+.type-style-whisper {
+  font-style: italic;
+}
+.type-size-normal {
+  font-size: 1em;
+}
+.type-size-small {
+  font-size: 0.8em;
+}
+.type-size-large {
+  font-size: 1.4em;
+}
+.type-size-huge {
+  font-size: 1.85em;
+}
+.type-font-serif {
+  font-family: Georgia, serif;
+}
+.type-font-sans {
+  font-family: system-ui, sans-serif;
+}
+.type-font-mono {
+  font-family: ui-monospace, monospace;
+}
+.type-font-handwritten {
+  font-family: "Listoire Handwriting", "Segoe Print", "Bradley Hand", cursive;
+}
+.type-color-crimson {
+  color: color-mix(in srgb, #a52d40 65%, currentColor);
+}
+.type-color-ocean {
+  color: color-mix(in srgb, #236784 65%, currentColor);
+}
+.type-color-forest {
+  color: color-mix(in srgb, #346943 65%, currentColor);
+}
+.type-color-gold {
+  color: color-mix(in srgb, #866016 65%, currentColor);
+}
+.type-color-violet {
+  color: color-mix(in srgb, #75508b 65%, currentColor);
+}
+.type-direction-diagonal-up,
+.type-direction-diagonal-down {
+  display: inline-block;
+  max-inline-size: 100%;
+  margin-block: 0.35em;
+  transform: rotate(-10deg);
+}
+.type-direction-diagonal-down {
+  transform: rotate(10deg);
+}
+.type-direction-vertical {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  vertical-align: middle;
+  line-height: 1.1;
+  margin-inline: 0.25em;
+}
+.type-spacing-wide {
+  letter-spacing: 0.14em;
+}
+.type-spacing-extra-wide {
+  letter-spacing: 0.3em;
+}
+.type-shape-outline {
+  -webkit-text-stroke: 0.035em currentColor;
+  -webkit-text-fill-color: var(--paper, #fff9ef);
+  text-shadow: 0.04em 0.04em 0 var(--paper, #fff9ef);
+}
+.type-letter {
+  display: inline-block;
+  white-space: pre;
+  transform: translateY(var(--letter-offset));
+}
+.type-shape-wave {
+  display: inline-block;
+  padding-block: 0.18em;
+}
+.type-shape-cascade {
+  display: inline-block;
+  padding-bottom: 1.1em;
+}
+@media (forced-colors: active) {
+  .narrative-type {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+  }
+}

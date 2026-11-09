@@ -1,43 +1,40 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import type { AceUndoManager, ProjectDelta } from "./ace.ts";
+
+interface Version {
+  before: string;
+  after: string;
+  label: string;
+  at: number;
+}
 
 export class ProjectHistory {
-  private readonly manager: AceUndoManager;
-  private last: { label: string; at: number; delta: ProjectDelta } | undefined;
-  constructor(manager: AceUndoManager, restore: (project: StoryProject) => void) {
-    this.manager = manager;
-    this.document = {
-      undoChanges: (sets: ProjectDelta[]) => restore(JSON.parse(sets[0]!.deltas[0]!.lines[0]!)),
-      redoChanges: (sets: ProjectDelta[]) => restore(JSON.parse(sets.at(-1)!.deltas[0]!.lines[1]!)),
-    };
-  }
-  private readonly document;
+  private readonly versions: Version[] = [];
+  private cursor = 0;
+  private last: Version | undefined;
   record(before: StoryProject, after: StoryProject, label: string, now = Date.now()) {
     if (this.last?.label === label && now - this.last.at < 750) {
-      this.last.delta.deltas[0]!.lines[1] = JSON.stringify(after);
+      this.last.after = JSON.stringify(after);
       this.last.at = now;
     } else {
-      const delta = {
-        group: "project",
-        deltas: [{ lines: [JSON.stringify(before), JSON.stringify(after)] }],
-      };
-      this.manager.execute({ args: [[delta], this.document] });
-      if (this.manager.$undoStack.length > 30) this.manager.$undoStack.shift();
-      this.last = { label, at: now, delta };
+      this.versions.splice(this.cursor);
+      this.last = { before: JSON.stringify(before), after: JSON.stringify(after), label, at: now };
+      this.versions.push(this.last);
+      if (this.versions.length > 30) this.versions.shift();
+      this.cursor = this.versions.length;
     }
   }
-  undo() {
+  undo(): StoryProject | undefined {
     this.last = undefined;
-    this.manager.undo();
+    if (this.canUndo) return JSON.parse(this.versions[--this.cursor]!.before);
   }
-  redo() {
+  redo(): StoryProject | undefined {
     this.last = undefined;
-    this.manager.redo();
+    if (this.canRedo) return JSON.parse(this.versions[this.cursor++]!.after);
   }
   get canUndo() {
-    return this.manager.hasUndo();
+    return this.cursor > 0;
   }
   get canRedo() {
-    return this.manager.hasRedo();
+    return this.cursor < this.versions.length;
   }
 }

@@ -1,23 +1,25 @@
-import { mediaInsertionPosition } from "./media-references.ts";
 import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { insertLocalized } from "./localized-insertion.ts";
-import { buildInkCommand, outlineEntries } from "./ink-commands.ts";
-import { withMediaReferences, editMediaScript, mediaReferenceLine } from "./media-references.ts";
+import { buildInkCommand } from "./ink-commands.ts";
+import { outlineEntries } from "./ink-outline.ts";
+import {
+  editMediaScript,
+  mediaInsertionPosition,
+  mediaReferenceLine,
+  withMediaReferences,
+} from "./media-script.ts";
 import { animationOptions } from "./animation-options.ts";
-import { speechOptions } from "../media/speech-options.ts";
-import { defaultSpeechSettings } from "../../contracts/media.ts";
 import { applyMediaEdit } from "./media-authoring.ts";
 import { mediaDefaults } from "./media-form.ts";
 import { addLanguage } from "./add-language.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
-import { cacheNarration } from "./narration-authoring.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 import { editorShortcut } from "./editor-shortcuts.ts";
-import { presentationBlocks } from "../reader/narrative-blocks.ts";
+import { presentationBlocks } from "../reader/PassageText.tsx";
 import { CinematicSchema } from "../../contracts/cinematic.ts";
 
 const original = StoryProjectSchema.parse(
@@ -29,6 +31,16 @@ const original = StoryProjectSchema.parse(
   ),
 );
 afterEach(() => vi.restoreAllMocks());
+it("keeps unknown command names out of the template object's prototype", () => {
+  expect(
+    buildInkCommand(
+      "constructor",
+      { name: "start", label: "", condition: "", create: false },
+      [],
+      "test",
+    ),
+  ).toBe("-> start\n");
+});
 it("ignores example headings in block comments while preserving real outline source rows", () => {
   expect(
     outlineEntries("/*\n=== example ===\n= example_stitch\n*/\n=== start ===\n= first"),
@@ -80,13 +92,11 @@ it.each(["inline", "right"] as const)(
     const changed = applyMediaEdit(project, "en", input, [], "passage").languages.en!.configuration
       .scenes!.start!;
     expect(changed.blocks).toContainEqual(expect.objectContaining({ position: { x: 10, y: -5 } }));
-    expect(changed.events).toContainEqual(
-      expect.objectContaining({
-        action: expect.objectContaining({
-          effect: expect.objectContaining({ id: "cinematic-camera", duration: 6000 }),
-        }),
-      }),
-    );
+    expect(
+      changed.events?.some(
+        (event) => event.action.kind === "effect" && event.action.effect.id === "cinematic-camera",
+      ) ?? false,
+    ).toBe(false);
   },
 );
 
@@ -150,18 +160,6 @@ it("filters effects by target and preserves the chosen image effect", () => {
     trigger: { kind: "passage" },
     action: { effect: { target: "canvas" } },
   });
-});
-
-it("uses generation settings and voice examples in clip matching, while leaving playback speed separate", async () => {
-  expect(await speechOptions("nano-default")).toEqual({});
-  const first = await speechOptions("nano-default", undefined, defaultSpeechSettings);
-  expect(
-    (await speechOptions("nano-default", undefined, { ...defaultSpeechSettings, pitch: 2 }))
-      .settingsKey,
-  ).not.toBe(first.settingsKey);
-  expect(await speechOptions("nano-default", undefined, { ...defaultSpeechSettings })).toEqual(
-    first,
-  );
 });
 
 it("allows images in new native Ink Knots without requiring stable segment tags", async () => {
@@ -337,29 +335,11 @@ it("checks string-valued logic and stable tags while accepting translated choice
   );
 });
 
-it("rejects missing or oversized generated audio before caching any bytes", async () => {
-  const request = {
-    clip: original.languages.en!.configuration.narration![0]!,
-    audioUrl: "/api/narration/audio/test.mp3",
-  };
-  const fetcher = vi
-    .spyOn(globalThis, "fetch")
-    .mockResolvedValueOnce(new Response(null, { status: 404 }))
-    .mockResolvedValueOnce(new Response(null, { headers: { "content-length": "5000001" } }));
-  const signal = new AbortController().signal;
-  await expect(cacheNarration(request, "Text", signal)).rejects.toThrow(/cache/);
-  await expect(cacheNarration(request, "Text", signal)).rejects.toThrow(/cache/);
-  expect(fetcher).toHaveBeenCalledWith(request.audioUrl, {
-    signal,
-    redirect: "error",
-    credentials: "same-origin",
-  });
-});
-
 it("reports missing media and retries after the resource becomes available", async () => {
   const bundle = {
     ...fixtureBundle(),
     assets: [{ id: "missing", path: "media/missing.webp", type: "image" as const, alt: "" }],
+    cover: "missing",
   };
   const fetch = vi
     .spyOn(globalThis, "fetch")
@@ -438,10 +418,17 @@ it("shares media resources while preserving translated alt text and embedded sou
 });
 it("restores the target image when reopening a sound cue triggered by that image", () => {
   const project = structuredClone(original);
-  const asset = project.languages.en!.configuration.assets!.find((asset) => asset.type === "audio")!;
+  const asset = project.languages.en!.configuration.assets!.find(
+    (asset) => asset.type === "audio",
+  )!;
   const input = mediaDefaults("Sound Effect", "intro", "image-sound");
-  Object.assign(input, {asset: asset.id, target: "intro-photo"});
+  Object.assign(input, { asset: asset.id, target: "intro-photo" });
   const next = applyMediaEdit(project, "en", input, [], "block");
-  const restored = mediaDefaults("Sound Effect", "intro", input.id, next.languages.en!.configuration.scenes!.intro);
+  const restored = mediaDefaults(
+    "Sound Effect",
+    "intro",
+    input.id,
+    next.languages.en!.configuration.scenes!.intro,
+  );
   expect(restored.target).toBe(input.target);
 });

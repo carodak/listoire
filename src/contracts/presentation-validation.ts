@@ -1,92 +1,35 @@
+import { validateMediaBlock } from "./media-validation.ts";
+import { validateEffectColors } from "./effect-colors.ts";
 import type { z } from "zod";
-import type { SceneSchema, PresentationBlock } from "./presentation.ts";
-import type { NarrativeEvent } from "./effects.ts";
+import { isMediaBlock } from "./presentation.ts";
+import type { SceneSchema } from "./presentation.ts";
+import type { NarrativeEvent } from "./narrative-events.ts";
 
 type Issue = (message: string) => void;
 type Assets = Map<string, { type: "image" | "audio" | "video" | "model3d" }>;
-type MediaBlock = Extract<PresentationBlock, { kind: "media" }>;
-
-function validateOrder(blocks: PresentationBlock[], segments: string[], invalid: Issue) {
-  const textIds = blocks.filter((block) => block.kind === "text").map((block) => block.segmentId);
-  if (JSON.stringify(textIds) !== JSON.stringify(segments))
-    invalid("Blocks must preserve every declared Ink segment in order");
-  if (
-    blocks.at(-1)?.kind !== "choices" ||
-    blocks.filter((block) => block.kind === "choices").length !== 1
-  )
-    invalid("Choices must be the final block");
-  const media = blocks.filter((block) => block.kind === "media");
-  if (new Set(media.map((block) => block.id)).size !== media.length)
-    invalid("Duplicate media block ID");
-  return media;
-}
-
-function validateColors(event: NarrativeEvent, palette: string[], invalid: Issue) {
-  if (event.action.kind !== "effect") return;
-  const effect = event.action.effect;
-  const props = "props" in effect ? effect.props : effect;
-  const colors = Object.entries(props)
-    .filter(([key]) => key.toLowerCase().includes("color"))
-    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]));
-  const normalize = (color: string) =>
-    color.length === 4
-      ? "#" +
-        color
-          .slice(1)
-          .split("")
-          .map((letter) => letter + letter)
-          .join("")
-      : color.toLowerCase();
-  for (const color of colors)
-    if (typeof color === "string" && !palette.map(normalize).includes(normalize(color)))
-      invalid("Effect color is outside the story palette");
-  const imageEffects = [
-    "react-bits.noise",
-    "react-bits.ripple-distortion",
-    "react-bits.grid-distortion",
-  ];
-  if (effect.id.startsWith("react-bits.") && !imageEffects.includes(effect.id) && !colors.length)
-    invalid("Colored effects need an explicit story palette");
-}
-
 function validateCues(
   events: NarrativeEvent[],
-  media: MediaBlock[],
+  ids: Set<string>,
   segments: string[],
   assets: Assets,
   invalid: Issue,
 ) {
-  const ids = new Set(media.map((block) => block.id));
+  const targets = new Set(["page", ...segments, ...ids]);
+  const triggerTargets = { block: ids, segment: new Set(segments) };
   if (new Set(events.map((event) => event.id)).size !== events.length)
     invalid("Duplicate event ID");
   for (const event of events) {
-    validateExit(event, invalid);
+    if (event.blockId && !targets.has(event.blockId)) invalid("Unknown event target block");
+    const trigger = event.trigger;
     if (
-      event.blockId &&
-      !ids.has(event.blockId) &&
-      event.blockId !== "page" &&
-      !segments.includes(event.blockId)
+      trigger.kind !== "passage" &&
+      !triggerTargets[trigger.kind].has(trigger[`${trigger.kind}Id`]!)
     )
-      invalid("Unknown event target block");
-    if (event.trigger.kind === "block" && !ids.has(event.trigger.blockId!))
-      invalid("Unknown block trigger");
-    if (event.trigger.kind === "segment" && !segments.includes(event.trigger.segmentId!))
-      invalid("Unknown segment trigger");
+      invalid("Unknown event trigger");
     if (event.action.kind === "audio" && assets.get(event.action.assetId)?.type !== "audio")
       invalid("Unknown audio cue");
   }
 }
-function validateExit(event: NarrativeEvent, invalid: Issue) {
-  if (event.phase !== "exit") return;
-  if (
-    event.blockId !== "page" ||
-    event.trigger.kind !== "passage" ||
-    event.action.kind !== "effect" ||
-    event.action.effect.id !== "fade-out"
-  )
-    invalid("Scene transitions require a page fade-out on passage exit");
-}
-
 export function validateScenePresentation(
   scene: z.infer<typeof SceneSchema>,
   segments: string[],
@@ -94,50 +37,20 @@ export function validateScenePresentation(
   palette: string[] | undefined,
   invalid: Issue,
 ) {
-  const media = scene.blocks ? validateOrder(scene.blocks, segments, invalid) : [];
-  const events = scene.events ?? [];
-  validateCues(events, media, segments, assets, invalid);
-  for (const block of media) validateMediaBlock(block, events, segments, assets, invalid);
-  if (palette) for (const event of events) validateColors(event, palette, invalid);
-}
-function validateMediaBlock(
-  block: MediaBlock,
-  events: NarrativeEvent[],
-  segments: string[],
-  assets: Assets,
-  invalid: Issue,
-) {
-  if (
-    block.examination &&
-    (block.layout === "fullscreen" ||
-      block.examination.image !== block.image ||
-      assets.get(block.image)?.type !== "image")
-  )
-    invalid("Only non-cinematic images can be examined, using their own image");
-  if (!["image", "video"].includes(assets.get(block.image)?.type ?? ""))
-    invalid("Unknown block media");
-  for (const id of block.motion?.layers ?? [])
-    if (assets.get(id)?.type !== "image") invalid("Parallax layers must reference library images");
-  validateIllustration(block, assets, invalid);
-  if (block.show?.kind === "segment" && !segments.includes(block.show.segmentId!))
-    invalid("Unknown image timing segment");
-  if (
-    block.layout === "fullscreen" &&
-    !events.some((event) => event.blockId === block.id && event.blocking)
-  )
-    invalid("Fullscreen media needs a bounded blocking event");
-}
-
-function validateIllustration(block: MediaBlock, assets: Assets, invalid: Issue) {
-  if (block.illustration) {
-    const ids = block.illustration.layers.map((layer) => layer.image);
-    if (assets.get(block.image)?.type !== "image") invalid("Illustrations need an image base");
-    for (const id of ids)
-      if (assets.get(id)?.type !== "image")
-        invalid("Illustration layers must reference library images");
-    if (block.motion?.layers.length)
-      invalid("Use illustration layers or legacy depth layers, not both");
-    if (block.illustration.wrap !== "none" && block.layout !== "inline")
-      invalid("Text wrapping requires an inline illustration");
+  const { blocks } = scene;
+  const media = (blocks ?? []).filter(isMediaBlock);
+  const ids = new Set(media.map((block) => block.id));
+  if (ids.size !== media.length) invalid("Duplicate media block ID");
+  if (blocks) {
+    const textIds = blocks.filter((block) => block.kind === "text").map((block) => block.segmentId);
+    const choices = blocks.filter((block) => block.kind === "choices");
+    if (JSON.stringify(textIds) !== JSON.stringify(segments))
+      invalid("Blocks must preserve every declared Ink segment in order");
+    if (choices.length !== 1 || blocks.at(-1) !== choices[0])
+      invalid("Choices must be the final block");
   }
+  const events = scene.events ?? [];
+  validateCues(events, ids, segments, assets, invalid);
+  for (const block of media) validateMediaBlock(block, events, segments, assets, invalid);
+  if (palette) for (const event of events) validateEffectColors(event, palette, invalid);
 }

@@ -1,10 +1,24 @@
-import type { CharacterProfile } from "../../contracts/character.ts";
+import type { CharacterProfile, AttributeDetails } from "../../contracts/character.ts";
 import { attributes } from "../../contracts/game.ts";
 import type { GameDefinition, GameState } from "../../contracts/game.ts";
 import { roll } from "./random.ts";
 
 export function equipped(game: GameState, definition: GameDefinition) {
   return definition.items.filter((item) => Object.values(game.equipment).includes(item.id));
+}
+export function attackAttribute(
+  character: CharacterProfile,
+  game: GameState,
+  definition: GameDefinition,
+) {
+  return (
+    definition.items.find((item) => item.id === game.equipment.weapon)?.attribute ??
+    attributes.reduce(
+      (best, key) =>
+        character.attributes[key].current > character.attributes[best].current ? key : best,
+      "STR",
+    )
+  );
 }
 export function stat(
   character: CharacterProfile,
@@ -68,4 +82,35 @@ export function awardXp(character: CharacterProfile, game: GameState, amount: nu
     );
   }
   game.xp = total % 5;
+}
+
+type Attribute = "STR" | "DEX" | "WIL";
+
+/** Display the same capped value as game checks, with an honest uncapped equipment breakdown. */
+export function attributeBreakdown(
+  profile: CharacterProfile,
+  game: GameState | null | undefined,
+  definition: GameDefinition | null | undefined,
+  attribute: Attribute,
+) {
+  const base = profile.attributes[attribute].current;
+  if (!game || !definition) return { base, equipment: 0, total: base, capped: false };
+  const equipment = equipped(game, definition).reduce(
+    (sum, item) => sum + item.bonus[attribute],
+    0,
+  );
+  const total = stat(profile, game, definition, attribute);
+  return { base, equipment, total, capped: total < base + equipment };
+}
+
+export function characterAttributes(
+  profile: CharacterProfile,
+  game?: GameState | null,
+  definition?: GameDefinition,
+): AttributeDetails {
+  return {
+    STR: attributeBreakdown(profile, game, definition, "STR"),
+    DEX: attributeBreakdown(profile, game, definition, "DEX"),
+    WIL: attributeBreakdown(profile, game, definition, "WIL"),
+  };
 }

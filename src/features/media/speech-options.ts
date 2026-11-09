@@ -1,4 +1,4 @@
-import type { VoiceProfile, SpeechSettings } from "../../contracts/media.ts";
+import type { VoiceProfile, SpeechSettings } from "../../contracts/speech.ts";
 export async function speechOptions(
   voiceId: string,
   profiles?: VoiceProfile[],

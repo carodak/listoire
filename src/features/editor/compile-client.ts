@@ -1,11 +1,12 @@
+import { verifyMediaAssets } from "./asset-validation.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 
-export function compileInWorker(
+export async function compileInWorker(
   project: StoryProject,
   locale?: string,
 ): Promise<Record<string, StoryBundle>> {
-  return new Promise((resolve, reject) => {
+  const bundles = await new Promise<Record<string, StoryBundle>>((resolve, reject) => {
     const worker = new Worker(new URL("./compiler.worker.ts", import.meta.url), { type: "module" });
     const timeout = setTimeout(
       () => finish(new Error("Compilation exceeded 15 seconds. Check for oversized Ink input.")),
@@ -23,6 +24,8 @@ export function compileInWorker(
       finish(event.data.error ? new Error(event.data.error) : undefined, event.data.bundles);
     };
     worker.onerror = () => finish(new Error("Ink compiler could not start."));
-    worker.postMessage({ id: 1, project, locale });
+    worker.postMessage({ project, locale });
   });
+  await verifyMediaAssets(bundles);
+  return bundles;
 }

@@ -1,3 +1,79 @@
+import { useEffect, useState } from "react";
+
+export function useSmartCrop(source: string | undefined, enabled: boolean) {
+  const [crop, setCrop] = useState<{ source: string; url: string } | null>(null);
+  useEffect(() => {
+    if (!enabled || !source) return;
+    let active = true,
+      url: string | undefined;
+    const original = source;
+    const image = new Image();
+    image.src = original;
+    async function load() {
+      let result = original;
+      try {
+        await image.decode();
+        if (!active) return;
+        const blob = await cropImage(image);
+        if (!active) return;
+        if (blob) {
+          url = URL.createObjectURL(blob);
+          result = url;
+          const decoded = new Image();
+          decoded.src = url;
+          await decoded.decode().catch(() => {});
+        }
+      } catch {
+        /* Unreadable or cross-origin images keep their original frame. */
+      }
+      if (active) setCrop({ source: original, url: result });
+    }
+    void load();
+    return () => {
+      active = false;
+      image.src = "";
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [source, enabled]);
+  return enabled ? (crop && crop.source === source ? crop.url : undefined) : source;
+}
+
+export function cropImage(image: HTMLImageElement): Promise<Blob | null> | null {
+  const sample = document.createElement("canvas");
+  const context = sample.getContext("2d", { willReadFrequently: true });
+  if (!context) return null;
+  const ratio = 256 / Math.max(image.naturalWidth, image.naturalHeight);
+  sample.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+  sample.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+  context.drawImage(image, 0, 0, sample.width, sample.height);
+  const bounds = inkBounds(
+    context.getImageData(0, 0, sample.width, sample.height).data,
+    sample.width,
+    sample.height,
+  );
+  if (!bounds || bounds.width * bounds.height > 0.98) return null;
+  const width = image.naturalWidth * bounds.width;
+  const height = image.naturalHeight * bounds.height;
+  const output = document.createElement("canvas");
+  const draw = output.getContext("2d");
+  if (!draw) return null;
+  const scale = Math.min(1, 2048 / Math.max(width, height));
+  output.width = Math.max(1, Math.round(width * scale));
+  output.height = Math.max(1, Math.round(height * scale));
+  draw.drawImage(
+    image,
+    image.naturalWidth * bounds.x,
+    image.naturalHeight * bounds.y,
+    width,
+    height,
+    0,
+    0,
+    output.width,
+    output.height,
+  );
+  return new Promise((resolve) => output.toBlob(resolve, "image/webp", 0.95));
+}
+
 export function inkBounds(data: Uint8ClampedArray, width: number, height: number) {
   const corners = [0, (width - 1) * 4, width * (height - 1) * 4, (width * height - 1) * 4];
   const background = [0, 1, 2].map(

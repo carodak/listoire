@@ -1,6 +1,6 @@
 import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 
 const presets = [
   [

@@ -48,9 +48,9 @@ export function InkEditor({ value, onChange, onReady, onError, onCursor }: InkEd
         instance.on("change", () => {
           if (!updating.current) latest.current.onChange(instance.getValue());
         });
-        instance.on("changeSelection", () =>
-          latest.current.onCursor?.(instance.getCursorPosition().row),
-        );
+        instance.on("changeSelection", () => {
+          if (!updating.current) latest.current.onCursor?.(instance.getCursorPosition().row);
+        });
         const Range = ace.require("ace/range").Range;
         let marker: number | undefined;
         instance.highlight = (line) => {
@@ -84,6 +84,7 @@ export function InkEditor({ value, onChange, onReady, onError, onCursor }: InkEd
     instance.setValue(value, -1);
     instance.gotoLine(cursor.row + 1, cursor.column);
     updating.current = false;
+    latest.current.onCursor?.(instance.getCursorPosition().row);
   }, [value]);
   return <div ref={element} className="ink-editor" aria-label="Ink script editor" />;
 }

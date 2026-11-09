@@ -1,6 +1,7 @@
 import { useAssetSource } from "../presentation/use-asset-source.ts";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { Dialog } from "../../shared/Dialog.tsx";
 import { useTranslation } from "react-i18next";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import { MagnifiedImage } from "../presentation/MagnifiedImage.tsx";
@@ -27,30 +28,17 @@ function PhotographViewer({
   onClose,
 }: PhotographViewerProps) {
   const { t } = useTranslation();
-  const dialog = useRef<HTMLDialogElement>(null);
   const [zoom, setZoom] = useState(false);
   const [reset, setReset] = useState(0);
   const [turned, setTurned] = useState(false);
   const [detail, setDetail] = useState(0);
-  const zoomLabel = t(zoom ? "zoomOut" : "zoomIn");
   const asset = bundle.assets?.find((entry) => entry.id === examination.image);
   const source = useAssetSource(asset, presentation.resolveAsset);
-  useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
   return (
-    <dialog
-      ref={dialog}
-      className="photo-dialog"
-      aria-labelledby="photo-title"
-      onClose={onClose}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) dialog.current?.close();
-      }}
-    >
+    <Dialog className="photo-dialog" aria-labelledby="photo-title" onDismiss={onClose}>
       <div className="dialog-heading">
         <h2 id="photo-title">{examination.title}</h2>
-        <button aria-label={t("close")} title={t("close")} onClick={() => dialog.current?.close()}>
+        <button aria-label={t("close")} title={t("close")} onClick={onClose}>
           <span aria-hidden="true">✕</span>
         </button>
       </div>
@@ -74,54 +62,20 @@ function PhotographViewer({
       <p className="photo-caption" aria-live="polite">
         {examination.descriptions[detail]}
       </p>
-      <div className="photo-controls">
-        <div className="photo-controls-group">
-          <button
-            disabled={turned}
-            aria-label={zoomLabel}
-            title={zoomLabel}
-            onClick={() => setZoom(!zoom)}
-          >
-            <span aria-hidden="true">{zoom ? "−" : "+"}</span>
-          </button>
-          <button
-            aria-label={t("resetView")}
-            title={t("resetView")}
-            onClick={() => {
-              setTurned(false);
-              setDetail(0);
-              setZoom(false);
-              setReset((value) => value + 1);
-            }}
-          >
-            <span aria-hidden="true">↺</span>
-          </button>
-        </div>
-        <div className="photo-controls-group">
-          <button
-            disabled={turned}
-            aria-label={t("nextDetail")}
-            title={t("nextDetail")}
-            onClick={() => setDetail((detail + 1) % examination.descriptions.length)}
-          >
-            <span aria-hidden="true">⌕</span>
-          </button>
-          <button
-            hidden={!examination.reverse}
-            aria-label={t("turnPhoto")}
-            title={t("turnPhoto")}
-            onClick={() => {
-              setTurned(!turned);
-              setZoom(false);
-              setReset((value) => value + 1);
-            }}
-          >
-            <span aria-hidden="true">↻</span>
-          </button>
-        </div>
-      </div>
+      <PhotoControls
+        zoom={zoom}
+        turned={turned}
+        canTurn={Boolean(examination.reverse)}
+        onZoom={() => setZoom(!zoom)}
+        onDetail={() => setDetail((detail + 1) % examination.descriptions.length)}
+        onTurn={() => {
+          setTurned(!turned);
+          setZoom(false);
+          setReset((value) => value + 1);
+        }}
+      />
       {asset?.credit && <small className="photo-credit">{asset.credit}</small>}
-    </dialog>
+    </Dialog>
   );
 }
 
@@ -130,6 +84,26 @@ interface PhotographHotspotProps {
   enabled: boolean;
   busy: boolean;
   onDiscover: () => void;
+}
+
+function ExamineIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="10" cy="10" r="7" />
+      <path d="m15 15 6 6M5.5 10s1.7-3 4.5-3 4.5 3 4.5 3-1.7 3-4.5 3-4.5-3-4.5-3Z" />
+      <circle cx="10" cy="10" r="1" />
+    </svg>
+  );
 }
 
 function PhotographHotspot({ hotspot, enabled, busy, onDiscover }: PhotographHotspotProps) {
@@ -168,17 +142,20 @@ export function PhotographExamination({
 }: PhotographExaminationProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
   if (!enabled || !examination) return null;
   const canDiscover = Boolean(
     examination.hotspot && frame?.actions?.some((action) => action.id === examination.actionId),
   );
   return (
     <>
-      <button ref={trigger} className="examine-photo" onClick={() => setOpen(true)}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
-          <path d="m12 2 10 10-10 10L2 12Z m0 5 5 5-5 5-5-5Z" fill="none" stroke="currentColor" />
-        </svg>
+      <button
+        className="examine-photo"
+        onClick={(event) => {
+          event.currentTarget.focus();
+          setOpen(true);
+        }}
+      >
+        <ExamineIcon />
         {examination.buttonLabel ||
           t(examination === bundle.examination ? "examinePhoto" : "examineImage")}
       </button>
@@ -194,7 +171,6 @@ export function PhotographExamination({
           }}
           onClose={() => {
             setOpen(false);
-            trigger.current?.focus();
           }}
         />
       )}
@@ -241,5 +217,60 @@ function PhotographImage({
         onDiscover={onDiscover}
       />
     </MagnifiedImage>
+  );
+}
+
+function PhotoControls({
+  zoom,
+  turned,
+  canTurn,
+  onZoom,
+  onTurn,
+  onDetail,
+}: {
+  zoom: boolean;
+  turned: boolean;
+  canTurn: boolean;
+  onZoom: () => void;
+  onTurn: () => void;
+  onDetail: () => void;
+}) {
+  const { t } = useTranslation();
+  const zoomLabel = t(zoom ? "zoomOut" : "zoomIn");
+  return (
+    <div className="photo-controls">
+      <div className="photo-controls-group">
+        <button disabled={turned} aria-label={zoomLabel} title={zoomLabel} onClick={onZoom}>
+          <span aria-hidden="true">{zoom ? "−" : "+"}</span>
+        </button>
+      </div>
+      <div className="photo-controls-group">
+        <button
+          disabled={turned}
+          aria-label={t("nextDetail")}
+          title={t("nextDetail")}
+          onClick={onDetail}
+        >
+          <ExamineIcon />
+        </button>
+        {canTurn && (
+          <button aria-label={t("turnPhoto")} title={t("turnPhoto")} onClick={onTurn}>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4" />
+            </svg>
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

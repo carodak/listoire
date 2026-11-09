@@ -31,6 +31,7 @@ const emptyMedia: Omit<MediaEdit, "kind" | "sceneId" | "id" | "loop"> = {
 };
 
 export function mediaDefaults(kind: string, sceneId: string, id: string, scene?: Scene): MediaEdit {
+  const { blocks = [], events = [] } = scene ?? {};
   const input: MediaEdit = {
     ...structuredClone(emptyMedia),
     kind,
@@ -38,72 +39,93 @@ export function mediaDefaults(kind: string, sceneId: string, id: string, scene?:
     id,
     loop: kind === "Background Music",
   };
-  const block = scene?.blocks?.find(
+  const block = blocks.find(
     (block): block is MediaBlock => block.kind === "media" && block.id === id,
   );
   if (block) Object.assign(input, imageDefaults(block));
+  if (kind === "Image") imageEffects(input, block, scene);
+  const event = events.find((event) => event.id === id);
+  if (!event) return input;
+  const { segmentId = "", blockId = "page" } = event.trigger;
+  const { delayMs = 0 } = event;
+  input.segment = segmentId;
+  input.delay = delayMs;
+  input.target = event.phase === "exit" ? "transition" : (event.blockId ?? blockId);
+  const action = event.action;
+  if (action.kind === "effect") {
+    input.effect = action.effect.id;
+    input.duration = action.effect.duration;
+    if ("intensity" in action.effect) {
+      const { intensity = 0.3 } = action.effect;
+      input.intensity = intensity;
+    }
+  }
+  if (action.kind === "audio") {
+    const { volume = 0.65, loop = false, fadeMs = 350 } = action;
+    Object.assign(input, {
+      asset: action.assetId,
+      volume,
+      loop,
+      fade: fadeMs,
+    });
+  }
+  input.stop = action.kind === "stop-audio";
+  return input;
+}
+
+function imageEffects(input: MediaEdit, block: MediaBlock | undefined, scene?: Scene) {
+  // Keep the simple image effect separate from general animation cues.
+  // An absent cue means the image is still, including after reopening the editor.
+  input.effect = "none";
+  const simple = scene?.events?.find((event) => event.id === `${input.id}.simple`);
+  if (simple?.action.kind === "effect" && ["fade-in", "fade-out"].includes(simple.action.effect.id))
+    input.effect = simple.action.effect.id;
   const hold = scene?.events?.find(
     (event) =>
-      event.blockId === id &&
+      event.blockId === input.id &&
       event.blocking &&
       event.action.kind === "effect" &&
       event.action.effect.id === "cinematic-camera",
   );
   if (
-    kind === "Image" &&
     block?.layout === "fullscreen" &&
     input.motion.preset === "none" &&
     !input.motion.durationMs &&
     hold?.action.kind === "effect"
   )
     input.motion = { ...input.motion, durationMs: hold.action.effect.duration };
-  const event = scene?.events?.find((event) => event.id === id);
-  if (event) {
-    input.segment = event.trigger.segmentId ?? "";
-    input.delay = event.delayMs ?? 0;
-    input.target =
-      event.phase === "exit" ? "transition" : (event.blockId ?? event.trigger.blockId ?? "page");
-  }
-  const action = event?.action;
-  if (action?.kind === "effect") {
-    input.effect = action.effect.id;
-    input.duration = action.effect.duration;
-    if ("intensity" in action.effect) input.intensity = action.effect.intensity ?? 0.3;
-  }
-  if (action?.kind === "audio")
-    Object.assign(input, {
-      asset: action.assetId,
-      volume: action.volume ?? 0.65,
-      loop: action.loop ?? false,
-      fade: action.fadeMs ?? 350,
-    });
-  input.stop = action?.kind === "stop-audio";
-  return input;
 }
 function imageDefaults(block: MediaBlock) {
+  const {
+    image: asset,
+    layout,
+    caption = "",
+    widthPercent: width = 100,
+    align = "center",
+    fit = layout === "fullscreen" ? "cover" : "contain",
+    motion = CinematicSchema.parse({ preset: "none" }),
+    illustration = null,
+    durationMs: persistence = 0,
+  } = block;
+  const { x = 0, y = 0 } = block.position ?? {};
+  const { kind = "page", segmentId = "", delayMs = 0 } = block.show ?? {};
   return {
-    asset: block.image,
-    layout: block.layout,
+    asset,
+    layout,
     examination: block.examination ?? (block.photograph ? undefined : null),
-    caption: block.caption ?? "",
-    width: block.widthPercent ?? 100,
-    align: block.align ?? "center",
-    fit: block.fit ?? (block.layout === "fullscreen" ? "cover" : "contain"),
-    ...imagePosition(block),
-    motion: block.motion ?? CinematicSchema.parse({ preset: "none" }),
-    illustration: block.illustration ?? null,
-    show: block.show?.kind ?? "page",
-    segment: block.show?.segmentId ?? "",
-    delay: block.show?.delayMs ?? 0,
-    persistence: block.durationMs ?? 0,
-  };
-}
-
-function imagePosition(block: MediaBlock) {
-  return {
+    caption,
+    width,
+    align,
+    fit,
     positionOverride: Boolean(block.position),
-    x: block.position?.x ?? 0,
-    y: block.position?.y ?? 0,
+    x,
+    y,
+    motion,
+    illustration,
+    show: kind,
+    segment: segmentId,
+    delay: delayMs,
+    persistence,
   };
 }
 
@@ -113,7 +135,7 @@ export function mediaContext(
   asset: string,
   selectedId?: string,
 ) {
-  const scene = language.configuration.scenes?.[sceneId];
+  const { blocks = [], events = [] } = language.configuration.scenes?.[sceneId] ?? {};
   const chosen = language.configuration.assets?.find((a) => a.id === asset);
   return {
     segmentIds: [...language.script.matchAll(/#\s*segment:([a-z][a-z0-9.-]*)/g)]
@@ -121,7 +143,7 @@ export function mediaContext(
       .filter((id) => id.startsWith(`${sceneId}.`)),
     alt: chosen?.alt ?? "",
     assetUrl: chosen ? `/stories/house/${chosen.path}` : undefined,
-    blocks: scene?.blocks?.filter((b) => b.kind === "media").map((b) => b.id) ?? [],
-    trigger: scene?.events?.find((e) => e.id === selectedId)?.trigger.kind ?? "passage",
+    blocks: blocks.filter((b) => b.kind === "media").map((b) => b.id),
+    trigger: events.find((e) => e.id === selectedId)?.trigger.kind ?? "passage",
   };
 }

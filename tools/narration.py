@@ -54,8 +54,14 @@ def effective_settings(model_id, overrides=None):
     return applied
 
 
-def cache_key(segment, voice, model):
-    return sha(json.dumps({"segmentId": segment["segmentId"], "text": unicodedata.normalize("NFC", segment["text"]), "locale": segment["locale"], "voice": {key: voice[key] for key in ["id", "model", "reference"]}, "model": {"repo": model.get("repo", ""), "revision": model["revision"]}, "settings": effective_settings(voice["model"], voice.get("settings")), "source": CONFIG["sourceRevision"], **({"settingsKey": voice["settingsKey"]} if "settingsKey" in voice else {})}, sort_keys=True, ensure_ascii=False).encode())
+def cache_key(segment, voice, model, processed=True):
+    return sha(json.dumps({"segmentId": segment["segmentId"], "text": unicodedata.normalize("NFC", segment["text"]), "locale": segment["locale"], "voice": {key: voice[key] for key in ["id", "model", "reference"]}, "model": {"repo": model.get("repo", ""), "revision": model["revision"]}, "settings": effective_settings(voice["model"], voice.get("settings")), "source": CONFIG["sourceRevision"], **({"audioProcessing": 1} if processed else {}), **({"settingsKey": voice["settingsKey"]} if "settingsKey" in voice else {})}, sort_keys=True, ensure_ascii=False).encode())
+
+
+def edge_silence_filter():
+    # Reverse twice to trim only the ends; pauses inside a sentence stay intact.
+    trim = "silenceremove=start_periods=1:start_duration=0.03:start_threshold=-48dB:start_silence=0.06"
+    return trim + ",areverse," + trim + ",areverse"
 
 
 def current_entries(entries, segments, models):
@@ -197,30 +203,39 @@ class Generator:
             cached = read(metadata)
             if sha(mp3.read_bytes()) == cached["clip"]["audioDigest"]:
                 return cached
-        self.load(voice)
-        import numpy as np
         import soundfile as sf
-        import torch
-        applied = effective_settings(voice["model"], voice.get("settings"))
-        torch.manual_seed(applied["seed"])
-        arguments = dict(applied["parameters"])
-        if voice["model"] != "nano": arguments["language_id"] = segment["locale"]
-        self.model.conds = copy.deepcopy(self.default_conditioning)
-        if "example" in voice:
-            arguments["audio_prompt_path"] = reference_file(voice["example"])
-            # Nano's NumPy loudness scaling promotes float32 to float64; references are normalized above.
-            if voice["model"] == "nano": arguments["norm_loudness"] = False
-        with torch.inference_mode():
-            waveform = self.model.generate(segment["text"], **arguments)
-        samples = waveform.detach().cpu().numpy().reshape(-1)
-        duration = len(samples) / self.model.sr
-        if not np.isfinite(samples).all() or not 0.2 <= duration <= 180 or np.max(np.abs(samples)) < 0.001:
-            raise ValueError("Generated waveform is empty, non-finite, silent or outside duration bounds")
         wav = CACHE / f"{key}.wav"
-        sf.write(wav, samples, self.model.sr, subtype="PCM_16")
+        legacy = CACHE / f"{cache_key(segment, voice, model, processed=False)}.wav"
+        # Re-encode existing speech without reloading the model or changing immutable URLs.
+        if not wav.exists() and legacy.exists():
+            shutil.copyfile(legacy, wav)
+        if not wav.exists():
+            self.load(voice)
+            import numpy as np
+            import soundfile as sf
+            import torch
+            applied = effective_settings(voice["model"], voice.get("settings"))
+            torch.manual_seed(applied["seed"])
+            arguments = dict(applied["parameters"])
+            if voice["model"] != "nano": arguments["language_id"] = segment["locale"]
+            self.model.conds = copy.deepcopy(self.default_conditioning)
+            if "example" in voice:
+                arguments["audio_prompt_path"] = reference_file(voice["example"])
+                # Nano's NumPy loudness scaling promotes float32 to float64; references are normalized above.
+                if voice["model"] == "nano": arguments["norm_loudness"] = False
+            with torch.inference_mode():
+                waveform = self.model.generate(segment["text"], **arguments)
+            samples = waveform.detach().cpu().numpy().reshape(-1)
+            duration = len(samples) / self.model.sr
+            if not np.isfinite(samples).all() or not 0.2 <= duration <= 180 or np.max(np.abs(samples)) < 0.001:
+                raise ValueError("Generated waveform is empty, non-finite, silent or outside duration bounds")
+            sf.write(wav, samples, self.model.sr, subtype="PCM_16")
+        applied = effective_settings(voice["model"], voice.get("settings"))
+        info = sf.info(wav)
+        duration = info.duration
         temporary = CACHE / f"{key}.pending.mp3"
         pitch_factor = 2 ** (applied.get("pitch", 0) / 12)
-        filters = f"asetrate={self.model.sr * pitch_factor},aresample=44100,atempo={1 / pitch_factor},loudnorm=I=-20:TP=-2:LRA=7"
+        filters = f"asetrate={info.samplerate * pitch_factor},aresample=44100,atempo={1 / pitch_factor},loudnorm=I=-20:TP=-2:LRA=7," + edge_silence_filter()
         subprocess.run(["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i", str(wav), "-ac", "1", "-ar", "44100", "-af", filters, "-codec:a", "libmp3lame", "-b:a", f"{applied['mp3Kbps']}k", str(temporary)], check=True)
         subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(temporary), "-f", "null", "-"], check=True, capture_output=True)
         temporary.replace(mp3)

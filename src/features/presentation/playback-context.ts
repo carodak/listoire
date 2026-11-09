@@ -13,6 +13,7 @@ export interface PresentationState {
   progress: Record<string, number>;
   synchronized: boolean;
   revealAll: boolean;
+  skipMedia: boolean;
   layers: { id: string; blockId?: string; effect: ReactBitsEffect }[];
   visibleMedia: string[];
   expiredMedia: string[];
@@ -40,6 +41,7 @@ export class PlaybackContext {
     progress: {},
     synchronized: false,
     revealAll: false,
+    skipMedia: false,
     layers: [],
     visibleMedia: [],
     expiredMedia: [],
@@ -76,6 +78,7 @@ export class PlaybackContext {
           ? previousImage
           : undefined,
       revealAll: restored || this.preferences.reveal === "instant" || reducedMotion,
+      skipMedia: restored || reducedMotion,
       layers: [],
       visibleMedia: [],
       expiredMedia: [],

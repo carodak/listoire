@@ -1,71 +1,167 @@
-import type { StoryBundle } from "../../contracts/story.ts";
-import type { StoryDirector } from "../story-runtime/director.ts";
+import { useModalPause } from "./use-modal-pause.ts";
+import { useState, useCallback } from "react";
+import { CheckRoll } from "./CheckRoll.tsx";
+import type { Frame, StoryBundle } from "../../contracts/story.ts";
+import type { ReaderController, ReaderSnapshot } from "../../contracts/story.ts";
+import { ReaderModal } from "../../shared/ReaderModal.tsx";
+import { inventoryCategory } from "../character/inventory-category.ts";
+import type { PresentationSession } from "../presentation/presentation-session.ts";
+import { CombatControls } from "./CombatControls.tsx";
+import { DiceRoll } from "./DiceRoll.tsx";
+import { SpellFeedback } from "../presentation/SpellFeedback.tsx";
 
 interface GamePanelProps {
   bundle: StoryBundle;
-  director: StoryDirector;
-  state: ReturnType<StoryDirector["getSnapshot"]>;
+  director: ReaderController;
+  state: ReaderSnapshot & { frame: Frame };
+  seenResults?: WeakSet<object>;
+  presentation?: PresentationSession;
+  combatReady?: boolean;
 }
 
-export function GamePanel({ bundle, director, state }: GamePanelProps) {
-  const { game, character, occurrenceId } = state;
-  if (!game || !character || !occurrenceId) return null;
-  const combat = game.combat;
+export function GamePanel({
+  bundle,
+  director,
+  state,
+  seenResults,
+  presentation,
+  combatReady = false,
+}: GamePanelProps) {
+  if (!state.game || !state.character || !state.occurrenceId) return null;
+  const active = { ...state, game: state.game, occurrenceId: state.occurrenceId };
+  return (
+    <>
+      {state.game.pendingCheck && (
+        <CheckRoll bundle={bundle} director={director} state={active} presentation={presentation} />
+      )}
+      {state.game.combat && combatReady && (
+        <CombatEncounter
+          bundle={bundle}
+          director={director}
+          state={state}
+          presentation={presentation}
+        />
+      )}
+      <GameNotifications
+        bundle={bundle}
+        state={state}
+        director={director}
+        seenResults={seenResults}
+        presentation={presentation}
+      />
+    </>
+  );
+}
+function CombatEncounter({
+  bundle,
+  director,
+  state,
+  presentation,
+}: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation">) {
+  useModalPause(presentation);
+  return (
+    <ReaderModal className="reader-combat-modal" title="Combat">
+      <CombatControls
+        bundle={bundle}
+        director={director}
+        state={state}
+        presentation={presentation}
+      />
+    </ReaderModal>
+  );
+}
+function GameNotifications({ bundle, director, state, seenResults, presentation }: GamePanelProps) {
+  const [dismissed, setDismissed] = useState<object | null>(null);
+  const game = state.game;
+  const result = game?.lastResult;
+  if (
+    !result ||
+    game?.combat ||
+    game?.pendingCheck ||
+    (state.restored && !game?.pendingEvent) ||
+    result === dismissed ||
+    seenResults?.has(result)
+  )
+    return null;
+  const received = bundle.game?.items.find((item) => item.id === result.itemId);
+  return (
+    <GameResultNotice
+      bundle={bundle}
+      result={result}
+      received={received}
+      presentation={presentation}
+      dismiss={() => {
+        if (game?.pendingEvent) {
+          setDismissed(result);
+          void director.finishEvent(state.occurrenceId!).then(() => {
+            if (director.getSnapshot().failure) setDismissed(null);
+          });
+        } else {
+          seenResults?.add(result);
+          setDismissed(result);
+        }
+      }}
+    />
+  );
+}
+
+function GameResultNotice({
+  bundle,
+  result,
+  received,
+  presentation,
+  dismiss,
+}: {
+  bundle: StoryBundle;
+  result: NonNullable<NonNullable<ReaderSnapshot["game"]>["lastResult"]>;
+  received?: NonNullable<StoryBundle["game"]>["items"][number];
+  presentation?: PresentationSession;
+  dismiss: () => void;
+}) {
   const french = bundle.locale.startsWith("fr");
+  const [settled, setSettled] = useState(!result.dice?.length);
+  const finishDice = useCallback(() => setSettled(true), []);
+  useModalPause(presentation);
+  const labels = french
+    ? {
+        event: "Événement",
+        item: "Objet reçu",
+        adventure: "Votre aventure",
+        continue: "Continuer la lecture",
+        inventory: "Retrouvez cet objet dans votre inventaire.",
+      }
+    : {
+        event: "Story update",
+        item: "Item received",
+        adventure: "Your adventure",
+        continue: "Continue reading",
+        inventory: "You can find this item in your inventory.",
+      };
   return (
-    <section className="game-panel" aria-label={french ? "Partie" : "Game"}>
-      {game.lastResult && <p role="status">{game.lastResult.message}</p>}
-      {combat && <CombatControls bundle={bundle} director={director} state={state} />}
-    </section>
+    <ReaderModal
+      title={received?.name ?? labels.event}
+      eyebrow={received ? labels.item : labels.adventure}
+      closeLabel={labels.continue}
+      onDismiss={settled ? dismiss : undefined}
+      className={result.abilityId ? "spell-learned-modal" : undefined}
+    >
+      <SpellFeedback ability={result.abilityId} />
+      {settled && (
+        <p className="reader-event-message" role="status">
+          {result.message}
+        </p>
+      )}
+      <DiceRoll result={result} french={french} onSettled={finishDice} />
+      {received && <p className="reader-event-detail">{labels.inventory}</p>}
+    </ReaderModal>
   );
 }
 
-function CombatControls({ bundle, director, state }: GamePanelProps) {
-  const { game, character, occurrenceId } = state;
-  if (!game?.combat || !character || !occurrenceId) return null;
-  const combat = game.combat,
-    french = bundle.locale.startsWith("fr");
-  return (
-    <fieldset disabled={state.busy || Boolean(state.failure)}>
-      <legend>
-        {bundle.game?.encounters.find((item) => item.id === combat.encounterId)?.name} · HP{" "}
-        {combat.hp} / {combat.maxHp} · {french ? "Tour" : "Turn"} {combat.turn}
-      </legend>
-      <p>
-        {french ? "Riposte" : "Retaliation"}: {combat.damage} ·{" "}
-        {combat.effects.map((effect) => `${effect.kind} (${effect.turns})`).join(", ")}
-      </p>
-      <button onClick={() => void director.gameTurn({ kind: "attack" }, occurrenceId)}>
-        {french ? "Attaquer" : "Attack"}
-      </button>
-      {bundle.game?.abilities
-        .filter(
-          (ability) =>
-            ability.offensive && character.abilities.some((item) => item.id === ability.id),
-        )
-        .map((ability) => (
-          <button
-            key={ability.id}
-            onClick={() =>
-              void director.gameTurn({ kind: "ability", id: ability.id }, occurrenceId)
-            }
-          >
-            {bundle.character?.abilities.find((item) => item.id === ability.id)?.name ??
-              ability.name ??
-              ability.id}
-          </button>
-        ))}
-      <button onClick={() => void director.gameTurn({ kind: "flee" }, occurrenceId)}>
-        {french ? "Fuir" : "Flee"}
-      </button>
-    </fieldset>
-  );
-}
 export function GameInventory({ bundle, director, state }: GamePanelProps) {
   const { game, occurrenceId } = state;
   if (!game || !occurrenceId || !game.inventory.length) return null;
-  const combat = game.combat,
-    french = bundle.locale.startsWith("fr");
+  const combat = game.combat;
+  const french = bundle.locale.startsWith("fr");
   return (
     <div className="game-inventory">
       {game.inventory.map((id) => {
@@ -73,8 +169,8 @@ export function GameInventory({ bundle, director, state }: GamePanelProps) {
         if (!item) return null;
         const selected = Object.values(game.equipment).includes(id);
         return (
-          <p key={id}>
-            {item.name}{" "}
+          <div className="game-inventory-item" key={id} data-kind={inventoryCategory(item)}>
+            <span>{item.name}</span>
             {item.slot !== "none" && (
               <button
                 disabled={state.busy || Boolean(combat)}
@@ -90,7 +186,7 @@ export function GameInventory({ bundle, director, state }: GamePanelProps) {
                 {selected ? (french ? "Retirer" : "Unequip") : french ? "Équiper" : "Equip"}
               </button>
             )}
-          </p>
+          </div>
         );
       })}
     </div>

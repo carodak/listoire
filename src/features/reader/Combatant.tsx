@@ -1,0 +1,51 @@
+import type { ReactNode } from "react";
+import { useCallback } from "react";
+import type { StoryBundle } from "../../contracts/story.ts";
+import type { PresentationSession } from "../presentation/presentation-session.ts";
+import { useAssetSource } from "../presentation/use-asset-source.ts";
+import { useSmartCrop } from "../presentation/smart-crop.ts";
+
+export function Combatant({
+  label,
+  name,
+  health,
+  maximum,
+  stats,
+  portrait,
+  bundle,
+  presentation,
+}: {
+  label: string;
+  name: string;
+  health: number;
+  maximum: number;
+  stats: ReactNode;
+  portrait?: string;
+  bundle: StoryBundle;
+  presentation?: PresentationSession;
+}) {
+  const asset = bundle.assets?.find((asset) => asset.id === portrait);
+  const fallback = useCallback(
+    async (asset: NonNullable<typeof bundle.assets>[number]) => ({
+      url: `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+      dispose() {},
+    }),
+    [bundle.storyId],
+  );
+  const source = useAssetSource(asset, presentation?.resolveAsset ?? fallback);
+  const cropped = useSmartCrop(source || undefined, true);
+  return (
+    <section className="combatant">
+      <div className="combatant-portrait">{cropped && <img src={cropped} alt={name} />}</div>
+      <span className="combatant-label">{label}</span>
+      <strong className="combatant-name">{name}</strong>
+      <small className="combatant-stats">{stats}</small>
+      <div className="combat-vital">
+        <strong>
+          {health} / {maximum} {bundle.locale === "fr" ? "PV" : "HP"}
+        </strong>
+        <progress max={maximum} value={health} aria-label={label} />
+      </div>
+    </section>
+  );
+}

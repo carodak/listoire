@@ -114,3 +114,15 @@
     scale(calc(var(--layer-scale) * var(--camera-overscan, 1.3)))
     rotate(var(--layer-rotation, 0deg));
 }
+.reader-copy .scene-illustration[data-layered="true"] .isolated-image,
+.story-art .scene-illustration[data-layered="true"] .isolated-image {
+  display: block;
+  position: static;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  object-fit: contain;
+}
+.story-art .scene-illustration[data-layered="true"] .isolated-image {
+  max-height: 520px;
+}

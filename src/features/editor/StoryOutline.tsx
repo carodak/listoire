@@ -1,7 +1,7 @@
-import { sceneMediaEntries } from "./media-references.ts";
+import { sceneMediaEntries } from "./scene-media.ts";
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { outlineEntries } from "./ink-commands.ts";
+import { outlineEntries } from "./ink-outline.ts";
 
 interface StoryOutlineProps {
   language: StoryProject["languages"][string];

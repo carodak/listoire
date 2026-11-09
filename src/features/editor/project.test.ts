@@ -1,12 +1,12 @@
 import "fake-indexeddb/auto";
 import { readFileSync } from "node:fs";
 import { beforeEach, expect, it } from "vitest";
+import { houseBundles, refreshedHouseProject } from "../../../tests/fixtures/house-project.ts";
 import { clear, createStore } from "idb-keyval";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { compileProject, compileLanguage, structure } from "./compiler.ts";
 import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
-import { BundleSchema } from "../../contracts/story.ts";
 import { refreshDefaultArtwork, refreshPublishedArtwork } from "../../contracts/artwork-refresh.ts";
 
 const original = StoryProjectSchema.parse(
@@ -17,9 +17,7 @@ const original = StoryProjectSchema.parse(
     ),
   ),
 );
-const current = StoryProjectSchema.parse(
-  JSON.parse(readFileSync(new URL("../../../stories/house/project.json", import.meta.url), "utf8")),
-);
+const current = refreshedHouseProject;
 beforeEach(async () => {
   await clear(createStore("listoire-editor", "projects"));
 });
@@ -132,14 +130,7 @@ it.each(storyPaths)(
   "preserves $locale: song=$song, light=$light, photo=$photo, examine=$examine",
   async ({ locale, song, light, photo, examine }) => {
     const migrated = await compileLanguage(original, locale);
-    const baseline = BundleSchema.parse(
-      JSON.parse(
-        readFileSync(
-          new URL(`../../../public/stories/house/${locale}.json`, import.meta.url),
-          "utf8",
-        ),
-      ),
-    );
+    const baseline = houseBundles[locale]!;
     expect(migrated.scenes).toEqual(original.languages[locale]!.configuration.scenes);
     expect(migrated.assets).toEqual(original.languages[locale]!.configuration.assets);
     expect(migrated.narration).toEqual(original.languages[locale]!.configuration.narration);

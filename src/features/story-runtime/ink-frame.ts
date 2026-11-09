@@ -1,4 +1,5 @@
 import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
+import { parseTypography } from "../../contracts/typography.ts";
 import type { Story } from "inkjs";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 function tag(tags: string[], prefix: string, fallback?: string): string {
@@ -23,7 +24,7 @@ export function inkChoices(story: Story, bundle: StoryBundle, actions = false) {
     .filter((choice) => (choice.tags ?? []).includes("interaction") === actions)
     .map((choice) => ({
       id: inkChoiceId(choice, bundle),
-      text: choice.text,
+      ...parseTypography(choice.text),
       ...((choice.tags ?? []).some((value) => value.startsWith("game:"))
         ? { gameAction: tag(choice.tags ?? [], "game") }
         : {}),
@@ -65,8 +66,11 @@ export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
     const path = story.state.currentPathString ?? "start";
     const text = continueInkLine(story, bundle.authored ?? false)?.trim();
     const tags = story.currentTags ?? [];
-    for (const marker of tags.filter((value) => value.startsWith("media:")))
-      mediaAnchors.push({ id: marker.slice(6).trim(), after: segments.at(-1)?.id });
+    mediaAnchors.push(
+      ...tags
+        .filter((value) => value.startsWith("media:"))
+        .map((marker) => ({ id: marker.slice(6).trim(), after: segments.at(-1)?.id })),
+    );
     if (!text) continue;
     passageId = inkPassage(bundle, tags, passageId, path);
     const segmentId = tag(
@@ -74,7 +78,7 @@ export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
       "segment",
       bundle.authored ? `${passageId}.line-${steps}` : undefined,
     );
-    segments.push({ id: segmentId, text });
+    segments.push({ id: segmentId, ...parseTypography(text) });
   }
   const facts = Object.fromEntries(
     (bundle.variables ?? []).map((name) => [name, story.variablesState[name]]),

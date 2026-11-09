@@ -69,13 +69,8 @@ export function ImageComposition(props: Props) {
           <ImageLayers
             key={mode}
             previewTarget={props.previewTarget}
-            image={image}
+            {...{ image, onChange, language, library, motion, layout }}
             value={current}
-            onChange={onChange}
-            language={language}
-            library={library}
-            motion={motion}
-            layout={layout}
             layered={mode === "layered"}
           />
           <PageCompositionFields value={current} onChange={onChange} layout={layout} />

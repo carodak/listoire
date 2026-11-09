@@ -12,6 +12,7 @@ import { editorShortcut } from "./editor-shortcuts.ts";
 import { EditorHeader } from "./EditorHeader.tsx";
 import { Ribbon } from "./Ribbon.tsx";
 import { EditorWorkspace } from "./EditorWorkspace.tsx";
+import { TextToolbar } from "./TextToolbar.tsx";
 import "./editor.css";
 interface StoryEditorProps {
   renderPreview: (
@@ -19,7 +20,6 @@ interface StoryEditorProps {
     project: StoryProject,
     knot: string,
     onClose: () => void,
-    composing?: boolean,
   ) => ReactNode;
 }
 
@@ -86,12 +86,8 @@ function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
   useEditorTooltips(true);
   const preview = view.preview ? (
     <div className="preview-slot" key={view.preview.key}>
-      {renderPreview(
-        view.preview.bundle,
-        project,
-        view.preview.knot,
-        () => patchView({ preview: null }),
-        false,
+      {renderPreview(view.preview.bundle, project, view.preview.knot, () =>
+        patchView({ preview: null }),
       )}
     </div>
   ) : null;
@@ -119,6 +115,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         onFind={actions.find}
       />
       <Ribbon
+        textTools={<TextToolbar selection={actions.selectedText} apply={actions.formatText} />}
         tab={tab}
         collapsed={view.collapsed}
         gameMode={c.project.gameMode}

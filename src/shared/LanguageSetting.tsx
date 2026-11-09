@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { Locale, ReaderSettings } from "../contracts/story.ts";
+import { ToolbarGlyph } from "./ToolbarGlyph.tsx";
 
 function Flag({ language }: { language: Locale }) {
   return (
@@ -27,23 +28,23 @@ function Flag({ language }: { language: Locale }) {
 interface Props {
   language: Locale;
   busy: boolean;
+  compact?: boolean;
   onChange: (language: ReaderSettings["language"]) => void;
 }
 
-export function LanguageSetting({ language, busy, onChange }: Props) {
+export function LanguageSetting({ language, busy, onChange, compact = false }: Props) {
   const { t } = useTranslation();
   const details = useRef<HTMLDetailsElement>(null);
-  const summary = useRef<HTMLElement>(null);
   const names: Record<string, string> = { en: "English", fr: "Français" };
   return (
-    <div className="language-controls">
+    <div className={`language-controls${compact ? " language-controls-compact" : ""}`}>
       <details
         ref={details}
         className="language-picker"
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             details.current!.open = false;
-            summary.current?.focus();
+            details.current!.querySelector("summary")!.focus();
           }
         }}
         onBlur={(event) => {
@@ -52,10 +53,21 @@ export function LanguageSetting({ language, busy, onChange }: Props) {
             event.currentTarget.open = false;
         }}
       >
-        <summary role="button" ref={summary} aria-label={`${t("language")}: ${names[language]}`}>
+        <summary role="button" aria-label={`${t("language")}: ${names[language]}`}>
           <Flag language={language} />
-          <span lang={language}>{names[language]}</span>
-          <span aria-hidden="true">⌄</span>
+          <span lang={language}>{compact ? language.toUpperCase() : names[language]}</span>
+          {!compact && (
+            <ToolbarGlyph
+              name="chevron"
+              className="language-chevron"
+              viewBox="0 0 20 20"
+              width="16"
+              height="16"
+              strokeWidth="1.5"
+              strokeLinecap="butt"
+              strokeLinejoin="miter"
+            />
+          )}
         </summary>
         <div className="language-options" role="group" aria-label={t("language")}>
           <p className="language-prompt">{t("changeLanguage")}</p>
@@ -67,7 +79,7 @@ export function LanguageSetting({ language, busy, onChange }: Props) {
               aria-pressed={locale === language}
               onClick={() => {
                 details.current!.open = false;
-                summary.current?.focus();
+                details.current!.querySelector("summary")!.focus();
                 onChange(locale);
               }}
             >

@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { MediaEdit } from "./media-edit.ts";
 import { ExaminationFields } from "./ExaminationFields.tsx";
 import { animationOptions } from "./animation-options.ts";
+import { CheckboxField, Field, SelectField } from "./Fields.tsx";
 interface NumberFieldProps {
   name: string;
   label: string;
@@ -14,23 +15,15 @@ interface NumberFieldProps {
 
 function NumberField({ name, label, value, max, min = 0, step = 1 }: NumberFieldProps) {
   return (
-    <label>
-      {label}
-      <input name={name} type="number" min={min} max={max} step={step} defaultValue={value} />
-    </label>
-  );
-}
-function SegmentField({ segments, value }: { segments: string[]; value: string }) {
-  return (
-    <label>
-      Text position
-      <select name="segment" defaultValue={value}>
-        <option value="">Choose a segment</option>
-        {segments.map((id) => (
-          <option key={id}>{id}</option>
-        ))}
-      </select>
-    </label>
+    <Field
+      label={label}
+      name={name}
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      defaultValue={value}
+    />
   );
 }
 interface ImageFieldsProps {
@@ -64,14 +57,8 @@ export function ImageFields({
         />
       )}
       <ImagePlacement input={input} />
-      <label>
-        Alt text
-        <input name="alt" defaultValue={alt} />
-      </label>
-      <label>
-        Caption
-        <input name="caption" defaultValue={input.caption} />
-      </label>
+      <Field label="Alt text" name="alt" defaultValue={alt} />
+      <Field label="Caption" name="caption" defaultValue={input.caption} />
       <ImageTiming input={input} segments={segments} />
       {layout === "fullscreen" ? (
         <p>
@@ -102,15 +89,12 @@ function PositionFields({ input }: { input: MediaEdit }) {
   return (
     <fieldset>
       <legend>Position</legend>
-      <label className="check">
-        <input
-          type="checkbox"
-          name="positionOverride"
-          checked={override}
-          onChange={(event) => setOverride(event.target.checked)}
-        />
-        Override default position
-      </label>
+      <CheckboxField
+        label="Override default position"
+        name="positionOverride"
+        checked={override}
+        onChange={(event) => setOverride(event.target.checked)}
+      />
       <p>Default: where this media command appears in the script.</p>
       {override && (
         <>
@@ -141,41 +125,26 @@ export function AnimationFields({
   const selectedEffect = effects.includes(effect) ? effect : effects[0]!;
   return (
     <>
-      <label>
-        Target
-        <select
-          aria-label="Target"
-          name="target"
-          value={target}
-          onChange={(e) => onTarget(e.target.value)}
-        >
-          <option value="page">Scene</option>
-          <option value="transition">Scene Transition</option>
-          {blocks.map((id) => (
-            <option key={id} value={id}>
-              Image: {id}
-            </option>
-          ))}
-          {segments.map((id) => (
-            <option key={id} value={id}>
-              Text: {id}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Animation
-        <select
-          aria-label="Animation"
-          name="effect"
-          value={selectedEffect}
-          onChange={(e) => setEffect(e.target.value)}
-        >
-          {effects.map((id) => (
-            <option key={id}>{id}</option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        label="Target"
+        name="target"
+        value={target}
+        onChange={onTarget}
+        options={["page", "transition", ...blocks, ...segments]}
+        labels={{
+          page: "Scene",
+          transition: "Scene Transition",
+          ...Object.fromEntries(blocks.map((id) => [id, `Image: ${id}`])),
+          ...Object.fromEntries(segments.map((id) => [id, `Text: ${id}`])),
+        }}
+      />
+      <SelectField
+        label="Animation"
+        name="effect"
+        value={selectedEffect}
+        onChange={setEffect}
+        options={effects}
+      />
       <NumberField name="duration" label="Duration (ms)" max={10000} value={input.duration} />
       <NumberField name="intensity" label="Intensity" max={1} step={0.05} value={input.intensity} />
     </>
@@ -186,14 +155,8 @@ export function AudioFields({ input }: { input: MediaEdit }) {
     <>
       <NumberField name="volume" label="Volume" max={1} step={0.05} value={input.volume} />
       <NumberField name="fade" label="Fade / crossfade (ms)" max={3000} value={input.fade} />
-      <label className="check">
-        <input type="checkbox" name="loop" defaultChecked={input.loop} />
-        Loop
-      </label>
-      <label className="check">
-        <input type="checkbox" name="stop" defaultChecked={input.stop} />
-        Stop channel
-      </label>
+      <CheckboxField label="Loop" name="loop" defaultChecked={input.loop} />
+      <CheckboxField label="Stop channel" name="stop" defaultChecked={input.stop} />
     </>
   );
 }
@@ -208,25 +171,36 @@ export function TimingFields({ input, segments, trigger, blocks }: TimingFieldsP
   const [when, setWhen] = useState(trigger);
   return (
     <>
-      <label>
-        Show / trigger
-        <select name="trigger" value={when} onChange={(event) => setWhen(event.target.value)}>
-          <option value="passage">When page appears</option>
-          <option value="segment">When narration or text reaches this element</option>
-          <option value="block">When target image appears</option>
-        </select>
-      </label>
-      {when === "segment" && <SegmentField segments={segments} value={input.segment} />}
+      <SelectField
+        label="Show / trigger"
+        name="trigger"
+        value={when}
+        onChange={setWhen}
+        options={["passage", "segment", "block"]}
+        labels={{
+          passage: "When page appears",
+          segment: "When narration or text reaches this element",
+          block: "When target image appears",
+        }}
+      />
+      {when === "segment" && (
+        <SelectField
+          label="Text position"
+          name="segment"
+          defaultValue={input.segment}
+          options={["", ...segments]}
+          labels={{ "": "Choose a segment" }}
+        />
+      )}
       {when === "block" && input.kind !== "Animation" && (
-        <label>
-          Target image
-          <select name="target" defaultValue={input.target} required>
-            <option value="">Choose an image</option>
-            {blocks.map((id) => (
-              <option key={id}>{id}</option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="Target image"
+          name="target"
+          defaultValue={input.target}
+          required
+          options={["", ...blocks]}
+          labels={{ "": "Choose an image" }}
+        />
       )}
       <NumberField name="delay" label="Delay (ms)" max={10000} value={input.delay} />
     </>
@@ -239,22 +213,20 @@ function ImagePlacement({ input }: { input: MediaEdit }) {
       <summary>Size and positioning (optional)</summary>{" "}
       <NumberField name="width" label="Width (%)" min={10} max={100} value={input.width} />
       <PositionFields input={input} />
-      <label>
-        Alignment
-        <select name="align" defaultValue={input.align}>
-          {["left", "center", "right"].map((v) => (
-            <option key={v}>{v}</option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        label="Alignment"
+        name="align"
+        defaultValue={input.align}
+        options={["left", "center", "right"]}
+      />
       {input.kind !== "Image" && (
-        <label>
-          Fit / crop
-          <select name="fit" defaultValue={input.fit}>
-            <option value="contain">Fit</option>
-            <option value="cover">Cover / crop</option>
-          </select>
-        </label>
+        <SelectField
+          label="Fit / crop"
+          name="fit"
+          defaultValue={input.fit}
+          options={["contain", "cover"]}
+          labels={{ contain: "Fit", cover: "Cover / crop" }}
+        />
       )}
     </details>
   );
@@ -264,19 +236,27 @@ function ImageTiming({ input, segments }: { input: MediaEdit; segments: string[]
   const [show, setShow] = useState(input.show);
   return (
     <>
-      <label>
-        Show
-        <select
-          name="show"
-          value={show}
-          onChange={(event) => setShow(event.target.value as typeof show)}
-        >
-          <option value="page">When page appears</option>
-          <option value="segment">When narration or text reaches this element</option>
-          <option value="delay">After a delay</option>
-        </select>
-      </label>
-      {show === "segment" && <SegmentField segments={segments} value={input.segment} />}
+      <SelectField
+        label="Show"
+        name="show"
+        value={show}
+        onChange={setShow}
+        options={["page", "segment", "delay"] as const}
+        labels={{
+          page: "When page appears",
+          segment: "When narration or text reaches this element",
+          delay: "After a delay",
+        }}
+      />
+      {show === "segment" && (
+        <SelectField
+          label="Text position"
+          name="segment"
+          defaultValue={input.segment}
+          options={["", ...segments]}
+          labels={{ "": "Choose a segment" }}
+        />
+      )}
       {show === "delay" && (
         <NumberField name="delay" label="Delay (ms)" max={10000} value={input.delay} />
       )}

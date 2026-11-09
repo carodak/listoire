@@ -4,37 +4,6 @@ export interface InkCommandInput {
   condition: string;
   create: boolean;
 }
-export function knotNames(script: string) {
-  return outlineEntries(script)
-    .filter((entry) => entry.kind === "Knot")
-    .map((entry) => entry.name);
-}
-export function outlineEntries(script: string) {
-  let knot = "";
-  script = script.replace(/\/\*[\s\S]*?(?:\*\/|$)/g, (comment) => comment.replace(/[^\r\n]/g, " "));
-  return script.split("\n").flatMap((line, row) => {
-    const main = line.match(/^\s*={2,}\s*(?!function\b)(\w+)/);
-    if (main) {
-      knot = main[1]!;
-      return [
-        { name: knot, path: knot, knot: knot.toLowerCase().replace(/_/g, "-"), row, kind: "Knot" },
-      ];
-    }
-    const stitch = line.match(/^\s*=\s*(\w+)/);
-    return stitch && knot
-      ? [
-          {
-            name: stitch[1]!,
-            path: `${knot}.${stitch[1]}`,
-            knot: knot.toLowerCase().replace(/_/g, "-"),
-            row,
-            kind: "Stitch",
-          },
-        ]
-      : [];
-  });
-}
-
 function validate(command: string, input: InkCommandInput, knots: string[]) {
   if (!/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?$/.test(input.name))
     throw new Error("Use a valid Ink identifier or knot.stitch path.");
@@ -46,7 +15,8 @@ function validate(command: string, input: InkCommandInput, knots: string[]) {
     throw new Error("Use a single Ink condition without braces.");
 }
 function choiceCommand(command: string, input: InkCommandInput, id: string) {
-  const marker = command === "Sticky Choice" ? "+" : command === "Nested Choice" ? "**" : "*";
+  const markers: Record<string, string> = { "Sticky Choice": "+", "Nested Choice": "**" };
+  const marker = markers[command] ?? "*";
   return `${marker} ${input.condition ? `{${input.condition}} ` : ""}[${input.label || "Continue"} # choice:${id}]\n  -> ${input.name}\n`;
 }
 export function buildInkCommand(
@@ -56,31 +26,19 @@ export function buildInkCommand(
   id: string,
 ) {
   validate(command, input, knots);
-  let ink: string;
-  if (command.includes("Choice")) ink = choiceCommand(command, input, id);
-  else
-    switch (command) {
-      case "Knot":
-        ink = `\n=== ${input.name} ===\nTODO: Translate this passage.\n-> END\n`;
-        break;
-      case "Stitch":
-        ink = `\n= ${input.name}\nTODO: Translate this passage.\n-> END\n`;
-        break;
-      case "Insert Variable":
-        ink = `{${input.name}}`;
-        break;
-      case "Variable":
-        ink = `~ ${input.name} = ${input.label || "0"}\n`;
-        break;
-      case "Thread":
-        ink = `<- ${input.name}\n`;
-        break;
-      case "Tunnel":
-        ink = `-> ${input.name} ->\n`;
-        break;
-      default:
-        ink = `-> ${input.name}\n`;
-    }
+  const commands: Record<string, string> = {
+    Knot: `\n=== ${input.name} ===\nTODO: Translate this passage.\n-> END\n`,
+    Stitch: `\n= ${input.name}\nTODO: Translate this passage.\n-> END\n`,
+    "Insert Variable": `{${input.name}}`,
+    Variable: `~ ${input.name} = ${input.label || "0"}\n`,
+    Thread: `<- ${input.name}\n`,
+    Tunnel: `-> ${input.name} ->\n`,
+  };
+  let ink = command.includes("Choice")
+    ? choiceCommand(command, input, id)
+    : Object.hasOwn(commands, command)
+      ? commands[command]
+      : `-> ${input.name}\n`;
   if (input.create)
     ink += `\n=== ${input.name} ===\nTODO: Translate this passage.\n${command === "Tunnel" ? "->->" : "-> END"}\n`;
   return ink;

@@ -1,5 +1,45 @@
 import { expect, it, vi } from "vitest";
 import { AudioManager } from "./audio-manager.ts";
+it("starts the next spoken page after the previous page was canceled while paused", async () => {
+  const utterances: SpeechSynthesisUtterance[] = [];
+  let paused = false;
+  const synth = {
+    getVoices: () => [{ voiceURI: "test", lang: "en-US" }],
+    cancel: vi.fn(),
+    pause: () => {
+      paused = true;
+    },
+    resume: () => {
+      paused = false;
+    },
+    speak: (utterance: SpeechSynthesisUtterance) => {
+      if (!paused) utterances.push(utterance);
+    },
+  };
+  vi.stubGlobal("speechSynthesis", synth);
+  vi.stubGlobal(
+    "SpeechSynthesisUtterance",
+    class {
+      constructor(public text: string) {}
+    },
+  );
+  const audio = new AudioManager();
+  try {
+    const first = audio.speak("First page", "en", 1, new AbortController().signal, vi.fn());
+    audio.pause();
+    audio.stopChannel("narration");
+    expect(await first).toBe("aborted");
+    audio.resume();
+    expect(paused).toBe(true);
+    const second = audio.speak("Next page", "en", 1, new AbortController().signal, vi.fn());
+    expect(utterances.map((utterance) => utterance.text)).toEqual(["First page", "Next page"]);
+    utterances[1]!.onend!(new Event("end") as SpeechSynthesisEvent);
+    expect(await second).toBe("ended");
+  } finally {
+    audio.dispose();
+    vi.unstubAllGlobals();
+  }
+});
 class FakeAudio extends EventTarget {
   volume = 1;
   loop = false;
@@ -26,8 +66,8 @@ it("fades page sounds at both ends and releases fade timers on cancellation", as
   node.currentTime = 9.5;
   await vi.advanceTimersByTimeAsync(32);
   expect(node.volume).toBeCloseTo(0.325);
-  playback.stop();
-  await playback.finished;
+  manager.stopAll();
+  await playback;
   const volume = node.volume;
   node.currentTime = 4;
   await vi.advanceTimersByTimeAsync(100);
@@ -48,11 +88,12 @@ it("remembers the latest narration speed before a delayed clip is created", asyn
   expect(node.playbackRate).toBe(1.4);
   manager.setRate(1.2);
   expect(node.playbackRate).toBe(1.2);
-  playback.stop();
-  expect(await playback.finished).toBe("aborted");
+  manager.stopAll();
+  expect(await playback).toBe("aborted");
   manager.dispose();
 });
-it("mixes channels, ducks backgrounds, controls transport and settles cancellation", async () => {
+it("mixes channels, fades backgrounds, controls transport and settles cancellation", async () => {
+  vi.useFakeTimers();
   const nodes: FakeAudio[] = [];
   const manager = new AudioManager(() => {
     const node = new FakeAudio();
@@ -63,6 +104,11 @@ it("mixes channels, ducks backgrounds, controls transport and settles cancellati
   const music = manager.play({ url: "music", channel: "music", loop: true, signal: scope.signal });
   manager.setVolume("music", 0.8);
   manager.setDucking(true);
+  expect(nodes[0]!.volume).toBeCloseTo(0.8);
+  await vi.advanceTimersByTimeAsync(300);
+  expect(nodes[0]!.volume).toBeGreaterThan(0.2);
+  expect(nodes[0]!.volume).toBeLessThan(0.8);
+  await vi.advanceTimersByTimeAsync(324);
   expect(nodes[0]!.volume).toBeCloseTo(0.2);
   manager.setMuted(true);
   expect(nodes[0]!.volume).toBe(0);
@@ -71,15 +117,15 @@ it("mixes channels, ducks backgrounds, controls transport and settles cancellati
   manager.pause();
   expect(nodes[0]!.pause).toHaveBeenCalled();
   manager.resume();
-  music.seek(3);
-  expect(nodes[0]!.currentTime).toBe(3);
   const voice = manager.play({ url: "voice", channel: "narration", signal: scope.signal });
   manager.setRate(1.5);
   expect(nodes[1]!.playbackRate).toBe(1.5);
   scope.abort();
-  expect(await music.finished).toBe("aborted");
-  expect(await voice.finished).toBe("aborted");
+  expect(await music).toBe("aborted");
+  expect(await voice).toBe("aborted");
   manager.dispose();
+  expect(vi.getTimerCount()).toBe(0);
+  vi.useRealTimers();
 });
 it("bounds overlapping SFX and tolerates blocked or never-starting playback", async () => {
   vi.useFakeTimers();
@@ -87,13 +133,12 @@ it("bounds overlapping SFX and tolerates blocked or never-starting playback", as
   node.play.mockRejectedValue(new Error("blocked"));
   const manager = new AudioManager(() => node as unknown as HTMLAudioElement);
   expect(
-    await manager.play({ url: "sfx", channel: "sfx", signal: new AbortController().signal })
-      .finished,
+    await manager.play({ url: "sfx", channel: "sfx", signal: new AbortController().signal }),
   ).toBe("blocked");
   node.play.mockImplementation(() => new Promise(() => {}));
   const hung = manager.play({ url: "sfx", channel: "sfx", signal: new AbortController().signal });
   await vi.advanceTimersByTimeAsync(4000);
-  expect(await hung.finished).toBe("timeout");
+  expect(await hung).toBe("timeout");
   manager.dispose();
   vi.useRealTimers();
 });
@@ -106,13 +151,20 @@ it("crossfades backgrounds and cleans up both the incoming and outgoing resource
     return audio as unknown as HTMLAudioElement;
   });
   const scope = new AbortController();
-  const old = manager.play({ url: "old", channel: "ambience", loop: true, signal: scope.signal });
+  const old = manager.play({
+    url: "old",
+    channel: "ambience",
+    loop: true,
+    signal: scope.signal,
+    gain: 0.4,
+  });
   const incoming = manager.crossfade("ambience", "new", scope.signal, 100);
+  expect(nodes[0]!.volume).toBeCloseTo(0.12);
   await vi.advanceTimersByTimeAsync(160);
-  expect(await old.finished).toBe("aborted");
+  expect(await old).toBe("aborted");
   expect(nodes[1]!.volume).toBeCloseTo(0.3);
   scope.abort();
-  expect(await incoming.finished).toBe("aborted");
+  expect(await incoming).toBe("aborted");
   manager.dispose();
   vi.useRealTimers();
 });

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { houseProject } from "../../../tests/fixtures/house-project.ts";
 import { expect, it } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { addIllustrationLibrary, applyIllustrationPack } from "./illustration-pack.ts";
@@ -8,11 +8,30 @@ import { illustrationDefaults, IllustrationSchema } from "../../contracts/illust
 import { CinematicSchema } from "../../contracts/cinematic.ts";
 import { compileLanguage } from "./compiler.ts";
 
-const project = StoryProjectSchema.parse(
-  JSON.parse(
-    readFileSync(new URL("../../../public/stories/house/project.json", import.meta.url), "utf8"),
-  ),
-);
+const project = structuredClone(houseProject);
+const gallery = [
+  "paper.background-city",
+  "paper.background-the-plains-forest",
+  "paper.modern-male-character",
+];
+project.mediaLibrary = gallery.map((id) => ({
+  id,
+  title: id,
+  category: "image",
+  themes: [],
+  usage: [],
+}));
+for (const language of Object.values(project.languages)) {
+  language.configuration.assets!.push(
+    ...gallery.map((id) => ({ id, path: `media/${id}.webp`, type: "image" as const, alt: id })),
+  );
+  language.configuration.scenes!.intro!.blocks!.unshift({
+    kind: "media",
+    id: "intro.artwork",
+    image: gallery[0]!,
+    layout: "right",
+  });
+}
 it("adds a supplied gallery without overwriting draft text, images or page preferences", () => {
   const old = structuredClone(project);
   old.languages.en!.script += "\n// Keep my draft";
@@ -23,7 +42,7 @@ it("adds a supplied gallery without overwriting draft text, images or page prefe
   const next = addIllustrationLibrary(old, project);
   expect(
     next.languages.en!.configuration.assets!.filter((asset) => asset.id.startsWith("paper.")),
-  ).toHaveLength(26);
+  ).toHaveLength(gallery.length);
   expect(next.languages.en!.script).toBe(old.languages.en!.script);
   expect(next.languages.en!.configuration.scenes).toEqual(old.languages.en!.configuration.scenes);
   expect(next.languages.en!.defaults).toEqual(old.languages.en!.defaults);

@@ -1,7 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 import type { Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { browserHouseProject } from "../fixtures/house-project.ts";
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/stories/house/project.json", (route) =>
+    route.fulfill({ json: browserHouseProject }),
+  );
+});
 
 async function openEditor(page: Page) {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -17,6 +24,39 @@ async function appendInk(page: Page, text: string) {
   await page.keyboard.press("Control+End");
   await page.keyboard.insertText(text);
 }
+
+test("opens media from its selected Ink reference and reports lines without a reference", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "Edit Selected Media", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Validation issues", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByLabel("Find in Ink", { exact: true }).fill("// @media intro/intro.illustration");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  await page.getByRole("button", { name: "Edit Selected Media", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Image", exact: true })).toBeVisible();
+});
+
+test("keeps photograph magnification calibrated and restores focus after Escape", async ({
+  page,
+}) => {
+  await openEditor(page);
+  const trigger = page.getByRole("button", { name: "Examine the photograph", exact: true });
+  await trigger.click();
+  const photo = page.locator(".photo-dialog .magnified-image");
+  await photo.focus();
+  await expect(page.locator(".magnifier-lens")).toHaveAttribute("data-x", "0.500");
+  await photo.press("ArrowRight");
+  await expect(page.locator(".magnifier-lens")).toHaveAttribute("data-x", "0.530");
+  await photo.press("Home");
+  await expect(page.locator(".magnifier-lens")).toHaveAttribute("data-x", "0.500");
+  await photo.press("Escape");
+  await expect(page.locator(".photo-dialog")).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
 
 test("refreshes an imported legacy project's artwork without losing the author's text", async ({
   page,
@@ -76,8 +116,8 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("X (%)", { exact: true }).fill("5");
   await page.getByLabel("Y (%)", { exact: true }).fill("0");
   await expect(page.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "cinematic push in", exact: true }).click();
-  await page.getByLabel("Cinematic atmosphere", { exact: true }).selectOption("historical");
+  await expect(page.getByRole("button", { name: "cinematic push in", exact: true })).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Simple effect", exact: true }).selectOption("fade-in");
   await page.getByLabel("Media examinable", { exact: true }).check();
   await page
     .getByLabel("Image details (one per line)", { exact: true })
@@ -95,8 +135,8 @@ test("inserts images at their source position and preserves video uploads in com
   expect(await figure.evaluate((node) => node.previousElementSibling?.textContent)).toContain(
     "The girl beside her looked exactly like you.",
   );
-  await expect(figure.locator(".atmosphere-historical")).toBeVisible();
-  await expect(figure.locator(".scene-illustration")).toHaveCSS("border-top-width", "2px");
+  await expect(figure.locator(".atmosphere-none")).toBeVisible();
+  await expect(figure.locator(".scene-illustration")).toHaveCSS("border-top-width", "0px");
   await page.getByRole("button", { name: "Examine the image", exact: true }).click();
   const examination = page.getByRole("dialog", { name: "Image", exact: true });
   await expect(examination).toContainText("The locked gate.");
@@ -357,7 +397,7 @@ test("edits both languages, undoes metadata, publishes a title and previews the 
   await page.getByRole("button", { name: "Close preview" }).click();
   await page.goto("/");
   await page.getByRole("button", { name: "Play an existing story" }).click();
-  await expect(page.locator(".eyebrow")).toContainText("The Photograph — edited");
+  await expect(page.locator(".reader-story-title")).toContainText("The Photograph — edited");
   await expect(page.locator(".prose")).toContainText("The first time you saw the girl");
   expect(errors).toEqual([]);
 });
@@ -398,7 +438,9 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByLabel("Game Mode", { exact: true }).selectOption("narrative");
   const settings = page.getByRole("dialog", { name: "Story Settings", exact: true });
-  await expect(settings.getByLabel("Custom page color", { exact: true })).toHaveValue("#f3e5cf");
+  await expect(settings.getByLabel("Custom page color", { exact: true })).toHaveValue(
+    browserHouseProject.languages.en!.defaults.backgroundColor ?? "#f5ead7",
+  );
   await settings.getByLabel("Custom page color", { exact: true }).fill("#131313");
   await page.getByRole("button", { name: "Apply settings" }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();

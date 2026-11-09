@@ -1,7 +1,6 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import { BundleSchema } from "../src/contracts/story.ts";
-import { InkNarrativeEngine } from "../src/features/story-runtime/ink-engine.ts";
+import { narrationSegments } from "./narration-segments.ts";
 
 const output = new URL("../assets/narration/", import.meta.url);
 await mkdir(output, { recursive: true });
@@ -17,33 +16,8 @@ for (const locale of ["en", "fr"]) {
     ),
   );
   inkDigests[locale] = bundle.inkDigest;
-  const engine = new InkNarrativeEngine(bundle);
-  const initial = engine.advance();
-  const queue = [{ state: engine.serialize(), frame: initial }];
-  const visited = new Set<string>();
-  while (queue.length) {
-    if (visited.size > 1024) throw new Error("Narration export exceeded the authored path budget");
-    const { state, frame } = queue.shift()!;
-    if (visited.has(state)) continue;
-    visited.add(state);
-    for (const segment of frame.segments) {
-      const text = segment.text.normalize("NFC");
-      const digest = createHash("sha256").update(text).digest("hex");
-      segments.set(`${locale}:${segment.id}:${digest}`, {
-        segmentId: segment.id,
-        passageId: frame.passageId,
-        locale,
-        text,
-        spokenTextDigest: digest,
-      });
-    }
-    for (const choice of [...frame.choices, ...(frame.actions ?? [])]) {
-      engine.restore(state, frame);
-      engine.choose(choice.id);
-      const next = engine.advance();
-      queue.push({ state: engine.serialize(), frame: next });
-    }
-  }
+  for (const segment of narrationSegments(bundle))
+    segments.set(`${locale}:${segment.segmentId}:${segment.spokenTextDigest}`, segment);
 }
 await writeFile(
   new URL("segments.json", output),

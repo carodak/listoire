@@ -3,22 +3,22 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 export function addIllustrationLibrary(project: StoryProject, source: StoryProject | null) {
   if (!source) return project;
   const next = structuredClone(project);
+  const { mediaLibrary = [] } = source;
+  const catalogue = new Map(mediaLibrary.map((entry) => [entry.id, entry]));
   for (const [locale, language] of Object.entries(next.languages)) {
     const available = source.languages[locale] ?? source.languages[source.defaultLocale]!;
     language.defaults.dropCapColor ??= available.defaults.dropCapColor;
-    const ids = new Set(language.configuration.assets?.map((asset) => asset.id));
+    const { assets = [] } = language.configuration;
+    const { assets: supplied = [] } = available.configuration;
+    const ids = new Set(assets.map((asset) => asset.id));
     language.configuration.assets = [
-      ...(language.configuration.assets ?? []),
-      ...(available.configuration.assets ?? []).filter(
-        (asset) =>
-          source.mediaLibrary?.some((entry) => entry.id === asset.id) && !ids.has(asset.id),
-      ),
+      ...assets,
+      ...supplied.filter((asset) => catalogue.has(asset.id) && !ids.has(asset.id)),
     ];
   }
-  const catalogue = new Map(source.mediaLibrary?.map((entry) => [entry.id, entry]));
   const available = new Set(
-    Object.values(next.languages).flatMap(
-      (language) => language.configuration.assets?.map((asset) => asset.id) ?? [],
+    Object.values(next.languages).flatMap(({ configuration: { assets = [] } }) =>
+      assets.map((asset) => asset.id),
     ),
   );
   next.mediaLibrary = [...catalogue.values()].filter((entry) => available.has(entry.id));

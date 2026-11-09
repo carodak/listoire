@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { EditorDialog } from "./EditorDialog.tsx";
+import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { NarrationModeSelect } from "./NarrationModeSelect.tsx";
 import { PaperPalette } from "../presentation/PaperPalette.tsx";
-import { Field, SelectField } from "./Fields.tsx";
+import { Field, SelectField, TextareaField } from "./Fields.tsx";
 type Language = StoryProject["languages"][string];
 interface LanguageProps {
   language: Language;
@@ -46,20 +46,17 @@ export function StorySettings({ project, locale, onApply, onClose }: Props) {
           options={Object.keys(draft.languages)}
           onChange={(defaultLocale) => setDraft({ ...draft, defaultLocale })}
         />
-        <label>
-          Game Mode
-          <select
-            aria-label="Game Mode"
-            value={draft.gameMode}
-            onChange={(event) =>
-              setDraft({ ...draft, gameMode: event.target.value as StoryProject["gameMode"] })
-            }
-          >
-            <option value="narrative">Narrative Only</option>
-            <option value="rpg-no-combat">Game Mode — No Combat</option>
-            <option value="with-combat">Game Mode — With Combat</option>
-          </select>
-        </label>
+        <SelectField
+          label="Game Mode"
+          value={draft.gameMode}
+          options={["narrative", "rpg-no-combat", "with-combat"] as const}
+          onChange={(gameMode) => setDraft({ ...draft, gameMode })}
+          labels={{
+            narrative: "Narrative Only",
+            "rpg-no-combat": "Game Mode — No Combat",
+            "with-combat": "Game Mode — With Combat",
+          }}
+        />
         <p className="editor-hint">
           Author checks, inventory, abilities and encounters from Game. Results and random state are
           saved with the story.
@@ -73,14 +70,7 @@ export function StorySettings({ project, locale, onApply, onClose }: Props) {
             onChange={(event) => changeLanguage({ missingTranslation: !event.target.checked })}
           />
         )}
-        <footer>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="primary" type="submit">
-            Apply settings
-          </button>
-        </footer>
+        <EditorFormActions onClose={onClose}>Apply settings</EditorFormActions>
       </form>
     </EditorDialog>
   );
@@ -117,29 +107,23 @@ function StoryMetadata({ language, onChange }: LanguageProps) {
           onChange({ configuration: { ...language.configuration, title: event.target.value } })
         }
       />
-      <label>
-        Description
-        <textarea
-          value={language.description}
-          onChange={(event) => onChange({ description: event.target.value })}
-        />
-      </label>
-      <label>
-        Cover image
-        <select
-          value={language.cover ?? ""}
-          onChange={(event) => onChange({ cover: event.target.value || undefined })}
-        >
-          <option value="">No cover</option>
-          {language.configuration.assets
+      <TextareaField
+        label="Description"
+        value={language.description}
+        onChange={(event) => onChange({ description: event.target.value })}
+      />
+      <SelectField
+        label="Cover image"
+        value={language.cover ?? ""}
+        onChange={(cover) => onChange({ cover: cover || undefined })}
+        options={[
+          "",
+          ...(language.configuration.assets
             ?.filter((asset) => asset.type === "image")
-            .map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {asset.id}
-              </option>
-            ))}
-        </select>
-      </label>
+            .map((asset) => asset.id) ?? []),
+        ]}
+        labels={{ "": "No cover" }}
+      />
     </>
   );
 }

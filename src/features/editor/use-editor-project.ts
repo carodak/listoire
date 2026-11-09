@@ -4,8 +4,7 @@ import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-st
 import { compileInWorker } from "./compile-client.ts";
 import { ProjectHistory } from "./project-history.ts";
 import { loadAce } from "./ace.ts";
-import { verifyMediaAssets } from "./asset-validation.ts";
-import { withMediaReferences } from "./media-references.ts";
+import { withMediaReferences } from "./media-script.ts";
 import { refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
 import { addIllustrationLibrary } from "./illustration-pack.ts";
 import { loadDefaultProject, readActiveProject } from "./default-project.ts";
@@ -18,18 +17,14 @@ export function useEditorProject() {
     NonNullable<Awaited<ReturnType<typeof readEditorRecord>>>["history"]
   >([]);
   const latest = useRef<StoryProject | null>(null);
-  const history = useRef<ProjectHistory | null>(null);
   const revision = useRef(0);
   const serial = useRef(Promise.resolve());
   const change = useRef(0);
   const lastEvent = useRef("Original story");
   const dirty = useRef(false);
   const mounted = useRef(true);
-  const [availability, setAvailability] = useState({
-    canUndo: false,
-    canRedo: false,
-    illustrationPack: null as StoryProject | null,
-  });
+  const [history] = useState(() => new ProjectHistory());
+  const [illustrationPack, setIllustrationPack] = useState<StoryProject | null>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -41,19 +36,12 @@ export function useEditorProject() {
       const seed = withMediaReferences(
         addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
       );
-      const ace = await loadAce();
+      await loadAce();
       if (scope.signal.aborted) return;
-      setAvailability((before) => ({ ...before, illustrationPack: built }));
+      setIllustrationPack(built);
       const initialized = record ?? (await writeEditorRecord(seed, 0, "Original story"));
       if (scope.signal.aborted) return;
       revision.current = initialized.revision;
-      history.current = new ProjectHistory(new ace.UndoManager(), (restored) => {
-        latest.current = restored;
-        dirty.current = true;
-        change.current++;
-        setProject(restored);
-        setStatus("Unsaved changes");
-      });
       latest.current = seed;
       dirty.current =
         JSON.stringify(initialized.draft) !== JSON.stringify(seed) ||
@@ -85,13 +73,12 @@ export function useEditorProject() {
     next = refreshDefaultArtwork(next, latest.current);
     next = withMediaReferences(next);
     if (!latest.current || next === latest.current) return;
-    history.current?.record(latest.current, next, label);
+    history.record(latest.current, next, label);
+    replaceProject(next, label);
+  }
+  function replaceProject(next: StoryProject | undefined, label: string) {
+    if (!next) return;
     lastEvent.current = label;
-    setAvailability((before) => ({
-      ...before,
-      canUndo: history.current?.canUndo ?? false,
-      canRedo: history.current?.canRedo ?? false,
-    }));
     latest.current = next;
     change.current++;
     dirty.current = true;
@@ -121,7 +108,6 @@ export function useEditorProject() {
         if (generation === change.current) dirty.current = false;
         try {
           const bundles = await compileInWorker(source);
-          await verifyMediaAssets(bundles);
           if (generation !== change.current || !mounted.current) return;
           const published = await writeEditorRecord(source, revision.current, "Autosave", {
             revision: revision.current + 1,
@@ -160,24 +146,6 @@ export function useEditorProject() {
     return () => clearTimeout(timer);
   }, [project]);
 
-  function undo() {
-    lastEvent.current = "Undid an editing change";
-    history.current?.undo();
-    setAvailability((before) => ({
-      ...before,
-      canUndo: history.current?.canUndo ?? false,
-      canRedo: history.current?.canRedo ?? false,
-    }));
-  }
-  function redo() {
-    lastEvent.current = "Redid an editing change";
-    history.current?.redo();
-    setAvailability((before) => ({
-      ...before,
-      canUndo: history.current?.canUndo ?? false,
-      canRedo: history.current?.canRedo ?? false,
-    }));
-  }
   return {
     project,
     update,
@@ -186,9 +154,11 @@ export function useEditorProject() {
     issues,
     setIssues,
     versions,
-    undo,
-    redo,
-    ...availability,
+    undo: () => replaceProject(history.undo(), "Undid an editing change"),
+    redo: () => replaceProject(history.redo(), "Redid an editing change"),
+    illustrationPack,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
   };
 }
 

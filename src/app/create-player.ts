@@ -13,6 +13,7 @@ export async function createPlayer(
   saves: SaveManager,
   preferences: ReadingPreferences,
   preview?: { startKnot?: string; state?: z.infer<typeof PreviewStateSchema> },
+  fromDraft = false,
 ) {
   const { InkNarrativeEngine } = await import("../features/story-runtime/ink-engine.ts");
   const presentation = new PresentationSession(
@@ -20,15 +21,12 @@ export async function createPlayer(
     preferences,
     undefined,
     (asset) => resolveMediaAsset(asset, bundle.storyId),
-    Boolean(preview),
+    Boolean(preview) || (import.meta.env.DEV && fromDraft),
   );
   const director = new StoryDirector(
     bundle,
     new InkNarrativeEngine(bundle, preview?.startKnot, preview?.state?.variables),
-    {
-      read: saves.read.bind(saves),
-      commit: saves.commit.bind(saves),
-    },
+    saves,
     bundle.character
       ? () =>
           preview?.state?.character ??

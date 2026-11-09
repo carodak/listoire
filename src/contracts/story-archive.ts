@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { StoryProjectSchema } from "./editor-project.ts";
-import type { MediaAsset } from "./uploaded-media.ts";
+import type { MediaAsset } from "./presentation.ts";
 export function splitStoryArchive(raw: unknown) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw))
     throw new Error("Invalid project backup.");

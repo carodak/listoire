@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 
 test("keeps the illustration visible while choosing duplicate layer instances in the embedded gallery", async ({
   page,

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 test("all fourteen official components load on demand and the guarded layer unmounts", async ({
   page,
 }) => {

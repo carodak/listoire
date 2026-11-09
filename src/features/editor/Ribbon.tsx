@@ -1,7 +1,8 @@
 import snippets from "./vendor/snippets.json";
 import { commandHelp } from "./tooltips.ts";
+import type { ReactNode } from "react";
 
-export type RibbonTab = "Story" | "Logic" | "Media" | "Game" | "Review";
+export type RibbonTab = "Text" | "Story" | "Logic" | "Media" | "Game" | "Review";
 interface Command {
   label: string;
   icon: string;
@@ -9,6 +10,7 @@ interface Command {
   snippet?: string;
 }
 const groups: Record<RibbonTab, { label: string; commands: Command[] }[]> = {
+  Text: [],
   Story: [
     {
       label: "Structure",
@@ -205,6 +207,7 @@ function AdditionalCommands({ insert }: { insert: (script: string) => void }) {
 }
 
 interface RibbonProps {
+  textTools: ReactNode;
   tab: RibbonTab;
   collapsed: boolean;
   gameMode: string;
@@ -215,6 +218,7 @@ interface RibbonProps {
 }
 
 export function Ribbon({
+  textTools,
   tab,
   collapsed,
   onTab,
@@ -254,41 +258,58 @@ export function Ribbon({
           role="tabpanel"
           aria-label={`${tab} commands`}
         >
+          {tab === "Text" && textTools}
           {groups[tab].map((group) => (
-            <div className="ribbon-group" key={group.label}>
-              <fieldset>
-                <legend>{group.label}</legend>
-                <div>
-                  {group.commands.map((command) => (
-                    <button
-                      key={command.label}
-                      title={
-                        command.action === "unavailable"
-                          ? `${command.label}: the existing engine does not implement this operation`
-                          : (commandHelp[command.label] ??
-                            `Insert ${command.label.toLowerCase()} into the Ink script.`)
-                      }
-                      disabled={command.action === "unavailable"}
-                      onClick={() =>
-                        command.action === "insert"
-                          ? onInsert(command.snippet!)
-                          : command.action === "upstream"
-                            ? onInsert(upstreamSnippet(command.snippet!))
-                            : onCommand(command.action)
-                      }
-                    >
-                      <span aria-hidden="true">{command.icon}</span>
-                      {command.label}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-              {group.label === "Advanced" && <AdditionalCommands insert={onInsert} />}
-            </div>
+            <CommandGroup
+              key={group.label}
+              group={group}
+              onCommand={onCommand}
+              onInsert={onInsert}
+            />
           ))}
           {tab === "Story" && <AdditionalCommands insert={onInsert} />}
         </div>
       )}
+    </div>
+  );
+}
+function CommandGroup({
+  group,
+  onCommand,
+  onInsert,
+}: Pick<RibbonProps, "onCommand" | "onInsert"> & {
+  group: { label: string; commands: Command[] };
+}) {
+  return (
+    <div className="ribbon-group" key={group.label}>
+      <fieldset>
+        <legend>{group.label}</legend>
+        <div>
+          {group.commands.map((command) => (
+            <button
+              key={command.label}
+              title={
+                command.action === "unavailable"
+                  ? `${command.label}: the existing engine does not implement this operation`
+                  : (commandHelp[command.label] ??
+                    `Insert ${command.label.toLowerCase()} into the Ink script.`)
+              }
+              disabled={command.action === "unavailable"}
+              onClick={() =>
+                command.action === "insert"
+                  ? onInsert(command.snippet!)
+                  : command.action === "upstream"
+                    ? onInsert(upstreamSnippet(command.snippet!))
+                    : onCommand(command.action)
+              }
+            >
+              <span aria-hidden="true">{command.icon}</span>
+              {command.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      {group.label === "Advanced" && <AdditionalCommands insert={onInsert} />}
     </div>
   );
 }

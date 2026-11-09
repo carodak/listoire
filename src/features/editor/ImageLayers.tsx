@@ -8,6 +8,7 @@ import type { Cinematic } from "../../contracts/cinematic.ts";
 import { MediaLibrary, VisualPreview } from "./MediaLibrary.tsx";
 import { CompositionPreview } from "./IllustrationPreview.tsx";
 import { LayerTransform } from "./LayerTransform.tsx";
+import { CheckboxField } from "./Fields.tsx";
 interface Props {
   image: string;
   value: Illustration;
@@ -49,17 +50,12 @@ export function ImageLayers(props: Props) {
           margins={margins}
         />
       </ImageDragStage>
-      <label
-        className="check"
-        title="Check the inset frame for exposed edges before applying camera movement."
-      >
-        <input
-          type="checkbox"
-          checked={margins}
-          onChange={(event) => showMargins(event.target.checked)}
-        />
-        Show crop / safe margins
-      </label>
+      <CheckboxField
+        label="Show crop / safe margins"
+        help="Check the inset frame for exposed edges before applying camera movement."
+        checked={margins}
+        onChange={(event) => showMargins(event.target.checked)}
+      />
     </>
   );
   return (

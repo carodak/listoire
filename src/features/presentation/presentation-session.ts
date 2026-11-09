@@ -1,7 +1,7 @@
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 import { AudioManager } from "../media/audio-manager.ts";
 import { PlaybackContext } from "./playback-context.ts";
 import { ScenePlayback } from "./scene-playback.ts";

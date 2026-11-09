@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { FailureCode } from "../../contracts/story.ts";
-import type { StoryDirector } from "../story-runtime/director.ts";
+import type { ReaderController } from "../../contracts/story.ts";
 
 interface CheckpointControlsProps {
-  director: StoryDirector;
+  director: ReaderController;
   busy: boolean;
   hasFrame: boolean;
   failure: FailureCode | null;

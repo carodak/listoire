@@ -1,8 +1,105 @@
 import { expect, it, vi, afterEach } from "vitest";
-import { NarrationManager, textDigest } from "./narration-manager.ts";
+import { NarrationManager } from "./narration-manager.ts";
+import { textDigest } from "../../contracts/digest.ts";
 import { AudioManager } from "./audio-manager.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 afterEach(() => vi.unstubAllGlobals());
+it("requests the next local paragraph while the first recording is still playing", async () => {
+  const bytes = new TextEncoder().encode("prefetch fixture");
+  const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (value) =>
+    value.toString(16).padStart(2, "0"),
+  ).join("");
+  const bundle = { ...fixtureBundle(), narrationMode: "ai-live" as const };
+  bundle.assets = [{ id: "recording.first", path: "media/first.mp3", type: "audio", alt: "" }];
+  bundle.narration = [
+    {
+      segmentId: "first",
+      locale: "en",
+      spokenTextDigest: await textDigest("First."),
+      voiceId: "nano-default",
+      assetId: "recording.first",
+      audioDigest: digest,
+      durationMs: 1000,
+      marks: [],
+      approval: { status: "approved", reviewer: "test", rightsReference: "test" },
+    },
+  ];
+  const fetch = vi.fn(async (_url: unknown, options?: RequestInit) =>
+    options?.method === "POST" ? new Response("{}", { status: 503 }) : new Response(bytes),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const node = Object.assign(new EventTarget(), {
+    currentTime: 0,
+    duration: 1,
+    volume: 1,
+    loop: false,
+    playbackRate: 1,
+    play: vi.fn(() => Promise.resolve()),
+    pause: vi.fn(),
+  });
+  const audio = new AudioManager(() => node as unknown as HTMLAudioElement);
+  const scope = new AbortController();
+  const playing = new NarrationManager(audio).play(
+    {
+      passageId: "threshold",
+      segments: [
+        { id: "first", text: "First." },
+        { id: "next", text: "Next." },
+      ],
+      choices: [],
+    },
+    bundle,
+    { rate: 1, deviceVoice: false, settings: () => ({ rate: 1, voiceId: "nano-default" }) },
+    scope.signal,
+    vi.fn(),
+  );
+  await vi.waitFor(() => expect(node.play).toHaveBeenCalledOnce());
+  await vi.waitFor(() =>
+    expect(
+      fetch.mock.calls.some(
+        ([, options]) =>
+          options?.method === "POST" && JSON.parse(options.body as string).segmentId === "next",
+      ),
+    ).toBe(true),
+  );
+  scope.abort();
+  expect(await playing).toBe("aborted");
+  audio.dispose();
+});
+it("reads device paragraphs in one utterance and maps boundaries back to their segments", async () => {
+  const audio = new AudioManager();
+  const speak = vi
+    .spyOn(audio, "speak")
+    .mockImplementation((text, _locale, _rate, _signal, boundary) => {
+      expect(text).toBe("First. Second.");
+      boundary(7, 6);
+      return Promise.resolve("ended");
+    });
+  const progress = vi.fn();
+  const bundle = { ...fixtureBundle(), narrationMode: "ai-live" as const };
+  const result = await new NarrationManager(audio).play(
+    {
+      passageId: "threshold",
+      segments: [
+        { id: "one", text: "First." },
+        { id: "two", text: "Second." },
+      ],
+      choices: [],
+    },
+    bundle,
+    { rate: 1, deviceVoice: true, settings: () => ({ rate: 1, voiceId: "device:test" }) },
+    new AbortController().signal,
+    progress,
+  );
+  expect(result).toBe("ended");
+  expect(speak).toHaveBeenCalledTimes(1);
+  expect(progress.mock.calls.map(([event]) => event)).toEqual([
+    { segmentId: "one", characters: 6, done: true },
+    { segmentId: "two", characters: 6, done: false },
+    { segmentId: "two", characters: 7, done: true },
+  ]);
+  audio.dispose();
+});
 it.each([false, true])(
   "uses explicit editor preview context (%s), independently of authored Ink",
   async (editorPreview) => {
@@ -114,15 +211,9 @@ it("device narration cancellation releases ducking and ignores late completion",
   const stop = vi.fn(() => resolve("aborted"));
   vi.spyOn(audio, "speak").mockImplementation((_text, _locale, _rate, signal) => {
     signal.addEventListener("abort", stop, { once: true });
-    return {
-      finished: new Promise((done) => {
-        resolve = done;
-      }),
-      stop,
-      pause() {},
-      resume() {},
-      seek() {},
-    };
+    return new Promise((done) => {
+      resolve = done;
+    });
   });
   const duck = vi.spyOn(audio, "setDucking");
   const manager = new NarrationManager(audio);

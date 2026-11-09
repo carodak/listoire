@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import argparse
+import subprocess
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,24 +32,13 @@ assert all(entry["status"] in ("extracted", "already-extracted", "extracted-sour
 if not published_only: assert len(report) == len(list((ROOT / "assets/images/heritage-library").rglob(".listoire-extracted.json")))
 curated = {entry["id"]: entry for entry in load("assets/catalog/curated.json")["entries"]}
 expected = set()
-project = load("public/stories/house/project.json")
 for locale in ("en", "fr"):
     bundle = load(f"public/stories/house/{locale}.json")
-    referenced = {scene[key] for scene in bundle["scenes"].values() for key in ("image", "sound") if key in scene}
-    referenced.update(asset["id"] for asset in project["languages"][locale]["configuration"]["assets"] if asset["type"] == "image")
-    referenced.add(bundle["examination"]["image"])
-    referenced.add(bundle["character"]["portrait"])
-    if bundle.get("cover"): referenced.add(bundle["cover"])
-    for scene in bundle["scenes"].values():
-        for block in scene.get("blocks", []):
-            if block["kind"] == "media":
-                referenced.add(block["image"])
-                referenced.update(layer["image"] for layer in block.get("illustration", {}).get("layers", []))
-        for event in scene.get("events", []):
-            action = event["action"]
-            if action["kind"] == "audio": referenced.add(action["assetId"])
-            if action["kind"] == "effect" and "image" in action["effect"]: referenced.add(action["effect"]["image"])
-    for clip in bundle.get("narration", []): referenced.add(clip["assetId"])
+    referenced = set(json.loads(subprocess.check_output([
+        "node", "--input-type=module", "-e",
+        "import {readFileSync} from 'node:fs'; import {storyAssetIds} from './src/contracts/story-assets.ts'; const bundle = JSON.parse(readFileSync(process.argv[1], 'utf8')); process.stdout.write(JSON.stringify([...storyAssetIds(bundle)]));",
+        f"public/stories/house/{locale}.json",
+    ], cwd=ROOT, text=True)))
     assert referenced == {entry["id"] for entry in bundle["assets"]}
     for asset in bundle["assets"]:
         if asset["id"].startswith("narration."):

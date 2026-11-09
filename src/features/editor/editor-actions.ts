@@ -6,15 +6,13 @@ import type { useEditorProject } from "./use-editor-project.ts";
 import { message } from "./use-editor-project.ts";
 import { importProjectArchive } from "./project-archive.ts";
 import { compileInWorker } from "./compile-client.ts";
-import { verifyMediaAssets } from "./asset-validation.ts";
 import { insertLocalized } from "./localized-insertion.ts";
-import { outlineEntries } from "./ink-commands.ts";
-import {
-  editMediaScript,
-  mediaInsertionPosition,
-  mediaReferenceLine,
-  sceneMediaEntries,
-} from "./media-references.ts";
+import { outlineEntries } from "./ink-outline.ts";
+import { editMediaScript, mediaInsertionPosition, mediaReferenceLine } from "./media-script.ts";
+import { sceneMediaEntries } from "./scene-media.ts";
+import type { Typography } from "../../contracts/typography.ts";
+import { parseTypography } from "../../contracts/typography.ts";
+import { formatTextSelection } from "./text-formatting.ts";
 export interface EditorActionContext {
   project: StoryProject;
   language: StoryProject["languages"][string];
@@ -31,6 +29,39 @@ export class EditorActions {
   constructor(context: EditorActionContext) {
     this.context = context;
   }
+  selectedText = () => {
+    try {
+      return parseTypography(this.context.handles.current.editor?.getSelectedText() ?? "").text;
+    } catch {
+      return "";
+    }
+  };
+  formatText = (format: Typography): string | undefined => {
+    const { handles } = this.context;
+    const editor = handles.current.editor;
+    if (!editor) return "The script editor is still loading.";
+    const range = editor.getSelectionRange();
+    if (range.start.row !== range.end.row) return "Select words within one paragraph.";
+    try {
+      const { start, end, replacement, selection } = formatTextSelection(
+        editor.session.getLine(range.start.row),
+        range.start.column,
+        range.end.column,
+        format,
+      );
+      handles.current.selection = {
+        start: { row: range.start.row, column: start },
+        end: { row: range.end.row, column: end },
+      };
+      this.insert(replacement, false);
+      editor.selection.setRange({
+        start: { row: range.start.row, column: selection.start },
+        end: { row: range.start.row, column: selection.end },
+      });
+    } catch (error) {
+      return message(error);
+    }
+  };
   changeScript = (script: string) => {
     const { handles, update, project, activeLocale, language } = this.context;
     if (handles.current.suppress) return;
@@ -92,10 +123,10 @@ export class EditorActions {
     patchView({ selectedMedia: undefined });
     patchView({ dialog: command });
   };
-  editSelectedMedia = () => {
+  private editSelectedMedia() {
     const { handles, language, state, patchView } = this.context;
     const cursor = handles.current.editor?.getCursorPosition();
-    const line = cursor ? handles.current.editor?.session.getLine(cursor.row) : "";
+    const line = handles.current.editor?.session.getLine(cursor?.row ?? 0);
     const match = line?.match(/@media\s+([^/\s]+)\/([a-z0-9.-]+)/);
     if (!match) {
       state.setIssues([
@@ -104,14 +135,14 @@ export class EditorActions {
       patchView({ dialog: "Issues" });
       return;
     }
-    patchView({ selectedScene: match[1]! });
-    patchView({ selectedMedia: match[2] });
     patchView({
+      selectedScene: match[1]!,
+      selectedMedia: match[2],
       dialog:
         sceneMediaEntries(language, match[1]!).find((entry) => entry.id === match[2])?.kind ??
         "Scene Properties",
     });
-  };
+  }
   validate = async () => {
     const { patchView, project, state } = this.context;
     patchView({ busy: true });
@@ -131,7 +162,6 @@ export class EditorActions {
     patchView({ busy: true });
     try {
       const bundles = await compileInWorker(source, activeLocale);
-      await verifyMediaAssets(bundles);
       patchView({ preview: { bundle: bundles[activeLocale]!, knot, key: crypto.randomUUID() } });
     } catch (error) {
       state.setIssues([message(error)]);

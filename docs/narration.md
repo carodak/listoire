@@ -2,7 +2,12 @@
 
 Narration stays outside React. The reader uses NarrationManager → AudioManager;
 the local preparation tool uses official Chatterbox checkpoints. No paid service,
-voice cloning reference, Sonniss recording or browser model download is involved.
+Sonniss voice recording or browser model download is involved. The Orée story also
+uses synthetic voice references, described below.
+
+AudioManager playback now returns a completion promise. Pause, resume and channel
+cancellation stay on the manager; the unused public seek/per-clip transport API
+was removed. Narration still verifies clip bytes and text digests before playback.
 
 ## Reproduce the environment
 
@@ -36,9 +41,19 @@ Do not run two downloaders against the same destination at once.
 
 ## Actual text, caching and publication
 
+Expressive typography is decoded before narration. The Ink adapter emits plain
+segment/choice text and separate validated style spans; neither playback nor export
+speaks the `<typo>` tags. The editor's on-demand generation and human recording
+digest also use the plain text. Styling does not change the spoken-text cache key.
+Existing clips keep their listening-review status; this change generates or approves none.
+
+Device speech resumes the browser's synthesis queue before speaking an unpaused
+page. This covers browsers retaining their native paused flag after cancellation,
+including when the prior utterance has already been released by the application.
+
 `narration:export` traverses the authored Ink paths with a bounded state budget,
-including photograph interaction variants. It exports 72 exact NFC segment variants
-(36 per language) with stable segment IDs and text SHA-256. No hand-maintained copy
+including check and combat outcome variants. Orée 1.2 exports 260 exact
+NFC segment variants (130 per language) with stable IDs and text SHA-256. No hand-maintained copy
 of narrative paragraphs is used for generation.
 
 `prepare` selects Nano for English and Multilingual V3 for French. The provider's
@@ -72,8 +87,8 @@ npm run dev
 The service listens only on `127.0.0.1:8765`; Vite proxies `/api/narration`. The original
 endpoint accepts only exact exported story variants. `/api/narration/editor-preview`
 also accepts bounded authored text for unsaved editor previews and edited local stories.
-The reader endpoint restricts configured voice IDs and requests to 20 KB. The editor
-endpoint also accepts named profiles and synthesis settings, with a 7 MB request cap.
+Both endpoints accept named profiles and synthesis settings, with a 7 MB request cap.
+The normal reader additionally requires an exact exported story segment.
 Examples must be MP3/WAV, 6–30 seconds and at most 5 MB, with author-attested rights.
 Forced audio demuxers, local-only protocols and decode timeouts prevent interpreting
 an upload as a playlist. Both endpoints check loopback Host/Origin, serialize model
@@ -104,3 +119,39 @@ For EN/FR, a scoped adapter bypasses an upstream Chinese-only converter initiali
 that otherwise downloads unrelated resources into the user home. No installed files or
 Latin tokenization are changed. Revisit this workaround before adding other languages.
 French generation was verified with Hub offline mode enabled.
+
+## Orée narrators (2026-11-07)
+
+Orée supplies six Multilingual V3 registers in both English and French: Ariane (warm),
+Noé (calm), Lison (childlike), Éli (youthful), Alma (mature/mellow) and Basile (deep).
+These are two local synthetic speaker bases with four pitch-shaped reference variants,
+not six independently recorded speakers. `tools/prepare-narrator-voices.ps1` prepares
+the references from Microsoft Linda/Richard, using FFmpeg Rubber Band without changing
+duration. `tools/create-magic-story.ts` embeds the bounded references into each language.
+Uploaded author references and installed device voices still use the existing controls.
+
+All twelve voice/language combinations were generated through the normal endpoint and
+then requested through the editor-preview endpoint. Each pair returned the same cached
+MP3; voice, locale, settings digest, audio hash, decode and preview status were checked.
+This is a technical check, not a listening review. Speaker-reference reuse rights have
+not been independently verified and are explicitly recorded separately from the model
+license. No clip was promoted to approved audio.
+
+Live narration requires the local service. Static/mobile distribution needs optimized
+clips for the selected voices and all text variants, followed by human listening review.
+The exporter merges equivalent visible frames/globals and has an 8,192-state bound;
+revisit it before adding visit-count-dependent loops or prose that interpolates dice/HP.
+
+Paragraph playback now prepares the next local recording during the current recording.
+Device narration joins ordinary-page paragraphs into one utterance; full-screen cinematic
+barriers retain segmented playback. Device voice changes apply on the next page or Replay;
+local voice settings are rechecked before each segment. Text reveals approximately 65
+graphemes ahead, and does not move backwards when transport progress changes.
+
+Audio processing revision 1 trims only the leading and trailing silence. Reversing the
+signal for the second trim preserves pauses within the recording. Cache keys include
+this revision; old MP3 URLs are never overwritten, and an existing exact-source WAV can
+be re-encoded without generating speech again. Fresh FR/EN first-paragraph generation
+took 15.838s/13.185s locally, with subsequent reader/preview requests taking 12ms/30ms.
+Cold synthesis can therefore still take several seconds; clips remain previews until
+listening review. Background audio ducks and recovers smoothly over 600ms around playback.

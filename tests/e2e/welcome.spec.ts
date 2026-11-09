@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 
 test("language choices display flags and support keyboard selection and Escape", async ({
   page,

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 test("the photograph magnifier samples pointer/touch coordinates and supports keyboard control", async ({
   page,
 }) => {

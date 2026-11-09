@@ -15,7 +15,13 @@ export function storyAssetIds(bundle: StoryBundle) {
     }
   }
   if (bundle.cover) ids.add(bundle.cover);
-  for (const value of [bundle.scenes, bundle.examination, bundle.character, bundle.narration])
+  for (const value of [
+    bundle.scenes,
+    bundle.examination,
+    bundle.character,
+    bundle.game,
+    bundle.narration,
+  ])
     visit(value);
   ids.delete("");
   return ids;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { EditorDialog } from "./EditorDialog.tsx";
+import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { NarrationModeSelect } from "./NarrationModeSelect.tsx";
 import { VoiceDesigner } from "./VoiceDesigner.tsx";
 import { VoiceControls } from "./NarrationVoiceControls.tsx";
@@ -54,14 +54,7 @@ export function NarrationDialog({ project, locale, onApply, onClose }: Props) {
           Clips remain previews until listening review. Backups embed recordings; library media
           retain licensed file references.
         </p>
-        <footer>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="primary">
-            Apply narration
-          </button>
-        </footer>
+        <EditorFormActions onClose={onClose}>Apply narration</EditorFormActions>
       </form>
     </EditorDialog>
   );

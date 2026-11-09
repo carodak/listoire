@@ -1,6 +1,9 @@
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
-import type { NarrativeEvent, NativeEffect, ReactBitsEffect } from "../../contracts/effects.ts";
+import type { ReactBitsEffect } from "../../contracts/effects.ts";
+import type { NarrativeEvent } from "../../contracts/narrative-events.ts";
+import type { NativeEffect } from "../../contracts/native-effects.ts";
+import { dissolveWords } from "./page-departure.ts";
 import { EffectsEngine } from "./effects.ts";
 import type { EffectTargets } from "./effects.ts";
 import { PresentationClock } from "./presentation-clock.ts";
@@ -37,7 +40,7 @@ export class ScenePlayback {
   configure(preferences: ReadingPreferences, wasEnabled: boolean | undefined) {
     const volumes = preferences.volumes ?? { sfx: 0.65, ambience: 0.3, music: 0.3, narration: 0.8 };
     for (const channel of ["sfx", "ambience", "music", "narration"] as const)
-      this.audio.setVolume(channel, volumes[channel]);
+      this.audio.setVolume(channel, volumes[channel] * (preferences.masterVolume ?? 1));
     this.audio.setRate(preferences.narrationRate ?? 1);
     this.configureVideos(preferences);
     if (wasEnabled && !preferences.sound)
@@ -77,6 +80,7 @@ export class ScenePlayback {
   bind(targets: EffectTargets, blockId = "scene") {
     const loaded = () => this.queueTarget(blockId);
     this.targets.set(blockId, targets);
+    targets.canvas.addEventListener?.("load", loaded, true);
     if (targets.video) {
       this.videos.add(targets.video);
       setVideoSound(targets, this.context.preferences);
@@ -88,6 +92,7 @@ export class ScenePlayback {
     }
     if (!this.context.restored || targets.silentVideo) this.queueTarget(blockId);
     return () => {
+      targets.canvas.removeEventListener?.("load", loaded, true);
       if (targets.video) {
         targets.video.removeEventListener("loadeddata", loaded);
         targets.video.pause();
@@ -106,8 +111,9 @@ export class ScenePlayback {
   }
   private queueTarget(id: string) {
     if (!this.mediaVisible(id)) return;
-    if (!this.context.restored) this.startPersistence(id);
     const target = this.targets.get(id);
+    if (target && !this.imagesReady(target)) return;
+    if (!this.context.restored) this.startPersistence(id);
     const video = target?.video;
     if (
       video &&
@@ -124,44 +130,24 @@ export class ScenePlayback {
     this.queue("block", id);
   }
   bindPage(element: HTMLElement) {
-    this.targets.set("page", { canvas: element });
-    this.targets.set("scene", { canvas: element });
+    const board = element.querySelector?.<HTMLElement>(".reader-board") ?? element;
+    this.targets.set("page", { canvas: board });
+    this.targets.set("scene", { canvas: board });
     if (!this.context.restored) this.queue("passage");
-    if (!this.context.restored)
-      this.effects.play(
-        { id: "fade-in", duration: 160, target: "canvas" },
-        { canvas: element },
-        this.context.scope.signal,
-        this.reducedMotion(),
-      );
     return () => {
-      if (this.targets.get("page")?.canvas === element) this.targets.delete("page");
-      if (this.targets.get("scene")?.canvas === element) this.targets.delete("scene");
+      if (this.targets.get("page")?.canvas === board) this.targets.delete("page");
+      if (this.targets.get("scene")?.canvas === board) this.targets.delete("scene");
     };
   }
   async leave(direction: "forward" | "back" = "forward") {
     const targets = this.targets.get("page");
     if (!targets || this.context.state.departed) return;
     this.context.publish({ exiting: true });
-    const transitions =
-      this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.events?.flatMap((event) =>
-        event.phase === "exit" &&
-        event.action.kind === "effect" &&
-        event.action.effect.id === "fade-out"
-          ? [event.action.effect]
-          : [],
-      ) ?? [];
-    const effects: NativeEffect[] = transitions.length
-      ? transitions
-      : this.context.preferences.pageTurn
-        ? [{ id: "page-turn", duration: 650, direction, target: "canvas" }]
-        : [{ id: "fade-out" as const, duration: 160, target: "canvas" as const }];
-    await Promise.all(
-      effects.map(
-        (effect) =>
-          this.effects.play(effect, targets, this.context.scope.signal, this.reducedMotion())
-            .finished,
-      ),
+    await dissolveWords(
+      targets.canvas,
+      this.context.scope.signal,
+      this.reducedMotion() || !this.context.preferences.pageTurn,
+      direction,
     );
     this.context.publish({ departed: true });
   }
@@ -200,19 +186,31 @@ export class ScenePlayback {
     if (!this.context.frame) return;
     if (kind === "segment" && targetId) this.context.queuedSegments.add(targetId);
     const events = this.context.bundle.scenes?.[this.context.frame.passageId]?.events ?? [];
-    for (const event of events) {
-      if (event.phase === "exit" || (this.context.skipped && event.action.kind === "effect"))
-        continue;
-      if (!matchesTrigger(event.trigger, kind, targetId) || this.issued.has(event.id)) continue;
-      if (event.action.kind === "effect" && !this.effectReady(event.blockId ?? "scene")) continue;
-      this.issue(event);
-    }
+    const pending = events.filter(
+      (event) =>
+        event.phase !== "exit" &&
+        !(this.context.skipped && event.action.kind === "effect") &&
+        matchesTrigger(event.trigger, kind, targetId) &&
+        !this.issued.has(event.id) &&
+        (event.action.kind !== "effect" || this.effectReady(event.blockId ?? "scene")),
+    );
+    for (const event of pending) this.issue(event);
   }
   private effectReady(id: string) {
     const target = this.targets.get(id);
     return Boolean(
-      target && this.mediaVisible(id) && (!target.video || target.video.readyState >= 2),
+      target &&
+      this.mediaVisible(id) &&
+      this.imagesReady(target) &&
+      (!target.video || target.video.readyState >= 2),
     );
+  }
+  private imagesReady(target: EffectTargets) {
+    return Array.from(
+      target.canvas.querySelectorAll?.<HTMLImageElement>(
+        ".shot-image, .shot-plane-image, .parallax-layer",
+      ) ?? [],
+    ).every((image) => image.complete && image.naturalWidth > 0);
   }
   private issue(event: NarrativeEvent) {
     this.issued.add(event.id);
@@ -255,6 +253,12 @@ export class ScenePlayback {
       this.done(event, generation);
       return;
     }
+    // Older published stories may still contain cinematic-camera events for a lone image.
+    // Do not animate depth that is not actually there; keep genuine layered/3D scenes.
+    if (this.isLegacySingleImageCamera(event)) {
+      this.done(event, generation);
+      return;
+    }
     const reduced = this.reducedMotion();
     if (action.effect.id.startsWith("react-bits.")) {
       if (!reduced)
@@ -286,8 +290,24 @@ export class ScenePlayback {
       this.context.scope.signal,
       reduced,
     );
-    void playback.finished.then(() => this.done(event, generation));
+    void playback.then(() => this.done(event, generation));
   }
+  private isLegacySingleImageCamera(event: NarrativeEvent) {
+    if (
+      event.action.kind !== "effect" ||
+      event.action.effect.id !== "cinematic-camera" ||
+      !event.blockId
+    )
+      return false;
+    const block = this.context.bundle.scenes?.[this.context.frame?.passageId ?? ""]?.blocks?.find(
+      (candidate) => candidate.kind === "media" && candidate.id === event.blockId,
+    );
+    if (block?.kind !== "media") return false;
+    if (block.illustration?.layers.length || block.motion?.layers.length) return false;
+    const asset = this.context.bundle.assets?.find((asset) => asset.id === block.image);
+    return !asset?.scene3d;
+  }
+
   skipCinematic = () => {
     this.context.skipped = true;
     this.clock.clear();
@@ -296,6 +316,7 @@ export class ScenePlayback {
     this.blocking = 0;
     this.context.publish({
       blocking: false,
+      skipMedia: true,
       layers: [],
       previousImage: undefined,
       completedBlocks:
@@ -305,7 +326,6 @@ export class ScenePlayback {
     });
   };
   revealRemaining = () => {
-    this.skipCinematic();
     this.context.publish({ revealAll: true });
     this.context.publish({
       visibleMedia:
@@ -330,5 +350,5 @@ export class ScenePlayback {
 function setVideoSound(target: EffectTargets, preferences: ReadingPreferences) {
   if (!target.video) return;
   target.video.muted = Boolean(target.silentVideo) || !preferences.sound;
-  target.video.volume = preferences.volumes?.sfx ?? 0.65;
+  target.video.volume = (preferences.volumes?.sfx ?? 0.65) * (preferences.masterVolume ?? 1);
 }

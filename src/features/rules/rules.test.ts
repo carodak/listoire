@@ -25,6 +25,113 @@ function definitions() {
     ],
   });
 }
+it("learns and trains an ability once, then removes equipped gear without changing the RNG", () => {
+  const character = hero(),
+    game = state(),
+    definition = definitions();
+  definition.abilities.push({ ...definition.abilities[0]!, id: "new-skill" });
+  const act = (kind: string, reference: string, amount = 1) =>
+    performAction(
+      character,
+      game,
+      definition,
+      GameActionSchema.parse({ id: "test", label: "Test", kind, reference, amount }),
+      "test",
+    );
+  const rng = game.rng;
+  act("learn", "new-skill");
+  act("learn", "new-skill");
+  act("train", "new-skill", 10);
+  expect(character.abilities.filter((ability) => ability.id === "new-skill")).toEqual([
+    { id: "new-skill", rank: 4 },
+  ]);
+  expect(() => act("train", "missing")).toThrow("Unknown ability");
+  expect(() => act("learn", "missing")).toThrow("Unknown ability");
+  act("give-item", "sword");
+  equip(character, game, definition, "sword");
+  act("remove-item", "sword");
+  expect(game.equipment).toEqual({});
+  expect(game.inventory).toEqual([]);
+  character.health.current = 0;
+  expect(() => act("learn", "new-skill")).toThrow("defeat");
+  act("heal", "", 100);
+  expect(character.health.current).toBe(character.health.max);
+  expect(game.rng).toBe(rng);
+});
+
+it.each([1, 2])("resolves a failed or successful escape using the retained RNG %s", (rng) => {
+  const character = hero(),
+    game = state(),
+    definition = definitions();
+  game.rng = rng;
+  game.combat = {
+    encounterId: "guard",
+    choiceId: "fight",
+    hp: 100,
+    maxHp: 100,
+    damage: 1,
+    turn: 1,
+    effects: [],
+  };
+  const outcome = combatTurn(character, game, definition, { kind: "flee" });
+  expect(game.lastResult!.dice).toHaveLength(1);
+  expect(game.lastResult!.outcome === "escaped").toBe(
+    game.lastResult!.roll <= character.attributes[definition.rules.fleeAttribute].current,
+  );
+  expect(["fight", undefined]).toContain(outcome);
+});
+it.each([6, 20])(
+  "keeps all d%i faces equally distributed across a deterministic long run",
+  (sides) => {
+    const game = state();
+    const counts = Array.from({ length: sides }, () => 0);
+    const expected = 100000;
+    for (let index = 0; index < expected * sides; index++) counts[roll(game, sides) - 1]!++;
+    for (const count of counts) expect(Math.abs(count - expected)).toBeLessThan(expected * 0.015);
+    expect(counts.every((count) => count > 0)).toBe(true);
+  },
+);
+it("consumes a healing item once, caps healing and applies the opponent's turn without rolling", () => {
+  const character = hero(),
+    game = state(),
+    definition = definitions();
+  definition.items.push({
+    ...definition.items[0]!,
+    id: "balm",
+    name: "Balm",
+    slot: "none",
+    consumable: true,
+    healing: 4,
+  });
+  game.inventory = ["balm"];
+  performAction(
+    character,
+    game,
+    definition,
+    GameActionSchema.parse({ id: "fight", label: "Fight", kind: "combat", reference: "guard" }),
+    "choice",
+  );
+  character.health.current = 5;
+  const rng = game.rng,
+    damage = game.combat!.damage;
+  combatTurn(character, game, definition, { kind: "item", id: "balm" });
+  expect(character.health.current).toBe(Math.max(0, 6 - damage));
+  expect(game.inventory).toEqual([]);
+  expect(game.rng).toBe(rng);
+  expect(() => combatTurn(character, game, definition, { kind: "item", id: "balm" })).toThrow();
+});
+it("records actual dice without consuming additional random numbers and validates saved faces", () => {
+  const game = state(),
+    copy = structuredClone(game);
+  const dice: NonNullable<NonNullable<typeof game.lastResult>["dice"]> = [];
+  for (const sides of [6, 3, 4, 20]) expect(roll(game, sides, dice)).toBe(roll(copy, sides));
+  expect(game.rng).toBe(copy.rng);
+  expect(dice.map((die) => die.sides)).toEqual([6, 3, 4, 20]);
+  game.lastResult = { success: true, roll: dice[0]!.value, dice, message: "fixture" };
+  expect(GameStateSchema.parse(JSON.parse(JSON.stringify(game)))).toEqual(game);
+  dice[0]!.value = 7;
+  expect(GameStateSchema.safeParse(game).success).toBe(false);
+});
 it("retains the approved enemy formula and corrects its example to 15 HP", () => {
   const character = hero(),
     game = state();
@@ -136,4 +243,18 @@ it("expires a one-turn stun after cancelling exactly one retaliation", () => {
   expect(game.combat!.effects).toEqual([]);
   combatTurn(character, game, definition, { kind: "attack" });
   expect(character.health.current).toBe(4);
+});
+
+it("identifies a received item so the reader can show its notification without guessing from text", () => {
+  const character = hero(),
+    game = state();
+  const action = GameActionSchema.parse({
+    id: "pickup",
+    label: "A letter arrives",
+    kind: "give-item",
+    reference: "sword",
+  });
+  performAction(character, game, definitions(), action, "option-0");
+  expect(game.lastResult).toMatchObject({ message: "A letter arrives", itemId: "sword" });
+  expect(GameStateSchema.parse(game).inventory).toEqual(["sword"]);
 });

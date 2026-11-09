@@ -4,7 +4,7 @@ import { VideoUpload } from "./VideoUpload.tsx";
 import { CinematicFields } from "./CinematicFields.tsx";
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { EditorDialog } from "./EditorDialog.tsx";
+import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { applyMediaEdit } from "./media-authoring.ts";
 import { mediaDefaults, mediaContext } from "./media-form.ts";
 import type { MediaEdit } from "./media-edit.ts";
@@ -102,14 +102,7 @@ export function MediaDialog(props: MediaDialogProps) {
           )}
         </fieldset>
         {form.error && <p role="alert">{form.error}</p>}
-        <footer>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="primary" type="submit">
-            Apply {kind}
-          </button>
-        </footer>
+        <EditorFormActions onClose={onClose}>Apply {kind}</EditorFormActions>
       </form>
     </EditorDialog>
   );
@@ -178,6 +171,8 @@ function MediaConfiguration({ kind, project, locale, form, initial, context, pat
         kind={kind}
         motion={form.motion}
         image={context.assetUrl}
+        layerCount={form.illustration?.layers.length ?? 0}
+        simpleEffect={initial.effect}
         onChange={(motion) => patch({ motion })}
       />
       {!["Image", "Video"].includes(kind) && form.target !== "transition" && (

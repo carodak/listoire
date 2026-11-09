@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { EditorDialog } from "./EditorDialog.tsx";
-import { buildInkCommand, knotNames } from "./ink-commands.ts";
+import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
+import { buildInkCommand } from "./ink-commands.ts";
+import { knotNames } from "./ink-outline.ts";
+import { CheckboxField, Field } from "./Fields.tsx";
 const nameLabels: Record<string, string> = {
   Knot: "Knot name",
   Stitch: "Stitch name",
@@ -16,21 +18,26 @@ interface CommandDialogProps {
 }
 
 export function CommandDialog({ command, script, onInsert, onClose }: CommandDialogProps) {
-  const [name, setName] = useState("");
-  const [label, setLabel] = useState("");
-  const [condition, setCondition] = useState("");
-  const [create, setCreate] = useState(false);
   const [error, setError] = useState("");
   const knots = knotNames(script);
   const choice = command.includes("Choice");
   const variable = command.includes("Variable");
-  function submit(event: React.FormEvent) {
+  const identifiers = variable
+    ? [...script.matchAll(/^\s*VAR\s+(\w+)/gm)].map((m) => m[1]!)
+    : knots;
+  function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const data = new FormData(event.currentTarget);
     try {
       onInsert(
         buildInkCommand(
           command,
-          { name, label, condition, create },
+          {
+            name: String(data.get("name") ?? ""),
+            label: String(data.get("label") ?? ""),
+            condition: String(data.get("condition") ?? ""),
+            create: data.has("create"),
+          },
           knots,
           `choice-${crypto.randomUUID()}`,
         ),
@@ -44,54 +51,31 @@ export function CommandDialog({ command, script, onInsert, onClose }: CommandDia
   return (
     <EditorDialog title={command} onClose={onClose}>
       <form onSubmit={submit}>
-        <label>
-          {nameLabels[command] ?? "Destination Knot or Stitch"}
-          <input
-            autoFocus
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            list="ink-identifiers"
-          />
-        </label>
+        <Field
+          label={nameLabels[command] ?? "Destination Knot or Stitch"}
+          autoFocus
+          required
+          name="name"
+          list="ink-identifiers"
+        />
         <datalist id="ink-identifiers">
-          {(variable ? [...script.matchAll(/^\s*VAR\s+(\w+)/gm)].map((m) => m[1]!) : knots).map(
-            (k) => (
-              <option key={k} value={k} />
-            ),
-          )}
+          {identifiers.map((k) => (
+            <option key={k} value={k} />
+          ))}
         </datalist>
         {(choice || command === "Variable") && (
-          <label>
-            {choice ? "Choice label" : "Value"}
-            <input value={label} onChange={(e) => setLabel(e.target.value)} required={choice} />
-          </label>
+          <Field label={choice ? "Choice label" : "Value"} name="label" required={choice} />
         )}
-        {choice && (
-          <label>
-            Optional condition
-            <input value={condition} onChange={(e) => setCondition(e.target.value)} />
-          </label>
-        )}
+        {choice && <Field label="Optional condition" name="condition" />}
         {!["Knot", "Stitch"].includes(command) && !variable && (
-          <label className="check">
-            <input type="checkbox" checked={create} onChange={(e) => setCreate(e.target.checked)} />
-            Create destination Knot
-          </label>
+          <CheckboxField label="Create destination Knot" name="create" />
         )}
         {error && <p role="alert">{error}</p>}
         <p className="editor-hint">
           Structure commands are inserted in each translation. New text is explicitly marked for
           translation review.
         </p>
-        <footer>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="primary" type="submit">
-            Insert {command}
-          </button>
-        </footer>
+        <EditorFormActions onClose={onClose}>Insert {command}</EditorFormActions>
       </form>
     </EditorDialog>
   );

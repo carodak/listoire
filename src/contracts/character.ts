@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export type AttributeDetails = Record<
+  "STR" | "DEX" | "WIL",
+  {
+    base: number;
+    equipment: number;
+    total: number;
+    capped: boolean;
+  }
+>;
+
 const AttributeSchema = z
   .object({
     initial: z.number().int().min(3).max(18),
@@ -27,6 +37,7 @@ export type CharacterProfile = z.infer<typeof CharacterSchema>;
 export const CharacterDefinitionSchema = z
   .object({
     portrait: z.string(),
+    name: z.string().trim().max(80).optional(),
     abilities: z
       .array(z.object({ id: z.string(), name: z.string(), description: z.string() }).strict())
       .min(1)

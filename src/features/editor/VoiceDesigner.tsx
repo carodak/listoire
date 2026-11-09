@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { defaultSpeechSettings } from "../../contracts/media.ts";
-import type { VoiceProfile, SpeechSettings } from "../../contracts/media.ts";
+import { defaultSpeechSettings } from "../../contracts/speech.ts";
+import type { VoiceProfile, SpeechSettings } from "../../contracts/speech.ts";
 import { VoiceExample } from "./VoiceExample.tsx";
-import { Field } from "./Fields.tsx";
+import { Field, SelectField } from "./Fields.tsx";
 type Language = StoryProject["languages"][string];
 function availableProfiles(language: Language, locale: string): VoiceProfile[] {
   const builtin: VoiceProfile[] = [
@@ -133,24 +133,15 @@ function VoiceSelectors({
           <option value="multilingual-v3">Chatterbox Multilingual V3</option>
         </select>
       </label>
-      <label>
-        Voice
-        <select
-          aria-label="Voice"
-          value={voice.id}
-          onChange={(event) =>
-            onChange(profiles.find((profile) => profile.id === event.target.value)!)
-          }
-        >
-          {profiles
-            .filter((profile) => profile.model === voice.model)
-            .map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.label}
-              </option>
-            ))}
-        </select>
-      </label>
+      <SelectField
+        label="Voice"
+        value={voice.id}
+        onChange={(id) => onChange(profiles.find((profile) => profile.id === id)!)}
+        options={profiles
+          .filter((profile) => profile.model === voice.model)
+          .map((profile) => profile.id)}
+        labels={Object.fromEntries(profiles.map((profile) => [profile.id, profile.label]))}
+      />
     </>
   );
 }

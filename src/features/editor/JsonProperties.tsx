@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { EditorDialog } from "./EditorDialog.tsx";
+import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
+import { TextareaField } from "./Fields.tsx";
 
 interface JsonPropertiesProps {
   title: string;
@@ -35,24 +36,15 @@ export function JsonProperties({
           {description ??
             "Edit the existing runtime configuration. Changes are validated before applying."}
         </p>
-        <label>
-          Properties JSON
-          <textarea
-            className="properties-json"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            spellCheck={false}
-          />
-        </label>
+        <TextareaField
+          label="Properties JSON"
+          className="properties-json"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          spellCheck={false}
+        />
         {error && <p role="alert">{error}</p>}
-        <footer>
-          <button type="button" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="primary" type="submit">
-            Apply properties
-          </button>
-        </footer>
+        <EditorFormActions onClose={onClose}>Apply properties</EditorFormActions>
       </form>
     </EditorDialog>
   );

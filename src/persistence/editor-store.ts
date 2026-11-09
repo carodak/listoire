@@ -19,10 +19,10 @@ const RecordSchema = z
   })
   .strict();
 type EditorRecord = z.infer<typeof RecordSchema>;
-const store = () => createStore("listoire-editor", "projects");
+const store = createStore("listoire-editor", "projects");
 
 export async function readEditorRecord(): Promise<EditorRecord | null> {
-  const raw = await get("house", store());
+  const raw = await get("house", store);
   return raw === undefined ? null : RecordSchema.parse(raw);
 }
 
@@ -37,7 +37,7 @@ export async function writeEditorRecord(
   let saved: EditorRecord | undefined;
   await update(
     "house",
-    (raw: unknown) => {
+    function commitDraft(raw: unknown) {
       const previous = raw === undefined ? null : RecordSchema.parse(raw);
       if ((previous?.revision ?? 0) !== expectedRevision)
         throw new Error(
@@ -59,7 +59,7 @@ export async function writeEditorRecord(
       });
       return saved;
     },
-    store(),
+    store,
   );
   return saved!;
 }

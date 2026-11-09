@@ -2,6 +2,9 @@ import copy
 import base64
 import io
 import wave
+import math
+import struct
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +13,21 @@ import narration
 
 
 class NarrationTests(unittest.TestCase):
+    def test_edge_trimming_preserves_the_pause_between_two_spoken_parts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, output = Path(directory) / 'source.wav', Path(directory) / 'output.wav'
+            rate = 24000
+            tone = [int(8000 * math.sin(2 * math.pi * 330 * i / rate)) for i in range(rate // 2)]
+            samples = [0] * rate + tone + [0] * (rate // 2) + tone + [0] * rate
+            with wave.open(str(source), 'wb') as audio:
+                audio.setnchannels(1); audio.setsampwidth(2); audio.setframerate(rate)
+                audio.writeframes(struct.pack('<' + 'h' * len(samples), *samples))
+            subprocess.run(['ffmpeg', '-v', 'error', '-i', str(source), '-af', narration.edge_silence_filter(), str(output)], check=True)
+            with wave.open(str(output), 'rb') as audio:
+                duration = audio.getnframes() / audio.getframerate()
+            self.assertGreater(duration, 1.45)
+            self.assertLess(duration, 1.7)
+
     def test_custom_voice_settings_and_reference_are_bounded_and_change_cache_identity(self):
         audio = io.BytesIO()
         with wave.open(audio, 'wb') as wav:

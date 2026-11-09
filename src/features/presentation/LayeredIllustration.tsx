@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Cinematic } from "../../contracts/cinematic.ts";
 import type { Illustration } from "../../contracts/illustration.ts";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
-import { useSmartCrop } from "./use-smart-crop.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
+import { useSmartCrop } from "./smart-crop.ts";
 import { useAssetSource } from "./use-asset-source.ts";
 import type { PresentationSession } from "./presentation-session.ts";
 import "./layered-illustration.css";
@@ -26,6 +26,25 @@ export function LayeredIllustration({
   moving = false,
   motion,
 }: LayeredIllustrationProps) {
+  const base = illustration.base;
+  const flat =
+    !illustration.layers.length &&
+    !moving &&
+    base.role !== "background" &&
+    base.x === 0 &&
+    base.y === 0 &&
+    base.scale === 1 &&
+    !base.rotation;
+  const asset = flat ? assets.find((asset) => asset.id === image) : undefined;
+  if (asset)
+    return (
+      <SolitaryImage
+        asset={asset}
+        autoCrop={illustration.autoCrop ?? false}
+        resolveAsset={resolveAsset}
+        cameraRef={cameraRef}
+      />
+    );
   return (
     <div
       className="multiplane-viewport"
@@ -64,6 +83,27 @@ export function LayeredIllustration({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function SolitaryImage({
+  asset,
+  autoCrop,
+  resolveAsset,
+  cameraRef,
+}: Pick<ImagePlaneProps, "asset" | "autoCrop" | "resolveAsset"> &
+  Pick<LayeredIllustrationProps, "cameraRef">) {
+  const original = useAssetSource(asset, resolveAsset);
+  const source = useSmartCrop(original || undefined, autoCrop);
+  return (
+    <div className="isolated-illustration" ref={cameraRef}>
+      <img
+        className="shot-plane-image isolated-image"
+        src={source || undefined}
+        alt={asset.alt}
+        draggable={false}
+      />
     </div>
   );
 }

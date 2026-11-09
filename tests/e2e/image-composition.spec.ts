@@ -1,5 +1,92 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 import { readFile } from "node:fs/promises";
+import { browserHouseProject } from "../fixtures/house-project.ts";
+import { StoryProjectSchema } from "../../src/contracts/editor-project.ts";
+import { addIllustrationLibrary } from "../../src/features/editor/illustration-pack.ts";
+import { compileProject } from "../../src/features/editor/compiler.ts";
+import { illustrationDefaults } from "../../src/contracts/illustration.ts";
+import { CinematicSchema } from "../../src/contracts/cinematic.ts";
+
+const gallery = StoryProjectSchema.parse(
+  JSON.parse(
+    await readFile(new URL("../../public/stories/house/project.json", import.meta.url), "utf8"),
+  ),
+);
+const project = addIllustrationLibrary(browserHouseProject, gallery);
+for (const language of Object.values(project.languages)) {
+  language.defaults.backgroundColor = "#eee6d8";
+  const scene = language.configuration.scenes!.intro!;
+  const illustration = illustrationDefaults();
+  illustration.base.role = "background";
+  illustration.layers.push({
+    ...illustration.base,
+    image: "sketch.curly-haired-woman-standing-001",
+    role: "foreground",
+  });
+  const motion = CinematicSchema.parse({ preset: "parallax" });
+  scene.blocks!.splice(1, 0, {
+    kind: "media",
+    id: "intro.paper",
+    image: "sketch.misty-conifer-plain-001",
+    layout: "inline",
+    illustration,
+    motion,
+  });
+  scene.events!.push({
+    id: "intro.paper.motion",
+    blockId: "intro.paper",
+    trigger: { kind: "block", blockId: "intro.paper" },
+    action: {
+      kind: "effect",
+      effect: { id: "cinematic-camera", duration: 14000, cinematic: motion },
+    },
+  });
+  const wide = language.configuration
+    .scenes!.arrival!.blocks!.filter((block) => block.kind === "media")
+    .find((block) => block.id === "arrival.illustration")!;
+  wide.image = "sketch.misty-conifer-plain-001";
+  wide.illustration = {
+    ...illustration,
+    layers: [
+      ...illustration.layers,
+      {
+        ...illustration.base,
+        image: "sketch.fern-fronds-001",
+        role: "midground",
+      },
+    ],
+  };
+}
+const bundles = await compileProject(project);
+test("crops pale borders, preserves full frames and limits the output size", async ({ page }) => {
+  await page.goto("/");
+  const sizes = await page.evaluate(async () => {
+    const { cropImage } = await import("../../src/features/presentation/smart-crop.ts");
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 3000;
+    const context = canvas.getContext("2d")!;
+    context.fillStyle = "white";
+    context.fillRect(0, 0, 3000, 3000);
+    context.fillStyle = "black";
+    context.fillRect(300, 300, 2400, 2400);
+    const image = new Image();
+    image.src = canvas.toDataURL();
+    await image.decode();
+    const blob = await cropImage(image);
+    const cropped = await createImageBitmap(blob!);
+    const size = [cropped.width, cropped.height];
+    cropped.close();
+    context.fillRect(0, 0, 3000, 3000);
+    image.src = canvas.toDataURL();
+    await image.decode();
+    return { size, unchanged: (await cropImage(image)) === null };
+  });
+  expect(sizes).toEqual({ size: [2048, 2048], unchanged: true });
+});
+test.beforeEach(async ({ page }) => {
+  await page.route("**/stories/house/project.json", (route) => route.fulfill({ json: project }));
+  await page.route("**/stories/house/en.json", (route) => route.fulfill({ json: bundles.en }));
+});
 
 test("composes gallery layers, crops and wraps them, then restores a complete project backup", async ({
   page,
@@ -8,6 +95,7 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
   await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  await expect(page.locator(".ace_text-input")).toHaveCount(1);
   await page
     .getByLabel("Find in Ink", { exact: true })
     .fill("The girl beside her looked exactly like you.");
@@ -21,7 +109,7 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(3);
   await dialog.getByRole("button", { name: "+ foreground", exact: true }).click();
   const library = page.getByRole("region", { name: "Media library", exact: true });
-  await library.getByLabel("Search media", { exact: true }).fill("foreground-tree-forest-3");
+  await library.getByLabel("Search media", { exact: true }).fill("fern-fronds-001");
   await library.getByRole("button", { name: "Use this media", exact: true }).click();
   await dialog.getByLabel("Image scale", { exact: true }).press("ArrowRight");
   await dialog.getByLabel("Image scale", { exact: true }).press("ArrowRight");
@@ -88,18 +176,16 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await page.getByRole("button", { name: "Image", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
   await dialog.getByRole("button", { name: /Browse media library/ }).click();
-  await page
-    .getByLabel("Search media", { exact: true })
-    .fill("paper.modern-male-character-reading");
+  await page.getByLabel("Search media", { exact: true }).fill("curly-haired-woman-standing-001");
   await page.getByRole("button", { name: "Use this media", exact: true }).click();
   await expect(dialog.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
   await dialog.getByLabel("Illustration mode", { exact: true }).selectOption("layered");
   await dialog.getByRole("button", { name: "+ foreground", exact: true }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("foreground-tree");
+  await page.getByLabel("Search media", { exact: true }).fill("fern-fronds-001");
   await page.getByRole("button", { name: "Use this media", exact: true }).first().click();
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
   await dialog.getByLabel("Remove foreground layer 1", { exact: true }).click();
-  await dialog.getByRole("button", { name: "none", exact: true }).click();
+  await dialog.getByLabel("Simple effect", { exact: true }).selectOption("none");
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("left");
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
@@ -107,7 +193,7 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await expect(figure).toBeVisible();
   await expect(figure).toHaveCSS(
     "shape-outside",
-    /url\(.*paper\.modern-male-character-reading\.webp/,
+    /url\(.*sketch\.curly-haired-woman-standing-001\.webp/,
   );
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await page.getByRole("button", { name: "Page color #080b0d", exact: true }).click();
@@ -126,13 +212,14 @@ test("uses real perspective depth, pauses camera motion and removes it on page d
   test.setTimeout(45000);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.route("**/stories/house/en.json", async (route) => {
-    const bundle = await (await route.fetch()).json();
-    const scene = bundle.scenes.intro;
-    const artwork = scene.blocks.find((block: { id: string }) => block.id === "intro.artwork");
-    const inline = scene.blocks.find((block: { id: string }) => block.id === "intro.paper");
+    const bundle = structuredClone(bundles.en!);
+    const scene = bundle.scenes!.intro!;
+    const images = scene.blocks!.filter((block) => block.kind === "media");
+    const artwork = images.find((block) => block.id === "intro.artwork")!;
+    const inline = images.find((block) => block.id === "intro.paper")!;
     artwork.image = inline.image;
     artwork.illustration = structuredClone(inline.illustration);
-    artwork.illustration.layers.push({
+    artwork.illustration!.layers.push({
       image: "paper.modern-male-character",
       role: "midground",
       x: 15,
@@ -140,8 +227,8 @@ test("uses real perspective depth, pauses camera motion and removes it on page d
       scale: 0.9,
     });
     artwork.motion = inline.motion;
-    scene.events.push({
-      ...scene.events.find((event: { blockId: string }) => event.blockId === "intro.paper"),
+    scene.events!.push({
+      ...scene.events!.find((event) => event.blockId === "intro.paper")!,
       id: "intro.artwork.motion",
       blockId: "intro.artwork",
       trigger: { kind: "block", blockId: "intro.artwork" },

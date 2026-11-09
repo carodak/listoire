@@ -46,7 +46,8 @@ export function performAction(
       return;
     }
     case "give-item":
-      if (!game.inventory.includes(action.reference)) game.inventory.push(action.reference);
+      game.inventory = [...new Set([...game.inventory, action.reference])];
+      game.lastResult.itemId = action.reference;
       return;
     case "remove-item": {
       const item = definition.items.find((item) => item.id === action.reference);
@@ -73,10 +74,10 @@ export function performAction(
     case "learn": {
       if (!definition.abilities.some((ability) => ability.id === action.reference))
         throw new Error("Unknown ability");
-      if (!character.abilities.some((ability) => ability.id === action.reference)) {
-        if (character.abilities.length >= 32) throw new Error("Ability limit reached");
-        character.abilities.push({ id: action.reference, rank: 1 });
-      }
+      if (character.abilities.some((ability) => ability.id === action.reference)) return;
+      if (character.abilities.length >= 32) throw new Error("Ability limit reached");
+      character.abilities.push({ id: action.reference, rank: 1 });
+      game.lastResult.abilityId = action.reference;
     }
   }
 }
@@ -92,6 +93,8 @@ function check(
   game.lastResult = {
     success,
     roll: die,
+    dice: [{ sides: sides === 20 ? 20 : 6, value: die }],
+    ...(action.kind === "ability-check" ? { abilityUsed: action.reference } : {}),
     message: `${action.label}: ${die} ${sides === 20 ? "≤" : "≥"} ${threshold} · ${success ? "Success" : "Failure"}`,
   };
   awardXp(character, game, 1);

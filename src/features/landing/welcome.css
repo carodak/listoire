@@ -60,6 +60,7 @@
   background: var(--paper);
   color: var(--muted);
   display: grid;
+  place-items: center;
   gap: 7px;
 }
 .welcome-create:disabled {

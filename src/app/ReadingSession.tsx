@@ -4,6 +4,7 @@ import type { Locale, StoryBundle } from "../contracts/story.ts";
 import { loadBundle, loadManifest } from "../features/story-runtime/bundle-loader.ts";
 import type { SaveManager } from "../persistence/save-manager.ts";
 import type { PresentationSession } from "../features/presentation/presentation-session.ts";
+import type { ReaderNotesPort } from "../contracts/reader-notes.ts";
 import type { StoryDirector } from "../features/story-runtime/director.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
 import type { ReadingPreferences } from "../contracts/presentation.ts";
@@ -13,6 +14,9 @@ import { compileInWorker } from "../features/editor/compile-client.ts";
 
 interface Props {
   locale: Locale;
+  onHome: () => void;
+  onLanguageChange: (locale: Locale) => void;
+  languageBusy: boolean;
   saves: SaveManager;
   retry: () => void;
   preferences: ReadingPreferences;
@@ -22,6 +26,9 @@ interface Props {
 
 export function ReadingSession({
   locale,
+  onHome,
+  onLanguageChange,
+  languageBusy,
   saves,
   retry,
   preferences,
@@ -36,33 +43,21 @@ export function ReadingSession({
     bundle: StoryBundle;
     director: StoryDirector;
     presentation: PresentationSession;
+    notes: ReaderNotesPort;
   } | null>(null);
 
   useEffect(() => {
     const scope = new AbortController();
     let director: StoryDirector | undefined;
-    void readActiveProject(scope.signal)
-      .catch(() => null)
-      .then(async (record) => {
-        if (record) {
-          const chosen = record.draft.languages[locale] ? locale : record.draft.defaultLocale;
-          const bundles = await compileInWorker(record.draft, chosen);
-          return bundles[chosen]!;
-        }
-        const manifest = await loadManifest(scope.signal);
-        return loadBundle(
-          manifest.locales.includes(locale) ? locale : manifest.defaultLocale,
-          scope.signal,
-        );
-      })
-      .then(async (bundle) => {
+    void loadReadingBundle(locale, scope.signal)
+      .then(async ({ bundle, fromDraft }) => {
         if (scope.signal.aborted) return;
         const player = await createPlayer(
           bundle,
           saves,
-          initialHasPreferences.current
-            ? initialPreferences.current
-            : (bundle.readingDefaults ?? initialPreferences.current),
+          effectivePreferences(bundle, initialPreferences.current, initialHasPreferences.current),
+          undefined,
+          fromDraft,
         );
         director = player.director;
         if (scope.signal.aborted) {
@@ -112,7 +107,10 @@ export function ReadingSession({
       <StoryPlayer
         {...player}
         backup={backup}
-        preferences={hasPreferences ? preferences : (player.bundle.readingDefaults ?? preferences)}
+        onHome={onHome}
+        onLanguageChange={onLanguageChange}
+        languageBusy={languageBusy}
+        preferences={effectivePreferences(player.bundle, preferences, hasPreferences)}
         onPreferencesChange={onPreferencesChange}
       />
     </>
@@ -121,4 +119,24 @@ export function ReadingSession({
       {t("loading")}
     </main>
   );
+}
+
+async function loadReadingBundle(locale: Locale, signal: AbortSignal) {
+  const record = await readActiveProject(signal).catch(() => null);
+  if (record) {
+    const chosen = record.draft.languages[locale] ? locale : record.draft.defaultLocale;
+    const bundles = await compileInWorker(record.draft, chosen);
+    return { bundle: bundles[chosen]!, fromDraft: true };
+  }
+  const manifest = await loadManifest(signal);
+  const chosen = manifest.locales.includes(locale) ? locale : manifest.defaultLocale;
+  return { bundle: await loadBundle(chosen, signal), fromDraft: false };
+}
+
+function effectivePreferences(
+  bundle: StoryBundle,
+  preferences: ReadingPreferences,
+  hasPreferences: boolean,
+) {
+  return hasPreferences ? preferences : (bundle.readingDefaults ?? preferences);
 }

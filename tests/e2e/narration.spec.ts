@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 
 for (const locale of ["en", "fr"])
   test(`generated ${locale} narration uses verified MP3s and responds to playback controls`, async ({

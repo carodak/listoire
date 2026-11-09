@@ -1,4 +1,4 @@
-export function structure(ink: Record<string, unknown>) {
+export function inkStructure(ink: Record<string, unknown>) {
   // Keep compiled control flow and tags; translated prose never identifies narrative elements.
   function normalize(value: unknown, preserve = false): unknown {
     if (Array.isArray(value)) {

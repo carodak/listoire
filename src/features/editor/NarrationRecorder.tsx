@@ -3,6 +3,7 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import { attachNarration } from "./narration-authoring.ts";
 import { generateNarrationPreview, readHumanRecording } from "./narration-sources.ts";
+import { Field, TextareaField } from "./Fields.tsx";
 type Language = StoryProject["languages"][string];
 interface Props {
   storyId: string;
@@ -175,10 +176,11 @@ function NarrationSegment({
         </select>
       </label>
       {spokenText !== undefined && (
-        <label>
-          Spoken text (verify dynamic Ink in Preview)
-          <textarea value={spokenText} onChange={(event) => onText(event.target.value)} />
-        </label>
+        <TextareaField
+          label="Spoken text (verify dynamic Ink in Preview)"
+          value={spokenText}
+          onChange={(event) => onText(event.target.value)}
+        />
       )}
     </>
   );
@@ -202,48 +204,40 @@ function HumanRecordingFields({
   const { rights, marks } = recording;
   return (
     <>
-      <label>
-        Rights attestation
-        <input
-          value={rights}
-          onChange={(e) => setRecording({ ...recording, rights: e.target.value })}
-          placeholder="I own this recording, or license reference"
-        />
-      </label>
-      <label>
-        Text/audio marks JSON
-        <textarea
-          value={marks}
-          onChange={(e) => setRecording({ ...recording, marks: e.target.value })}
-          placeholder='[{"character":0,"startMs":0,"endMs":500}]'
-        />
-      </label>
-      <label>
-        Upload MP3
-        <input
-          type="file"
-          accept="audio/mpeg,.mp3"
-          onChange={(e) => {
-            const input = e.currentTarget;
-            const file = input.files?.[0];
-            if (file)
-              void upload(file).finally(() => {
-                input.value = "";
-              });
-          }}
-        />
-      </label>
-      <label>
-        Duration in seconds (optional override)
-        <input
-          type="number"
-          min="0"
-          max="180"
-          step="0.01"
-          value={recording.duration}
-          onChange={(e) => setRecording({ ...recording, duration: Number(e.target.value) })}
-        />
-      </label>
+      <Field
+        label="Rights attestation"
+        value={rights}
+        onChange={(e) => setRecording({ ...recording, rights: e.target.value })}
+        placeholder="I own this recording, or license reference"
+      />
+      <TextareaField
+        label="Text/audio marks JSON"
+        value={marks}
+        onChange={(e) => setRecording({ ...recording, marks: e.target.value })}
+        placeholder='[{"character":0,"startMs":0,"endMs":500}]'
+      />
+      <Field
+        label="Upload MP3"
+        type="file"
+        accept="audio/mpeg,.mp3"
+        onChange={(e) => {
+          const input = e.currentTarget;
+          const file = input.files?.[0];
+          if (file)
+            void upload(file).finally(() => {
+              input.value = "";
+            });
+        }}
+      />
+      <Field
+        label="Duration in seconds (optional override)"
+        type="number"
+        min="0"
+        max="180"
+        step="0.01"
+        value={recording.duration}
+        onChange={(e) => setRecording({ ...recording, duration: Number(e.target.value) })}
+      />
     </>
   );
 }

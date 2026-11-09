@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 test("all eleven native effects settle, cancel, pause and respect reduced motion", async ({
   page,
 }) => {
@@ -33,15 +33,19 @@ test("all eleven native effects settle, cancel, pause and respect reduced motion
     for (const effect of effects) {
       const scope = new AbortController();
       const playback = engine.play(
-        { ...effect, duration: 20 } as import("../../src/contracts/effects.ts").NativeEffect,
+        { ...effect, duration: 20 } as import("../../src/contracts/native-effects.ts").NativeEffect,
         { canvas: root, image, previousImage: old },
         scope.signal,
         false,
       );
-      states.push(await playback.finished);
-      if (["fade-in", "fade-out", "crossfade"].includes(effect.id)) fades.push(image.style.opacity);
+      states.push(await playback);
+      if (["fade-in", "fade-out", "crossfade"].includes(effect.id))
+        fades.push(getComputedStyle(image).opacity);
       if (effect.id === "camera-pan")
-        composed = { scale: image.style.scale, translate: image.style.translate };
+        composed = {
+          scale: getComputedStyle(image).scale,
+          translate: getComputedStyle(image).translate,
+        };
     }
     const scope = new AbortController();
     const active = engine.play(
@@ -53,18 +57,18 @@ test("all eleven native effects settle, cancel, pause and respect reduced motion
     engine.pause();
     engine.resume();
     scope.abort();
-    states.push(await active.finished);
+    states.push(await active);
     const reduced = engine.play(
       { id: "screen-shake", duration: 500 },
       { canvas: root, image },
       new AbortController().signal,
       true,
     );
-    states.push(await reduced.finished);
+    states.push(await reduced);
     const overlays = root.querySelectorAll(".cinematic-overlay").length;
-    const animations = root.getAnimations({ subtree: true }).length;
-    const fadedPrevious = old.style.opacity;
+    const fadedPrevious = getComputedStyle(old).opacity;
     engine.stop();
+    const animations = root.getAnimations({ subtree: true }).length;
     const reset = { scale: image.style.scale, translate: image.style.translate };
     root.remove();
     return {

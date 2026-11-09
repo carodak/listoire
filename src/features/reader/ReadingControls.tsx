@@ -1,8 +1,12 @@
 import { useSyncExternalStore } from "react";
+import type { ReactNode } from "react";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { useTranslation } from "react-i18next";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
+import type { StoryBundle } from "../../contracts/story.ts";
 import { PaperPalette } from "../presentation/PaperPalette.tsx";
+import { ToolbarGlyph } from "../../shared/ToolbarGlyph.tsx";
+import { useDeviceVoices } from "../presentation/use-device-voices.ts";
 
 interface PreferencesProps {
   preferences: ReadingPreferences;
@@ -10,98 +14,144 @@ interface PreferencesProps {
 }
 interface Props extends PreferencesProps {
   presentation: PresentationSession;
-  voices: { id: string; label: string }[];
+  bundle: StoryBundle;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  navigation?: ReactNode;
 }
 export function ReadingControls({
   preferences,
   onChange,
   presentation,
-  voices,
+  bundle,
   open,
   onOpenChange,
+  navigation,
 }: Props) {
   const { t } = useTranslation();
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
+  const voices = presentation.voices;
+  const allowDeviceVoices = !["disabled", "human", "ai-pregenerated"].includes(
+    bundle.narrationMode ?? "",
+  );
+  const deviceVoices = useDeviceVoices(bundle.locale, allowDeviceVoices).map((voice) => ({
+    id: `device:${voice.voiceURI}`,
+    label: `${voice.name} (${voice.lang})`,
+  }));
+  const availableVoices = voices.concat(
+    deviceVoices.filter((voice) => !voices.some((item) => item.id === voice.id)),
+  );
   return (
     <aside className="reading-controls">
-      <ReadingTransport
-        narration={preferences.narration ?? false}
-        media={media}
-        presentation={presentation}
-      />
+      <label className="reader-master-volume" title={t("masterVolume")}>
+        <span aria-hidden="true">♫</span>
+        <span className="sr-only">{t("masterVolume")}</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={preferences.masterVolume ?? 1}
+          aria-label={t("masterVolume")}
+          onChange={(event) =>
+            onChange({ ...preferences, masterVolume: Number(event.target.value) })
+          }
+        />
+      </label>
+      {navigation}
+      <ReadingTransport media={media} presentation={presentation} />
       <button
         className="transport-button"
         aria-expanded={open}
         aria-controls="reading-preferences-panel"
+        aria-label={t("readingPreferences")}
+        title={t("readingPreferences")}
         onClick={() => onOpenChange(!open)}
       >
-        {t("readingPreferences")}
+        <ToolbarGlyph name="settings" />
       </button>
       {open && (
-        <aside
-          id="reading-preferences-panel"
-          className="reader-sidebar reading-sidebar"
-          aria-label={t("readingPreferences")}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") onOpenChange(false);
-          }}
-        >
-          <header>
-            <h2>{t("readingPreferences")}</h2>
-            <button onClick={() => onOpenChange(false)} aria-label={t("close")}>
-              ?
-            </button>
-          </header>
-          <div className="reading-popover">
-            <PaperPalette
-              color={preferences.backgroundColor}
-              onChange={(backgroundColor) => onChange({ ...preferences, backgroundColor })}
-            />
-            <BookTypography preferences={preferences} onChange={onChange} />
-            <BookSound
-              preferences={preferences}
-              onChange={onChange}
-              voices={voices}
-              unavailable={media.voice === "unavailable"}
-            />
-            <AudioVolumes preferences={preferences} onChange={onChange} />
-          </div>
-        </aside>
+        <PreferencesPanel
+          {...{ preferences, onChange }}
+          defaultPaperColor={bundle.readingDefaults?.backgroundColor}
+          voices={availableVoices}
+          unavailable={media.voice === "unavailable"}
+          onClose={() => onOpenChange(false)}
+        />
       )}
     </aside>
   );
 }
+function PreferencesPanel({
+  preferences,
+  onChange,
+  defaultPaperColor,
+  voices,
+  unavailable,
+  onClose,
+}: PreferencesProps &
+  Pick<NarrationPreferencesProps, "voices" | "unavailable"> & {
+    defaultPaperColor?: string;
+    onClose: () => void;
+  }) {
+  const { t } = useTranslation();
+  return (
+    <aside
+      id="reading-preferences-panel"
+      className="reader-sidebar reading-sidebar"
+      aria-label={t("readingPreferences")}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onClose();
+      }}
+    >
+      <header>
+        <h2>{t("readingPreferences")}</h2>
+        <button onClick={onClose} aria-label={t("close")}>
+          ×
+        </button>
+      </header>
+      <div className="reading-popover">
+        <PaperPalette
+          color={preferences.backgroundColor ?? defaultPaperColor}
+          onChange={(backgroundColor) => onChange({ ...preferences, backgroundColor })}
+        />
+        <BookTypography preferences={preferences} onChange={onChange} />
+        <BookSound
+          preferences={preferences}
+          onChange={onChange}
+          voices={voices}
+          unavailable={unavailable}
+        />
+        <AudioVolumes preferences={preferences} onChange={onChange} />
+      </div>
+    </aside>
+  );
+}
 interface ReadingTransportProps {
-  narration: boolean;
   media: ReturnType<PresentationSession["getSnapshot"]>;
   presentation: PresentationSession;
 }
 
-function ReadingTransport({ media, presentation, narration }: ReadingTransportProps) {
+function ReadingTransport({ media, presentation }: ReadingTransportProps) {
   const { t } = useTranslation();
   return (
     <div className="reading-transport">
-      {!media.revealAll && !media.textComplete && (
-        <button className="transport-button" onClick={presentation.revealRemaining}>
-          {t("revealAll")}
-        </button>
-      )}
       <button
-        className="transport-button"
+        className="transport-button reader-icon-button"
+        aria-label={t(media.paused ? "resume" : "pause")}
+        title={t(media.paused ? "resume" : "pause")}
         onClick={media.paused ? presentation.resume : presentation.pause}
       >
-        {t(media.paused ? "resume" : "pause")}
+        <ToolbarGlyph name={media.paused ? "play" : "pause"} />
       </button>
-      {narration && (
-        <button className="transport-button" onClick={presentation.replayNarration}>
-          {t("replayVoice")}
-        </button>
-      )}
       {media.blocking && (
-        <button className="transport-button" onClick={presentation.skipCinematic}>
-          {t("skipCinematic")}
+        <button
+          className="transport-button reader-icon-button"
+          aria-label={t("skipCinematic")}
+          title={t("skipCinematic")}
+          onClick={presentation.skipCinematic}
+        >
+          <ToolbarGlyph name="skip" />
         </button>
       )}
     </div>
@@ -135,12 +185,7 @@ function BookTypography({ preferences, onChange }: PreferencesProps) {
     </label>
   ));
 }
-function BookSound({
-  preferences,
-  onChange,
-  voices,
-  unavailable,
-}: PreferencesProps & { voices: Props["voices"]; unavailable: boolean }) {
+function BookSound({ preferences, onChange, voices, unavailable }: NarrationPreferencesProps) {
   const { t } = useTranslation();
   return (
     <>
@@ -154,14 +199,12 @@ function BookSound({
           {t({ sound: "storySound", pageTurn: "pageTurn", narration: "readAloud" }[field])}
         </label>
       ))}
-      {preferences.narration && (
-        <NarrationPreferences
-          preferences={preferences}
-          onChange={onChange}
-          voices={voices}
-          unavailable={unavailable}
-        />
-      )}
+      <NarrationPreferences
+        preferences={preferences}
+        onChange={onChange}
+        voices={voices}
+        unavailable={unavailable}
+      />
     </>
   );
 }
@@ -210,7 +253,7 @@ function NarrationPreferences({
   unavailable,
 }: NarrationPreferencesProps) {
   const { t } = useTranslation();
-  const selectedVoice = voices.find((voice) => voice.id === preferences.narratorVoice) ?? voices[0];
+  const selectedVoice = voices.find((voice) => voice.id === preferences.narratorVoice);
   return (
     <>
       <label>
@@ -219,8 +262,15 @@ function NarrationPreferences({
           aria-label={t("narratorVoice")}
           title={t("voiceNextSegment")}
           value={selectedVoice?.id ?? ""}
-          onChange={(event) => onChange({ ...preferences, narratorVoice: event.target.value })}
+          onChange={(event) =>
+            onChange({
+              ...preferences,
+              narratorVoice: event.target.value,
+              ...(event.target.value.startsWith("device:") ? { deviceVoice: true } : {}),
+            })
+          }
         >
+          <option value="">{t("automaticVoice")}</option>
           {voices.map((voice) => (
             <option key={voice.id} value={voice.id}>
               {voice.label}

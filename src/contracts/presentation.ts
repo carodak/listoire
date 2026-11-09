@@ -1,9 +1,22 @@
 import { z } from "zod";
 
-import { NativeEffectSchema, NarrativeEventSchema } from "./effects.ts";
+import { NarrativeEventSchema } from "./narrative-events.ts";
+import { NativeEffectSchema } from "./native-effects.ts";
 import { CinematicSchema } from "./cinematic.ts";
 import { Model3DSchema, Scene3DSchema } from "./scene3d.ts";
 import { IllustrationSchema } from "./illustration.ts";
+
+export function isMediaBlock(
+  block: PresentationBlock,
+): block is Extract<PresentationBlock, { kind: "media" }> {
+  return block.kind === "media";
+}
+
+export function isFullscreenMedia(
+  block: PresentationBlock,
+): block is Extract<PresentationBlock, { kind: "media" }> & { layout: "fullscreen" } {
+  return isMediaBlock(block) && block.layout === "fullscreen";
+}
 
 export function mediaIsVisible(
   block: Extract<PresentationBlock, { kind: "media" }>,
@@ -20,6 +33,13 @@ export const RuntimeAssetSchema = z
     id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
     path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/),
     type: z.enum(["image", "audio", "video", "model3d"]),
+    dimensions: z
+      .object({
+        width: z.number().int().positive().max(32768),
+        height: z.number().int().positive().max(32768),
+      })
+      .strict()
+      .optional(),
     model3d: Model3DSchema.optional(),
     scene3d: Scene3DSchema.optional(),
     upload: z
@@ -36,8 +56,8 @@ export const RuntimeAssetSchema = z
     credit: z.string().max(500).optional(),
   })
   .strict()
-  .refine(
-    (asset) =>
+  .refine(function validAsset(asset) {
+    return (
       (!asset.scene3d || ["image", "video"].includes(asset.type)) &&
       (!asset.model3d || asset.type === "model3d") &&
       (asset.type !== "model3d" ||
@@ -56,9 +76,9 @@ export const RuntimeAssetSchema = z
               asset.upload.size <= 10_000_000) &&
           asset.id === `upload.${asset.upload.digest}` &&
           asset.path ===
-            `media/${asset.id}.${{ "video/mp4": "mp4", "video/webm": "webm", "image/webp": "webp", "model/gltf-binary": "glb" }[asset.upload.mime]}`)),
-    "Invalid uploaded media identity",
-  );
+            `media/${asset.id}.${{ "video/mp4": "mp4", "video/webm": "webm", "image/webp": "webp", "model/gltf-binary": "glb" }[asset.upload.mime]}`))
+    );
+  }, "Invalid uploaded media identity");
 
 export const ExaminationSchema = z
   .object({
@@ -155,6 +175,7 @@ export const ReadingPreferencesSchema = z
       .string()
       .regex(/^#[a-fA-F0-9]{6}$/)
       .optional(),
+    masterVolume: z.number().min(0).max(1).optional(),
     fontSize: z.enum(["small", "medium", "large"]),
     fontFamily: z.enum(["serif", "sans"]),
     lineHeight: z.enum(["comfortable", "spacious"]),
@@ -184,3 +205,5 @@ export const defaultReadingPreferences: ReadingPreferences = {
   reveal: "progressive",
   sound: false,
 };
+
+export type MediaAsset = z.infer<typeof RuntimeAssetSchema>;

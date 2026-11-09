@@ -37,18 +37,6 @@ export interface AceEditor {
   };
 }
 
-export interface ProjectDelta {
-  group: string;
-  deltas: { lines: string[] }[];
-}
-export interface AceUndoManager {
-  $undoStack: unknown[];
-  execute(options: { args: [ProjectDelta[], unknown]; merge?: boolean }): void;
-  undo(): void;
-  redo(): void;
-  hasUndo(): boolean;
-  hasRedo(): boolean;
-}
 interface Ace {
   require(name: "ace/ext/searchbox"): {
     SearchBox: new (editor: AceEditor) => { hide: () => void };
@@ -57,7 +45,6 @@ interface Ace {
     Range: new (startRow: number, startCol: number, endRow: number, endCol: number) => AceRange;
   };
   edit(element: HTMLElement): AceEditor;
-  UndoManager: new () => AceUndoManager;
   config: { set(key: string, value: string): void };
 }
 declare global {

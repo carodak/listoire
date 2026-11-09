@@ -143,6 +143,11 @@ input:focus-visible {
 .language-picker summary > span:last-child {
   margin-left: auto;
 }
+.language-chevron {
+  display: block;
+  flex: none;
+  margin-left: auto;
+}
 .language-flag {
   width: 22px;
   height: 14px;
@@ -248,4 +253,12 @@ input:focus-visible {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
       env(safe-area-inset-left);
   }
+}
+/* The reader owns its toolbar; there is no second global header above the book. */
+.reader-shell {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
 }

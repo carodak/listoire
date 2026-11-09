@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 
 test("text reaches its media before choices and the compact toolbar follows scrolling", async ({
   page,

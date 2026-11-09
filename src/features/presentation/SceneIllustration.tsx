@@ -1,11 +1,12 @@
 import { useIllustrationPlayback } from "./use-illustration-playback.ts";
 import type { BindNode } from "./use-illustration-playback.ts";
 import { useAssetSource } from "./use-asset-source.ts";
-import { useState, useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { Dialog } from "../../shared/Dialog.tsx";
 import type { ReactNode } from "react";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
 import { useTranslation } from "react-i18next";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
 import type { PresentationSession } from "./presentation-session.ts";
@@ -37,7 +38,7 @@ export function SceneIllustration({
   const videoSource = useAssetSource(illustration, presentation.resolveAsset);
   const fullscreen =
     block.layout === "fullscreen" &&
-    !state.revealAll &&
+    !state.skipMedia &&
     !state.completedBlocks.includes(block.id) &&
     mediaIsVisible(block, state);
   const bindNode = useIllustrationPlayback(
@@ -166,6 +167,8 @@ function IllustrationVisual({
             block.layout === "right" ? "shot-image story-cover" : "shot-image",
           )}
           src={videoSource || undefined}
+          width={illustration.dimensions?.width}
+          height={illustration.dimensions?.height}
           alt={illustration.alt}
           style={{ objectFit: block.fit ?? (block.layout === "fullscreen" ? "cover" : "contain") }}
           onError={(event) => {
@@ -197,23 +200,8 @@ interface CinematicDialogProps {
 
 function CinematicDialog({ presentation, paused, title, caption, children }: CinematicDialogProps) {
   const { t } = useTranslation();
-  const dialog = useRef<HTMLDialogElement>(null);
-  useLayoutEffect(() => {
-    const previousFocus = document.activeElement;
-    dialog.current?.showModal();
-    return () => {
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected)
-        previousFocus.focus({ preventScroll: true });
-    };
-  }, []);
   return (
-    <dialog
-      ref={dialog}
-      className="cinematic-dialog"
-      aria-label={title}
-      onCancel={presentation.skipCinematic}
-      onClose={presentation.skipCinematic}
-    >
+    <Dialog className="cinematic-dialog" aria-label={title} onDismiss={presentation.skipCinematic}>
       <button
         className="cinematic-transport"
         onClick={paused ? presentation.resume : presentation.pause}
@@ -229,7 +217,7 @@ function CinematicDialog({ presentation, paused, title, caption, children }: Cin
       </button>
       {children}
       {caption && <p className="cinematic-caption">{caption}</p>}
-    </dialog>
+    </Dialog>
   );
 }
 
@@ -254,7 +242,7 @@ function VideoSurface({ illustration, block, bindNode, state, source }: VideoSur
           controls={
             !illustration.scene3d &&
             (block.layout !== "fullscreen" ||
-              state.revealAll ||
+              state.skipMedia ||
               state.completedBlocks.includes(block.id))
           }
           loop={Boolean(illustration.scene3d && illustration.scene3d.cinematic.preset === "none")}

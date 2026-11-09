@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 test("character starts collapsed, retains rolled attributes, and reveals only known encounters", async ({
   page,
 }) => {

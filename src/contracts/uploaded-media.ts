@@ -1,8 +1,6 @@
 import { sha256 } from "./digest.ts";
-import type { z } from "zod";
-import type { RuntimeAssetSchema } from "./presentation.ts";
+import type { MediaAsset } from "./presentation.ts";
 import { inspectGlb } from "./scene3d.ts";
-export type MediaAsset = z.infer<typeof RuntimeAssetSchema>;
 export async function verifyUploadedMedia(asset: MediaAsset, blob: Blob) {
   if (
     !asset.upload ||

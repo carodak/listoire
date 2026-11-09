@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
-import { reachedBlocks, presentationBlocks, bookMediaLayout } from "./narrative-blocks.ts";
+import { reachedBlocks } from "./PassageText.tsx";
+import { bookMediaLayout, presentationBlocks } from "./PassageText.tsx";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { Scene3DSchema } from "../../contracts/scene3d.ts";
 

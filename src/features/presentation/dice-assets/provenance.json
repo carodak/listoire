@@ -1,0 +1,22 @@
+{
+  "source": "assets/dnd-dice-set/source/DiceSet.fbx",
+  "sourceSha256": "6ae5ac7ec2492ba9bf57b29f0d9623cf480d86e67de4633fc396bab02c28316e",
+  "providerVerifiedLicense": null,
+  "userAuthorization": "User supplied this set and requested its grey d6/d20 for the Listoire reader. Only these two meshes and their silver textures are extracted; no collection redistribution.",
+  "models": [
+    {
+      "model": "6Silver",
+      "sourceGeometry": "Cube.003",
+      "texture": "SixSilverAlbedo.png",
+      "faces": 6,
+      "triangles": 108
+    },
+    {
+      "model": "20Silver",
+      "sourceGeometry": "Icosphere.007",
+      "texture": "SilverDiceAlbedo.png",
+      "faces": 20,
+      "triangles": 260
+    }
+  ]
+}

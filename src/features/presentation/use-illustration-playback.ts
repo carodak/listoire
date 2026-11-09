@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import type { MediaAsset } from "../../contracts/uploaded-media.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 import type { PresentationSession } from "./presentation-session.ts";
 
 export function useIllustrationPlayback(

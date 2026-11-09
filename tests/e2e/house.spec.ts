@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test.ts";
 import type { Page } from "@playwright/test";
 
 async function enter(page: Page) {

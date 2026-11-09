@@ -1,14 +1,22 @@
 import { createStore, get, set } from "idb-keyval";
 import { verifyUploadedMedia } from "../contracts/uploaded-media.ts";
-import type { MediaAsset } from "../contracts/uploaded-media.ts";
-const store = () => createStore("listoire-media", "files");
+import type { MediaAsset } from "../contracts/presentation.ts";
+const store = createStore("listoire-media", "files");
+interface MediaBytes {
+  bytes: ArrayBuffer;
+  mime: string;
+}
 export async function storeUploadedMedia(asset: MediaAsset, blob: Blob) {
   await verifyUploadedMedia(asset, blob);
   // WebKit on Windows rejects IndexedDB Blob writes; immutable bytes work across browsers.
-  await set(asset.id, { bytes: await blob.arrayBuffer(), mime: blob.type }, store());
+  await set(
+    asset.id,
+    { bytes: await blob.arrayBuffer(), mime: blob.type } satisfies MediaBytes,
+    store,
+  );
 }
 export async function readUploadedMedia(asset: MediaAsset): Promise<Blob> {
-  const cached = await get<Blob | { bytes: ArrayBuffer; mime: string }>(asset.id, store());
+  const cached = await get<Blob | MediaBytes>(asset.id, store);
   let blob =
     cached instanceof Blob
       ? cached

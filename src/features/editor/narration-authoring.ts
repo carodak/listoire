@@ -1,6 +1,6 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
-import { textDigest } from "../media/narration-manager.ts";
+import { textDigest } from "../../contracts/digest.ts";
 
 export async function cacheNarration(
   result: { clip: NarrationClip; audioUrl: string },

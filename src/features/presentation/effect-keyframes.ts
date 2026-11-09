@@ -1,4 +1,5 @@
-import type { NativeEffect } from "../../contracts/effects.ts";
+import type { EffectTargets } from "./effects.ts";
+import type { NativeEffect } from "../../contracts/native-effects.ts";
 import { cinematicFrames, cinematicPlaneFrames } from "./cinematic-presets.ts";
 
 export function cameraKeyframes(effect: NativeEffect, target: HTMLElement, depth = 1): Keyframe[] {
@@ -53,20 +54,8 @@ export function effectKeyframes(effect: NativeEffect, target: HTMLElement): Keyf
 
     case "page-turn":
       return [
-        {
-          transform: "perspective(1600px) rotateY(0deg)",
-          filter: "brightness(1)",
-          transformOrigin: effect.direction === "back" ? "right center" : "left center",
-        },
-        {
-          transform: `perspective(1600px) rotateY(${effect.direction === "back" ? 48 : -48}deg)`,
-          filter: "brightness(.8)",
-          boxShadow: "inset -35px 0 70px #0003",
-          borderRadius:
-            effect.direction === "back" ? "24% 0 0 24% / 50% 0 0 50%" : "0 24% 24% 0 / 0 50% 50% 0",
-          opacity: 0,
-          transformOrigin: effect.direction === "back" ? "right center" : "left center",
-        },
+        { opacity: 1, transform: "translateY(0)" },
+        { opacity: 0, transform: `translateY(${effect.direction === "back" ? 22 : -22}px)` },
       ];
     case "fade-in":
       return [{ opacity: 0 }, { opacity: 1 }];
@@ -75,7 +64,7 @@ export function effectKeyframes(effect: NativeEffect, target: HTMLElement): Keyf
     case "crossfade":
       return [{ opacity: 0 }, { opacity: 1 }];
     case "light-flicker":
-      return [{ opacity: 0 }, { opacity: (effect.intensity ?? 0.4) * 0.25 }, { opacity: 0 }];
+      return [{ opacity: 0 }, { opacity: (effect.intensity ?? 0.4) * 0.55 }, { opacity: 0 }];
     case "rain-overlay":
       return [
         { backgroundPosition: "0px 0px", opacity: 0 },
@@ -99,4 +88,36 @@ export function effectKeyframes(effect: NativeEffect, target: HTMLElement): Keyf
     }
   }
   return [];
+}
+
+export function effectSurface(effect: NativeEffect, targets: EffectTargets) {
+  let target =
+    "target" in effect && effect.target === "canvas"
+      ? targets.canvas
+      : (targets.image ?? targets.canvas);
+  let overlay: HTMLElement | undefined;
+  if (["rain-overlay", "fog-overlay", "light-flicker"].includes(effect.id)) {
+    overlay = targets.canvas.ownerDocument.createElement("div");
+    overlay.className = `cinematic-overlay ${effect.id}`;
+    overlay.style.setProperty("--spell-arc-duration", `${Math.min(2600, effect.duration)}ms`);
+    overlay.setAttribute("aria-hidden", "true");
+    if (effect.id === "light-flicker") overlay.style.backgroundColor = effect.color ?? "#ffffff";
+    const reader = targets.canvas.closest?.(".reader");
+    const board = targets.canvas.classList?.contains("reader-board");
+    if (reader && board) overlay.classList.add("reader-viewport-effect");
+    (reader && board ? reader : targets.canvas).append(overlay);
+    target = overlay;
+  }
+  return { target, overlay };
+}
+export function imagePlaneTargets(effect: NativeEffect, targets: EffectTargets): EffectTargets {
+  if (effect.id !== "cinematic-camera" || !targets.image?.classList?.contains("multiplane-camera"))
+    return targets;
+  const planes = [...targets.image.querySelectorAll<HTMLElement>(".multiplane-plane")];
+  return { ...targets, image: planes[0], layers: planes.slice(1) };
+}
+export function effectEasing(effect: NativeEffect) {
+  if (effect.id === "cinematic-camera") return "cubic-bezier(.25,.1,.25,1)";
+  if (effect.id === "page-turn") return "cubic-bezier(.24,.08,.23,1)";
+  return "ease-in-out";
 }

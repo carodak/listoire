@@ -1,7 +1,28 @@
 import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { BundleSchema } from "./story.ts";
-import { mediaIsVisible } from "./presentation.ts";
+import { mediaIsVisible, SceneSchema } from "./presentation.ts";
+
+it("validates exit transitions when parsing a scene, before publication", () => {
+  const event = {
+    id: "exit",
+    phase: "exit",
+    blockId: "page",
+    trigger: { kind: "passage" },
+    action: { kind: "effect", effect: { id: "fade-out", duration: 300 } },
+  };
+  const scene = { title: "Exit", progress: 0, events: [event] };
+  expect(SceneSchema.safeParse(scene).success).toBe(true);
+  expect(
+    SceneSchema.safeParse({
+      ...scene,
+      events: [{ ...event, action: { kind: "effect", effect: { id: "fade-in", duration: 300 } } }],
+    }).success,
+  ).toBe(false);
+  expect(
+    SceneSchema.safeParse({ ...scene, events: [{ ...event, blockId: "picture" }] }).success,
+  ).toBe(false);
+});
 
 it("shares delayed, revealed and expired media visibility between playback and rendering", () => {
   const block = {
@@ -24,9 +45,17 @@ it("rejects reordered text, unknown media/cues, premature choices and colors out
   const source = JSON.parse(
     readFileSync(new URL("../../public/stories/house/en.json", import.meta.url), "utf8"),
   );
+  source.artDirection = {
+    style: "fixture",
+    colorMode: "grayscale",
+    palette: ["#ffffff", "#000000", "#ffe2a2", "#c7a55c"],
+    complexity: "simple",
+  };
+  const picture = (bundle: typeof source) =>
+    bundle.scenes.chemin.blocks.find((block: { kind: string }) => block.kind === "media");
   const changes = [
     (bundle: typeof source) =>
-      bundle.scenes.intro.blocks[0].illustration.layers.push({
+      picture(bundle).illustration.layers.push({
         image: "missing",
         role: "foreground",
         x: 0,
@@ -34,30 +63,35 @@ it("rejects reordered text, unknown media/cues, premature choices and colors out
         scale: 1,
       }),
     (bundle: typeof source) =>
-      bundle.scenes.intro.blocks[0].illustration.layers.push({
-        image: bundle.scenes.intro.blocks[0].image,
+      picture(bundle).illustration.layers.push({
+        image: picture(bundle).image,
         rotation: 999,
         role: "foreground",
         x: 0,
         y: 0,
         scale: 1,
       }),
-    (bundle: typeof source) => (bundle.scenes.intro.blocks[0].illustration.wrap = "left"),
-    (bundle: typeof source) => bundle.scenes.intro.blocks.reverse(),
     (bundle: typeof source) =>
-      (bundle.scenes.intro.blocks.find((block: { kind: string }) => block.kind === "media").image =
-        "unknown"),
-    (bundle: typeof source) => (bundle.scenes.intro.events[0].blockId = "unknown"),
+      (bundle.scenes.messagere.blocks.find(
+        (block: { kind: string }) => block.kind === "media",
+      ).illustration = { ...structuredClone(picture(bundle).illustration), wrap: "left" }),
+    (bundle: typeof source) => bundle.scenes.atelier.blocks.reverse(),
+    (bundle: typeof source) => (picture(bundle).image = "unknown"),
+    (bundle: typeof source) => (bundle.scenes.chemin.events[0].blockId = "unknown"),
     (bundle: typeof source) =>
-      (bundle.scenes.song.events.find(
-        (event: { action: { kind: string } }) => event.action.kind === "effect",
-      ).action.effect = {
-        id: "react-bits.dark-veil",
-        duration: 1800,
-        props: { color: "#ff0000" },
+      bundle.scenes.lueur.events.push({
+        id: "invalid-color",
+        blockId: "page",
+        trigger: { kind: "passage" },
+        action: {
+          kind: "effect",
+          effect: { id: "light-flicker", duration: 300, color: "#ff0000" },
+        },
       }),
     (bundle: typeof source) =>
-      bundle.scenes.room.events.forEach((event: { blocking: boolean }) => (event.blocking = false)),
+      bundle.scenes.passage.events.forEach(
+        (event: { blocking: boolean }) => (event.blocking = false),
+      ),
   ];
   expect(BundleSchema.safeParse(source).success).toBe(true);
   for (const change of changes) {

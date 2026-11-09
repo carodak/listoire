@@ -1,4 +1,4 @@
-import { Field } from "./Fields.tsx";
+import { CheckboxField, Field, TextareaField } from "./Fields.tsx";
 import { useState } from "react";
 import type { ImageExamination } from "../../contracts/presentation.ts";
 
@@ -6,6 +6,7 @@ interface ExaminationFieldsProps {
   initial: ImageExamination | null;
   locale: string;
 }
+const emptyExamination = { image: "", title: "Image", descriptions: [""], reverse: "" };
 
 export function ExaminationFields({ initial, locale }: ExaminationFieldsProps) {
   const [enabled, setEnabled] = useState(Boolean(initial));
@@ -16,28 +17,19 @@ export function ExaminationFields({ initial, locale }: ExaminationFieldsProps) {
     : locale.startsWith("fr")
       ? "Examiner l’image"
       : "Examine the image";
-  const [draft, setDraft] = useState<ImageExamination>(
-    initial
-      ? { ...initial, buttonLabel: initial.buttonLabel ?? label }
-      : {
-          image: "",
-          title: "Image",
-          buttonLabel: label,
-          descriptions: [""],
-          reverse: "",
-        },
-  );
+  const [draft, setDraft] = useState<ImageExamination>(() => ({
+    ...emptyExamination,
+    ...initial,
+    buttonLabel: initial?.buttonLabel ?? label,
+  }));
   return (
     <fieldset>
       <legend>Image examination</legend>
-      <label className="check">
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(event) => setEnabled(event.target.checked)}
-        />
-        Media examinable
-      </label>
+      <CheckboxField
+        label="Media examinable"
+        checked={enabled}
+        onChange={(event) => setEnabled(event.target.checked)}
+      />
       {enabled && (
         <>
           <input type="hidden" name="examination" value={JSON.stringify(draft)} />
@@ -54,23 +46,19 @@ export function ExaminationFields({ initial, locale }: ExaminationFieldsProps) {
             value={draft.title}
             onChange={(event) => setDraft({ ...draft, title: event.target.value })}
           />
-          <label>
-            Image details (one per line)
-            <textarea
-              value={draft.descriptions.join("\n")}
-              onChange={(event) =>
-                setDraft({ ...draft, descriptions: event.target.value.split("\n") })
-              }
-            />
-          </label>
-          <label>
-            Text on the reverse (optional)
-            <textarea
-              maxLength={5000}
-              value={draft.reverse}
-              onChange={(event) => setDraft({ ...draft, reverse: event.target.value })}
-            />
-          </label>
+          <TextareaField
+            label="Image details (one per line)"
+            value={draft.descriptions.join("\n")}
+            onChange={(event) =>
+              setDraft({ ...draft, descriptions: event.target.value.split("\n") })
+            }
+          />
+          <TextareaField
+            label="Text on the reverse (optional)"
+            maxLength={5000}
+            value={draft.reverse}
+            onChange={(event) => setDraft({ ...draft, reverse: event.target.value })}
+          />
           <p>
             The reader can magnify the image, browse its details and turn it over when reverse text
             is provided.

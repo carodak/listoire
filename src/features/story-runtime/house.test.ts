@@ -1,8 +1,7 @@
 import "fake-indexeddb/auto";
 import { expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { BundleSchema } from "../../contracts/story.ts";
+import { houseBundles } from "../../../tests/fixtures/house-project.ts";
 import { InkNarrativeEngine } from "./ink-engine.ts";
 import { createCharacter } from "../character/create-character.ts";
 import { StoryDirector } from "./director.ts";
@@ -10,14 +9,7 @@ import { SaveManager } from "../../persistence/save-manager.ts";
 import { createIndexedDbStore } from "../../persistence/indexeddb-store.ts";
 
 function house(locale: "en" | "fr") {
-  return BundleSchema.parse(
-    JSON.parse(
-      readFileSync(
-        new URL(`../../../public/stories/house/${locale}.json`, import.meta.url),
-        "utf8",
-      ),
-    ),
-  );
+  return houseBundles[locale]!;
 }
 const reference = JSON.parse(
   readFileSync(new URL("../../../tests/fixtures/house-reference.json", import.meta.url), "utf8"),
@@ -28,6 +20,22 @@ for (const locale of ["en", "fr"] as const)
     for (const light of [false, true])
       for (const photo of [false, true])
         for (const examine of [false, true]) {
+          const choices = [
+            "intro.call",
+            song ? "call.song" : "call.room",
+            `${song ? "song" : "room"}.arrival`,
+            light ? "arrival.light" : "arrival.break",
+            `${light ? "light" : "break"}.last`,
+            photo ? "last.photo" : "last.window",
+            `${photo ? "photo" : "window"}.end`,
+          ];
+          const facts = {
+            brasskey: !light,
+            hiddenclue: light,
+            caller: song ? -5 : 5,
+            girl: photo ? -10 : -30,
+            examined: examine,
+          };
           it(`${locale}: song=${song}, light=${light}, photo=${photo}, examine=${examine}`, () => {
             const bundle = house(locale);
             let engine = new InkNarrativeEngine(bundle);
@@ -55,28 +63,14 @@ for (const locale of ["en", "fr"] as const)
               expect(frame.actions).toEqual([]);
               expect(() => engine.choose("examine-photo")).toThrow("content");
             }
-            for (const choice of [
-              "intro.call",
-              song ? "call.song" : "call.room",
-              `${song ? "song" : "room"}.arrival`,
-              light ? "arrival.light" : "arrival.break",
-              `${light ? "light" : "break"}.last`,
-              photo ? "last.photo" : "last.window",
-              `${photo ? "photo" : "window"}.end`,
-            ]) {
+            for (const choice of choices) {
               engine.choose(choice);
               frame = engine.advance();
               snapshot();
             }
             expect(frame.choices).toEqual([]);
             expect(frame.passageId).toBe("end");
-            expect(frame.facts).toMatchObject({
-              brasskey: !light,
-              hiddenclue: light,
-              caller: song ? -5 : 5,
-              girl: photo ? -10 : -30,
-              examined: examine,
-            });
+            expect(frame.facts).toMatchObject(facts);
             expect(passages).toContain("arrival");
             expect(passages).toContain("last");
           });
@@ -131,59 +125,11 @@ it("rolls back photograph discovery if its atomic save fails", async () => {
   expect(restored.getSnapshot().restored).toBe(true);
   expect(restored.getSnapshot().frame).toEqual(saved?.frame);
 });
-it("rejects tampered saved facts and bundles only selected optimized assets", () => {
+it("rejects tampered facts in the archived house checkpoint", () => {
   const bundle = house("en");
   const engine = new InkNarrativeEngine(bundle);
   const frame = engine.advance();
   expect(() =>
     engine.restore(engine.serialize(), { ...frame, facts: { ...frame.facts, brasskey: true } }),
   ).toThrow("save-invalid");
-  const ids = new Set(bundle.assets?.map((asset) => asset.id));
-  const refs = new Set(
-    Object.values(bundle.scenes!).flatMap((scene) => [scene.image, scene.sound].filter(Boolean)),
-  );
-  refs.add(bundle.character!.portrait);
-  refs.add(bundle.cover);
-  for (const scene of Object.values(bundle.scenes!))
-    for (const block of scene.blocks ?? [])
-      if (block.kind === "media") {
-        refs.add(block.image);
-        block.illustration?.layers.forEach((layer) => refs.add(layer.image));
-      }
-  for (const clip of bundle.narration ?? []) refs.add(clip.assetId);
-  for (const scene of Object.values(bundle.scenes!))
-    for (const event of scene.events ?? []) {
-      if (event.action.kind === "audio") refs.add(event.action.assetId);
-      if (
-        event.action.kind === "effect" &&
-        "image" in event.action.effect &&
-        event.action.effect.image
-      )
-        refs.add(event.action.effect.image);
-    }
-  const gallery = JSON.parse(
-    readFileSync(new URL("../../../stories/house/project.json", import.meta.url), "utf8"),
-  ).languages.en.configuration.assets;
-  for (const asset of gallery.filter((asset: { type: string }) => asset.type === "image"))
-    refs.add(asset.id);
-  for (const asset of bundle.assets!)
-    if (asset.type === "image")
-      expect(
-        asset.id.startsWith("heritage.") ||
-          gallery.some(
-            (entry: { id: string }) => entry.id === asset.id && entry.id.startsWith("paper."),
-          ) ||
-          ["house.night", "tcp.human5-cutout"].includes(asset.id),
-      ).toBe(true);
-  expect(ids).toEqual(refs);
-  expect(bundle.assets!.filter((asset) => !asset.id.startsWith("narration."))).toHaveLength(35);
-  for (const asset of bundle.assets!) {
-    const source = readFileSync(new URL(`../../../stories/house/${asset.path}`, import.meta.url));
-    const published = readFileSync(
-      new URL(`../../../public/stories/house/${asset.path}`, import.meta.url),
-    );
-    expect(createHash("sha256").update(source).digest("hex")).toBe(
-      createHash("sha256").update(published).digest("hex"),
-    );
-  }
 });

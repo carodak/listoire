@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CharacterSchema } from "./character.ts";
 const id = z.string().regex(/^[a-z][a-z0-9.-]*$/);
 export const attributes = ["STR", "DEX", "WIL"] as const;
 const attribute = z.enum(attributes);
@@ -21,6 +22,7 @@ export const GameItemSchema = z
       .default({ STR: 0, DEX: 0, WIL: 0, damage: 0, HP: 0 }),
     ability: id.optional(),
     consumable: z.boolean().default(false),
+    healing: z.number().int().min(0).max(100).default(0),
   })
   .strict();
 const ability = z
@@ -39,6 +41,7 @@ export const EncounterSchema = z
     name: z.string().min(1).max(100),
     difficulty: z.enum(["easy", "normal", "hard", "boss"]),
     profile: z.enum(["resilient", "balanced", "offensive"]),
+    portrait: z.string().optional(),
   })
   .strict();
 export const GameActionSchema = z
@@ -112,7 +115,22 @@ const result = z
   .object({
     success: z.boolean(),
     roll: z.number().int(),
+    dice: z
+      .array(
+        z
+          .object({
+            sides: z.union([z.literal(3), z.literal(4), z.literal(6), z.literal(20)]),
+            value: z.number().int().min(1),
+          })
+          .strict()
+          .refine((die) => die.value <= die.sides, "Roll exceeds die size"),
+      )
+      .max(4)
+      .optional(),
     outcome: z.enum(["victory", "escaped", "defeat", "charmed"]).optional(),
+    itemId: id.optional(),
+    abilityId: id.optional(),
+    abilityUsed: id.optional(),
     message: z.string().max(500),
   })
   .strict();
@@ -123,6 +141,25 @@ export const GameStateSchema = z
     baseMaxHp: z.number().int().min(6),
     inventory: z.array(id).max(100),
     equipment: z.object({ weapon: id.optional(), accessory: id.optional() }).strict(),
+    pendingEvent: z.object({ choiceId: id }).strict().optional(),
+    pendingCheck: z
+      .object({
+        choiceId: id,
+        actionId: id,
+        rolled: z.boolean(),
+        origin: z
+          .object({
+            character: CharacterSchema,
+            rng: z.number().int().min(1).max(4294967295),
+            xp: z.number().int().min(0).max(4),
+            baseMaxHp: z.number().int().min(6),
+            lastResult: result.optional(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
     combat: z
       .object({
         encounterId: id,
@@ -151,4 +188,31 @@ export const GameStateSchema = z
 export type GameDefinition = z.infer<typeof GameDefinitionSchema>;
 export type GameState = z.infer<typeof GameStateSchema>;
 export type GameAction = z.infer<typeof GameActionSchema>;
-export type GameMove = { kind: "attack" | "flee" } | { kind: "ability"; id: string };
+export type GameMove =
+  | { kind: "attack" }
+  | { kind: "flee" }
+  | { kind: "ability"; id: string }
+  | { kind: "item"; id: string };
+export type PlayerMove = GameMove | { kind: "equip"; id: string } | { kind: "unequip"; id: string };
+export interface CheckOption {
+  attribute: (typeof attributes)[number];
+  sides: 6 | 20;
+  threshold: number;
+  comparison: "≤" | "≥";
+}
+export interface CombatOption {
+  move: GameMove;
+  probability: number;
+  check?: CheckOption;
+  damage?: {
+    base: number;
+    bonus: number;
+    equipment: number;
+    attribute: (typeof attributes)[number];
+    score: number;
+  };
+  attackTable?: { die: number; damage: number }[];
+  ranks?: { rank: number; threshold: number; damage: number; probability: number }[];
+  rank?: number;
+  healing?: number;
+}

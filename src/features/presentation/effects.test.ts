@@ -45,12 +45,12 @@ it("pauses, resumes and cancels every depth layer and restores their original tr
     expect.any(Array),
     expect.objectContaining({ easing: "cubic-bezier(.25,.1,.25,1)" }),
   );
-  playback.pause();
+  engine.pause();
   expect(animations.every((animation) => animation.pause.mock.calls.length === 1)).toBe(true);
-  playback.resume();
+  engine.resume();
   expect(animations.every((animation) => animation.play.mock.calls.length === 1)).toBe(true);
   scope.abort();
-  expect(await playback.finished).toBe("aborted");
+  expect(await playback).toBe("aborted");
   expect(animations.every((animation) => animation.cancel.mock.calls.length === 1)).toBe(true);
   engine.stop();
   expect(layer.style.transform).toBe("");

@@ -16,6 +16,7 @@ $taskOutput = Join-Path $taskRoot '.fallow/narrator-reference'
 New-Item -ItemType Directory -Force -Path $taskOutput | Out-Null
 $taskText = 'Beyond the window, the last light rested on the hills. A door stood open where no door had ever been. You took one quiet step, and the whole world seemed to listen.'
 foreach ($taskName in @('Linda', 'Richard')) {
+    if (Test-Path -LiteralPath (Join-Path $taskOutput "$($taskName.ToLower()).wav")) { continue }
     $taskVoice = $taskSynthType::AllVoices | Where-Object { $_.DisplayName -eq "Microsoft $taskName" } | Select-Object -First 1
     if (-not $taskVoice) { throw "The installed synthetic voice $taskName is unavailable." }
     $taskSynth = New-Object $taskSynthType
@@ -29,4 +30,20 @@ foreach ($taskName in @('Linda', 'Richard')) {
     $taskReader.Dispose()
     $taskSynth.Dispose()
     Write-Output "$taskName reference prepared ($($taskBytes.Length) bytes)."
+}
+$taskRegisters = @(
+    @{ Key = 'linda'; Base = 'linda'; Pitch = 1.0 },
+    @{ Key = 'richard'; Base = 'richard'; Pitch = 1.0 },
+    @{ Key = 'linda-young'; Base = 'linda'; Pitch = 1.26 },
+    @{ Key = 'richard-young'; Base = 'richard'; Pitch = 1.19 },
+    @{ Key = 'linda-low'; Base = 'linda'; Pitch = 0.89 },
+    @{ Key = 'richard-deep'; Base = 'richard'; Pitch = 0.79 }
+)
+foreach ($taskRegister in $taskRegisters) {
+    $taskPitch = $taskRegister.Pitch.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+    $taskInput = Join-Path $taskOutput "$($taskRegister.Base).wav"
+    $taskDestination = Join-Path $taskOutput "$($taskRegister.Key).mp3"
+    & ffmpeg -nostdin -v error -y -i $taskInput -af "rubberband=pitch=$taskPitch,loudnorm=I=-23:TP=-2:LRA=7" -ac 1 -ar 24000 -b:a 80k $taskDestination
+    if ($LASTEXITCODE -ne 0) { throw "Could not prepare $($taskRegister.Key)" }
+    Write-Output "$($taskRegister.Key) reference encoded."
 }

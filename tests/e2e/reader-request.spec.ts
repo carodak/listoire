@@ -1,0 +1,723 @@
+import { expect, test } from "./test.ts";
+import type { Page } from "@playwright/test";
+
+async function enter(page: Page, french = false, skipIntro = true) {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.goto("/");
+  if (french) {
+    await page.getByRole("button", { name: "Language: English", exact: true }).click();
+    await page.getByRole("button", { name: "Français", exact: true }).click();
+  }
+  await page.getByRole("button", { name: /Play an existing story|Jouer/ }).click();
+  await expect(page.locator(".reader-copy h1")).toBeVisible();
+  await page.getByRole("button", { name: /Reading preferences|Préférences de lecture/ }).click();
+  await page
+    .getByRole("combobox", { name: french ? "Affichage du texte" : "Text display" })
+    .selectOption("instant");
+  await page
+    .getByRole("checkbox", { name: french ? "Lire à voix haute" : "Read aloud", exact: true })
+    .uncheck();
+  await page.locator(".reading-sidebar header button").click();
+  if (skipIntro) for (let index = 0; index < 3; index++) await next(page);
+}
+
+async function dismissNotice(page: Page) {
+  const check = page.locator(".check-roll-modal");
+  if (await check.count()) {
+    const heading = await page.locator(".reader-copy h1").textContent();
+    const roll = check.getByRole("button", { name: /Lancer les|Roll dice/ });
+    if (await roll.count()) {
+      await expect(check.locator(".dice-result")).toHaveCount(0);
+      await roll.click();
+      await expect(check.locator(".dice-roll")).toBeVisible();
+      await expect(page.locator(".reader-copy h1")).toHaveText(heading!);
+    }
+    await check.getByRole("button", { name: /Continuer|Continue/, exact: true }).click();
+    await expect(check).toHaveCount(0);
+  }
+  const notice = page.locator(".reader-modal:not(.reader-combat-modal)");
+  if (await notice.count()) await notice.locator(".reader-modal-footer button").last().click();
+  await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
+}
+
+async function next(page: Page) {
+  await page.locator(".choices button").first().click();
+  await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
+  await dismissNotice(page);
+}
+
+test("keeps character size, aligns language chevron, removes close border and preserves text width beside art", async ({
+  page,
+}) => {
+  await enter(page);
+  const character = page.getByRole("button", { name: /My Character/ });
+  const before = (await character.boundingBox())!;
+  const font = await character.evaluate((element) => getComputedStyle(element).fontSize);
+  await character.hover();
+  const after = (await character.boundingBox())!;
+  expect(after.width).toBeCloseTo(before.width, 1);
+  expect(after.height).toBeCloseTo(before.height, 1);
+  await expect(character).toHaveCSS("font-size", font);
+  const language = (await page.locator(".reader-toolbar .language-picker summary").boundingBox())!;
+  const chevron = (await page.locator(".reader-toolbar .language-chevron").boundingBox())!;
+  expect(chevron.y + chevron.height / 2).toBeCloseTo(language.y + language.height / 2, 0);
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await expect(page.locator(".reading-sidebar header button")).toHaveCSS("border-top-width", "0px");
+  await expect(
+    page
+      .getByRole("combobox", { name: "Narrator", exact: true })
+      .locator('option[value^="narrator."]'),
+  ).toHaveCount(6);
+  await page.locator(".reading-sidebar header button").click();
+  const plain = (await page.locator(".reader-copy").boundingBox())!.width;
+  await next(page);
+  await expect(page.locator(".story-art img").first()).toBeVisible();
+  const illustrated = (await page.locator(".reader-copy").boundingBox())!.width;
+  expect(illustrated).toBeCloseTo(plain, 0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("places Examine directly under its image and retains zoom and details without reset", async ({
+  page,
+}, info) => {
+  await enter(page);
+  await next(page);
+  const examine = page.getByRole("button", { name: "Examine Nour", exact: true });
+  await expect(examine).toBeVisible();
+  const illustration = page.locator('[data-examinable="true"] > .scene-illustration');
+  const picture = (await illustration.boundingBox())!;
+  expect((await examine.boundingBox())!.y - picture.y - picture.height).toBeCloseTo(0, 0);
+  await examine.click();
+  const dialog = page.getByRole("dialog", { name: "Nour", exact: true });
+  await expect(dialog.getByRole("button", { name: /Reset view/ })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Turn over", exact: true })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await expect(dialog.locator(".magnified-image")).toHaveCSS(
+    "transform",
+    "matrix(1.5, 0, 0, 1.5, 0, 0)",
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Examine details", exact: true }).locator("svg"),
+  ).toBeVisible();
+  await page.screenshot({ path: info.outputPath("examination.png") });
+  await page.keyboard.press("Escape");
+  await expect(examine).toBeFocused();
+});
+
+test("completes the French magic chapter with two combats and visible saved dice", async ({
+  page,
+}, info) => {
+  test.setTimeout(90000);
+  await enter(page, true);
+  let encounters = 0;
+  let rolls = 0;
+  for (let step = 0; step < 42; step++) {
+    const combat = page.locator(".reader-combat-modal");
+    if (await combat.count()) {
+      encounters++;
+      await expect(combat.getByRole("button", { name: /Lancer les/ })).toHaveCount(0);
+      await expect(combat.locator(".combat-summary progress")).toHaveCount(2);
+      await expect(combat.locator(".combatant-portrait img")).toHaveCount(2);
+      await expect(combat.locator(".combatant-portrait img").first()).toBeVisible();
+      await expect(combat.locator(".character-xp-track")).toHaveCount(0);
+      await expect(combat.locator(".combat-ability-menu")).toHaveCount(0);
+      await combat.locator(".combat-actions .reader-info summary").first().click();
+      await expect(combat.locator(".reader-info[open]")).toContainText("d6");
+      await expect(combat.locator(".reader-info[open] tbody tr")).toHaveCount(6);
+      const tooltip = (await combat
+        .locator(".reader-info[open] .reader-info-content")
+        .boundingBox())!;
+      expect(tooltip.x).toBeGreaterThanOrEqual(0);
+      expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+      await combat.locator(".combat-actions .reader-info summary").first().click();
+      await combat.getByRole("button", { name: "Utiliser une capacit\u00e9", exact: true }).click();
+      await expect(combat.locator(".combat-ability-menu button").first()).toContainText("33");
+      await expect(combat.locator(".combatant-portrait")).toHaveCount(2);
+      await expect(combat.locator(".combat-actions > .combat-action")).toHaveCount(4);
+
+      await page.screenshot({ path: info.outputPath(`combat-${encounters}.png`) });
+      if (encounters === 1) {
+        await expect(combat.locator(".combatant-name").first()).toHaveText("Ysée Valambre");
+        await combat.getByRole("button", { name: "Utiliser un objet", exact: true }).click();
+        await combat
+          .locator(".combat-ability-menu button")
+          .filter({ hasText: "Baume de soin" })
+          .click();
+        await expect(
+          combat.getByRole("button", { name: "Utiliser un objet", exact: true }),
+        ).toBeDisabled();
+      }
+      for (let turn = 0; (await combat.count()) && turn < 30; turn++) {
+        await combat.getByRole("button", { name: "Attaque simple", exact: true }).click();
+        await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
+        await expect(page.locator(".dice-roll")).toBeVisible();
+        await expect(page.locator(".dice-result small").first()).toHaveText("d6");
+        rolls++;
+      }
+    }
+    await dismissNotice(page);
+    if (await page.locator(".ending").count()) break;
+    await next(page);
+  }
+  await expect(page.locator(".ending")).toBeVisible();
+  expect(encounters).toBe(2);
+  expect(rolls).toBeGreaterThanOrEqual(2);
+  await expect(page.locator(".reader-copy h1")).toHaveText("Laisser une lumière");
+});
+
+test("dissolves words upward while keeping the page color fixed", async ({ page }) => {
+  await enter(page);
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Animated page turns", exact: true }).check();
+  await page.locator(".reading-sidebar header button").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const color = await page
+    .locator(".reader")
+    .evaluate((node) => getComputedStyle(node).backgroundColor);
+  await page.locator(".choices button").first().click();
+  await expect(page.locator(".page-word-departure span").first()).toBeVisible();
+  await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target instanceof Element &&
+          animation.effect.target.closest(".page-word-departure"),
+      )
+      .forEach((animation) => animation.pause()),
+  );
+  await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
+  await page.waitForTimeout(180);
+  await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
+  await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target instanceof Element &&
+          animation.effect.target.closest(".page-word-departure"),
+      )
+      .forEach((animation) => animation.play()),
+  );
+  await expect(page.locator(".reader")).toHaveCSS("background-color", color);
+  await expect(page.locator(".reader")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
+  await expect(page.locator(".page-word-departure")).toHaveCount(0);
+  await page.getByRole("button", { name: "Previous page", exact: true }).click();
+  await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
+  await expect(page.locator(".page-word-departure")).toHaveCount(0);
+  await expect(page.locator(".reader")).toHaveCSS("background-color", color);
+});
+
+test("keeps a check on its page until its dice settle and the reader confirms", async ({
+  page,
+}, info) => {
+  await enter(page);
+  const check = page.locator(".check-roll-modal");
+  for (let step = 0; step < 20 && !(await check.count()); step++) {
+    await dismissNotice(page);
+    await page.locator(".choices button").first().click();
+    await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
+  }
+  await expect(check).toBeVisible();
+  const heading = await page.locator(".reader-copy h1").textContent();
+  await expect(check.locator(".dice-result")).toHaveCount(1);
+  await expect(check.locator(".spell-cast-effect")).toHaveCount(1);
+  await expect(check.getByRole("button", { name: "Roll dice", exact: true })).toHaveCount(0);
+  async function reloadCheck() {
+    await page.reload();
+    await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+    await expect(check).toBeVisible();
+  }
+  const advance = check.getByRole("button", { name: "Continue", exact: true });
+  await page.screenshot({ path: info.outputPath("dice-in-flight.png") });
+  await expect(advance).toBeEnabled();
+  await expect(page.locator(".reader-copy h1")).toHaveText(heading!);
+  await expect(check.locator(".dice-result").first()).toHaveAttribute("aria-label", /^d6: [1-6]$/);
+  const savedRoll = await check.locator(".dice-result").first().getAttribute("aria-label");
+  await page.screenshot({ path: info.outputPath("dice-result.png") });
+  await reloadCheck();
+  await expect(check.locator(".spell-cast-effect")).toHaveCount(0);
+  await expect(check.getByRole("button", { name: "Roll dice", exact: true })).toHaveCount(0);
+  await expect(check.locator(".dice-result").first()).toHaveAttribute("aria-label", savedRoll!);
+  await advance.click();
+  await expect(check).toHaveCount(0);
+  await expect(page.locator(".reader-copy h1")).not.toHaveText(heading!);
+  await page.getByRole("button", { name: "Previous page", exact: true }).click();
+  await expect(page.locator(".reader-copy h1")).toHaveText(heading!);
+  await expect(check).toHaveCount(0);
+  await expect(page.locator(".choices button").first()).toBeEnabled();
+});
+
+test("uses the whole viewport below the menu for board effects", async ({ page }) => {
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    bundle.scenes.atelier.events = [
+      {
+        id: "viewport-test",
+        blockId: "page",
+        trigger: { kind: "passage" },
+        action: {
+          kind: "effect",
+          effect: { id: "light-flicker", duration: 10000, target: "canvas", intensity: 0.2 },
+        },
+      },
+    ];
+    await route.fulfill({ response, json: bundle });
+  });
+  await enter(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  const effect = page.locator(".reader-viewport-effect");
+  await expect(effect).toBeAttached();
+  const bounds = (await effect.boundingBox())!;
+  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
+  const viewport = page.viewportSize()!;
+  expect(bounds.x).toBeCloseTo(0, 0);
+  expect(bounds.width).toBeCloseTo(viewport.width, 0);
+  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
+  expect(bounds.height).toBeCloseTo(viewport.height - bounds.y, 0);
+});
+
+test("shows a cropped illustration once at its final size and removes the lower fade before Examine", async ({
+  page,
+}) => {
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    const block = bundle.scenes.messagere.blocks.find(
+      (block: { kind: string }) => block.kind === "media",
+    );
+    block.illustration = {
+      base: { role: "midground", x: 0, y: 0, scale: 1 },
+      layers: [],
+      aspect: "portrait",
+      blend: "paper",
+      wrap: "none",
+      autoCrop: true,
+    };
+    await route.fulfill({ response, json: bundle });
+  });
+  await enter(page);
+  await next(page);
+  const stage = page.locator('[data-examinable="true"] .scene-illustration');
+  await expect(stage).toHaveCSS("mask-image", "none");
+  const drawing = stage.locator(".shot-plane-image");
+  await expect(drawing).toHaveAttribute("src", /^blob:/);
+  await expect
+    .poll(() => drawing.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0);
+  const source = await drawing.getAttribute("src");
+  const first = (await drawing.boundingBox())!;
+  await page.waitForTimeout(500);
+  expect(await drawing.getAttribute("src")).toBe(source);
+  const final = (await drawing.boundingBox())!;
+  for (const key of ["x", "y", "width", "height"] as const)
+    expect(final[key]).toBeCloseTo(first[key], 1);
+  const button = (await page
+    .getByRole("button", { name: "Examine Nour", exact: true })
+    .boundingBox())!;
+  const image = (await stage.boundingBox())!;
+  expect(button.y - image.y - image.height).toBeCloseTo(0, 0);
+});
+
+test("renders the numbered grey d20 model for a contextual attribute check", async ({
+  page,
+}, info) => {
+  await enter(page);
+  for (
+    let step = 0;
+    step < 30 && !(await page.locator(".choices button").filter({ hasText: /\/20/ }).count());
+    step++
+  )
+    await next(page);
+  const choice = page.locator(".choices button").filter({ hasText: /\/20/ }).first();
+  await expect(choice).toBeVisible();
+  await choice.click();
+  const check = page.locator(".check-roll-modal");
+  await expect(check.locator(".check-test")).toContainText("/20");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(check.getByRole("button", { name: "Roll dice", exact: true })).toHaveCount(0);
+  await expect(check.locator('.dice-result[data-sides="20"] canvas')).toBeVisible();
+  await expect(check.getByRole("button", { name: "Continue", exact: true })).toBeEnabled();
+  await page.screenshot({ path: info.outputPath("grey-d20.png") });
+});
+
+test("waits for Fight even after restoring an encounter and animates the combat viewport", async ({
+  page,
+}) => {
+  await enter(page);
+  for (
+    let step = 0;
+    step < 35 &&
+    !(await page
+      .locator(".choices button")
+      .filter({ hasText: /^Fight/ })
+      .count());
+    step++
+  )
+    await next(page);
+  const combat = page.locator(".reader-combat-modal");
+  await expect(combat).toHaveCount(0);
+  await page
+    .locator(".choices button")
+    .filter({ hasText: /^Fight/ })
+    .first()
+    .click();
+  await expect(combat).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+  await expect(page.locator(".reader-copy h1")).toBeVisible();
+  await expect(combat).toHaveCount(0);
+  await page.getByRole("button", { name: "Fight", exact: true }).click();
+  await expect(combat).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await combat.getByRole("button", { name: "Basic attack", exact: true }).click();
+  const feedback = combat.locator(".reader-viewport-feedback");
+  await expect(feedback).toBeAttached();
+  await expect(combat).toHaveCSS("transform", "none");
+  const bounds = (await feedback.boundingBox())!;
+  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
+  expect(bounds.width).toBeCloseTo(page.viewportSize()!.width, 0);
+  expect(bounds.x).toBeCloseTo(0, 0);
+  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
+  await expect(combat.getByRole("button", { name: "Basic attack", exact: true })).toBeEnabled();
+  await combat.getByRole("button", { name: "Use an ability", exact: true }).click();
+  await combat.locator(".combat-ability-menu button").first().click();
+  await expect(page.locator(".dice-roll")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Roll dice", exact: true })).toHaveCount(0);
+});
+
+test("spends three pages in the ordinary world with relevant layered art before the letter", async ({
+  page,
+}) => {
+  await enter(page, false, false);
+  await expect(page.locator(".reader-copy h1")).toHaveText("The morning errands");
+  await expect(page.locator(".multiplane-plane")).toHaveCount(2);
+  await expect(page.locator(".narrative-media")).toHaveAttribute("data-wrap", "none");
+  await next(page);
+  await expect(page.locator(".reader-copy h1")).toHaveText("A notch in the balance staff");
+  await expect(page.locator(".narrative-media")).toHaveCount(0);
+  await next(page);
+  await expect(page.locator(".reader-copy h1")).toHaveText("Twelve strokes at noon");
+  await expect(page.locator(".multiplane-plane")).toHaveCount(2);
+  await next(page);
+  await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
+});
+
+test("shows the item before departure, fades the illustration and dissolves the heading before the next page fades in", async ({
+  page,
+}) => {
+  await enter(page);
+  await next(page);
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Animated page turns", exact: true }).check();
+  await page.locator(".reading-sidebar header button").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.locator(".choices button").first().click();
+  const notice = page.locator(".reader-modal");
+  await expect(notice).toBeVisible();
+  await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
+  await expect(page.locator(".page-word-departure")).toHaveCount(0);
+  await notice.locator(".reader-modal-footer button").click();
+  await expect(page.locator('[data-departure-heading="true"]').first()).toBeAttached();
+  const timing = await page.evaluate(() =>
+    document
+      .getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target instanceof Element &&
+          animation.effect.target.matches(".narrative-media"),
+      )
+      .map((animation) => animation.effect!.getTiming().duration),
+  );
+  expect(timing).toContain(920);
+  await page.waitForTimeout(500);
+  await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
+  await expect(page.locator(".reader-copy h1")).toHaveText("A coin suspended in the air");
+  await expect(page.locator(".page-word-departure")).toHaveCount(0);
+  const arrival = await page
+    .locator(".reader-scene")
+    .evaluate((element) => getComputedStyle(element).animationDuration);
+  expect(arrival).toBe("1.4s");
+});
+
+test("types graphemes smoothly while staying just one word ahead of narrated boundaries", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    class Utterance {
+      text: string;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+    Object.defineProperty(window, "SpeechSynthesisUtterance", {
+      value: Utterance,
+      configurable: true,
+    });
+    Object.defineProperty(window, "speechSynthesis", {
+      value: {
+        getVoices: () => [{ lang: "en-US", voiceURI: "test", name: "Test voice" }],
+        speak: (utterance: SpeechSynthesisUtterance) => {
+          (window as unknown as { spoken: SpeechSynthesisUtterance }).spoken = utterance;
+        },
+        cancel() {},
+        pause() {},
+        resume() {},
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      configurable: true,
+    });
+  });
+  await enter(page, false, false);
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Text display", exact: true })
+    .selectOption("progressive");
+  await page.getByRole("combobox", { name: "Narrator", exact: true }).selectOption("device:test");
+  await page.getByRole("checkbox", { name: "Read aloud", exact: true }).check();
+  await page.locator(".reading-sidebar header button").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  const visible = page.locator('.prose p > span[aria-hidden="true"]').first();
+  await expect(visible).toHaveText("On");
+  const samples = await page.evaluate(async () => {
+    const utterance = (window as unknown as { spoken: SpeechSynthesisUtterance }).spoken;
+    utterance.onboundary?.({ charIndex: 0, charLength: 2 } as SpeechSynthesisEvent);
+    const lengths: number[] = [];
+    const until = performance.now() + 400;
+    await new Promise<void>((resolve) => {
+      const sample = () => {
+        lengths.push(
+          document.querySelector('.prose p > span[aria-hidden="true"]')?.textContent?.length ?? 0,
+        );
+        if (performance.now() < until) requestAnimationFrame(sample);
+        else resolve();
+      };
+      requestAnimationFrame(sample);
+    });
+    return lengths;
+  });
+  expect(samples.some((length) => length > 3 && length < 13)).toBe(true);
+  expect(samples.every((length, index) => !index || length - samples[index - 1]! <= 5)).toBe(true);
+  await expect(visible).toHaveText("On Wednesdays,");
+  await page.evaluate(() => {
+    const utterance = (window as unknown as { spoken: SpeechSynthesisUtterance }).spoken;
+    utterance.onboundary?.({ charIndex: 3, charLength: 11 } as SpeechSynthesisEvent);
+  });
+  await expect(visible).toHaveText("On Wednesdays, you");
+});
+
+test("updates an old active Orée draft while keeping its full previous version in history", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.goto("/");
+  const project = await (await page.request.get("/stories/house/project.json")).json();
+  project.release = "oree-1.2.0";
+  for (const language of Object.values(project.languages) as {
+    script: string;
+    configuration: { checkpointId: string };
+  }[]) {
+    language.configuration.checkpointId = "oree-v1-2";
+    language.script += "\n// Former author's note\n";
+  }
+  await page.evaluate(async (draft) => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("listoire-editor");
+      request.onupgradeneeded = () => request.result.createObjectStore("projects");
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction("projects", "readwrite");
+        transaction
+          .objectStore("projects")
+          .put({ revision: 1, draft, published: null, history: [] }, "house");
+        transaction.oncomplete = () => {
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => {
+          database.close();
+          reject(transaction.error);
+        };
+      };
+    });
+  }, project);
+  await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+  await expect(page.locator(".reader-copy h1")).toHaveText("The morning errands");
+  const saved = await page.evaluate(
+    async () =>
+      new Promise<{ release: string; archived: string }>((resolve, reject) => {
+        const request = indexedDB.open("listoire-editor");
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const item = database.transaction("projects").objectStore("projects").get("house");
+          item.onsuccess = () => {
+            database.close();
+            resolve({
+              release: item.result.draft.release,
+              archived: item.result.history.at(-2).project.languages.en.script,
+            });
+          };
+          item.onerror = () => {
+            database.close();
+            reject(item.error);
+          };
+        };
+      }),
+  );
+  expect(saved.release).toBe("oree-1.3.0");
+  expect(saved.archived).toContain("Former author's note");
+});
+
+test("aligns unnamed heroes with long opponent names, shows gallery portraits and keeps every action visible after dice", async ({
+  page,
+}, info) => {
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    delete bundle.character.name;
+    bundle.game.encounters[0].name = "Ysée Valambre, head teacher of the school of Orée";
+    await route.fulfill({ json: bundle });
+  });
+  await enter(page);
+  for (
+    let step = 0;
+    step < 35 &&
+    !(await page
+      .locator(".choices button")
+      .filter({ hasText: /^Fight/ })
+      .count());
+    step++
+  )
+    await next(page);
+  await page
+    .locator(".choices button")
+    .filter({ hasText: /^Fight/ })
+    .first()
+    .click();
+  const combat = page.locator(".reader-combat-modal");
+  await expect(combat).toBeVisible();
+  await expect(combat.locator(".combatant-name").nth(1)).toBeEmpty();
+  await expect(combat.locator(".combatant-portrait img")).toHaveCount(2);
+  await expect(combat.locator("svg.opponent-emblem")).toHaveCount(0);
+  const hp = combat.locator(".combat-vital progress");
+  expect((await hp.nth(0).boundingBox())!.y).toBeCloseTo((await hp.nth(1).boundingBox())!.y, 0);
+  await combat.locator(".combat-actions .reader-info summary").nth(1).click();
+  await expect(combat.locator(".reader-info[open] tbody tr")).toHaveCount(4);
+  await expect(combat.locator('.reader-info[open] tr[data-current="true"]')).toHaveCount(1);
+  await combat.locator(".combat-actions .reader-info summary").nth(1).click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await combat.getByRole("button", { name: "Basic attack", exact: true }).click();
+  await expect(combat.getByRole("button", { name: "Basic attack", exact: true })).toBeEnabled();
+  const actions = combat.locator(".combat-actions > .combat-action > button");
+  for (let index = 0; index < 4; index++) {
+    const bounds = (await actions.nth(index).boundingBox())!;
+    expect(bounds.y).toBeGreaterThanOrEqual(0);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  }
+  await page.screenshot({ path: info.outputPath("compact-combat.png") });
+});
+
+test("plays instant-text illustrations from the beginning and keeps them running when all text is revealed", async ({
+  page,
+}) => {
+  await enter(page, false, false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter(
+              (animation) =>
+                animation.effect instanceof KeyframeEffect &&
+                animation.effect.target instanceof Element &&
+                animation.effect.target.classList.contains("multiplane-plane"),
+            ).length,
+      ),
+    )
+    .toBeGreaterThan(0);
+  const times = await page.evaluate(() => {
+    const animations = document
+      .getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect instanceof KeyframeEffect &&
+          animation.effect.target instanceof Element &&
+          animation.effect.target.classList.contains("multiplane-plane"),
+      );
+    animations.forEach((animation, index) => {
+      animation.id = `live-illustration-${index}`;
+    });
+    return animations.map((animation) => ({
+      time: Number(animation.currentTime),
+      duration: Number(animation.effect!.getTiming().duration),
+    }));
+  });
+  expect(times.every((timing) => timing.time < timing.duration - 2000)).toBe(true);
+  await page.locator(".prose p").first().click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter(
+              (animation) =>
+                animation.id.startsWith("live-illustration-") && animation.playState === "running",
+            ).length,
+      ),
+    )
+    .toBe(times.length);
+});
+
+test("plays an ordered fullscreen illustration even when the text display is instant", async ({
+  page,
+}) => {
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    const scene = bundle.scenes["matin-ville"];
+    const picture = scene.blocks.find((block: { kind: string }) => block.kind === "media");
+    picture.layout = "fullscreen";
+    for (const event of scene.events)
+      if (event.blockId === picture.id) {
+        event.blocking = true;
+        event.action.effect.duration = 2500;
+      }
+    scene.events.push({
+      id: "after-cinematic",
+      blockId: "page",
+      trigger: { kind: "segment", segmentId: "matin-ville.p2" },
+      blocking: false,
+      action: {
+        kind: "effect",
+        effect: { id: "screen-shake", duration: 2000, intensity: 0.1, target: "canvas" },
+      },
+    });
+    await route.fulfill({ json: bundle });
+  });
+  await enter(page, false, false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  await expect(page.locator(".cinematic-dialog[open]")).toBeVisible();
+  await expect(page.locator(".choices button")).toHaveCount(0);
+  expect(
+    await page.locator(".reader-board").evaluate((element) => element.getAnimations().length),
+  ).toBe(0);
+  await expect(page.locator(".cinematic-dialog")).toHaveCount(0, { timeout: 10000 });
+  await expect(page.locator(".choices button")).toBeVisible();
+});

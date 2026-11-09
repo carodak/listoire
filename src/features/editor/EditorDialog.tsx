@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Dialog } from "../../shared/Dialog.tsx";
 import type { ReactNode } from "react";
 
 interface EditorDialogProps {
@@ -16,14 +16,6 @@ export function EditorDialog({
   docked = false,
   actions,
 }: EditorDialogProps) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const focused = document.activeElement as HTMLElement | null;
-    dialog.current?.showModal();
-    return () => {
-      focused?.focus();
-    };
-  }, []);
   const content = (
     <>
       <header>
@@ -41,8 +33,27 @@ export function EditorDialog({
       {content}
     </section>
   ) : (
-    <dialog className="editor-dialog" ref={dialog} aria-label={title} onCancel={onClose}>
+    <Dialog className="editor-dialog" aria-label={title} onDismiss={onClose}>
       {content}
-    </dialog>
+    </Dialog>
+  );
+}
+
+export function EditorFormActions({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <footer>
+      <button type="button" onClick={onClose}>
+        Cancel
+      </button>
+      <button className="primary" type="submit">
+        {children}
+      </button>
+    </footer>
   );
 }

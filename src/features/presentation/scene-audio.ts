@@ -1,4 +1,4 @@
-import type { NarrativeEvent } from "../../contracts/effects.ts";
+import type { NarrativeEvent } from "../../contracts/narrative-events.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { AudioManager } from "../media/audio-manager.ts";
 
@@ -45,7 +45,7 @@ export class SceneAudio {
             fadeMs: action.fadeMs,
           });
     if (persistent)
-      void playback.finished.then(() => {
+      void playback.then(() => {
         if (this.tracks.get(action.channel) === signature) this.tracks.delete(action.channel);
       });
   }

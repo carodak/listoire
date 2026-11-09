@@ -3,19 +3,24 @@ import type { PresentationSession } from "../presentation/presentation-session.t
 import type { Frame } from "../../contracts/story.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { PresentationBlock } from "../../contracts/presentation.ts";
-import { mediaIsVisible } from "../../contracts/presentation.ts";
+import { mediaIsVisible, isMediaBlock } from "../../contracts/presentation.ts";
 import { SceneIllustration } from "../presentation/SceneIllustration.tsx";
 import { PhotographExamination } from "./PhotographViewer.tsx";
-import { reachedBlocks, presentationBlocks, bookMediaLayout } from "./narrative-blocks.ts";
+import { isFullscreenMedia } from "../../contracts/presentation.ts";
+
 import { useTextReveal } from "./use-text-reveal.ts";
 import { ChoiceList } from "./ChoiceList.tsx";
 import { ReaderMediaFigure } from "./ReaderMediaFigure.tsx";
+import { TypographicText } from "../presentation/TypographicText.tsx";
+import type { CheckOption } from "../../contracts/game.ts";
 
 interface PassageTextProps {
   frame: Frame;
   instant: boolean;
   disabled: boolean;
   onChoose: (id: string) => void;
+  resumeCombat?: () => void;
+  checkOptions?: Record<string, CheckOption>;
   media: ReturnType<PresentationSession["getSnapshot"]>;
   bundle: StoryBundle;
   presentation: PresentationSession;
@@ -28,6 +33,8 @@ export function PassageText({
   instant,
   disabled,
   onChoose,
+  resumeCombat,
+  checkOptions,
   media,
   bundle,
   presentation,
@@ -39,22 +46,8 @@ export function PassageText({
     ...media,
     paused: media.paused || media.blocking || media.exiting,
   });
-  const announced = useRef(new Set<string>());
-  useEffect(() => {
-    for (const paragraph of reveal.paragraphs) {
-      if (paragraph.text === paragraph.visible && !announced.current.has(paragraph.id)) {
-        announced.current.add(paragraph.id);
-        presentation.segmentRevealed(paragraph.id);
-      }
-    }
-  }, [reveal.paragraphs, presentation]);
   const blocks = presentationBlocks(bundle, frame);
-  const reached = reachedBlocks(
-    blocks,
-    reveal.paragraphs,
-    media.completedBlocks,
-    instant || media.revealAll,
-  );
+  const reached = reachedBlocks(blocks, reveal.paragraphs, media.completedBlocks, media.skipMedia);
   const illustration = (block: Extract<PresentationBlock, { kind: "media" }>) => (
     <ReaderIllustration
       key={block.id}
@@ -66,6 +59,19 @@ export function PassageText({
     reveal.finish();
     presentation.revealRemaining();
   };
+  const choices =
+    reveal.complete && !media.blocking ? (
+      <ChoiceList
+        key="choices"
+        resumeCombat={resumeCombat}
+        checkOptions={checkOptions}
+        bundle={bundle}
+        frame={frame}
+        locale={bundle.locale}
+        disabled={disabled}
+        onChoose={onChoose}
+      />
+    ) : null;
   return (
     <div className="reader-scene" data-illustrated={layout.illustrated}>
       <div className="reader-copy">
@@ -74,64 +80,80 @@ export function PassageText({
           {reached.map((block) => {
             if (block.kind === "text") {
               const segment = reveal.paragraphs.find((segment) => segment.id === block.segmentId);
-              if (!segment) return null;
               return (
                 <NarrativeParagraph
-                  key={segment.id}
+                  key={block.segmentId}
                   onClick={finish}
                   presentation={presentation}
                   segment={segment}
-                >
-                  <span className="sr-only">{segment.text}</span>
-                  <span aria-hidden="true">{segment.visible}</span>
-                </NarrativeParagraph>
+                />
               );
             }
             if (block.kind === "media")
               return block.layout === "right" ? null : illustration(block);
-            return reveal.complete && !media.blocking ? (
-              <ChoiceList
-                key="choices"
-                frame={frame}
-                locale={bundle.locale}
-                disabled={disabled}
-                onChoose={onChoose}
-              />
-            ) : null;
+            return choices;
           })}
         </div>
         {reveal.complete && notice && <p className="story-notice">{notice}</p>}
         {children}
       </div>
-      {layout.illustrated && (
-        <aside
-          className="story-art"
-          aria-label={bundle.locale === "fr" ? "Illustration de la page" : "Page illustration"}
-        >
-          {layout.right && illustration(layout.right)}
-        </aside>
-      )}
+      <ReaderArtwork layout={layout} locale={bundle.locale} illustration={illustration} />
     </div>
+  );
+}
+
+function ReaderArtwork({
+  layout,
+  locale,
+  illustration,
+}: {
+  layout: ReturnType<typeof bookMediaLayout>;
+  locale: string;
+  illustration: (block: Extract<PresentationBlock, { kind: "media" }>) => React.ReactNode;
+}) {
+  if (!layout.illustrated) return null;
+  return (
+    <aside
+      className="story-art"
+      aria-label={locale === "fr" ? "Illustration de la page" : "Page illustration"}
+    >
+      {layout.right && illustration(layout.right)}
+    </aside>
   );
 }
 
 interface NarrativeParagraphProps {
   presentation: PresentationSession;
-  segment: { id: string };
+  segment: (Frame["segments"][number] & { visible: string }) | undefined;
   onClick: () => void;
-  children: React.ReactNode;
 }
 
-function NarrativeParagraph({ presentation, segment, onClick, children }: NarrativeParagraphProps) {
+function NarrativeParagraph({ presentation, segment, onClick }: NarrativeParagraphProps) {
   const node = useRef<HTMLParagraphElement>(null);
+  const announced = useRef(false);
+  const segmentId = segment?.id;
   useLayoutEffect(() => {
-    if (!node.current) return;
-    presentation.segmentReached(segment.id);
-    return presentation.bind({ canvas: node.current, image: node.current }, segment.id);
-  }, [presentation, segment.id]);
+    if (!node.current || !segmentId) return;
+    presentation.segmentReached(segmentId);
+    return presentation.bind({ canvas: node.current, image: node.current }, segmentId);
+  }, [presentation, segmentId]);
+  useEffect(() => {
+    if (segment && segment.text === segment.visible && !announced.current) {
+      announced.current = true;
+      presentation.segmentRevealed(segment.id);
+    }
+  }, [segment, presentation]);
+  if (!segment) return null;
   return (
     <p ref={node} onClick={onClick}>
-      {children}
+      <span className="sr-only">{segment.text}</span>
+      <span aria-hidden="true">
+        <TypographicText
+          text={segment.text}
+          typography={segment.typography}
+          visible={segment.visible.length}
+        />
+      </span>
     </p>
   );
 }
@@ -184,10 +206,95 @@ function ReaderIllustration({
           presentation={presentation}
           block={block}
         />
-        {block.caption && <figcaption>{block.caption}</figcaption>}
         {block.layout !== "background" && examine}
+        {block.caption && <figcaption>{block.caption}</figcaption>}
       </ReaderMediaFigure>
       {block.layout === "background" && examine}
     </>
   );
+}
+
+export function reachedBlocks(
+  blocks: PresentationBlock[],
+  paragraphs: { id: string; text: string; visible: string }[],
+  completed: string[],
+  skipMedia: boolean,
+) {
+  const reached: PresentationBlock[] = [];
+  for (const block of blocks) {
+    if (block.kind === "text") {
+      const paragraph = paragraphs.find((paragraph) => paragraph.id === block.segmentId);
+      if (!paragraph) continue;
+      reached.push(block);
+      if (paragraph.text !== paragraph.visible) break;
+    } else {
+      reached.push(block);
+      if (isFullscreenMedia(block) && !skipMedia && !completed.includes(block.id)) break;
+    }
+  }
+  return reached;
+}
+
+function anchorMedia(blocks: PresentationBlock[], anchors: NonNullable<Frame["mediaAnchors"]>) {
+  const media = new Map(blocks.filter(isMediaBlock).map((block) => [block.id, block]));
+  const previous = new Map<string, PresentationBlock>();
+  for (const { id, after = "" } of anchors) {
+    const block = media.get(id);
+    if (!block) continue;
+    blocks.splice(blocks.indexOf(block), 1);
+    const previousIndex = blocks.indexOf(previous.get(after) ?? block);
+    const position =
+      previousIndex >= 0
+        ? previousIndex
+        : blocks.findIndex((block) => block.kind === "text" && block.segmentId === after);
+    blocks.splice(position + 1, 0, block);
+    previous.set(after, block);
+  }
+  return blocks;
+}
+
+export function bookMediaLayout(
+  bundle: StoryBundle,
+  blocks: PresentationBlock[],
+  reached: PresentationBlock[],
+  media: { visibleMedia: string[]; expiredMedia: string[]; revealAll: boolean },
+) {
+  const pictures = blocks.filter(isMediaBlock);
+  const scenes = new Map(bundle.assets?.map((asset) => [asset.id, asset.scene3d]));
+  const appeared = new Set([...media.visibleMedia, ...media.expiredMedia]);
+  const wide = pictures.some(
+    (block) =>
+      block.layout === "wide" && (Boolean(block.illustration) || Boolean(scenes.get(block.image))),
+  );
+  const right = reached
+    .filter(isMediaBlock)
+    .filter(
+      (block) =>
+        block.layout === "right" && (!block.show || media.revealAll || appeared.has(block.id)),
+    )
+    .at(-1);
+  const illustrated = !wide && pictures.some((block) => block.layout === "right");
+  return { wide, right, illustrated };
+}
+
+export function presentationBlocks(bundle: StoryBundle, frame: Frame): PresentationBlock[] {
+  const text = frame.segments.map((s) => ({ kind: "text" as const, segmentId: s.id }));
+  const blocks = bundle.scenes?.[frame.passageId]?.blocks ?? [
+    ...text,
+    { kind: "choices" as const },
+  ];
+  if (!bundle.authored) return blocks;
+  const ordered: PresentationBlock[] = [];
+  let cursor = 0;
+  for (const block of blocks) {
+    if (block.kind === "text") {
+      const index = frame.segments.findIndex((s) => s.id === block.segmentId);
+      ordered.push(...text.slice(cursor, index + 1));
+      cursor = Math.max(cursor, index + 1);
+    } else {
+      if (block.kind === "choices") ordered.push(...text.slice(cursor));
+      ordered.push(block);
+    }
+  }
+  return anchorMedia(ordered, frame.mediaAnchors ?? []);
 }

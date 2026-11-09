@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { VoiceProfile } from "../../contracts/media.ts";
-import { VoiceProfileSchema } from "../../contracts/media.ts";
+import type { VoiceProfile } from "../../contracts/speech.ts";
+import { VoiceProfileSchema } from "../../contracts/speech.ts";
 import { audioDuration } from "./narration-authoring.ts";
 import { DurationField } from "./DurationField.tsx";
 import { Field } from "./Fields.tsx";

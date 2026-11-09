@@ -153,12 +153,7 @@ function EncounterFields({ game, selected, onChange }: Props & { selected: numbe
   const item = game.encounters[selected];
   if (!item) return null;
   const update = (patch: Partial<typeof item>) =>
-    onChange({
-      ...game,
-      encounters: game.encounters.map((item, index) =>
-        index === selected ? { ...item, ...patch } : item,
-      ),
-    });
+    onChange({ ...game, encounters: replaceAt(game.encounters, selected, patch) });
   return (
     <fieldset>
       <legend>Encounter</legend>
@@ -186,10 +181,7 @@ function ItemFields({ game, selected, onChange }: Props & { selected: number }) 
   const item = game.items[selected];
   if (!item) return null;
   const update = (patch: Partial<typeof item>) =>
-    onChange({
-      ...game,
-      items: game.items.map((item, index) => (index === selected ? { ...item, ...patch } : item)),
-    });
+    onChange({ ...game, items: replaceAt(game.items, selected, patch) });
   return (
     <fieldset>
       <legend>Item</legend>
@@ -338,4 +330,8 @@ function DefinitionIdentity({
       />
     </>
   );
+}
+
+function replaceAt<T>(items: T[], selected: number, patch: Partial<T>) {
+  return items.map((item, index) => (index === selected ? { ...item, ...patch } : item));
 }

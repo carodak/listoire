@@ -2,8 +2,9 @@ import type { StoryProject } from "../../contracts/editor-project.ts";
 import { NarrationClipSchema } from "../../contracts/media.ts";
 import { requestLocalNarration } from "../media/local-narration.ts";
 import { speechOptions } from "../media/speech-options.ts";
-import { textDigest } from "../media/narration-manager.ts";
+import { textDigest } from "../../contracts/digest.ts";
 import { audioDuration, cacheNarration, narrationBytes } from "./narration-authoring.ts";
+import { parseTypography } from "../../contracts/typography.ts";
 type Language = StoryProject["languages"][string];
 interface Segment {
   id: string;
@@ -18,12 +19,13 @@ export async function generateNarrationPreview(
   signal: AbortSignal,
 ) {
   if (!segment || !voice) throw new Error("Choose a narrative segment and voice first.");
+  const spoken = parseTypography(segment.text).text;
   const result = await requestLocalNarration(
     {
       storyId,
       locale,
       segmentId: segment.id,
-      text: segment.text,
+      text: spoken,
       voiceId: voice,
       ...(await speechOptions(
         voice,
@@ -38,7 +40,7 @@ export async function generateNarrationPreview(
     throw new Error(
       "Local Chatterbox is unavailable. Start scripts/start-local.ps1; supported local languages are English and French.",
     );
-  return { clip: result.clip, dataUrl: await cacheNarration(result, segment.text, signal) };
+  return { clip: result.clip, dataUrl: await cacheNarration(result, spoken, signal) };
 }
 export async function readHumanRecording(
   file: File,
@@ -57,7 +59,7 @@ export async function readHumanRecording(
     segmentId: segment.id,
     locale,
     voiceId: voice || "human",
-    spokenTextDigest: await textDigest(segment.text),
+    spokenTextDigest: await textDigest(parseTypography(segment.text).text),
     assetId: `recording.${audioDigest}`,
     audioDigest,
     durationMs,

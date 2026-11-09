@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { ReaderSettings } from "../contracts/story.ts";
+import type { ReaderSettings, Locale } from "../contracts/story.ts";
 import type { SaveManager } from "../persistence/save-manager.ts";
 import { WelcomeScreen } from "../features/landing/WelcomeScreen.tsx";
 import { ReadingSession } from "./ReadingSession.tsx";
 import { defaultReadingPreferences } from "../contracts/presentation.ts";
-import { LanguageSetting } from "./LanguageSetting.tsx";
+import { LanguageSetting } from "../shared/LanguageSetting.tsx";
 
 interface Props {
   saves: SaveManager;
@@ -44,30 +44,29 @@ export function App({ saves, initialSettings }: Props) {
       if (settingsWrites.current === write) setSettingsBusy(false);
     }
   }
+  const changeLanguage = (language: Locale) => {
+    if (language === "en" || language === "fr") void changeSettings({ language });
+  };
 
   return (
     <div className={entered ? "reader-shell" : undefined}>
       <a className="skip-link" href={entered ? "#story" : "#welcome"}>
         {t("skip")}
       </a>
-      <header className="site-header">
-        <button className="wordmark" onClick={() => setEntered(false)} aria-label={t("home")}>
-          {entered ? (
-            <>← {t("library")}</>
-          ) : (
-            <>
-              listoire<span aria-hidden="true">.</span>
-            </>
-          )}
-        </button>
-        <LanguageSetting
-          language={settings.language}
-          busy={settingsBusy}
-          onChange={(language) => {
-            void changeSettings({ language });
-          }}
-        />
-      </header>
+      {!entered && (
+        <header className="site-header">
+          <button className="wordmark" onClick={() => setEntered(false)} aria-label={t("home")}>
+            listoire<span aria-hidden="true">.</span>
+          </button>
+          <LanguageSetting
+            language={settings.language}
+            busy={settingsBusy}
+            onChange={(language) => {
+              void changeSettings({ language });
+            }}
+          />
+        </header>
+      )}
       {settingsFailed && (
         <p className="notice" role="alert">
           {t("settingsFailed")}
@@ -85,6 +84,9 @@ export function App({ saves, initialSettings }: Props) {
               void changeSettings({ reading });
             }}
             retry={() => setReload((value) => value + 1)}
+            onHome={() => setEntered(false)}
+            onLanguageChange={changeLanguage}
+            languageBusy={settingsBusy}
           />
         </>
       ) : (

@@ -1,3 +1,4 @@
+import { magicCues } from "./magic-direction.ts";
 import { readFile, writeFile } from "node:fs/promises";
 import { StoryProjectSchema } from "../src/contracts/editor-project.ts";
 import { GameDefinitionSchema } from "../src/contracts/game.ts";
@@ -14,6 +15,7 @@ const catalogue = JSON.parse(
     title: string;
     description?: string;
     runtimePath: string;
+    technical?: { width: number; height: number };
     mediaType: string;
     sourceCollection: string;
     suggested: { roles: string[]; themes: string[]; layerRoles: string[] };
@@ -50,33 +52,51 @@ const images = {
   letter: asset("shared_item_small_paper_parcel_tied_with_string_001"),
   apple: asset("shared_item_single_lopsided_apple_001"),
   cup: asset("shared_item_plain_tin_cup_001"),
+  canal: asset("contemporary_background_quiet_canal_towpath_001"),
+  skyline: asset("contemporary_background_distant_city_skyline_001"),
+  railing: asset("shared_foreground_street_lamp_and_rail_frame_001"),
 };
 const titles: Record<string, [string, string]> = {
+  "matin-ville": ["The morning errands", "Les courses du matin"],
+  etabli: ["A notch in the balance staff", "Une encoche sur l'axe"],
+  livraison: ["Twelve strokes at noon", "Les douze coups de midi"],
   atelier: ["The watch without a spring", "La montre sans ressort"],
   messagere: ["The ninth delivery", "La neuvième livraison"],
+  preuve: ["A coin suspended in the air", "Une pièce en suspension"],
   lettre: ["An invitation addressed to you", "Une lettre pour toi"],
-  depart: ["The world behind you", "Le monde derrière toi"],
+  depart: ["Closing the workshop", "Fermer l'atelier"],
+  ville: ["The street between the platforms", "La rue entre les quais"],
+  boutique: ["The right to learn", "Le droit d'apprendre"],
   chemin: ["The door at dusk", "La porte du crépuscule"],
-  passage: ["Your unwritten time", "Ton temps encore à écrire"],
+  passage: ["The crossing", "La traversée"],
   cour: ["Orée", "Orée"],
-  chambre: ["A place for your questions", "Une place pour tes questions"],
+  refectoire: ["The salt that doesn't sing", "Le sel qui ne chante pas"],
+  chambre: ["The orchard room", "La chambre du verger"],
+  matin: ["Don't feed the stairs", "Ne pas nourrir les escaliers"],
   relais: ["The keeping of small lights", "L'Entretien des petites lumières"],
   lueur: ["You made that", "C'est toi qui fais cela"],
   "cours-air": ["The Weight of Air", "Le Poids de l'air"],
   "air-test": ["An apple and a river", "Une pomme et une rivière"],
   "air-result": ["The landing can wait", "Pour l'atterrissage, on a le temps"],
+  reparation: ["Learning to undo", "Apprendre à défaire"],
   "cours-ecoute": ["The Listening Garden", "Le Jardin d'écoute"],
   "ecoute-test": ["An excellent assistant", "Une excellente assistante"],
   "ecoute-result": ["An afternoon worth keeping", "Un après-midi à garder"],
-  bibliotheque: ["What holds us together", "Ce qui nous tient ensemble"],
+  bibliotheque: ["The gateway plan", "Le plan des passages"],
+  archives: ["A word with its letters missing", "Un mot sans ses lettres"],
   formule: ["Dawnstroke", "Trait d'aube"],
   sceau: ["Other beginners", "D'autres débutants"],
+  entrainement: ["The chalk circle", "Le cercle de craie"],
+  duel: ["A practice duel", "Un duel d'entraînement"],
+  "apres-duel": ["One step to the side", "Un pas de côté"],
+  veille: ["The lamps that listen", "Les lampes qui écoutent"],
   serre: ["The missing note", "La note manquante"],
   fissure: ["What you know now", "Ce que tu sais, maintenant"],
   gardien: ["Hold the doorway", "Tenir le passage"],
   apres: ["The first sound", "Le premier bruit"],
   infirmerie: ["Apples provided", "Pommes fournies"],
   promesse: ["Tomorrow's lessons", "Les cours de demain"],
+  retour: ["A letter from the workshop", "Le courrier de l'atelier"],
   fin: ["Leave a light on", "Laisser une lumière"],
 };
 const sound = {
@@ -103,10 +123,10 @@ const layer = (
   y = 0,
   scale = 1,
 ): Illustration => ({ image, role, x, y, scale });
-const motion = (preset = "none", durationMs = 7500) => ({
+const motion = (preset = "none", durationMs = 6000) => ({
   preset,
   speed: "normal",
-  intensity: "strong",
+  intensity: "normal",
   direction: "auto",
   atmosphere: "none",
   layers: [],
@@ -114,7 +134,7 @@ const motion = (preset = "none", durationMs = 7500) => ({
 });
 function illustration(
   image: string,
-  layout = "wide",
+  layout = "inline",
   layers: Illustration[] = [],
   preset = "none",
   after = 1,
@@ -123,10 +143,21 @@ function illustration(
   return { image, layout, layers, preset, after, isolated };
 }
 const art: Record<string, ReturnType<typeof illustration>> = {
-  atelier: illustration(images.candle, "inline", [], "none", 2),
+  "matin-ville": illustration(
+    images.canal,
+    "wide",
+    [layer(images.railing, "foreground", 0, 10, 1.12)],
+    "gentle-depth",
+    1,
+  ),
+  livraison: illustration(
+    images.skyline,
+    "wide",
+    [layer(images.branch, "foreground", -18, -8, 1.15)],
+    "sideways-drift",
+    2,
+  ),
   messagere: illustration(images.nour, "right"),
-  lettre: illustration(images.letter, "inline", [], "none", 1),
-  depart: illustration(images.hero, "right"),
   chemin: illustration(
     images.meadow,
     "wide",
@@ -141,21 +172,8 @@ const art: Record<string, ReturnType<typeof illustration>> = {
     "high-arrival-hold-pullback",
     1,
   ),
-  cour: illustration(
-    images.meadow,
-    "wide",
-    [
-      layer(images.house, "midground", -25, 9, 0.8),
-      layer(images.arch, "midground", 24, 5, 0.8),
-      layer(images.nour, "midground", 8, 10, 0.7),
-      layer(images.branch, "foreground", -22, -8, 1.12),
-    ],
-    "deep-pullback",
-    1,
-  ),
   chambre: illustration(images.bed, "inline"),
   relais: illustration(images.ysee, "right"),
-  lueur: illustration(images.candle, "inline", [], "cinematic-push-in", 1),
   "cours-air": illustration(
     images.river,
     "wide",
@@ -167,10 +185,6 @@ const art: Record<string, ReturnType<typeof illustration>> = {
     1,
   ),
   "air-test": illustration(images.apple, "inline"),
-  "air-result": illustration(images.selyan, "right"),
-  "cours-ecoute": illustration(images.ysee, "right"),
-  "ecoute-test": illustration(images.nour, "inline"),
-  "ecoute-result": illustration(images.cup, "inline"),
   bibliotheque: illustration(
     images.tree,
     "wide",
@@ -178,36 +192,10 @@ const art: Record<string, ReturnType<typeof illustration>> = {
     "sideways-drift",
     1,
   ),
-  formule: illustration(images.pen, "inline"),
-  sceau: illustration(images.abel, "right"),
-  serre: illustration(
-    images.meadow,
-    "wide",
-    [layer(images.nour, "midground", 20, 8, 0.85), layer(images.fern, "foreground", -25, 7, 1.2)],
-    "atmospheric-still",
-    1,
-  ),
-  fissure: illustration(
-    images.dusk,
-    "wide",
-    [layer(images.arch, "midground", 18, 0, 0.9), layer(images.guardian, "midground", 5, 10, 0.9)],
-    "dramatic-descent",
-    1,
-  ),
-  gardien: illustration(images.guardian, "right"),
-  apres: illustration(images.nour, "right"),
-  infirmerie: illustration(images.ysee, "inline"),
-  promesse: illustration(
-    images.dusk,
-    "wide",
-    [layer(images.house, "midground", -5, 5, 0.85), layer(images.grass, "foreground", 0, 18, 1.12)],
-    "gentle-depth",
-    1,
-  ),
-  fin: illustration(images.candle, "inline"),
 };
 function game(locale: "en" | "fr") {
   const fr = locale === "fr";
+  const label = (english: string, french: string) => (fr ? french : english);
   const names = fr
     ? ["Observation", "Courage", "Petite Lumière", "Fil d'air", "Contre-chant", "Trait d'aube"]
     : ["Observation", "Courage", "Little Light", "Thread of Air", "Counter-song", "Dawnstroke"];
@@ -221,18 +209,18 @@ function game(locale: "en" | "fr") {
   ];
   const descriptions = fr
     ? [
-        "Remarquer ce que le monde essaie de te montrer.",
-        "Garder ton intention quand la peur fait du bruit.",
+        "Repérer les traces et les défauts difficiles à voir.",
+        "Rester calme devant un danger.",
         "Faire naître une lumière douce, sans chaleur.",
-        "Proposer à un petit objet une autre destination.",
+        "Soulever et déplacer un petit objet à distance.",
         "Tenir une note pour repousser ce qui te menace.",
         "Dénouer un enchantement abîmé avec un trait de lumière.",
       ]
     : [
-        "Notice what the world is trying to show you.",
-        "Keep your intention steady when fear grows loud.",
+        "Spot traces and flaws that are difficult to see.",
+        "Keep calm when facing danger.",
         "Kindle a soft light without heat.",
-        "Offer a small object another destination.",
+        "Lift and move a small object from a distance.",
         "Hold a note against an approaching threat.",
         "Loosen a broken enchantment with a stroke of light.",
       ];
@@ -246,45 +234,69 @@ function game(locale: "en" | "fr") {
       effect: i === 5 ? "stun" : "none",
     })),
     items: [
-      { id: "letter", name: fr ? "La lettre d'Orée" : "The letter from Orée", slot: "none" },
+      {
+        id: "healing-balm",
+        name: label("Healing balm", "Baume de soin"),
+        slot: "none",
+        consumable: true,
+        healing: 3,
+      },
+      { id: "letter", name: label("The letter from Orée", "La lettre d'Orée"), slot: "none" },
       {
         id: "alder-pen",
-        name: fr ? "Stylet d'aulne" : "Alder pen",
+        name: label("Alder pen", "Stylet d'aulne"),
         slot: "weapon",
         attribute: "WIL",
         bonus: { WIL: 1, damage: 1 },
       },
       {
         id: "school-seal",
-        name: fr ? "Sceau de l'école" : "School seal",
+        name: label("School seal", "Sceau de l'école"),
         slot: "accessory",
         bonus: { HP: 1 },
       },
     ],
     encounters: [
       {
+        id: "ysee-training",
+        name: "Ysée Valambre",
+        portrait: images.ysee,
+        difficulty: "easy",
+        profile: "balanced",
+      },
+      {
         id: "broken-guardian",
-        name: fr ? "Le gardien brisé" : "The broken guardian",
+        name: label("The broken guardian", "Le gardien brisé"),
+        portrait: images.guardian,
         difficulty: "easy",
         profile: "resilient",
       },
     ],
     actions: [
       {
+        id: "take-balm",
+        label: label(
+          "Ysée gives you a dose of healing balm: restores 3 HP during combat.",
+          "Ysée te confie une dose de baume : rend 3 PV pendant un combat.",
+        ),
+        kind: "give-item",
+        reference: "healing-balm",
+      },
+      {
         id: "take-letter",
-        label: fr ? "Lettre reçue" : "Letter received",
+        label: label("Letter received", "Lettre reçue"),
         kind: "give-item",
         reference: "letter",
       },
       {
         id: "take-pen",
-        label: fr ? "Stylet reçu" : "Pen received",
+        label: label("Pen received", "Stylet reçu"),
         kind: "give-item",
         reference: "alder-pen",
       },
       {
         id: "take-seal",
-        label: fr ? "Sceau reçu" : "Seal received",
+        label: label("Seal received", "Sceau reçu"),
         kind: "give-item",
         reference: "school-seal",
       },
@@ -296,104 +308,48 @@ function game(locale: "en" | "fr") {
       })),
       {
         id: "test-air",
-        label: fr ? "Fil d'air" : "Thread of Air",
+        label: label("Thread of Air", "Fil d'air"),
         kind: "ability-check",
         reference: "air-thread",
       },
       {
         id: "test-shield",
-        label: fr ? "Contre-chant" : "Counter-song",
+        label: label("Counter-song", "Contre-chant"),
         kind: "ability-check",
         reference: "counter-song",
       },
       {
         id: "test-observation",
-        label: fr ? "Observer la marque" : "Study the mark",
+        label: label("Study the mark", "Observer la marque"),
         kind: "stat-check",
         attribute: "WIL",
       },
       {
         id: "test-courage",
-        label: fr ? "Tenir malgré la peur" : "Stand despite fear",
+        label: label("Stand despite fear", "Tenir malgré la peur"),
         kind: "stat-check",
         attribute: "WIL",
       },
       {
+        id: "training-duel",
+        label: label("Practice duel with Ysée", "Duel d'entraînement avec Ysée"),
+        kind: "combat",
+        reference: "ysee-training",
+      },
+      {
         id: "guardian",
-        label: fr ? "Protéger le passage" : "Protect the doorway",
+        label: label("Protect the doorway", "Protéger le passage"),
         kind: "combat",
         reference: "broken-guardian",
       },
-      { id: "recover", label: fr ? "Soins d'Ysée" : "Ysée's care", kind: "heal", amount: 20 },
+      {
+        id: "recover",
+        label: label("Ysée's care", "Soins d'Ysée"),
+        kind: "heal",
+        amount: 20,
+      },
     ],
   });
-}
-function cues(id: string, locale: "en" | "fr") {
-  const events: unknown[] = [];
-  const audio = (
-    suffix: string,
-    assetId: string,
-    channel = "sfx",
-    volume = 0.4,
-    segment = 1,
-    loop = false,
-  ) =>
-    events.push({
-      id: `${id}.${suffix}`,
-      trigger: { kind: "segment", segmentId: `${id}.p${segment}` },
-      blocking: false,
-      action: {
-        kind: "audio",
-        assetId,
-        channel,
-        volume,
-        loop,
-        fadeMs: channel === "sfx" ? 80 : 1400,
-      },
-    });
-  if (id === "atelier") {
-    audio("rain", sound.rain, "ambience", 0.15, 1, true);
-    audio("score", "oree.wonder", "music", 0.65, 1, true);
-  }
-  if (id === "lettre" || id === "bibliotheque") audio("paper", sound.pages, "sfx", 0.3);
-  if (id === "passage") {
-    audio("arrival", sound.magic, "sfx", 0.4);
-    audio("birds", sound.birds, "ambience", 0.2, 1, true);
-  }
-  if (id === "lueur") audio("light", sound.magic, "sfx", 0.28);
-  if (id === "air-test") audio("air", sound.air, "sfx", 0.4, 2);
-  if (id === "ecoute-test") audio("water", sound.water, "sfx", 0.35, 2);
-  if (id === "serre") {
-    audio("silence", "oree.silence", "music", 0.7, 2, true);
-    audio("impact", sound.impact, "sfx", 0.4, 2);
-    events.push({
-      id: "serre.camera-impact",
-      blockId: "page",
-      trigger: { kind: "segment", segmentId: "serre.p2" },
-      blocking: false,
-      action: {
-        kind: "effect",
-        effect: { id: "screen-shake", duration: 550, intensity: 0.9, target: "canvas" },
-      },
-    });
-  }
-  if (id === "apres") {
-    audio("return", sound.bells, "sfx", 0.22, 2);
-    audio("score", "oree.wonder", "music", 0.6, 3, true);
-  }
-  if (id === "lueur" || id === "passage")
-    events.push({
-      id: `${id}.bloom`,
-      blockId: "page",
-      trigger: { kind: "segment", segmentId: `${id}.p1` },
-      blocking: false,
-      action: {
-        kind: "effect",
-        effect: { id: "light-flicker", duration: 1200, intensity: 0.6, color: "#ffe2a2" },
-      },
-    });
-  void locale;
-  return events;
 }
 const languages: Record<string, unknown> = {};
 for (const locale of ["en", "fr"] as const) {
@@ -408,67 +364,78 @@ for (const locale of ["en", "fr"] as const) {
     );
     if (!ids.length) throw new Error(`Missing story page ${id}`);
     const blocks: unknown[] = ids.map((segmentId) => ({ kind: "text", segmentId }));
-    const picture = art[id]!;
-    const blockId = `${id}.illustration`;
-    const { layers, isolated } = picture;
-    const details =
-      picture.image === images.letter
-        ? {
-            image: images.letter,
-            title: fr ? "La lettre d'Orée" : "The letter from Orée",
-            buttonLabel: fr ? "Examiner la lettre" : "Examine the letter",
-            descriptions: fr
-              ? [
-                  "L'encre est de ta propre écriture. Le papier garde la chaleur de ta main.",
-                  "Au dos : Apporte quelque chose que tu as réparé.",
-                ]
-              : [
-                  "The ink is in your own handwriting. The paper keeps the warmth of your hand.",
-                  "On the reverse: Bring something you have mended.",
-                ],
-            reverse: fr
-              ? "On t'attendait. — Le bureau des admissions"
-              : "We have been waiting for you. — Admissions",
-          }
-        : undefined;
-    const image = {
-      kind: "media",
-      id: blockId,
-      image: picture.image,
-      layout: picture.layout,
-      fit: "contain",
-      align: "center",
-      widthPercent: isolated && picture.layout === "inline" ? 44 : 100,
-      motion: motion(picture.preset),
-      illustration: {
-        base: { role: isolated ? "midground" : "background", x: 0, y: 0, scale: 1 },
-        layers,
-        aspect: isolated ? "portrait" : "landscape",
-        blend: "paper",
-        wrap: isolated && picture.layout === "inline" ? "right" : "none",
-        autoCrop: isolated,
-      },
-      ...(details ? { examination: details } : {}),
-    };
-    const insert = Math.min(picture.after, ids.length);
-    blocks.splice(insert, 0, image);
+    const picture = art[id];
+    const events: unknown[] = magicCues(id, sound);
+    if (picture) {
+      const blockId = `${id}.illustration`;
+      const { layers, isolated } = picture;
+      const details =
+        id === "messagere"
+          ? {
+              image: images.nour,
+              title: "Nour",
+              buttonLabel: fr ? "Examiner Nour" : "Examine Nour",
+              descriptions: fr
+                ? [
+                    "Nour porte la lettre du bureau des admissions.",
+                    "Son manteau de voyage est encore couvert de poussière.",
+                  ]
+                : [
+                    "Nour carries the admissions letter.",
+                    "Her travelling coat is still covered in dust.",
+                  ],
+              reverse: "",
+            }
+          : undefined;
+      const layout =
+        picture.layout === "right"
+          ? "right"
+          : picture.layout === "fullscreen"
+            ? "fullscreen"
+            : "inline";
+      const image = {
+        kind: "media",
+        id: blockId,
+        image: picture.image,
+        layout,
+        fit: "contain",
+        align: "center",
+        widthPercent: isolated && layout === "inline" ? 44 : 100,
+        motion: motion(picture.preset),
+        ...(layers.length
+          ? {
+              illustration: {
+                base: { role: isolated ? "midground" : "background", x: 0, y: 0, scale: 1 },
+                layers,
+                aspect: isolated ? "portrait" : "landscape",
+                blend: "paper",
+                wrap: "none",
+                autoCrop: isolated,
+              },
+            }
+          : {}),
+        ...(details ? { examination: details } : {}),
+      };
+      const insert = Math.min(picture.after, ids.length);
+      blocks.splice(insert, 0, image);
+
+      script = script.replace(
+        new RegExp(`(^.*#\\s*segment:${id}\\.p${insert}\\s*$)`, "m"),
+        `$1\n// @media ${id}/${blockId}`,
+      );
+      if (picture.preset !== "none")
+        events.push({
+          id: `${blockId}.motion`,
+          blockId,
+          trigger: { kind: "block", blockId },
+          blocking: picture.layout === "fullscreen",
+          action: {
+            kind: "effect",
+            effect: { id: "cinematic-camera", duration: 6000, cinematic: motion(picture.preset) },
+          },
+        });
+    }
     blocks.push({ kind: "choices" });
-    script = script.replace(
-      new RegExp(`(^.*#\\s*segment:${id}\\.p${insert}\\s*$)`, "m"),
-      `$1\n// @media ${id}/${blockId}`,
-    );
-    const events = cues(id, locale);
-    if (picture.preset !== "none")
-      events.push({
-        id: `${blockId}.motion`,
-        blockId,
-        trigger: { kind: "block", blockId },
-        blocking: picture.layout === "fullscreen",
-        action: {
-          kind: "effect",
-          effect: { id: "cinematic-camera", duration: 7500, cinematic: motion(picture.preset) },
-        },
-      });
     scenes[id] = {
       title: titles[id]![index],
       progress: position / (order.length - 1),
@@ -477,19 +444,23 @@ for (const locale of ["en", "fr"] as const) {
     };
   }
   const profiles = [];
-  for (const [key, name] of [
-    ["linda", "Ariane"],
-    ["richard", "Noé"],
+  for (const [key, name, frenchRegister, englishRegister] of [
+    ["linda", "Ariane", "féminine · chaleureuse", "feminine · warm"],
+    ["richard", "Noé", "masculine · posée", "masculine · calm"],
+    ["linda-young", "Lison", "féminine · enfantine", "feminine · childlike"],
+    ["richard-young", "Éli", "masculine · juvénile", "masculine · youthful"],
+    ["linda-low", "Alma", "féminine · adulte, veloutée", "feminine · mature, mellow"],
+    ["richard-deep", "Basile", "masculine · adulte, grave", "masculine · mature, deep"],
   ] as const) {
     const data = await readFile(new URL(`.fallow/narrator-reference/${key}.mp3`, root));
     profiles.push({
       id: `narrator.${key}`,
-      label: `${name} · ${fr ? (key === "linda" ? "chaleureuse" : "posé") : key === "linda" ? "warm" : "calm"}`,
+      label: `${name} · ${fr ? frenchRegister : englishRegister}`,
       model: "multilingual-v3",
       reference: {
         name: `${key}.mp3`,
         data: `data:audio/mpeg;base64,${data.toString("base64")}`,
-        rights: `Synthetic reference generated locally using the installed Microsoft ${key === "linda" ? "Linda" : "Richard"} voice; no human speaker recording.`,
+        rights: `Synthetic reference generated locally using the installed Microsoft ${key.startsWith("linda") ? "Linda" : "Richard"} voice${key.includes("-") ? "; pitch-shaped register" : ""}; no human speaker recording. Provider voice-reference reuse rights not independently verified.`,
       },
     });
   }
@@ -497,8 +468,8 @@ for (const locale of ["en", "fr"] as const) {
   languages[locale] = {
     script,
     description: fr
-      ? "Une première journée à Orée : découvrir la magie, apprendre quatre sorts et protéger une amie. Un chapitre jouable, illustré et sonore."
-      : "Your first day at Orée: discover magic, learn four spells and protect a friend. An illustrated, playable chapter.",
+      ? "Tes premiers jours à Orée : un monde caché, quatre sorts à apprendre, un duel d'entraînement et une voix à sauver. Un chapitre jouable, illustré et sonore."
+      : "Your first days at Orée: a hidden world, four spells to learn, a practice duel and a voice to save. An illustrated, playable chapter.",
     cover: images.meadow,
     missingTranslation: false,
     narrationMode: "ai-live",
@@ -514,24 +485,27 @@ for (const locale of ["en", "fr"] as const) {
     },
     configuration: {
       title: fr ? "L'École des choses impossibles" : "The School of Impossible Things",
-      checkpointId: "oree",
-      chapter: fr ? "Chapitre I — Le temps encore à écrire" : "Chapter I — Your unwritten time",
+      checkpointId: "oree-v1-3",
+      chapter: fr ? "Chapitre I — Une lettre inattendue" : "Chapter I — An unexpected letter",
       scenes,
       assets: catalogue.entries.map((entry) => ({
         id: entry.id,
         path: entry.runtimePath,
         type: entry.mediaType,
         alt: (entry.description ?? entry.title).slice(0, 500),
+        dimensions:
+          entry.mediaType === "image" && entry.technical
+            ? { width: entry.technical.width, height: entry.technical.height }
+            : undefined,
       })),
       character: {
+        name: "Orion",
         portrait: images.hero,
-        abilities: definition.abilities
-          .slice(0, 2)
-          .map((ability) => ({
-            id: ability.id,
-            name: ability.name!,
-            description: ability.description!,
-          })),
+        abilities: definition.abilities.slice(0, 2).map((ability) => ({
+          id: ability.id,
+          name: ability.name!,
+          description: ability.description!,
+        })),
         inventory: [],
         encounters: [
           {
@@ -587,7 +561,7 @@ for (const locale of ["en", "fr"] as const) {
 const project = StoryProjectSchema.parse({
   schemaVersion: 1,
   storyId: "house",
-  release: "oree-1.0.0",
+  release: "oree-1.3.0",
   defaultLocale: "fr",
   shareConfiguration: true,
   gameMode: "with-combat",
@@ -600,5 +574,5 @@ await writeFile(
   JSON.stringify(project, null, 2) + "\n",
 );
 console.log(
-  `Created Orée: ${Object.keys(titles).length} bilingual pages, ${catalogue.entries.length} local gallery assets, four learnable spells and a complete encounter.`,
+  `Created Orée: ${Object.keys(titles).length} bilingual pages, ${catalogue.entries.length} local gallery assets, four learnable spells and two encounters.`,
 );

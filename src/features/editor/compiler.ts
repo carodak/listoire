@@ -1,4 +1,4 @@
-import { structure as inkStructure } from "./ink-structure.ts";
+import { inkStructure } from "./ink-structure.ts";
 import { gamePrelude } from "./compile-game.ts";
 import { Compiler } from "inkjs/full";
 import { BundleSchema } from "../../contracts/story.ts";
@@ -6,9 +6,12 @@ import type { StoryBundle } from "../../contracts/story.ts";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import packageInfo from "../../../package.json" with { type: "json" };
-import { knotNames } from "./ink-commands.ts";
+import { knotNames } from "./ink-outline.ts";
+import { parseTypography } from "../../contracts/typography.ts";
+import { sha256 } from "../../contracts/digest.ts";
 
 function compileInkJson(script: string) {
+  parseTypography(script);
   const compiler = new Compiler(script);
   let json: string | void;
   try {
@@ -34,9 +37,8 @@ export async function compileLanguage(
   if (language.missingTranslation && !preview)
     throw new Error(`${locale}: translation needs review before publishing.`);
   const imageIds = new Set(
-    Object.values(language.configuration.scenes ?? {}).flatMap(
-      (scene) =>
-        scene.blocks?.filter((block) => block.kind === "media").map((block) => block.id) ?? [],
+    Object.values(language.configuration.scenes ?? {}).flatMap((scene) =>
+      (scene.blocks ?? []).flatMap((block) => (block.kind === "media" ? [block.id] : [])),
     ),
   );
   const script = language.script
@@ -46,13 +48,7 @@ export async function compileLanguage(
     );
   const gameplay = gamePrelude(project, locale, script);
   const ink = compileInkJson(gameplay.script);
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(JSON.stringify(ink)),
-  );
-  const inkDigest = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  const inkDigest = await sha256(new TextEncoder().encode(JSON.stringify(ink)));
   const passages = declaredPassages(language.script);
   const scenes = language.configuration.scenes ?? {};
   validateScenes(scenes, passages);

@@ -1,60 +1,7 @@
 import { z } from "zod";
-import { CinematicSchema } from "./cinematic.ts";
 const duration = z.number().min(0).max(10000);
-const timing = {
-  duration,
-  delay: z.number().min(0).max(5000).optional(),
-  target: z.enum(["image", "canvas"]).optional(),
-};
 const color = z.string().regex(/^#[a-fA-F0-9]{3,8}$/);
 const intensity = z.number().min(0).max(1);
-const point = z.number().min(-25).max(25);
-export const NativeEffectSchema = z.discriminatedUnion("id", [
-  z.object({ id: z.literal("video-playback"), duration: z.number().min(0).max(180000) }).strict(),
-  z
-    .object({
-      id: z.literal("cinematic-camera"),
-      duration: z.number().min(0).max(60000),
-      cinematic: CinematicSchema,
-      target: z.literal("image").optional(),
-    })
-    .strict(),
-  z
-    .object({
-      id: z.literal("page-turn"),
-      duration,
-      direction: z.enum(["forward", "back"]),
-      target: z.literal("canvas").optional(),
-    })
-    .strict(),
-  z.object({ id: z.literal("fade-in"), ...timing }).strict(),
-  z.object({ id: z.literal("fade-out"), ...timing }).strict(),
-  z.object({ id: z.literal("crossfade"), ...timing }).strict(),
-  z.object({ id: z.literal("screen-shake"), ...timing, intensity: intensity.optional() }).strict(),
-  z
-    .object({
-      id: z.literal("light-flicker"),
-      ...timing,
-      intensity: intensity.optional(),
-      color: color.optional(),
-    })
-    .strict(),
-  z.object({ id: z.literal("slow-zoom"), ...timing, scale: z.number().min(1).max(3) }).strict(),
-  z.object({ id: z.literal("camera-zoom"), ...timing, scale: z.number().min(1).max(3) }).strict(),
-  z.object({ id: z.literal("camera-pan"), ...timing, x: point, y: point }).strict(),
-  z.object({ id: z.literal("parallax"), ...timing, x: point, y: point }).strict(),
-  z.object({ id: z.literal("rain-overlay"), ...timing, intensity: intensity.optional() }).strict(),
-  z.object({ id: z.literal("fog-overlay"), ...timing, intensity: intensity.optional() }).strict(),
-  z
-    .object({
-      id: z.literal("cinematic-wipe"),
-      ...timing,
-      direction: z.enum(["left", "right", "up", "down"]),
-    })
-    .strict(),
-]);
-export type NativeEffect = z.infer<typeof NativeEffectSchema>;
-
 const speed = z.number().min(0).max(3);
 const dpr = z.number().min(0.5).max(1.5);
 const opacity = z.number().min(0).max(0.3);
@@ -158,46 +105,3 @@ export const ReactBitsEffectSchema = z.discriminatedUnion("id", [
 ]);
 export type ReactBitsEffect = z.infer<typeof ReactBitsEffectSchema>;
 export type ReactBitsId = ReactBitsEffect["id"];
-export const NarrativeEventSchema = z
-  .object({
-    id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
-    phase: z.enum(["enter", "exit"]).optional(),
-    trigger: z
-      .object({
-        kind: z.enum(["passage", "segment", "block"]),
-        segmentId: z.string().optional(),
-        blockId: z.string().optional(),
-      })
-      .strict(),
-    delayMs: z.number().min(0).max(10000).optional(),
-    blocking: z.boolean().optional(),
-    blockId: z.string().optional(),
-    action: z.union([
-      z
-        .object({
-          kind: z.literal("effect"),
-          effect: z.union([NativeEffectSchema, ReactBitsEffectSchema]),
-        })
-        .strict(),
-      z
-        .object({
-          kind: z.literal("audio"),
-          assetId: z.string(),
-          channel: z.enum(["sfx", "ambience", "music"]),
-          loop: z.boolean().optional(),
-          volume: z.number().min(0).max(1).optional(),
-          fadeMs: z.number().min(0).max(3000).optional(),
-        })
-        .strict(),
-      z
-        .object({ kind: z.literal("stop-audio"), channel: z.enum(["sfx", "ambience", "music"]) })
-        .strict(),
-    ]),
-  })
-  .strict()
-  .refine(
-    (event) =>
-      (event.trigger.kind !== "segment" || Boolean(event.trigger.segmentId)) &&
-      (event.trigger.kind !== "block" || Boolean(event.trigger.blockId)),
-  );
-export type NarrativeEvent = z.infer<typeof NarrativeEventSchema>;
