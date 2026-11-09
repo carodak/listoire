@@ -1,4 +1,5 @@
 import { createStore, get, set } from "idb-keyval";
+import { sameOriginFetch } from "../contracts/same-origin-fetch.ts";
 import { verifyUploadedMedia } from "../contracts/uploaded-media.ts";
 import type { MediaAsset } from "../contracts/presentation.ts";
 const store = createStore("listoire-media", "files");
@@ -24,11 +25,11 @@ export async function readUploadedMedia(asset: MediaAsset): Promise<Blob> {
         ? new Blob([cached.bytes], { type: cached.mime })
         : undefined;
   if (!(blob instanceof Blob)) {
-    const response = await fetch(`/stories/house/${asset.path}`, {
-      redirect: "error",
-      signal: AbortSignal.timeout(15000),
+    const response = await sameOriginFetch(`/stories/house/${asset.path}`, {
+      timeoutMs: 15000,
+      maxBytes: 50_000_000,
     });
-    if (!response.ok || Number(response.headers.get("content-length")) > 50_000_000)
+    if (!response.ok)
       throw new Error(`Missing uploaded media: ${asset.id}. Restore its complete project backup.`);
     blob = new Blob([await response.arrayBuffer()], { type: asset.upload!.mime });
   }

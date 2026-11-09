@@ -1,6 +1,7 @@
 import { readUploadedMedia } from "../../persistence/media-store.ts";
 import { storyAssetIds } from "../../contracts/story-assets.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 
 const checked = new Map<string, Promise<void>>();
 export async function verifyMediaAssets(bundles: Record<string, StoryBundle>) {
@@ -18,12 +19,7 @@ export async function verifyMediaAssets(bundles: Record<string, StoryBundle>) {
     [...paths].map((path) => {
       let request = checked.get(path);
       if (!request) {
-        request = fetch(path, {
-          method: "HEAD",
-          redirect: "error",
-          credentials: "same-origin",
-          signal: AbortSignal.timeout(5000),
-        })
+        request = sameOriginFetch(path, { method: "HEAD", timeoutMs: 5000 })
           .then((response) => {
             if (!response.ok) throw new Error(`Missing media asset: ${path}`);
           })

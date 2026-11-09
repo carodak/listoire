@@ -1,6 +1,7 @@
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { NarrationClip, NarrationProgress } from "../../contracts/media.ts";
 import { sha256, textDigest } from "../../contracts/digest.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 import { requestLocalNarration } from "./local-narration.ts";
 import { speechOptions } from "./speech-options.ts";
 import { narrationCharacters } from "./narration-progress.ts";
@@ -69,12 +70,12 @@ export async function playRecording(
   if (clip.marks.some((mark) => mark.character > text.length)) return "unavailable";
   let url: string | undefined;
   try {
-    const response = await fetch(audioUrl, {
-      signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
-      redirect: "error",
-      credentials: "same-origin",
+    const response = await sameOriginFetch(audioUrl, {
+      signal,
+      timeoutMs: 5000,
+      maxBytes: 10000000,
     });
-    if (!response.ok || Number(response.headers.get("content-length")) > 10000000) return "error";
+    if (!response.ok) return "error";
     const bytes = await response.arrayBuffer();
     if (bytes.byteLength > 10000000) return "error";
     if ((await sha256(bytes)) !== clip.audioDigest) return "error";

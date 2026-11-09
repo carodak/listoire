@@ -1,4 +1,5 @@
 import { sha256 } from "../../contracts/digest.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 import {
   BundleSchema,
   LocaleSchema,
@@ -11,16 +12,8 @@ import packageInfo from "../../../package.json";
 async function fetchStoryFile(file: "manifest" | Locale, signal: AbortSignal): Promise<unknown> {
   const base = new URL(import.meta.env.BASE_URL, window.location.href);
   const url = new URL(`stories/house/${file}.json`, base);
-  if (
-    !["http:", "https:"].includes(url.protocol) ||
-    url.origin !== window.location.origin ||
-    url.username ||
-    url.password ||
-    !url.pathname.startsWith(base.pathname)
-  ) {
-    throw new ReaderFailure("content");
-  }
-  const response = await fetch(url, { signal, redirect: "error", credentials: "same-origin" });
+  if (!url.pathname.startsWith(base.pathname)) throw new ReaderFailure("content");
+  const response = await sameOriginFetch(url, { signal });
   if (!response.ok) throw new ReaderFailure("content");
   const source = await response.text();
   if (source.length > 2_000_000) throw new ReaderFailure("content");

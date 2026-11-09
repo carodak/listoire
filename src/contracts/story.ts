@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { mp3DataUrl } from "./same-origin-fetch.ts";
 import { TypographySpanSchema, validTypographySpans } from "./typography.ts";
 import { GameDefinitionSchema, GameStateSchema } from "./game.ts";
 import type { GameDefinition, GameState, CombatOption, CheckOption, PlayerMove } from "./game.ts";
@@ -63,15 +64,7 @@ export const BundleSchema = z
     narratorVoiceSelection: z.array(z.string()).max(8).optional(),
     speechSettings: SpeechSettingsSchema.optional(),
     voiceProfiles: z.array(VoiceProfileSchema).max(8).optional(),
-    embeddedAudio: z
-      .record(
-        z.string(),
-        z
-          .string()
-          .max(7_000_000)
-          .regex(/^data:audio\/mpeg;base64,[A-Za-z0-9+/]+=*$/),
-      )
-      .optional(),
+    embeddedAudio: z.record(z.string(), z.string().max(7_000_000).regex(mp3DataUrl)).optional(),
     passages: z.record(id, z.array(id).min(1)),
     ink: z.record(z.string(), z.unknown()),
     variables: z.array(variableId).max(100).optional(),

@@ -1,6 +1,7 @@
 import { NarrationClipSchema } from "../../contracts/media.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import type { VoiceProfile, SpeechSettings } from "../../contracts/speech.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 
 export async function requestLocalNarration(
   request: {
@@ -18,18 +19,18 @@ export async function requestLocalNarration(
 ): Promise<{ clip: NarrationClip; audioUrl: string } | null> {
   if (!import.meta.env.DEV) return null;
   try {
-    const response = await fetch(
+    const response = await sameOriginFetch(
       `${import.meta.env.BASE_URL}api/narration${editorPreview ? "/editor-preview" : ""}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
-        signal: AbortSignal.any([signal, AbortSignal.timeout(90000)]),
-        redirect: "error",
-        credentials: "same-origin",
+        signal,
+        timeoutMs: 90000,
+        maxBytes: 200000,
       },
     );
-    if (!response.ok || Number(response.headers.get("content-length")) > 200000) return null;
+    if (!response.ok) return null;
     const source = await response.text();
     if (source.length > 200000) return null;
     const data = JSON.parse(source);

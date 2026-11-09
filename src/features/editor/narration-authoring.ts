@@ -1,19 +1,15 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import { textDigest } from "../../contracts/digest.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 
 export async function cacheNarration(
   result: { clip: NarrationClip; audioUrl: string },
   text: string,
   signal: AbortSignal,
 ) {
-  const response = await fetch(result.audioUrl, {
-    signal,
-    redirect: "error",
-    credentials: "same-origin",
-  });
-  if (!response.ok || Number(response.headers.get("content-length")) > 5_000_000)
-    throw new Error("Could not cache generated narration.");
+  const response = await sameOriginFetch(result.audioUrl, { signal, maxBytes: 5_000_000 });
+  if (!response.ok) throw new Error("Could not cache generated narration.");
   const cached = await narrationBytes(await response.arrayBuffer());
   if (
     cached.audioDigest !== result.clip.audioDigest ||
