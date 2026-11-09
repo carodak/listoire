@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
+import { ToolbarGlyph } from "../../shared/ToolbarGlyph.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,19 +48,7 @@ export function CharacterPanel(props: Props) {
         title={t("myCharacter")}
         onClick={props.onToggle}
       >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="7" r="3.5" />
-          <path d="M5 21v-2a7 7 0 0 1 14 0v2M8 21h8" />
-        </svg>
+        <ToolbarGlyph name="character" width={22} height={22} />
         <span>{t("myCharacter")}</span>
       </button>
       {props.open && (
