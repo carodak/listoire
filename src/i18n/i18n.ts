@@ -63,6 +63,11 @@ const en = {
     useItem: "You use {{item}}… +{{count}} HP.",
     escaped: "You escape!",
     escapeFailed: "You try to flee… roll {{roll}}, no escape.",
+    effect: {
+      stun: "Stunned ({{count}})",
+      weaken: "Weakened ({{count}})",
+      charm: "Charmed ({{count}})",
+    },
   },
   encounters: "Encounters",
   abilities: "Abilities",
@@ -200,6 +205,11 @@ const fr: typeof en = {
     useItem: "Vous utilisez {{item}}… +{{count}} PV.",
     escaped: "Vous vous échappez !",
     escapeFailed: "Vous tentez de fuir… jet {{roll}}, sans succès.",
+    effect: {
+      stun: "Étourdissement ({{count}})",
+      weaken: "Affaiblissement ({{count}})",
+      charm: "Charme ({{count}})",
+    },
   },
   encounters: "Rencontres",
   abilities: "Capacités",

@@ -635,9 +635,10 @@ Own dev server on port 4175 (`playwright.local.config.ts`); 4173/4180 not used.
 Baseline (`8a78885`): score 94.8, prod LOC 20,712, 397 unit tests, 10 security candidates.
 Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow health, `fallow security`.
 
-| Commit | Item | Ponytail step | Prod LOC Δ | Score |
-| ------ | ---- | ------------- | ---------- | ----- |
-| (1a) | Escape, defeat and charm end in the combat window like victory | 2 reuse (victory window) | +15 | 94.8 |
+| Commit    | Item                                                           | Ponytail step            | Prod LOC Δ | Score |
+| --------- | -------------------------------------------------------------- | ------------------------ | ---------- | ----- |
+| `a79eaba` | Escape, defeat and charm end in the combat window like victory | 2 reuse (victory window) | +15        | 94.8  |
+| (1b)      | Ended combat effects fade out; effect names translated         | 6 minimal new code       | +60        | 94.9  |
 
 **1a notes**
 
@@ -656,3 +657,15 @@ Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow hea
 - Tests: new `combat-ending.test.ts` (5 cases, en/fr; fails on the previous GamePanel);
   new e2e "announces Defeated/Escaped in the combat window" (seeded). Updated assertions:
   `reader-request` French chapter — selector rename only, plus the fixed seed.
+
+**1b notes**
+
+- New `CombatEffects` (reader): one indicator per effect, keyed by ability. An effect that
+  expires or is replaced stays for a 600 ms CSS fade (`aria-hidden`, removed on
+  `animationend`); under reduced motion it is dropped at once (JS) and hidden (CSS).
+- The indicator text was the raw English kind ("stun (1)"); it now goes through i18n
+  (`combat.effect.*`: "Stunned (1)" / "Étourdissement (1)").
+- Tests: `combat-effects.test.ts` (which effects ended; labels en/fr).
+- **Not verified in a browser:** in Orée, only Dawnstroke applies an effect and no
+  first-choice path learns it, so I could not reach a live effect (12 seeds tried). A fixture
+  story with an effect ability would let an e2e check the fade.

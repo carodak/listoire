@@ -10,6 +10,7 @@ import { DiceRoll } from "./DiceRoll.tsx";
 import { useTranslation } from "react-i18next";
 import { useCombatLog } from "./combat-log.ts";
 import { useReducedMotion } from "../../shared/use-reduced-motion.ts";
+import { CombatEffects } from "./CombatEffects.tsx";
 
 export function CombatControls({
   bundle,
@@ -97,11 +98,7 @@ function CombatStatus({
           <p className="combat-turn">
             {french ? "Tour" : "Turn"} {combat.turn}
           </p>
-          {combat.effects.length > 0 && (
-            <p className="combat-effects">
-              {combat.effects.map((effect) => `${effect.kind} (${effect.turns})`).join(" · ")}
-            </p>
-          )}
+          <CombatEffects effects={combat.effects} />
           {log.length > 0 && (
             <ol
               className="combat-feedback combat-log"

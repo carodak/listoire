@@ -1098,6 +1098,22 @@
   color: var(--accent);
   font-size: 12px;
 }
+.combat-effect:not(:last-child)::after {
+  content: " · ";
+}
+.combat-effect-ended {
+  animation: combat-effect-fade 600ms ease-out forwards;
+}
+@keyframes combat-effect-fade {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .combat-effect-ended {
+    display: none;
+  }
+}
 .combat-feedback {
   padding: 12px 14px;
   border: 1px solid var(--separator);
