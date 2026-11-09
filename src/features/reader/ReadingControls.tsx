@@ -51,7 +51,11 @@ export function ReadingControls({
         />
       </label>
       {navigation}
-      <ReadingTransport media={media} presentation={presentation} />
+      <ReadingTransport
+        media={media}
+        presentation={presentation}
+        typewriter={preferences.reveal === "progressive"}
+      />
       <button
         className="transport-button"
         aria-expanded={open}
@@ -131,12 +135,23 @@ function PreferencesPanel({
 interface ReadingTransportProps {
   media: ReturnType<PresentationSession["getSnapshot"]>;
   presentation: PresentationSession;
+  typewriter: boolean;
 }
 
-function ReadingTransport({ media, presentation }: ReadingTransportProps) {
+function ReadingTransport({ media, presentation, typewriter }: ReadingTransportProps) {
   const { t } = useTranslation();
   return (
     <div className="reading-transport">
+      {typewriter && !media.revealAll && !media.textComplete && (
+        <button
+          className="transport-button reader-icon-button"
+          aria-label={t("revealAll")}
+          title={t("revealAll")}
+          onClick={presentation.revealRemaining}
+        >
+          <ToolbarGlyph name="reveal" />
+        </button>
+      )}
       <button
         className="transport-button reader-icon-button"
         aria-label={t(media.paused ? "resume" : "pause")}

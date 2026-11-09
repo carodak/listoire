@@ -47,8 +47,10 @@ test("the original welcome reveals its subtitle and offers stories within three 
     await page.screenshot({ path: info.outputPath("welcome.png"), fullPage: true });
   }
   await play.click();
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Get back before the kettle boils over" }),
+  ).toBeVisible();
 });
 
 test("reduced motion presents everything immediately without initializing audio", async ({
@@ -108,8 +110,10 @@ test("blocked audio leaves the visual intro and story access working", async ({ 
   await page.goto("/");
   await page.getByRole("heading", { name: "Step inside the story." }).click();
   await page.getByRole("button", { name: "Play an existing story" }).click();
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Continue reading" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Get back before the kettle boils over" }),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 

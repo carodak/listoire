@@ -143,7 +143,10 @@ it("resumes only visible videos and keeps expired or not-yet-visible media silen
       ],
     },
   };
-  const session = new PresentationSession(bundle, defaultReadingPreferences);
+  const session = new PresentationSession(bundle, {
+    ...defaultReadingPreferences,
+    reveal: "progressive",
+  });
   session.start(
     { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
     "one",

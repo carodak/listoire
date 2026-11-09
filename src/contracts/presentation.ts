@@ -202,7 +202,7 @@ export const defaultReadingPreferences: ReadingPreferences = {
   fontSize: "medium",
   fontFamily: "serif",
   lineHeight: "comfortable",
-  reveal: "progressive",
+  reveal: "instant",
   sound: false,
 };
 

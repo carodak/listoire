@@ -32,7 +32,7 @@ test("photograph keeps its dimensions, zooms from the center and writes on its r
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await page.getByRole("button", { name: "Play an existing story" }).click();
-  await page.getByRole("button", { name: "Show all text", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Examine the photograph", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "The photograph", exact: true });
   const window = dialog.locator(".photo-window");
