@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
@@ -318,6 +319,7 @@ function InventoryContents({
   );
 }
 
+const inventoryTabs: readonly InventoryTab[] = ["equipment", "consumables", "objects"];
 function InventoryTabs({
   label,
   locale,
@@ -334,17 +336,9 @@ function InventoryTabs({
       className="inventory-tabs"
       role="tablist"
       aria-label={label}
-      onKeyDown={(event) => {
-        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-        event.preventDefault();
-        const tabs: InventoryTab[] = ["equipment", "consumables", "objects"];
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        const next = (tabs.indexOf(tab) + direction + tabs.length) % tabs.length;
-        onTab(tabs[next]!);
-        event.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
-      }}
+      onKeyDown={arrowKeyTabs(inventoryTabs, tab, onTab)}
     >
-      {(["equipment", "consumables", "objects"] as const).map((kind) => (
+      {inventoryTabs.map((kind) => (
         <button
           key={kind}
           type="button"
