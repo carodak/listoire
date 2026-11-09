@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 import type { GameState } from "../../contracts/game.ts";
 import { EffectsEngine } from "./effects.ts";
+import { lightningElement } from "./lightning.ts";
 
 /** Feedback follows committed results; it never rolls dice or changes the game. */
 export function useCombatFeedback(
@@ -28,7 +29,10 @@ export function useCombatFeedback(
     const board = canvas.closest("dialog") ?? canvas;
     const viewport = document.createElement("div");
     viewport.className = "reader-viewport-feedback";
-    if (result.abilityUsed) viewport.classList.add("spell-cast-effect");
+    if (result.abilityUsed) {
+      viewport.classList.add("spell-cast-effect");
+      viewport.append(lightningElement());
+    }
     viewport.setAttribute("aria-hidden", "true");
     if (!reduced) board.append(viewport);
     const pulse = reduced ? undefined : playCombatPulse(viewport, result);
