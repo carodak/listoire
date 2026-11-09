@@ -1,5 +1,93 @@
 # Refactor log
 
+## ☀ Summary — branch `features/reader-combat-editor` (read this first)
+
+All work is on `features/reader-combat-editor` (13 commits on top of `main`, nothing pushed,
+nothing committed to `main`). **Partially done:** Parts 0 and 1 are complete. Parts 2–5 were
+**not started**: I ran out of working context, and I stopped at a clean, green state rather than
+leave half-finished UI redesigns.
+
+|                                                  | Before (`main`) | After (branch)                                                           |
+| ------------------------------------------------ | --------------- | ------------------------------------------------------------------------ |
+| Health score                                     | 95.0            | 94.8 (agreed floor; coupling +0.1 from the shared error helper)          |
+| Production LOC (src + tools, excl. tests/vendor) | 20,369          | 20,712 (+343: shared components, combat log, victory, i18n)              |
+| Unit tests                                       | 392             | **397**                                                                  |
+| E2E tests                                        | 292             | **316** (+6 new specs' tests incl. side panels, editor tabs, typewriter) |
+| `fallow security`                                | 10              | 10 (no new candidate)                                                    |
+
+### What was done
+
+- **Part 0.2:** `message()` → `src/contracts/error-message.ts`, 9 copies replaced.
+- **Part 0.3a:** one `CloseButton` (`src/shared/`) for all 7 close controls (one glyph, translated label).
+- **Part 0.3b:** one `ReaderSidebar` (`src/shared/`) for reading preferences + character panel:
+  focus in on open, back to the opener on close, one Escape rule.
+- **Part 0.3c:** full ARIA tab pattern (arrow keys, roving tabIndex, `aria-controls`,
+  labelled `tabpanel`) for Ribbon and StoryOutline, reusing the inventory's keyboard logic
+  (`src/shared/tab-keys.ts`).
+- **Part 1.1:** text is shown in full by default; the typewriter is opt-in (Reading
+  preferences → Text display → Progressive). With it on, a keyboard-reachable "Show all text"
+  control returns (existing `revealAll` strings and `reveal` glyph).
+- **Part 1.2:** combat log in reading order ("You attack… X damage dealt." then "The enemy
+  attacks… X damage received."), item use and flee too, all through i18n (en+fr) from
+  structured rule results; a claw slash + red flash on the enemy portrait when a blow lands;
+  both skipped under reduced motion (new `useReducedMotion()` hook); the log stays visible.
+- **Part 1.3:** combat runs until the enemy reaches 0 HP, then the combat window shows
+  "Victory!" with the final blow, and the story continues on its own once the dice settle.
+  No rule changes. The save format only gained optional fields (old saves still load).
+- **REVIEW fixes in touched code:** structured combat results instead of English rule
+  messages (#5, combat only); a third combat effect no longer breaks the save (section 3);
+  CombatControls' `rolling` no longer sticks when a turn is refused (section 3).
+- **Found and fixed: fresh dev servers reloaded pages mid-test** (504 "Outdated Optimize
+  Dep" for `ogl` on first dice, `inkjs/full` in the editor worker). `optimizeDeps.include`
+  now lists both. This made **5 reader-request tests and the editor's game-authoring tests
+  fail on any new server, including CI**. Verified with a cleared cache.
+- Part 0.1 so far: `welcome.spec` (3 tests) and `reader-request :108` updated; the other
+  outdated tests are still pending (below).
+
+### Design choices to review
+
+- Close-button labels: reader uses translated `t("close")`; the English-only editor keeps
+  "Close dialog" / "Close preview" / "Close gallery" (its tests and strings are English).
+  "Close gallery" became an icon button.
+- Side-panel Escape: closes from anywhere inside except within a nested modal or when
+  another handler already handled the key; the panel container takes focus (no outline).
+- Ribbon tabpanel is now named by its tab ("Text") instead of "Text commands".
+- Reveal control is an icon button, shown only with the typewriter on and while text is
+  still revealing. In instant mode, delayed media also appear at once (existing `revealAll`).
+- Combat results gained optional fields `dealt`, `received`, `usedItem`, `healed`, `fled`
+  (additive save-format change; `message` kept as fallback for old saves).
+- Effects cap: a new effect replaces the oldest when two are active (schema max is 2).
+- Victory hold: 2 s after the final dice settle (`VICTORY_HOLD_MS` in `GamePanel.tsx`).
+  Only victory moves into the combat window; escape/defeat/charm keep the existing notice.
+- `DiceRoll` still takes a `french` prop (existing API); I didn't widen the i18n refactor.
+
+### Skipped / not done, and why
+
+- **Part 0.1, remaining outdated e2e tests:** `house.spec` ×5, `reader.spec` ×9,
+  `reader-polish :3` and the rest of `:29` (Orée's photograph has no reverse side, so the
+  handwritten-reverse checks need a fixture story or a decision), `character.spec`,
+  `narration.spec` ×2, `magnifier`, `media-workspace`. Triage and proposed fix per test are in
+  "Task 1 — Triage" below.
+- **Part 2 (audio), Part 3 (visuals + screenshots), Part 4 (Text UX), Part 5 (Image UX):** not
+  started. Ran out of context. For Part 2, start with REVIEW #13 (5 s download timeout for clips
+  up to 10 MB in `narration-clips.ts`; 4 s start timer in `audio-manager.ts`), which is the most
+  likely cause of narration stopping, and #9 (`skipCinematic` clears layout timers).
+- No screenshots were taken (Part 3 not started).
+
+### How to try it
+
+- `git switch features/reader-combat-editor`, `npm run dev`.
+- **Text display:** open a story; text is complete. Reading preferences → Text display →
+  Progressive, then turn a page: the "Show all text" icon appears in the toolbar (Tab +
+  Enter works).
+- **Side panels:** open Reading preferences or My Character; Escape closes and returns focus.
+- **Editor tabs:** `/editor`, focus a ribbon tab, use ←/→.
+- **Combat:** play Orée until the practice duel with Ysée: the log fills in turn order, blows
+  flash on her portrait, and winning shows "Victory!" then moves on. In French too.
+- E2E locally: port 4173 is taken, so use an untracked override that starts/reuses a
+  server on 4175 (`playwright.local.config.ts`, listed in `.git/info/exclude`):
+  `npx playwright test -c playwright.local.config.ts`.
+
 ## ☀ Morning summary (read this first)
 
 **Done overnight.** E2E failures resolved as pre-existing (nothing reverted),
@@ -529,3 +617,14 @@ Test assertions updated because this pass changed the behavior on purpose:
   after a combat: `:108`, `:215`, `:328`, `:350`, `:583`). Bisected: they fail the same
   way on `ee22970` (identical to `main`'s code), so they predate this branch. They passed
   last night only against the long-lived 4173 server. To investigate with Part 1.3.
+
+| `0cce5e7` | REVIEW §3 + #5: structured combat damage, at most two stored effects | third effect broke the save; English rule text | 5 small change | +20 | 95.0 |
+| `350775a`, `81f2a20` | pre-bundle `ogl` and `inkjs/full` | fresh dev server reloaded pages mid-test (e2e failures in CI) | 4 installed dependency config | +5 | 95.0 |
+| `d7fed8c` | 1.2 + 1.3 combat log, hit feedback, in-window victory, `rolling` fix | no damage feedback; victory vanished into a separate notice | 6 minimal new code (+2 reuse ReaderModal/DiceRoll) | +170 | 94.8 |
+
+Test assertions updated because this pass changed the behavior on purpose (continued):
+
+- `reader-request.spec` "completes the French magic chapter…": the combat loop stops when
+  the victory window appears, asserts "Victoire !", the chronological log, the localized item
+  line and that no hit effect plays under reduced motion; it waits for the auto-continue
+  instead of dismissing a notice.
