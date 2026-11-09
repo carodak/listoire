@@ -120,8 +120,7 @@ export class EditorActions {
       this.editSelectedMedia();
       return;
     }
-    patchView({ selectedMedia: undefined });
-    patchView({ dialog: command });
+    patchView({ selectedMedia: undefined, dialog: command });
   };
   private editSelectedMedia() {
     const { handles, language, state, patchView } = this.context;

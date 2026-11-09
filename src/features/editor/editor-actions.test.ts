@@ -184,3 +184,9 @@ describe("EditorActions editor commands", () => {
     expect(patchView).not.toHaveBeenCalled();
   });
 });
+
+it("open() clears the selected media and opens the dialog in one view update", () => {
+  const { actions, patchView } = setup();
+  actions.open("Story Settings");
+  expect(patchView.mock.calls).toEqual([[{ selectedMedia: undefined, dialog: "Story Settings" }]]);
+});
