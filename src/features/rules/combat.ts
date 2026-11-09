@@ -16,10 +16,16 @@ export function combatTurn(
   if (move.kind === "item") return useItem(character, game, definition, move.id);
   const { damage, die, effects, dice } = attack(character, game, definition, move);
   combat.hp = Math.max(0, combat.hp - damage);
-  game.lastResult = { success: damage > 0, roll: die, dice, message: `${damage} damage dealt` };
+  game.lastResult = {
+    success: damage > 0,
+    roll: die,
+    dice,
+    dealt: damage,
+    message: `${damage} damage dealt`,
+  };
   if (move.kind === "ability") game.lastResult.abilityUsed = move.id;
   if (combat.hp === 0) return finish(character, game, "Victory", true, "victory");
-  if (definition.rules.effectsBeforeRetaliation) combat.effects.push(...effects);
+  if (definition.rules.effectsBeforeRetaliation) addEffects(combat, effects);
   if (combat.effects.some((effect) => effect.kind === "charm"))
     return finish(character, game, "Charmed · narrative resolution", true, "charmed");
   retaliate(character, game, definition);
@@ -32,7 +38,7 @@ export function combatTurn(
       "defeat",
     );
   ageEffects(combat);
-  if (!definition.rules.effectsBeforeRetaliation) combat.effects.push(...effects);
+  if (!definition.rules.effectsBeforeRetaliation) addEffects(combat, effects);
   if (combat.effects.some((effect) => effect.kind === "charm"))
     return finish(character, game, "Charmed", true, "charmed");
   combat.turn++;
@@ -112,7 +118,15 @@ function retaliate(character: CharacterProfile, game: GameState, definition: Gam
     : 0;
   const damage = stunned ? 0 : Math.max(0, combat.damage - reduction);
   character.health.current = Math.max(0, character.health.current - damage);
+  game.lastResult!.received = damage;
   game.lastResult!.message += ` · ${damage} damage received`;
+}
+/** The saved state holds at most two effects; a new one replaces the oldest. */
+function addEffects(
+  combat: NonNullable<GameState["combat"]>,
+  effects: NonNullable<GameState["combat"]>["effects"],
+) {
+  combat.effects = [...combat.effects, ...effects].slice(-2);
 }
 function flee(character: CharacterProfile, game: GameState, definition: GameDefinition) {
   const die = roll(game, 20),

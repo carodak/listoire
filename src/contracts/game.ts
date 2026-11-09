@@ -128,6 +128,9 @@ const result = z
       .max(4)
       .optional(),
     outcome: z.enum(["victory", "escaped", "defeat", "charmed"]).optional(),
+    /** Combat damage this turn, for a localized log; older saves only have `message`. */
+    dealt: z.number().int().nonnegative().optional(),
+    received: z.number().int().nonnegative().optional(),
     itemId: id.optional(),
     abilityId: id.optional(),
     abilityUsed: id.optional(),
