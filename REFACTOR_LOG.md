@@ -733,3 +733,36 @@ conflict with them.
   tests still pass (chromium and mobile).
 - Found while testing (fail without this change, triaged in task 2): `image-composition`
   :91 and :168, `reader-request` "updates an old active Orée draft".
+
+### Task 2 — the 18 outdated e2e tests: done, chromium suite 82/82 green
+
+| Commit    | Spec                                     | What changed                                                                                                                                                                                                                                                                                                                                  |
+| --------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `e8ac5fd` | `house` ×5 + `tests/e2e/oree.ts`         | Orée by passage ID (`data-passage`, `data-segment` added to the page); Nour's examination with a route fixture adding a reverse side; per-locale saves and inventory with the letter item; sound cue on page "atelier"; first-page requests checked against the assets that page references (computed from the bundle, not a hard-coded list) |
+| `e7dcf3c` | (app fix found by `reader` :124)         | at 320px the language chevron overflowed and the page scrolled sideways; the title now ellipsizes first                                                                                                                                                                                                                                       |
+| `89196d5` | `reader` ×9                              | first choice + passage IDs; titles read from the published bundle; layout checks follow `.reader-toolbar` / `.reader-board`; incompatible-save test finds the `save:<checkpoint>:en` key                                                                                                                                                      |
+| `56f64f2` | `character`, `magnifier`, `narration` ×2 | encounters unlock on Nour's page; Orée narrates live (`ai-live`), so the test answers `/api/narration` with a real MP3 and its SHA-256 (the app's digest check still runs)                                                                                                                                                                    |
+| `c119de9` | `media-workspace`                        | duplicates the forest starter's current character asset                                                                                                                                                                                                                                                                                       |
+| `fd4d433` | `reader-polish` ×2                       | progressive text turned on first; reverse side via the fixture (simple, so no separate fixture story)                                                                                                                                                                                                                                         |
+
+Assertions changed because the app changed on purpose (all in `9f1afcd` or this branch), logged:
+
+- "Reset view" no longer exists: turning the image over resets the view, so the tests turn it back
+  and check the lens is gone.
+- "Replay voice" no longer exists in the reader: "Replay page" restarts the voice.
+- Large text is 25px (a later CSS rule overrides the old 22px one, which is now dead CSS).
+- The toolbar is 72px tall (was < 70); the reader page uses the story's page color `#f5ead7`.
+- Encounters show name + description directly (no focus-to-reveal).
+- `.eyebrow`, `.site-header`, `.reader-shell` no longer exist; equivalent layout checks kept.
+- The text column check became "> 40% of the board and ≤ 800px" (was "< 55% of the canvas";
+  the board is narrower than the old canvas, the column is the same 768px).
+
+**Not covered any more (needs you):** photograph **hotspot discovery** (inspect a detail → a
+hidden story action → an inventory clue that survives reload). Orée has no discoverable hotspot
+and adding one needs an Ink action, not a simple route fixture. Options: author one in Orée, or a
+small fixture story served only to e2e.
+
+**Found: an earlier failing run was the dev server, not the app.** After I swapped source files
+with `git stash` during a run, Vite kept serving "Failed to fetch dynamically imported module
+EditorRoute.tsx" and 24 editor/typography/image tests failed. A restarted server passes them all.
+A fresh server also needs one warm-up page load (~60 s) or the first test times out.
