@@ -1,12 +1,31 @@
 .narrative-type {
   overflow-wrap: anywhere;
 }
-.type-style-shout,
-.type-style-impact {
+.type-bold-on {
+  font-weight: 700;
+}
+/* Shout and Impact keep their heavier weight. */
+.type-style-shout.type-bold-on,
+.type-style-impact.type-bold-on {
   font-weight: 900;
 }
-.type-style-whisper {
+.type-bold-off {
+  font-weight: normal;
+}
+.type-italic-on {
   font-style: italic;
+}
+.type-italic-off {
+  font-style: normal;
+}
+.type-underline-on {
+  text-decoration-line: underline;
+}
+.type-strike-on {
+  text-decoration-line: line-through;
+}
+.type-underline-on.type-strike-on {
+  text-decoration-line: underline line-through;
 }
 .type-size-normal {
   font-size: 1em;

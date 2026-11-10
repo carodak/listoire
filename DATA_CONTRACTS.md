@@ -31,6 +31,14 @@ Status: the implemented subset is defined by executable schemas in `src/contract
 
 The executable contracts live in [src/contracts/story.ts](src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields.
 
+Implemented inline formatting (`src/contracts/typography.ts`): narrative words carry
+`<typo …>` markup, parsed from an allowlist into `typography` spans on segments and choices
+(never HTML). Settings: `style` (presets), `size`, `font`, `color`, `direction`, `spacing`,
+`shape`, and `bold`, `italic`, `underline`, `strike` (`on`/`off`; `off` cancels what a preset
+sets). Presets declare their bold/italic (Shout, Impact bold; Whisper italic). All keys are
+optional, so markup written before a key existed parses unchanged. The illustrative `Inline`
+type below (`emphasis: em | strong`) was never implemented; the typography spans replace it.
+
 Each choice uses the run ID/revision as its occurrence identity; the director rejects stale commands and concurrent writes. IndexedDB's atomic read/compare/update replaces the proposed generic single-writer lease, with less browser-specific infrastructure. Restore verifies the saved choices against Ink without calling Continue. Exact-build/language compatibility is enforced, and settings use a separate key. Whole-paragraph instant display means no partial-reveal cursor is needed yet.
 
 The host-request choice convention is verified against real compiled Ink and a save round-trip in an isolated test. Its tag belongs **inside** the square-bracketed choice label, for example `* [Resolve # request:door.check]`. The Phase 1 player deliberately does not execute action requests. Add action receipts/results only with the first authorized gameplay integration. Future DTOs below remain design sketches, not unused runtime code.

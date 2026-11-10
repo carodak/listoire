@@ -159,3 +159,28 @@ test("renders vertical, falling, waved and handwritten words in the reader", asy
   await expect(prose.locator(".sr-only").last()).toHaveText("DOWN falling é👩🏽‍🚀a a secret.");
   await page.locator(".experience-preview").screenshot({ path: ".fallow/typography-styles.png" });
 });
+
+test("keeps preset weights and renders bold, italic, underline and strikethrough", async ({
+  page,
+}) => {
+  await openTypographyStory(
+    page,
+    false,
+    '<typo style="shout">S</typo> <typo style="impact">I</typo> <typo style="whisper">W</typo> <typo bold="on">B</typo> <typo italic="on">It</typo> <typo underline="on">U</typo> <typo strike="on">X</typo> <typo underline="on" strike="on">UX</typo> <typo style="whisper" italic="off">Wo</typo> <typo style="shout" bold="off">So</typo>.',
+  );
+  const prose = page.locator(".preview-slot .prose");
+  const word = (text: string) =>
+    prose.locator(".narrative-type").filter({ hasText: new RegExp(`^${text}$`) });
+  // Stories written before these settings render exactly as before.
+  await expect(word("S")).toHaveCSS("font-weight", "900");
+  await expect(word("I")).toHaveCSS("font-weight", "900");
+  await expect(word("W")).toHaveCSS("font-style", "italic");
+  await expect(word("B")).toHaveCSS("font-weight", "700");
+  await expect(word("It")).toHaveCSS("font-style", "italic");
+  await expect(word("U")).toHaveCSS("text-decoration-line", "underline");
+  await expect(word("X")).toHaveCSS("text-decoration-line", "line-through");
+  await expect(word("UX")).toHaveCSS("text-decoration-line", "underline line-through");
+  await expect(word("Wo")).toHaveCSS("font-style", "normal");
+  await expect(word("So")).toHaveCSS("font-weight", "400");
+  await expect(prose.locator(".sr-only").last()).toHaveText("S I W B It U X UX Wo So.");
+});

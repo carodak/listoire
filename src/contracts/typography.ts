@@ -8,6 +8,11 @@ export const typographyOptions = {
   direction: ["horizontal", "diagonal-up", "diagonal-down", "vertical"],
   spacing: ["normal", "wide", "extra-wide"],
   shape: ["normal", "wave", "cascade", "outline"],
+  // "off" lets a manual change turn off what a preset sets (Whisper without italic).
+  bold: ["on", "off"],
+  italic: ["on", "off"],
+  underline: ["on", "off"],
+  strike: ["on", "off"],
 } as const;
 
 export const TypographySchema = z
@@ -19,6 +24,10 @@ export const TypographySchema = z
     direction: z.enum(typographyOptions.direction).optional(),
     spacing: z.enum(typographyOptions.spacing).optional(),
     shape: z.enum(typographyOptions.shape).optional(),
+    bold: z.enum(typographyOptions.bold).optional(),
+    italic: z.enum(typographyOptions.italic).optional(),
+    underline: z.enum(typographyOptions.underline).optional(),
+    strike: z.enum(typographyOptions.strike).optional(),
   })
   .strict();
 export type Typography = z.infer<typeof TypographySchema>;
@@ -33,10 +42,10 @@ export type TypographySpan = z.infer<typeof TypographySpanSchema>;
 
 const presets: Record<NonNullable<Typography["style"]>, Typography> = {
   default: {},
-  shout: { size: "huge", font: "sans", color: "crimson" },
-  whisper: { size: "small", spacing: "wide" },
+  shout: { size: "huge", font: "sans", color: "crimson", bold: "on" },
+  whisper: { size: "small", spacing: "wide", italic: "on" },
   mystery: { font: "serif", color: "violet", spacing: "wide" },
-  impact: { size: "large", font: "sans", shape: "outline" },
+  impact: { size: "large", font: "sans", shape: "outline", bold: "on" },
   handwritten: { font: "handwritten", color: "ocean" },
   wave: { shape: "wave", color: "ocean" },
   falling: { shape: "cascade" },

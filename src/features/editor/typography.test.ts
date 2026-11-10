@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { FrameSchema } from "../../contracts/story.ts";
-import { parseTypography } from "../../contracts/typography.ts";
+import { parseTypography, typographySettings } from "../../contracts/typography.ts";
 import { formatTextSelection } from "./text-formatting.ts";
 import { compileLanguage } from "./compiler.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
@@ -75,6 +75,26 @@ it("splits overlapping styles while retaining unselected words and the exact sel
     { color: "ocean" },
   ]);
   expect(() => formatTextSelection(line, 4, 10, {})).toThrow(/attributes/);
+});
+
+it("reads and writes bold, italic, underline and strikethrough; presets declare theirs", () => {
+  const line = "Mark these words.";
+  const result = formatTextSelection(line, 5, 10, { bold: "on", underline: "on", strike: "on" });
+  expect(result.replacement).toBe(
+    'Mark <typo bold="on" underline="on" strike="on">these</typo> words.',
+  );
+  expect(parseTypography(result.replacement).typography).toEqual([
+    { start: 5, end: 10, format: { bold: "on", underline: "on", strike: "on" } },
+  ]);
+  expect(() => parseTypography('<typo bold="yes">x</typo>')).toThrow();
+  expect(typographySettings({ style: "shout" })).toMatchObject({ bold: "on" });
+  expect(typographySettings({ style: "impact" })).toMatchObject({ bold: "on" });
+  expect(typographySettings({ style: "whisper" })).toMatchObject({ italic: "on" });
+  expect(typographySettings({ style: "whisper", italic: "off" })).toMatchObject({ italic: "off" });
+  // Markup written before these settings existed parses to the same spans.
+  expect(parseTypography('A <typo style="shout">BOOM</typo>.').typography).toEqual([
+    { start: 2, end: 6, format: { style: "shout" } },
+  ]);
 });
 
 it("compiles typography through real Ink, restores choices and validates saved offsets", async () => {
