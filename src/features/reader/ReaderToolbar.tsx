@@ -42,7 +42,11 @@ export function ReaderToolbar({
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const { bundle, director, presentation, preferences, onPreferencesChange } = player;
   const portrait = bundle.assets?.find((asset) => asset.id === bundle.character?.portrait);
-  const portraitSource = useAssetSource(portrait, presentation.resolveAsset);
+  // Loaded with the panel, so the first page only fetches its own scene media.
+  const portraitSource = useAssetSource(
+    characterOpen ? portrait : undefined,
+    presentation.resolveAsset,
+  );
   return (
     <div className="reader-toolbar">
       <ToolbarStart player={player} />
