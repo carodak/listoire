@@ -105,6 +105,25 @@ it("persists a frozen combat and RNG, restores it, then commits its branch and X
   const save = await saves.read(bundle);
   expect(save!.game).toEqual(restored.getSnapshot().game);
 });
+it.each(["battle", "letter"])(
+  "back after %s restores the page with the stats it had then",
+  async (action) => {
+    const { create } = await fixture();
+    const director = create();
+    await director.load();
+    const before = structuredClone(director.getSnapshot());
+    const choice = before.frame!.choices.find((choice) => choice.gameAction === action)!;
+    await director.choose(choice.id, before.occurrenceId!);
+    for (let turn = 0; turn < 20 && director.getSnapshot().game?.combat; turn++)
+      await director.gameTurn({ kind: "attack" }, director.getSnapshot().occurrenceId!);
+    await director.finishEvent(director.getSnapshot().occurrenceId!);
+    expect(director.getSnapshot().game).not.toEqual(before.game);
+    await director.back();
+    expect(director.getSnapshot().frame).toEqual(before.frame);
+    expect(director.getSnapshot().character).toEqual(before.character);
+    expect(director.getSnapshot().game).toEqual(before.game);
+  },
+);
 it("shows a received item before leaving, restores the event, and never duplicates its mutation on retry", async () => {
   const { create, fail } = await fixture();
   const director = create();

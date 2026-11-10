@@ -100,6 +100,16 @@ export function beforeCheck(save: SaveData): SaveData {
   return restored;
 }
 
+/** The page as it was reached, before any fight or reward on it, for Back. */
+export function reachedPage(start: SaveData | null, before: SaveData): SaveData {
+  const game = start?.game;
+  if (start && !game?.combat && !game?.pendingEvent && !game?.pendingCheck) return start;
+  // A checkpoint reloaded mid-fight has no clean start: keep its stats, drop the ending.
+  return before.game
+    ? { ...before, game: { ...before.game, pendingEvent: undefined, lastResult: undefined } }
+    : before;
+}
+
 export function checkOrigin(before: SaveData) {
   return {
     character: structuredClone(before.character!),
