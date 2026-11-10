@@ -2,16 +2,16 @@
 
 ## ☀ Summary — Pass 6 (read this first)
 
-Branch `features/reader-combat-editor`, 19 commits on top of `8a78885` (nothing pushed, nothing
+Branch `features/reader-combat-editor`, 22 commits on top of `8a78885` (nothing pushed, nothing
 on `main`). **Tasks 1–4 are done.** Two items need a decision from you (marked ⚠ below).
 
-|                                        | Start (`8a78885`)       | Now (`a631fd3`)                                  |
-| -------------------------------------- | ----------------------- | ------------------------------------------------ |
-| Health score (`--score --hotspots`)    | 94.8                    | **92.5** ⚠ (95.0 without the one churn hotspot)  |
-| Production LOC (src + tools, no tests) | 20,712                  | 21,019 (+307)                                    |
-| Unit tests                             | 397                     | **414**                                          |
-| E2E, chromium                          | 79, 18 outdated failing | **SUITE_TOTAL passing** on my server (port 4175) |
-| `fallow security`                      | 10                      | 10 (no new candidate)                            |
+|                                        | Start (`8a78885`)       | Now (`bff1b07`)                                 |
+| -------------------------------------- | ----------------------- | ----------------------------------------------- |
+| Health score (`--score --hotspots`)    | 94.8                    | **92.5** ⚠ (95.0 without the one churn hotspot) |
+| Production LOC (src + tools, no tests) | 20,712                  | 21,023 (+311)                                   |
+| Unit tests                             | 397                     | **414**                                         |
+| E2E, chromium                          | 79, 18 outdated failing | **85/85 green** (fresh server, port 4175)       |
+| `fallow security`                      | 10                      | 10 (no new candidate)                           |
 
 ### What was done
 
@@ -37,7 +37,7 @@ on `main`). **Tasks 1–4 are done.** Two items need a decision from you (marked
    and audio is unlocked inside the first click/key press (Play, or the editor).
 4. **Visual** — `f83591c` branching lightning (jagged channel + forks, accent glow, light
    falloff, multi-strike flicker) for light-flicker and spell effects; `4aa2936` new home and
-   My Character icons in `ToolbarGlyph`; `a631fd3` portraits (My Character, combat) use the same
+   My Character icons in `ToolbarGlyph`; `a631fd3` + `bff1b07` portraits (My Character, combat) use the same
    theme blend as illustrations, live with the page colour; their URLs go through the
    presentation session (REVIEW #6).
 
