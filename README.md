@@ -38,6 +38,9 @@ npx --no-install playwright install chromium firefox webkit
 npm run test:e2e
 ```
 
+E2E and `npm run test:coverage` start or reuse a dev server on port 4173; set
+`E2E_PORT=4175` (for example) to use another port.
+
 `check` compiles the story, typechecks, lints, checks formatting and runs focused
 tests. `quality` gates dead code, dependencies, boundaries and duplication, then
 prints an advisory health report. `npm run quality:audit -- --base <git-ref>` audits
