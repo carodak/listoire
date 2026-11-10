@@ -10,6 +10,7 @@ import { GameInventory } from "./GamePanel.tsx";
 import { CharacterPanel } from "../character/CharacterPanel.tsx";
 import { LanguageSetting } from "../../shared/LanguageSetting.tsx";
 import { ToolbarGlyph } from "../../shared/ToolbarGlyph.tsx";
+import { PictureIcon } from "../../shared/PictureIcon.tsx";
 import { useAssetSource } from "../presentation/use-asset-source.ts";
 
 export interface StoryPlayerProps {
@@ -92,7 +93,7 @@ function ToolbarStart({ player }: Pick<ReaderToolbarProps, "player">) {
           aria-label={t("home")}
           title={t("home")}
         >
-          <ToolbarGlyph name="home" width={24} height={24} strokeWidth={1.75} />
+          <PictureIcon name="home" />
         </button>
       )}
       <span className="reader-story-title">{player.bundle.title}</span>

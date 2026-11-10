@@ -272,3 +272,13 @@ input:focus-visible {
   mix-blend-mode: var(--illustration-mix, multiply);
   filter: var(--ink-filter, none);
 }
+
+/* PictureIcon: the author's PNG drawn in the current text colour, so it follows the theme. */
+.picture-icon {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}

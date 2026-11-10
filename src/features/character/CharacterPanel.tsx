@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
-import { ToolbarGlyph } from "../../shared/ToolbarGlyph.tsx";
+import { PictureIcon } from "../../shared/PictureIcon.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -50,7 +50,7 @@ export function CharacterPanel(props: Props) {
         title={t("myCharacter")}
         onClick={props.onToggle}
       >
-        <ToolbarGlyph name="character" width={22} height={22} />
+        <PictureIcon name="character" />
         <span>{t("myCharacter")}</span>
       </button>
       {props.open && (
