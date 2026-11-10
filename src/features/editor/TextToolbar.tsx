@@ -207,6 +207,8 @@ function SettingSelect({
   const style = format.style ?? "default";
   const styleName = t(`editor.text.values.style.${style}`);
   const inherited = effectiveTypography({ style })[setting];
+  // "(from Mystery)" only for what the style itself sets, not for plain-text values.
+  const fromStyle = typographySettings({ style })[setting] !== undefined;
   const changed = format[setting] !== undefined;
   const name = t(`editor.text.${setting}`);
   const label = (value: string) => t(`editor.text.values.${setting}.${value}`);
@@ -224,7 +226,7 @@ function SettingSelect({
       >
         {typographyOptions[setting].map((value) => (
           <option key={value} value={value}>
-            {value === inherited && style !== "default"
+            {value === inherited && fromStyle
               ? t("editor.text.fromStyle", { value: label(value), style: styleName })
               : label(value)}
           </option>

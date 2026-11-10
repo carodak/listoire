@@ -177,6 +177,12 @@ test("one setting keeps the others; a preset clears manual changes and undo rest
     "Sans-serif (from Shout)",
   );
   await expect(page.locator(".text-setting.changed")).toHaveCount(1); // size
+  // A value Shout doesn't set reads plainly, not "(from Shout)".
+  await page.locator(".text-more summary").click();
+  await expect(page.getByLabel("Direction", { exact: true }).locator("option:checked")).toHaveText(
+    "Horizontal",
+  );
+  await page.locator(".text-more summary").click();
   await expect(page.locator(".text-summary")).toHaveText(
     "Shout sets: Huge · Sans-serif · Crimson · Bold. Your changes: Large · Italic.",
   );
