@@ -19,6 +19,7 @@ const en = {
   deviceVoice: "Use device voice when recordings are unavailable",
   voiceRate: "Voice speed",
   voiceUnavailable: "Narration is unavailable. You can continue reading.",
+  narrationPreparing: "Preparing narration…",
   audioChannels: {
     sfx: "Sound volume",
     ambience: "Ambience volume",
@@ -160,6 +161,7 @@ const fr: typeof en = {
   deviceVoice: "Utiliser la voix de l’appareil sans enregistrement",
   voiceRate: "Vitesse de la voix",
   voiceUnavailable: "La narration est indisponible. Vous pouvez poursuivre la lecture.",
+  narrationPreparing: "Préparation de la narration…",
   audioChannels: {
     sfx: "Volume des sons",
     ambience: "Volume de l’ambiance",

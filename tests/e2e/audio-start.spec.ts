@@ -5,7 +5,12 @@ import { playStory, readTo } from "./oree.ts";
 /** Records Web Audio contexts and every media play() without changing what they do. */
 async function recordAudio(page: Page) {
   await page.addInitScript(() => {
-    const log = { contexts: 0, resumedInGesture: 0, played: [] as string[] };
+    const log = {
+      contexts: 0,
+      resumedInGesture: 0,
+      played: [] as string[],
+      elements: [] as HTMLMediaElement[],
+    };
     Object.assign(window, { audioLog: log });
     const Original = window.AudioContext;
     window.AudioContext = class extends Original {
@@ -21,6 +26,7 @@ async function recordAudio(page: Page) {
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
       log.played.push(this.currentSrc || this.src);
+      log.elements.push(this);
       return play.call(this);
     };
   });
@@ -54,6 +60,24 @@ test("Play starts audio in its click, and story sound plays without enabling it 
       (await audioLog(page)).played.some((src) => src.endsWith("audio.5ed3276af9fe4c73edaa.mp3")),
     )
     .toBe(true);
+});
+
+test("music and ambience really play: their time advances", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await recordAudio(page);
+  await page.goto("/");
+  await playStory(page);
+  await readTo(page, "atelier");
+  const playing = () =>
+    page.evaluate(() =>
+      (window as unknown as { audioLog: { elements: HTMLMediaElement[] } }).audioLog.elements
+        .filter((element) => !element.paused && element.currentTime > 0.5)
+        .map((element) => element.src.split("/").at(-1)),
+    );
+  await expect
+    .poll(playing, { timeout: 15000 })
+    .toEqual(expect.arrayContaining(["audio.5ed3276af9fe4c73edaa.mp3", "oree.wonder.mp3"]));
 });
 
 test("the Story Editor starts audio on its first click", async ({ page }) => {

@@ -9,6 +9,8 @@ import json
 import os
 from pathlib import Path
 import re
+import select
+import socket
 import shutil
 import subprocess
 import threading
@@ -193,16 +195,26 @@ class Generator:
         self.default_conditioning = copy.deepcopy(self.model.conds)
         print(f"Loaded {self.model_id} on {device}", flush=True)
 
-    def generate(self, segment, voice):
+    def cached(self, segment, voice):
+        """A finished clip for this exact text and voice, without waiting for the model."""
         model = next(model for model in read(ROOT / "assets/catalog/narration-models.json")["models"] if model["id"] == voice["model"])
         key = cache_key(segment, voice, model)
-        CACHE.mkdir(parents=True, exist_ok=True)
         metadata = CACHE / f"{key}.json"
         mp3 = CACHE / f"{key}.mp3"
         if metadata.exists() and mp3.exists():
             cached = read(metadata)
             if sha(mp3.read_bytes()) == cached["clip"]["audioDigest"]:
                 return cached
+        return None
+
+    def generate(self, segment, voice):
+        model = next(model for model in read(ROOT / "assets/catalog/narration-models.json")["models"] if model["id"] == voice["model"])
+        key = cache_key(segment, voice, model)
+        CACHE.mkdir(parents=True, exist_ok=True)
+        mp3 = CACHE / f"{key}.mp3"
+        cached = self.cached(segment, voice)
+        if cached:
+            return cached
         import soundfile as sf
         wav = CACHE / f"{key}.wav"
         legacy = CACHE / f"{cache_key(segment, voice, model, processed=False)}.wav"
@@ -283,8 +295,16 @@ def download():
         write(path, {"models": records})
 
 
-def serve():
-    generator = Generator()
+def client_gone(connection):
+    """True once the browser (through the Vite proxy) has dropped this request."""
+    try:
+        readable, _, _ = select.select([connection], [], [], 0)
+        return bool(readable) and connection.recv(1, socket.MSG_PEEK) == b""
+    except OSError:
+        return True
+
+
+def make_handler(generator, wait_seconds=120):
     class Handler(BaseHTTPRequestHandler):
         def allowed(self):
             host = urlparse("http://" + self.headers.get("Host", "")).hostname
@@ -302,6 +322,26 @@ def serve():
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
+        def clip(self, segment, voice):
+            """Cached clips answer at once; new ones wait their turn for the single model.
+
+            The reader turns pages while a clip is generating; refusing the next page's request
+            (the old 2 s lock timeout) left that page silent. A request the browser abandoned
+            leaves the line without generating anything.
+            """
+            result = generator.cached(segment, voice)
+            if result:
+                return result
+            waited = 0.0
+            while not LOCK.acquire(timeout=0.5):
+                waited += 0.5
+                if client_gone(self.connection) or waited >= wait_seconds:
+                    return None
+            try:
+                return None if client_gone(self.connection) else generator.generate(segment, voice)
+            finally:
+                LOCK.release()
+
         def do_POST(self):
             if not self.allowed() or self.path not in ("/api/narration", "/api/narration/editor-preview") or self.headers.get("Content-Type") != "application/json":
                 self.respond(403, b'{}'); return
@@ -314,12 +354,9 @@ def serve():
             try:
                 authorize = authoring_segment if self.path.endswith("/editor-preview") else authorized_segment
                 segment, voice = authorize(json.loads(self.rfile.read(size)))
-                if not LOCK.acquire(timeout=2):
+                result = self.clip(segment, voice)
+                if result is None:
                     self.respond(429, b'{}'); return
-                try:
-                    result = generator.generate(segment, voice)
-                finally:
-                    LOCK.release()
                 self.respond(200, json.dumps({"clip": result["clip"], "audioPath": f"/api/narration/audio/{result['key']}.mp3"}).encode())
             except (ValueError, StopIteration, KeyError, TypeError):
                 self.respond(400, b'{}')
@@ -334,6 +371,11 @@ def serve():
                 self.respond(200, file.read_bytes(), "audio/mpeg")
             else:
                 self.respond(404, b'{}')
+    return Handler
+
+
+def serve():
+    Handler = make_handler(Generator())
     print("Local narration preview listening on http://127.0.0.1:8765 (Ctrl+C to stop)", flush=True)
     server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
     server.daemon_threads = True

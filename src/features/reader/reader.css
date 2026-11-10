@@ -170,6 +170,42 @@
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
+  align-items: center;
+}
+/* Live narration still generating: a small pulsing dot and, when there is room, the words. */
+.narration-preparing:empty {
+  display: none;
+}
+.narration-preparing > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 13px/1.2 var(--ui-font, system-ui, sans-serif);
+  color: var(--muted, currentColor);
+  white-space: nowrap;
+}
+.narration-preparing > span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent, #8a5a1f);
+  animation: narration-preparing 1.2s ease-in-out infinite;
+}
+@keyframes narration-preparing {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (max-width: 760px) {
+  .narration-preparing > span {
+    font-size: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .narration-preparing > span::before {
+    animation: none;
+  }
 }
 .reading-controls details {
   position: relative;

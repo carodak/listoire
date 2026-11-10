@@ -4,16 +4,18 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./test.ts";
 
 /** Orée narrates live (ai-live): answer the local narration server with a real MP3 and its digest. */
-async function serveNarration(page: Page) {
+async function serveNarration(page: Page, delays = { generateMs: 0, downloadMs: 0 }) {
   const mp3 = readFileSync(
     "public/stories/house/media/narration.3932985b744714925a9db05962b0de9e017eea335da2d00f184bb7cad461e8e4.mp3",
   );
   const sha = (data: Buffer | string) => createHash("sha256").update(data).digest("hex");
   const audioPath = `/api/narration/audio/${sha(mp3)}.mp3`;
-  await page.route("**/api/narration/audio/**", (route) =>
-    route.fulfill({ body: mp3, contentType: "audio/mpeg" }),
-  );
-  await page.route("**/api/narration", (route) => {
+  await page.route("**/api/narration/audio/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, delays.downloadMs));
+    await route.fulfill({ body: mp3, contentType: "audio/mpeg" }).catch(() => {});
+  });
+  await page.route("**/api/narration", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, delays.generateMs));
     const request = route.request().postDataJSON();
     const clip = {
       segmentId: request.segmentId,
@@ -27,7 +29,7 @@ async function serveNarration(page: Page) {
       marks: [],
       approval: { status: "preview", reviewer: "e2e", rightsReference: "test fixture" },
     };
-    return route.fulfill({ json: { clip, audioPath } });
+    await route.fulfill({ json: { clip, audioPath } }).catch(() => {});
   });
 }
 
@@ -141,3 +143,33 @@ for (const locale of ["en", "fr"])
     await voice.uncheck();
     expect((await recordings())[1]!.pauses).toBeGreaterThan(0);
   });
+
+test("live narration says it is preparing, then plays a clip that downloads slowly", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  // Generation takes 2 s; the clip then takes 7 s to download (the old limit was 5 s).
+  await serveNarration(page, { generateMs: 2000, downloadMs: 7000 });
+  await page.addInitScript(() => {
+    const started: string[] = [];
+    Object.assign(window, { narrationStarted: started });
+    const play = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      if (this.src.startsWith("blob:")) started.push(this.src);
+      return play.call(this);
+    };
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play an existing story" }).click();
+  const preparing = page.locator(".narration-preparing");
+  await expect(preparing).toHaveText("Preparing narration…");
+  await expect(preparing).toHaveAttribute("role", "status");
+  await expect(preparing).toHaveText("", { timeout: 5000 });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => (window as unknown as { narrationStarted: string[] }).narrationStarted),
+      { timeout: 15000 },
+    )
+    .toHaveLength(1);
+});

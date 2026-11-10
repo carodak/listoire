@@ -142,6 +142,9 @@ function ReadingTransport({ media, presentation, typewriter }: ReadingTransportP
   const { t } = useTranslation();
   return (
     <div className="reading-transport">
+      <span className="narration-preparing" role="status">
+        {media.preparing && <span title={t("narrationPreparing")}>{t("narrationPreparing")}</span>}
+      </span>
       {typewriter && !media.revealAll && !media.textComplete && (
         <button
           className="transport-button reader-icon-button"

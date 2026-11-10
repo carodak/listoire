@@ -9,6 +9,8 @@ interface NarrationOptions {
   deviceVoice: boolean;
   beforeSegment?: (id: string, signal: AbortSignal) => Promise<void>;
   settings?: () => { rate: number; voiceId: string };
+  /** True while a reached paragraph waits for its clip (live generation), false when it can play. */
+  onPreparing?: (preparing: boolean) => void;
 }
 
 export class NarrationManager {
@@ -84,16 +86,24 @@ export class NarrationManager {
       return pending;
     };
     const voice = () => options.settings?.().voiceId ?? "";
-    if (frame.segments[0]) void prepare(frame.segments[0], voice());
-    for (const [index, segment] of frame.segments.entries()) {
+    // Ask for the whole page now, in order and one at a time (the local generator makes one
+    // clip at a time), so later paragraphs are ready when the reader reaches them.
+    let queue: Promise<unknown> = Promise.resolve();
+    for (const segment of frame.segments) {
+      const voiceId = voice();
+      queue = queue.then(() => prepare(segment, voiceId));
+    }
+    for (const segment of frame.segments) {
       const voiceId = voice();
       const sources = prepare(segment, voiceId);
       await options.beforeSegment?.(segment.id, signal);
       if (signal.aborted) return "aborted";
+      // Only a wait the reader can notice is announced.
+      const notice = setTimeout(() => options.onPreparing?.(true), 400);
       const ready = await sources;
+      clearTimeout(notice);
+      options.onPreparing?.(false);
       if (signal.aborted) return "aborted";
-      const next = frame.segments[index + 1];
-      if (next) void prepare(next, voice());
       const result = await this.playSegment(segment, bundle, options, signal, onProgress, {
         voiceId,
         sources: ready,
