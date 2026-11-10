@@ -1571,3 +1571,142 @@ Mystery, then Bold and Large (they apply at once); the line under the toolbar sa
 sets and what you changed. Choose Shout: your changes go; Ctrl+Z brings them back. Click Center
 with the caret in a paragraph. Press Ctrl+B with the caret in a word. Type in the script: the
 preview follows after a short pause, without moving or replaying.
+
+### 2. Media → Image — design note (waiting for your OK)
+
+Screenshots: `review-screenshots/image-before/chemin-1…5.png` (Orée's 3-layer "chemin", one
+screen per scroll step), `matin-ville-1…4.png` (2 layers), `passage-1…4.png` (cinematic).
+
+**Current problems.** One long column, about five screens high, with the preview beside it.
+Twenty-odd controls are shown at the same level, and several duplicate each other:
+
+- The mode select ("Single Image / Layered Composition / Auto Compose (future)") decides whether
+  layers can be added. Switching back to Single silently deletes every layer. Auto Compose is a
+  disabled placeholder.
+- The base image's full description is printed under "Browse media library", repeating the alt
+  text.
+- Two different "positions": the selected layer's sliders, and "Size and positioning → Override
+  default position X/Y", which moves the whole figure on the page.
+- "Smart blend with text" sets four fields at once (auto-crop, blend, frame, wrap) that also have
+  their own controls.
+- The camera grid shows 16 identical thumbnails (the same image 16 times). Speed and duration both
+  set the length. Helper paragraphs repeat what the preview shows.
+- Adding a layer: "+ foreground" opens the library inside the dialog (below the fold), then search,
+  then "Use this media". Several scrolls, 3 clicks.
+- Form state goes through hidden JSON inputs and `FormData` (REVIEW §4). A boolean whose input
+  isn't rendered becomes `false` on Apply.
+- **REVIEW #3 is not fixed.** Deleting or cutting a `// @media` line deletes that image's whole
+  configuration and its cues; pasting the line back leaves a dead comment.
+
+**Step 1 — REVIEW #3 (before anything else), with tests.** An editor-session "cut buffer": when a
+reference line disappears, its block, cues and scene image are kept aside (keyed `scene/id`). When
+the same line comes back (paste, or typing it again), they are restored exactly. A deletion that
+is never pasted back stays a deletion: publishing is unchanged, and Undo/History still recover
+it. The status bar says "Image removed — paste the line back or press Ctrl+Z to restore it". No
+contract change. Limit: the buffer lasts until reload. Unit tests: cut → paste at the same place
+and in another passage (same block, cues, scene image; position follows the line); delete without
+paste; two images cut together.
+
+**Step 2 — proof that stored compositions render the same (test only, before changing the image
+editor).** A Playwright test opens each of Orée's six layered images (chemin, cours-air,
+bibliotheque, matin-ville, livraison, passage). It compares, against committed `toHaveScreenshot`
+baselines (chromium, reduced motion, fixed size):
+
+- the image in the editor's reader preview;
+- the image in the dialog's live preview;
+- a geometry fingerprint per layer (box, computed transform, image), saved as JSON next to them.
+
+The baselines are captured on today's code and the test must pass unchanged after every step. Like
+the rest of the e2e suite, it needs the local image library (REVIEW #1).
+
+**Step 3 — the new dialog.**
+
+```
+┌ Edit Image ── [ Inline | Wide | Right page | Background | Cinematic ] ────────── × ┐
+│ LAYERS (front to back)                       │ live preview — drag moves the     │
+│  ▣ Foreground   Thin grass fringe      ⧉  ×  │ selected layer                    │
+│  ▣ Middle       Arched stone doorway   ⧉  ×  │                                   │
+│  ▣ Background   Open field (base)            │                                   │
+│  Add: [+ Background] [+ Middle] [+ Foreground] │ ▷ Replay   ⊡ Safe margins       │
+│                                              │                                   │
+│ SELECTED · Middle · Arched stone doorway   [Change image]                        │
+│  Depth [Back|Middle|Front]  Scale ──●──  Rotate ──●──  ↺ Reset                   │
+│  ▸ Tilt & flip                (new: tilt forward/back, turn left/right, flip)    │
+│ ON THE PAGE   Frame [Landscape▾]  Blend [Paper edges▾]  Wrap [Full width▾]       │
+│ CAMERA        [Low diagonal pullback ▾]   ▸ Fine-tune (speed, intensity, …)      │
+│ TEXT          Alt text [………]   Caption [………]                                     │
+│ APPEARS       [When the page appears ▾]   Hide after [0] s (0 = stays)           │
+│ ▸ Examination (magnify, details, reverse side)            — closed unless used   │
+│ ▸ Advanced (width and offset on the page, smart auto-crop, start from a preset)  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ ☑ Same in all languages                                     Cancel   [Apply]     │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Layers are always there.** A single image is just the base with no other layer; adding one
+  turns on the camera presets (the existing rule). The list is drawn front to back like in image
+  editors. The stored order (base first) and the drawing order are unchanged.
+- **Fast adding:** "+ Background / + Middle / + Foreground" opens a picker over the preview. It
+  lists "In this story" first (reuse), then the library, with search; one click adds the image at
+  that depth and selects it, so 2 clicks in all. **⧉ Duplicate** reuses a layer's image in one
+  click (e.g. a second tree), keeping its depth and offset slightly shifted. The ×-remove and the
+  per-instance editing stay.
+- **Rotation on the other axes** (additive contract, ⚠ decision 1): optional `tiltX` (forward/back)
+  and `tiltY` (turn left/right), −75…75°, plus **Flip** (mirror). Mirror is a rotation around the
+  vertical axis, so flip and turn could share one field (`tiltY` up to 180°), or flip could be a
+  separate `flip: true`. Stored compositions have none of these and render as before; the reader
+  adds the 3D rotation only to tilted layers, so untouched layers keep exactly today's transform
+  (step 2 checks it). The preview's drag keeps moving x/y; tilt has sliders and arrow keys.
+- **Groups and progressive disclosure:** what you set on most images is visible (layers, selected
+  layer, page frame/blend/wrap, camera preset, alt text, caption, when it appears). Fine-tuning is
+  folded: tilt & flip, camera speed/intensity/direction/atmosphere/exact duration, examination
+  (folded unless already enabled, then its summary shows), and advanced.
+- **Typed state (REVIEW §4):** one `MediaEdit` draft in a reducer is the form state for Image and
+  Video (they share these fields). The hidden JSON inputs and `FormData` reading go from
+  `ImageComposition`, `CinematicFields`, `ExaminationFields`, `MediaLayout` and `ImageFields`.
+  Animation and the audio kinds, not rewritten, keep their `FormData` fields, read over the same
+  draft.
+- **Labels** are new UI text, so they go through i18n (en + fr) like the Text toolbar.
+
+**Removed or hidden controls, and why**
+
+| Control                                                             | Now                                          | Why                                                                                                                              |
+| ------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Illustration mode select (Single / Layered / Auto Compose (future)) | removed                                      | Implied by the number of layers; switching to Single silently deleted the layers; Auto Compose is a dead placeholder (REVIEW §4) |
+| Base image description under the picker                             | removed                                      | Repeats the alt text, which is still editable below                                                                              |
+| "Smart blend with text" button                                      | removed                                      | Sets four fields that keep their own controls and defaults (paper blend, frame by depth); confusing as a one-shot                |
+| Smart auto-crop checkbox                                            | Advanced                                     | Rarely changed; stored value kept                                                                                                |
+| Quick starters (5 hard-coded catalogue presets)                     | Advanced → "Start from a preset"             | Replace the whole composition; story-specific data in the UI (REVIEW §4); kept, not deleted                                      |
+| Camera thumbnail grid (16 identical images)                         | a select with the preset names               | The thumbnails were all the same; the preview shows the movement (Replay)                                                        |
+| Speed, intensity, direction, atmosphere, exact duration             | "Fine-tune" under the camera select          | Defaults come from the preset; "exact duration" overrides speed (said in its hint)                                               |
+| "Size and positioning": width %, override X/Y, alignment            | Advanced → "Width and offset on the page"    | Rarely used; its X/Y was easy to confuse with the layer position                                                                 |
+| "Hide automatically", persistence in ms                             | one "Hide after … s" field next to "Appears" | Seconds instead of ms (stored in ms as before)                                                                                   |
+| "Show crop / safe margins" checkbox                                 | a toggle button on the preview               | Belongs to the preview                                                                                                           |
+| Helper paragraphs (single-image and camera hints)                   | tooltips                                     | The preview already shows the result                                                                                             |
+| "Apply shared configuration to all languages"                       | "Same in all languages", in the footer       | Same setting, shorter, next to Apply                                                                                             |
+
+Nothing stored is removed: every field still loads, keeps its value and is editable (most in
+Advanced). Defaults are unchanged: inline, paper blend, frame by depth, camera None, shown when
+the page appears.
+
+**Tests:** the step 1 unit tests; the step 2 render baselines; unit tests for the tilt fields
+(old data parses unchanged); e2e: add a foreground layer in 2 clicks, duplicate, tilt and flip in
+the reader, a folded section's values survive Apply (the `FormData` boolean bug).
+`image-composition.spec.ts` uses the removed mode select, the "Character in forest" starter and
+the "gentle depth" grid button. **Its assertions stay the same** (number of planes, blend, wrap,
+backup round trip), reached through the new controls: changed selectors only.
+
+**⚠ Decisions for you**
+
+1. Tilt and flip: (a) `tiltX`, `tiltY` (−75…75°) and a separate `flip` (mirror); or (b) `tiltX`
+   and `tiltY` up to 180°, where Flip sets 180. **Recommended: (a)** (a mirrored image that you
+   then tilt reads naturally).
+2. Quick starters: keep them under Advanced (recommended), or remove them (they only work with
+   these catalogue IDs).
+3. The camera: a select with names (recommended), or a smaller text-only grid.
+4. Step 2 baselines: commit the `toHaveScreenshot` PNGs (about 12 small images) to the repo
+   (recommended; it's how the proof stays checkable), or keep them local and untracked.
+
+Planned commits once approved: (1) REVIEW #3 fix with tests; (2) render baselines (test only, on
+today's code); (3) tilt/flip contract and reader, with tests; (4) typed draft state (no visual
+change); (5) the new dialog layout and layer panel; (6) fast add and duplicate.
