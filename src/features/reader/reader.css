@@ -2789,8 +2789,10 @@
   pointer-events: auto;
   animation: reward-in 260ms ease-out;
 }
+/* Cards that do not fit stay hidden but keep counting: each lasts 10 s from its arrival. */
 .reward-card:nth-child(n + 5) {
-  display: none;
+  position: absolute;
+  visibility: hidden;
 }
 .reward-icon {
   display: grid;
@@ -2860,7 +2862,7 @@
   }
 }
 /* Narrower screens and mobile: one card at a time over the toolbar's title row, never over the
-   text; the next waits its turn (a hidden card's timer does not run). */
+   text; the others count down unseen, so the card shown is the oldest still current. */
 @media (max-width: 1339px) {
   .reward-notifications {
     top: 6px;
@@ -2869,7 +2871,8 @@
     width: min(340px, calc(100vw - 20px));
   }
   .reward-card:nth-child(n + 2) {
-    display: none;
+    position: absolute;
+    visibility: hidden;
   }
 }
 /* A page with art on the right is 1116px wide: its margin only fits a card from 1684px. */
@@ -2881,7 +2884,8 @@
     width: 340px;
   }
   .reader:has(.media-right) ~ .reward-notifications .reward-card:nth-child(n + 2) {
-    display: none;
+    position: absolute;
+    visibility: hidden;
   }
 }
 /* No motion: no entrance, no moving bar; the same 10 s still runs on an invisible change. */

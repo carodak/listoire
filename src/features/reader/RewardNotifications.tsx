@@ -37,7 +37,7 @@ export function useRewards(state: ReaderSnapshot, bundle: StoryBundle) {
   return { entries, dismiss };
 }
 
-/** Oldest first; CSS shows as many as fit, the others wait (their timer starts when shown). */
+/** Oldest first; CSS shows as many as fit. Every card lasts 10 s from its arrival. */
 export function RewardNotifications({
   entries,
   dismiss,
