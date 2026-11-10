@@ -82,3 +82,18 @@ it("uses shared zoom/pan effects, cancels handles and tolerates reduced motion",
   );
   expect(target.animate).toHaveBeenCalledTimes(1);
 });
+it("shakes clearly but briefly, whatever the authored duration", async () => {
+  const { cameraKeyframes } = await import("./effect-keyframes.ts");
+  const frames = cameraKeyframes(
+    { id: "screen-shake", duration: 2000, intensity: 0.12, target: "canvas" },
+    {} as HTMLElement,
+  );
+  const peak = Math.max(
+    ...frames.map((frame) =>
+      Math.abs(Number(/translate\((-?[\d.]+)px/.exec(String(frame.transform))![1])),
+    ),
+  );
+  expect(peak).toBeGreaterThanOrEqual(8); // was 1.7px at this intensity
+  expect(frames.at(-2)!.offset).toBeCloseTo(0.3); // still by 600 ms of 2 s
+  expect(frames.at(-1)).toMatchObject({ offset: 1, transform: frames[0]!.transform });
+});

@@ -19,8 +19,11 @@ export function cameraKeyframes(effect: NativeEffect, target: HTMLElement, depth
         { translate: `${effect.x}% ${effect.y}%` },
       ];
     case "screen-shake": {
-      const strength = effect.intensity ?? 0.5;
-      return [
+      // A short, clearly felt jolt: authored intensity 0–1 maps to 0.5–1.5, and the motion
+      // fits in the first 600 ms whatever the authored duration.
+      const strength = 0.5 + (effect.intensity ?? 0.5);
+      const span = Math.min(1, 600 / effect.duration);
+      const frames = [
         [0, 0, 0],
         [-14, 5, -0.35],
         [12, -4, 0.28],
@@ -29,9 +32,11 @@ export function cameraKeyframes(effect: NativeEffect, target: HTMLElement, depth
         [-4, 1, -0.08],
         [2, -0.5, 0.04],
         [0, 0, 0],
-      ].map(([x, y, roll]) => ({
+      ].map(([x, y, roll], index, all) => ({
+        offset: (index / (all.length - 1)) * span,
         transform: `translate(${x! * strength}px,${y! * strength}px) rotate(${roll! * strength}deg)`,
       }));
+      return span < 1 ? [...frames, { offset: 1, transform: frames[0]!.transform }] : frames;
     }
     default:
       return [];
