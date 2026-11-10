@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { GamePanel } from "./GamePanel.tsx";
+import { combatLines } from "./combat-log.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { GameStateSchema } from "../../contracts/game.ts";
 import type { ReaderController } from "../../contracts/story.ts";
@@ -52,9 +53,11 @@ it.each(endings)(
         createElement(GamePanel, { bundle, director, state }),
       ),
     );
-    expect(html).toContain(`data-outcome="${outcome}"`);
-    expect(html).toContain(`>${title}</p>`);
-    expect(html).toContain(line);
+    // Pass 7: the title and last lines appear in beats after the final roll (e2e
+    // "reader-request" endings); a static render shows the same single combat window.
+    expect(html).toContain("reader-combat-modal combat-ending");
+    expect(i18n.t(`combat.outcome.${outcome}`)).toBe(title);
+    expect(combatLines(game.lastResult!, i18n.t).join(" ")).toContain(line);
     // One window only: the separate story notice no longer opens, and no Continue without a failure.
     expect(html.match(/<dialog/g)).toHaveLength(1);
     expect(html).not.toContain("reader-modal-footer");

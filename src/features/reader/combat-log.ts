@@ -27,9 +27,23 @@ export function combatLines(
   ];
 }
 
+/** The enemy answers this long after your action shows, so each blow reads on its own. */
+const ENEMY_DELAY_MS = 1000;
+
+type Log = {
+  lines: string[];
+  enemyHits: number;
+  playerHits: number;
+  busy: boolean;
+  /** The results whose action, and whose answer, are on screen (HP bars follow them). */
+  acted?: Result;
+  answered?: Result;
+};
+
 /**
- * Appends each new turn once its dice have settled, so earlier turns stay readable.
- * `hits` counts landed blows, to replay the hit effect on the enemy.
+ * Appends each turn once its dice have settled, in two beats: your action (and the hit on the
+ * enemy), then a second later the enemy's answer (and the hit on you). `busy` is true between
+ * the two, so the next move waits. Hit counters change per landed blow to replay the effects.
  */
 export function useCombatLog(
   result: GameState["lastResult"],
@@ -37,15 +51,35 @@ export function useCombatLog(
   t: TFunction,
   itemName?: (id: string) => string,
 ) {
-  const [log, setLog] = useState<{ lines: string[]; hits: number }>({ lines: [], hits: 0 });
+  const [log, setLog] = useState<Log>({ lines: [], enemyHits: 0, playerHits: 0, busy: false });
   const logged = useRef<Result | undefined>(undefined);
+  const answer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(answer.current), []);
   useEffect(() => {
     if (!result || !ready || logged.current === result) return;
     logged.current = result;
+    const [action, ...reply] = combatLines(result, t, itemName);
+    const enemyHit = result.dealt ? 1 : 0;
     setLog((before) => ({
-      lines: [...before.lines, ...combatLines(result, t, itemName)],
-      hits: before.hits + (result.dealt ? 1 : 0),
+      ...before,
+      lines: [...before.lines, action!],
+      enemyHits: before.enemyHits + enemyHit,
+      busy: reply.length > 0,
+      acted: result,
+      answered: reply.length ? before.answered : result,
     }));
+    if (!reply.length) return;
+    answer.current = setTimeout(
+      () =>
+        setLog((before) => ({
+          ...before,
+          lines: [...before.lines, ...reply],
+          playerHits: before.playerHits + (result.received ? 1 : 0),
+          busy: false,
+          answered: result,
+        })),
+      ENEMY_DELAY_MS,
+    );
   }, [result, ready, t, itemName]);
   return log;
 }

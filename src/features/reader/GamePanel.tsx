@@ -7,9 +7,9 @@ import { ReaderModal } from "../../shared/ReaderModal.tsx";
 import { inventoryCategory } from "../character/inventory-category.ts";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { CombatControls } from "./CombatControls.tsx";
-import { DiceRoll } from "./DiceRoll.tsx";
+import type { CombatOutcome } from "./CombatControls.tsx";
+import { useReducedMotion } from "../../shared/use-reduced-motion.ts";
 import { useTranslation } from "react-i18next";
-import { combatLines } from "./combat-log.ts";
 
 interface GamePanelProps {
   bundle: StoryBundle;
@@ -34,17 +34,9 @@ export function GamePanel({
       {state.game.pendingCheck && (
         <CheckRoll bundle={bundle} director={director} state={active} presentation={presentation} />
       )}
-      {state.game.combat && combatReady && (
-        <CombatEncounter
-          bundle={bundle}
-          director={director}
-          state={state}
-          presentation={presentation}
-        />
-      )}
-      {ending && (
-        <CombatEnding
-          outcome={ending}
+      {((state.game.combat && combatReady) || ending) && (
+        <CombatWindow
+          ending={ending}
           bundle={bundle}
           director={director}
           state={state}
@@ -55,78 +47,64 @@ export function GamePanel({
     </>
   );
 }
-function CombatEncounter({
-  bundle,
-  director,
-  state,
-  presentation,
-}: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation">) {
-  useModalPause(presentation);
-  return (
-    <ReaderModal className="reader-combat-modal" title="Combat">
-      <CombatControls
-        bundle={bundle}
-        director={director}
-        state={state}
-        presentation={presentation}
-      />
-    </ReaderModal>
-  );
-}
 /** A finished encounter waits on its story event; the combat window announces how it ended. */
 function combatEnding(game: ReaderSnapshot["game"]) {
   return game?.pendingEvent ? game.lastResult?.outcome : undefined;
 }
-type CombatOutcome = NonNullable<ReturnType<typeof combatEnding>>;
 
-/** Time to read the outcome and the last turn before the story moves on. */
+/** Time to read the outcome between the portraits before the window fades out. */
 const ENDING_HOLD_MS = 2000;
+/** The window's fade-out (CSS `combat-closing`); none under reduced motion. */
+const CLOSING_MS = 450;
 
-function CombatEnding({
-  outcome,
+/**
+ * One window from the first turn to the end: the last roll and blows play as usual, then the
+ * defeated side fades, the outcome appears between the portraits, and the window fades out
+ * before the story continues. A failed save keeps the window with a Continue button.
+ */
+function CombatWindow({
+  ending,
   bundle,
   director,
   state,
   presentation,
 }: Pick<GamePanelProps, "bundle" | "director" | "state" | "presentation"> & {
-  outcome: CombatOutcome;
+  ending?: CombatOutcome;
 }) {
   useModalPause(presentation);
   const { t } = useTranslation();
-  const result = state.game!.lastResult!;
-  const [settled, setSettled] = useState(state.restored || !result.dice?.length);
-  const finishDice = useCallback(() => setSettled(true), []);
+  const reduced = useReducedMotion();
+  const [phase, setPhase] = useState<"fighting" | "ended" | "closing">("fighting");
+  const ended = useCallback(() => setPhase("ended"), []);
   const finish = useCallback(
     () => void director.finishEvent(state.occurrenceId!),
     [director, state.occurrenceId],
   );
   useEffect(() => {
-    if (!settled || state.failure) return;
-    const timer = setTimeout(finish, ENDING_HOLD_MS);
+    if (phase === "fighting" || state.failure) return;
+    if (phase === "ended") {
+      const timer = setTimeout(() => setPhase("closing"), ENDING_HOLD_MS);
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(finish, reduced ? 0 : CLOSING_MS);
     return () => clearTimeout(timer);
-  }, [settled, state.failure, finish]);
+  }, [phase, state.failure, reduced, finish]);
   return (
     <ReaderModal
-      className="reader-combat-modal combat-ending"
+      className={`reader-combat-modal${ending ? " combat-ending" : ""}${phase === "closing" ? " combat-closing" : ""}`}
       title={t("combat.title")}
       closeLabel={t("combat.continue")}
-      onDismiss={state.failure ? finish : undefined}
+      onDismiss={ending && state.failure ? finish : undefined}
     >
-      <p className="combat-ending-title" data-outcome={outcome} role="status">
-        {t(`combat.outcome.${outcome}`)}
-      </p>
-      <ol className="combat-feedback combat-log" aria-label={t("combat.log")}>
-        {combatLines(result, t).map((line, index) => (
-          <li key={index}>{line}</li>
-        ))}
-      </ol>
-      <DiceRoll
-        result={result}
-        french={bundle.locale.startsWith("fr")}
-        instant={state.restored}
-        onSettled={finishDice}
+      <CombatControls
+        bundle={bundle}
+        director={director}
+        state={state}
+        presentation={presentation}
+        ending={ending}
+        onEnded={ended}
       />
-      {state.failure && <p role="alert">{t("combat.saveFailed")}</p>}
+      {ending && state.failure && <p role="alert">{t("combat.saveFailed")}</p>}
     </ReaderModal>
   );
 }

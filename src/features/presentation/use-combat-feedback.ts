@@ -1,31 +1,21 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 import type { GameState } from "../../contracts/game.ts";
-import { EffectsEngine } from "./effects.ts";
 import { lightningElement } from "./lightning.ts";
 
 /** Feedback follows committed results; it never rolls dice or changes the game. */
 export function useCombatFeedback(
   target: RefObject<HTMLElement | null>,
-  health: number | undefined,
   result: GameState["lastResult"],
 ) {
-  const previous = useRef({ health, result });
+  const previous = useRef(result);
   useEffect(() => {
     const before = previous.current;
-    previous.current = { health, result };
+    previous.current = result;
     const canvas = target.current;
-    if (!canvas || result === before.result || !result?.dice?.length) return;
-    const scope = new AbortController();
-    const effects = new EffectsEngine();
+    if (!canvas || result === before || !result?.dice?.length) return;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (health !== undefined && before.health !== undefined && health < before.health)
-      effects.play(
-        { id: "screen-shake", duration: 2000, intensity: 0.16, target: "canvas" },
-        { canvas: canvas.querySelector<HTMLElement>(".combat-stage") ?? canvas },
-        scope.signal,
-        reduced,
-      );
+    // A blow received now shakes the reader's portrait in its own beat (Combatant).
     const board = canvas.closest("dialog") ?? canvas;
     const viewport = document.createElement("div");
     viewport.className = "reader-viewport-feedback";
@@ -37,11 +27,10 @@ export function useCombatFeedback(
     if (!reduced) board.append(viewport);
     const pulse = reduced ? undefined : playCombatPulse(viewport, result);
     return () => {
-      scope.abort();
       pulse?.cancel();
       viewport.remove();
     };
-  }, [target, health, result]);
+  }, [target, result]);
 }
 
 function playCombatPulse(viewport: HTMLElement, result: NonNullable<GameState["lastResult"]>) {
