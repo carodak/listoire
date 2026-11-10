@@ -137,7 +137,7 @@ it("bounds overlapping SFX and tolerates blocked or never-starting playback", as
   ).toBe("blocked");
   node.play.mockImplementation(() => new Promise(() => {}));
   const hung = manager.play({ url: "sfx", channel: "sfx", signal: new AbortController().signal });
-  await vi.advanceTimersByTimeAsync(4000);
+  await vi.advanceTimersByTimeAsync(15000); // no progress for 15 s (was a fixed 4 s start limit)
   expect(await hung).toBe("timeout");
   manager.dispose();
   vi.useRealTimers();
@@ -165,6 +165,62 @@ it("crossfades backgrounds and cleans up both the incoming and outgoing resource
   expect(nodes[1]!.volume).toBeCloseTo(0.3);
   scope.abort();
   expect(await incoming).toBe("aborted");
+  manager.dispose();
+  vi.useRealTimers();
+});
+it("waits for a slow start instead of giving up after a fixed delay (REVIEW #13)", async () => {
+  vi.useFakeTimers();
+  const node = new FakeAudio();
+  let started!: () => void;
+  node.play.mockImplementation(() => new Promise<void>((resolve) => (started = resolve)));
+  const manager = new AudioManager(() => node as unknown as HTMLAudioElement);
+  const settled = vi.fn();
+  void manager
+    .play({ url: "slow", channel: "narration", signal: new AbortController().signal })
+    .then(settled);
+  await vi.advanceTimersByTimeAsync(6000); // slow network: playback begins after 6 s
+  started();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(settled).not.toHaveBeenCalled();
+  expect(node.pause).not.toHaveBeenCalled();
+  node.dispatchEvent(new Event("ended"));
+  await vi.advanceTimersByTimeAsync(0);
+  expect(settled).toHaveBeenCalledWith("ended");
+  manager.dispose();
+  vi.useRealTimers();
+});
+it("never cuts a track that is still playing, however long it runs", async () => {
+  vi.useFakeTimers();
+  const node = new FakeAudio();
+  node.duration = 300;
+  const manager = new AudioManager(() => node as unknown as HTMLAudioElement);
+  const settled = vi.fn();
+  void manager
+    .play({ url: "long", channel: "music", signal: new AbortController().signal })
+    .then(settled);
+  // e.g. a slowed-down voice or a long music track: still advancing after 200 s.
+  for (let second = 1; second <= 200; second++) {
+    node.currentTime = second;
+    await vi.advanceTimersByTimeAsync(1000);
+  }
+  expect(settled).not.toHaveBeenCalled();
+  manager.dispose();
+  vi.useRealTimers();
+});
+it("still gives up on a track that makes no progress, but not while paused", async () => {
+  vi.useFakeTimers();
+  const node = new FakeAudio();
+  const manager = new AudioManager(() => node as unknown as HTMLAudioElement);
+  const settled = vi.fn();
+  void manager
+    .play({ url: "stalled", channel: "sfx", signal: new AbortController().signal })
+    .then(settled);
+  manager.pause();
+  await vi.advanceTimersByTimeAsync(60000);
+  expect(settled).not.toHaveBeenCalled();
+  manager.resume();
+  await vi.advanceTimersByTimeAsync(16000);
+  expect(settled).toHaveBeenCalledWith("timeout");
   manager.dispose();
   vi.useRealTimers();
 });

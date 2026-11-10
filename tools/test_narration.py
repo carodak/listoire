@@ -89,3 +89,50 @@ class NarrationTests(unittest.TestCase):
                 self.assertRaises(ValueError, narration.authorized_segment, changed)
                 self.assertRaises(StopIteration, narration.authorized_segment, {**request, "voiceId": "../../voice"})
                 self.assertRaises(ValueError, narration.authorized_segment, {**request, "path": "../../file"})
+
+
+class NarrationQueueTests(unittest.TestCase):
+    """The page-turn race: the previous page's clip is still generating."""
+
+    def test_a_new_request_waits_its_turn_and_an_abandoned_one_never_generates(self):
+        import http.client
+        import json
+        import threading
+        from http.server import ThreadingHTTPServer
+
+        release = threading.Event()
+        generated = []
+
+        class Generator:
+            def cached(self, segment, voice):
+                return None
+
+            def generate(self, segment, voice):
+                generated.append(segment["segmentId"])
+                if segment["segmentId"] == "old":
+                    release.wait(5)
+                return {"key": "0" * 64, "clip": {"segmentId": segment["segmentId"]}}
+
+        def post(port, segment_id):
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+            connection.request("POST", "/api/narration", json.dumps({"segmentId": segment_id}), {"Content-Type": "application/json"})
+            return connection
+
+        with patch.object(narration, "authorized_segment", lambda payload: ({"segmentId": payload["segmentId"]}, {})):
+            server = ThreadingHTTPServer(("127.0.0.1", 0), narration.make_handler(Generator()))
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            port = server.server_address[1]
+            try:
+                old = post(port, "old")
+                while not generated:
+                    pass
+                abandoned = post(port, "abandoned")
+                current = post(port, "current")
+                threading.Timer(1.2, abandoned.close).start()  # the reader turned the page
+                threading.Timer(2.5, release.set).start()  # longer than the old 2 s refusal
+                self.assertEqual(current.getresponse().status, 200)
+                self.assertEqual(old.getresponse().status, 200)
+                self.assertEqual(generated, ["old", "current"])
+            finally:
+                server.shutdown()
+                server.server_close()

@@ -11,7 +11,9 @@ export function validateCheckpoint(bundle: StoryBundle, raw: unknown) {
     save.mode !== bundle.mode ||
     save.locale !== bundle.locale ||
     save.release !== bundle.release ||
-    save.inkDigest !== bundle.inkDigest ||
+    // An earlier compatible version still has to restore exactly at its saved page (Ink check).
+    (save.inkDigest !== bundle.inkDigest &&
+      !bundle.compatibleInkDigests?.includes(save.inkDigest)) ||
     save.inkjsVersion !== bundle.inkjsVersion
   ) {
     throw new ReaderFailure("save-incompatible");

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import { RuntimeAssetSchema } from "../../contracts/presentation.ts";
 import type { MediaAsset } from "../../contracts/presentation.ts";
 import { storeUploadedMedia } from "../../persistence/media-store.ts";
@@ -20,7 +21,7 @@ export function VideoUpload({ onUpload }: { onUpload: (asset: MediaAsset) => voi
       setDraft({
         ...draft,
         busy: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: message(error),
       });
     }
   }

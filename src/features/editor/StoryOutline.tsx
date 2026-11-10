@@ -1,4 +1,5 @@
 import { sceneMediaEntries } from "./scene-media.ts";
+import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { outlineEntries } from "./ink-outline.ts";
@@ -15,6 +16,9 @@ interface StoryOutlineProps {
   onHover: (id: string | null) => void;
 }
 
+const outlineTabs = ["Files", "Story Outline", "Scene Media"] as const;
+type OutlineTab = (typeof outlineTabs)[number];
+
 export function StoryOutline({
   language,
   locale,
@@ -26,37 +30,51 @@ export function StoryOutline({
   onMedia,
   onHover,
 }: StoryOutlineProps) {
-  const [tab, setTab] = useState("Files");
+  const [tab, setTab] = useState<OutlineTab>("Files");
   return (
     <aside className="editor-outline" aria-label="Project navigation">
-      <div className="sidebar-tabs" role="tablist" aria-label="Project panels">
-        {["Files", "Story Outline", "Scene Media"].map((name) => (
+      <div
+        className="sidebar-tabs"
+        role="tablist"
+        aria-label="Project panels"
+        onKeyDown={arrowKeyTabs(outlineTabs, tab, setTab)}
+      >
+        {outlineTabs.map((name) => (
           <button
             key={name}
+            id={`outline-tab-${name.replaceAll(" ", "-")}`}
             title={`Show ${name.toLowerCase()}`}
             role="tab"
             aria-selected={tab === name}
+            aria-controls="outline-panel"
+            tabIndex={tab === name ? 0 : -1}
             onClick={() => setTab(name)}
           >
             {name}
           </button>
         ))}
       </div>
-      {tab === "Files" && (
-        <ProjectFiles locale={locale} locales={locales} onLocale={onLocale} onDialog={onDialog} />
-      )}
-      {tab === "Story Outline" && (
-        <ScriptOutline script={language.script} onNavigate={onNavigate} />
-      )}
-      {tab === "Scene Media" && (
-        <SceneMedia
-          language={language}
-          selectedScene={selectedScene}
-          onDialog={onDialog}
-          onMedia={onMedia}
-          onHover={onHover}
-        />
-      )}
+      <div
+        id="outline-panel"
+        role="tabpanel"
+        aria-labelledby={`outline-tab-${tab.replaceAll(" ", "-")}`}
+      >
+        {tab === "Files" && (
+          <ProjectFiles locale={locale} locales={locales} onLocale={onLocale} onDialog={onDialog} />
+        )}
+        {tab === "Story Outline" && (
+          <ScriptOutline script={language.script} onNavigate={onNavigate} />
+        )}
+        {tab === "Scene Media" && (
+          <SceneMedia
+            language={language}
+            selectedScene={selectedScene}
+            onDialog={onDialog}
+            onMedia={onMedia}
+            onHover={onHover}
+          />
+        )}
+      </div>
     </aside>
   );
 }

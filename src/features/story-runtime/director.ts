@@ -4,6 +4,7 @@ import {
   resolveGameAction,
   resolveGameTurn,
   beforeCheck,
+  reachedPage,
   checkOrigin,
   copyPlayer,
   playerDetails,
@@ -32,6 +33,8 @@ export class StoryDirector implements ReaderController {
   private readonly listeners = new Set<() => void>();
   private saved: SaveData | null = null;
   private readonly previousPages: SaveData[] = [];
+  /** The page as it was reached, before any fight, check or reward on it. */
+  private pageStart: SaveData | null = null;
   private disposed = false;
   private readonly initialState: string;
   private readonly createCharacter?: () => CharacterProfile;
@@ -171,9 +174,10 @@ export class StoryDirector implements ReaderController {
           await this.commitFrame(before, update, before.frame);
           return;
         }
+        const start = reachedPage(this.pageStart, before);
         this.engine.choose(choiceId);
         await this.commitFrame(before);
-        this.rememberPage(before);
+        this.rememberPage(start);
       },
       "forward",
       !actionId,
@@ -225,20 +229,15 @@ export class StoryDirector implements ReaderController {
     if (!pending || ("rolled" in pending && !pending.rolled)) return;
     await this.run(async () => {
       const before = this.saved!;
+      const start =
+        kind === "pendingCheck" ? beforeCheck(before) : reachedPage(this.pageStart, before);
       const update = copyPlayer(before);
       delete update.game[kind];
       this.engine.setGameFacts(gameFacts(update));
       this.engine.choose(pending.choiceId);
       delete update.game.lastResult;
       await this.commitFrame(before, update);
-      this.rememberPage(
-        kind === "pendingCheck"
-          ? beforeCheck(before)
-          : {
-              ...before,
-              game: { ...before.game!, pendingEvent: undefined, lastResult: undefined },
-            },
-      );
+      this.rememberPage(start);
     });
   }
   async restart(): Promise<void> {
@@ -302,6 +301,7 @@ export class StoryDirector implements ReaderController {
   }
   private activate(save: SaveData, restored: boolean, retained = false) {
     this.saved = save;
+    if (!retained) this.pageStart = save;
     const occurrenceId = retained ? this.snapshot.occurrenceId : `${save.runId}:${save.revision}`;
     const character = save.character ?? null;
     const game = save.game ?? null;

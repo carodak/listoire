@@ -202,8 +202,9 @@ export const defaultReadingPreferences: ReadingPreferences = {
   fontSize: "medium",
   fontFamily: "serif",
   lineHeight: "comfortable",
-  reveal: "progressive",
-  sound: false,
+  reveal: "instant",
+  // Entering a story is a user gesture (see unlockAudio), so its sound can start on.
+  sound: true,
 };
 
 export type MediaAsset = z.infer<typeof RuntimeAssetSchema>;

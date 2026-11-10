@@ -22,10 +22,14 @@ export class ScenePlayback {
   private readonly sceneAudio: SceneAudio;
   private readonly effects = new EffectsEngine();
   private readonly clock = new PresentationClock();
+  /** Image show/expiry timers: page layout, so skipping a cinematic must not drop them. */
+  private readonly layout = new PresentationClock();
   private readonly targets = new Map<string, EffectTargets>();
   private readonly pendingBlocks = new Map<string, number>();
   private readonly issued = new Set<string>();
   private readonly videos = new Set<HTMLVideoElement>();
+  /** In-flow media blocks that have scrolled into view on this page. */
+  private readonly entered = new Set<string>();
   private blocking = 0;
   constructor(context: PlaybackContext, audio: AudioManager) {
     this.context = context;
@@ -35,6 +39,7 @@ export class ScenePlayback {
   beginFrame() {
     this.issued.clear();
     this.pendingBlocks.clear();
+    this.entered.clear();
     this.blocking = 0;
   }
   configure(preferences: ReadingPreferences, wasEnabled: boolean | undefined) {
@@ -53,6 +58,7 @@ export class ScenePlayback {
     this.videos.forEach((video) => video.pause());
     this.effects.pause();
     this.clock.pause();
+    this.layout.pause();
     this.audio.pause();
     this.audio.setDucking(false);
     const voice = this.context.state.voice;
@@ -60,10 +66,16 @@ export class ScenePlayback {
   }
   resume() {
     for (const [id, target] of this.targets)
-      if (target.video && this.mediaVisible(id) && (!target.silentVideo || !this.reducedMotion()))
+      if (
+        target.video &&
+        this.mediaVisible(id) &&
+        !this.awaitsEntry(id) &&
+        (!target.silentVideo || !this.reducedMotion())
+      )
         void target.video.play().catch(() => {});
     this.effects.resume();
     this.clock.resume();
+    this.layout.resume();
     this.audio.resume();
     const voice = this.context.state.voice === "paused" ? "playing" : this.context.state.voice;
     this.audio.setDucking(voice === "playing");
@@ -73,6 +85,7 @@ export class ScenePlayback {
     this.sceneAudio.reset();
     this.audio.resume();
     this.clock.resume();
+    this.layout.resume();
   }
   dispose() {
     this.sceneAudio.dispose();
@@ -91,7 +104,9 @@ export class ScenePlayback {
         });
     }
     if (!this.context.restored || targets.silentVideo) this.queueTarget(blockId);
+    const observer = this.observeEntry(targets.canvas, blockId);
     return () => {
+      observer?.disconnect();
       targets.canvas.removeEventListener?.("load", loaded, true);
       if (targets.video) {
         targets.video.removeEventListener("loadeddata", loaded);
@@ -110,6 +125,32 @@ export class ScenePlayback {
   private mediaIds() {
     return this.blocks.filter((block) => block.kind === "media").map((block) => block.id);
   }
+  /** Instant text: an in-flow image starts its entrance, cues and duration once it scrolls into view. */
+  private awaitsEntry(id: string) {
+    const block = this.mediaBlock(id);
+    return (
+      block?.kind === "media" &&
+      block.layout !== "fullscreen" &&
+      block.layout !== "background" &&
+      this.context.state.revealAll &&
+      !this.context.restored &&
+      typeof IntersectionObserver !== "undefined" &&
+      !this.entered.has(id)
+    );
+  }
+  private observeEntry(element: HTMLElement, id: string) {
+    if (typeof IntersectionObserver === "undefined" || this.mediaBlock(id)?.kind !== "media")
+      return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect();
+      const waited = this.awaitsEntry(id);
+      this.entered.add(id);
+      if (waited) this.queueTarget(id);
+    });
+    observer.observe(element);
+    return observer;
+  }
   private mediaVisible(id: string) {
     const block = this.mediaBlock(id);
     return block?.kind === "media"
@@ -117,7 +158,7 @@ export class ScenePlayback {
       : !this.context.state.expiredMedia.includes(id);
   }
   private queueTarget(id: string) {
-    if (!this.mediaVisible(id)) return;
+    if (!this.mediaVisible(id) || this.awaitsEntry(id)) return;
     const target = this.targets.get(id);
     if (target && !this.imagesReady(target)) return;
     if (!this.context.restored) this.startPersistence(id);
@@ -171,7 +212,7 @@ export class ScenePlayback {
   showMedia(id: string, delay: number) {
     if (this.issued.has(`show:${id}`)) return;
     this.issued.add(`show:${id}`);
-    this.clock.schedule(() => {
+    this.layout.schedule(() => {
       this.context.publish({ visibleMedia: [...this.context.state.visibleMedia, id] });
       this.queueTarget(id);
     }, delay);
@@ -181,7 +222,7 @@ export class ScenePlayback {
     const block = this.mediaBlock(id);
     if (block?.kind !== "media" || !block.durationMs || block.layout === "fullscreen") return;
     this.issued.add(`expire:${id}`);
-    this.clock.schedule(() => {
+    this.layout.schedule(() => {
       this.targets.get(id)?.video?.pause();
       this.context.publish({ expiredMedia: [...this.context.state.expiredMedia, id] });
     }, block.durationMs);
@@ -205,6 +246,7 @@ export class ScenePlayback {
     return Boolean(
       target &&
       this.mediaVisible(id) &&
+      !this.awaitsEntry(id) &&
       this.imagesReady(target) &&
       (!target.video || target.video.readyState >= 2),
     );
@@ -336,6 +378,7 @@ export class ScenePlayback {
     this.context.generation++;
     this.context.scope.abort();
     this.clock.clear();
+    this.layout.clear();
     this.effects.stop();
     this.sceneAudio.cancelPage();
     this.targets.clear();

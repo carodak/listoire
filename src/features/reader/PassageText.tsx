@@ -61,7 +61,7 @@ export function PassageText(props: PassageTextProps) {
     ) : null;
   return (
     <div className="reader-scene" data-illustrated={layout.illustrated}>
-      <div className="reader-copy">
+      <div className="reader-copy" data-passage={frame.passageId}>
         {props.heading}
         <NarrativeBlocks
           blocks={reached}
@@ -159,7 +159,7 @@ function NarrativeParagraph({ presentation, segment, onClick }: NarrativeParagra
   }, [segment, presentation]);
   if (!segment) return null;
   return (
-    <p ref={node} onClick={onClick}>
+    <p ref={node} onClick={onClick} data-segment={segment.id}>
       <span className="sr-only">{segment.text}</span>
       <span aria-hidden="true">
         <TypographicText

@@ -1,4 +1,5 @@
 import { useAssetSource } from "../presentation/use-asset-source.ts";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
@@ -99,9 +100,7 @@ function LibraryFrame({
     <section className="embedded-media-library" aria-label="Media library">
       <header>
         <strong>Media library</strong>
-        <button type="button" onClick={onClose} aria-label="Close gallery">
-          Close gallery
-        </button>
+        <CloseButton label="Close gallery" onClick={onClose} />
       </header>
       {children}
     </section>

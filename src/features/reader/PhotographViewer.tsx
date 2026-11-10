@@ -1,4 +1,5 @@
 import { useAssetSource } from "../presentation/use-asset-source.ts";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { useState } from "react";
 import { Dialog } from "../../shared/Dialog.tsx";
@@ -38,9 +39,7 @@ function PhotographViewer({
     <Dialog className="photo-dialog" aria-labelledby="photo-title" onDismiss={onClose}>
       <div className="dialog-heading">
         <h2 id="photo-title">{examination.title}</h2>
-        <button aria-label={t("close")} title={t("close")} onClick={onClose}>
-          <span aria-hidden="true">✕</span>
-        </button>
+        <CloseButton title={t("close")} onClick={onClose} />
       </div>
       <div className="photo-window">
         {turned ? (

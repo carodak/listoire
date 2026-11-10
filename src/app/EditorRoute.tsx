@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import { CloseButton } from "../shared/CloseButton.tsx";
 import { download } from "../features/editor/downloads.ts";
 import { StoryEditor } from "../features/editor/StoryEditor.tsx";
 import type { StoryProject } from "../contracts/editor-project.ts";
@@ -7,7 +8,7 @@ import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
 import { SaveManager } from "../persistence/save-manager.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
-import { message } from "../features/editor/use-editor-project.ts";
+import { message } from "../contracts/error-message.ts";
 
 export default function EditorRoute() {
   return (
@@ -82,13 +83,11 @@ function PreviewHeader({
       >
         ⛶
       </button>
-      <button
+      <CloseButton
+        label="Close preview"
         title="Close preview; use Preview above to reopen it"
-        aria-label="Close preview"
         onClick={onClose}
-      >
-        ×
-      </button>
+      />
     </header>
   );
 }

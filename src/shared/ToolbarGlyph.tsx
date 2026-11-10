@@ -1,7 +1,6 @@
 /** Compact, consistent icons; buttons provide their own accessible labels. */
 import type { SVGProps } from "react";
 export type ToolbarGlyphName =
-  | "home"
   | "chevron"
   | "back"
   | "replay"
@@ -22,7 +21,6 @@ const common = {
   "aria-hidden": true as const,
 };
 const paths = {
-  home: <path d="m3 11 9-8 9 8v10h-6v-7H9v7H3z" />,
   chevron: <path d="m5 7.5 5 5 5-5" />,
   back: (
     <>

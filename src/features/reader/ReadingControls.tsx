@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { useTranslation } from "react-i18next";
@@ -49,7 +51,11 @@ export function ReadingControls({
         />
       </label>
       {navigation}
-      <ReadingTransport media={media} presentation={presentation} />
+      <ReadingTransport
+        media={media}
+        presentation={presentation}
+        typewriter={preferences.reveal === "progressive"}
+      />
       <button
         className="transport-button"
         aria-expanded={open}
@@ -99,19 +105,15 @@ function PreferencesPanel({
   }) {
   const { t } = useTranslation();
   return (
-    <aside
+    <ReaderSidebar
       id="reading-preferences-panel"
-      className="reader-sidebar reading-sidebar"
-      aria-label={t("readingPreferences")}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
+      className="reading-sidebar"
+      label={t("readingPreferences")}
+      onClose={onClose}
     >
       <header>
         <h2>{t("readingPreferences")}</h2>
-        <button onClick={onClose} aria-label={t("close")}>
-          ×
-        </button>
+        <CloseButton onClick={onClose} />
       </header>
       <div className="reading-popover">
         <PaperPalette
@@ -127,18 +129,32 @@ function PreferencesPanel({
         />
         <AudioVolumes preferences={preferences} onChange={onChange} />
       </div>
-    </aside>
+    </ReaderSidebar>
   );
 }
 interface ReadingTransportProps {
   media: ReturnType<PresentationSession["getSnapshot"]>;
   presentation: PresentationSession;
+  typewriter: boolean;
 }
 
-function ReadingTransport({ media, presentation }: ReadingTransportProps) {
+function ReadingTransport({ media, presentation, typewriter }: ReadingTransportProps) {
   const { t } = useTranslation();
   return (
     <div className="reading-transport">
+      <span className="narration-preparing" role="status">
+        {media.preparing && <span title={t("narrationPreparing")}>{t("narrationPreparing")}</span>}
+      </span>
+      {typewriter && !media.revealAll && !media.textComplete && (
+        <button
+          className="transport-button reader-icon-button"
+          aria-label={t("revealAll")}
+          title={t("revealAll")}
+          onClick={presentation.revealRemaining}
+        >
+          <ToolbarGlyph name="reveal" />
+        </button>
+      )}
       <button
         className="transport-button reader-icon-button"
         aria-label={t(media.paused ? "resume" : "pause")}

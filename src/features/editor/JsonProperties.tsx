@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { TextareaField } from "./Fields.tsx";
 
@@ -28,7 +29,7 @@ export function JsonProperties({
             onApply(JSON.parse(text));
             onClose();
           } catch (error) {
-            setError(error instanceof Error ? error.message : String(error));
+            setError(message(error));
           }
         }}
       >

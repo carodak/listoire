@@ -13,7 +13,6 @@ interface PlayOptions {
   rate?: number;
   onTime?: (seconds: number) => void;
   replace?: boolean;
-  maxMs?: number;
   gain?: number;
   fadeMs?: number;
 }
@@ -23,6 +22,8 @@ interface TrackHost {
   settle: (result: PlaybackResult) => void;
 }
 const clampRate = (rate: number) => Math.max(0.5, Math.min(2, rate));
+/** A playing track that makes no progress this long (stalled, never starts, no "ended") gives up. */
+const STALL_MS = 15000;
 
 export class AudioManager {
   private readonly tracks = new Set<PlayingTrack>();
@@ -231,8 +232,7 @@ class PlayingTrack {
   gain: number;
   paused: boolean;
   private settled = false;
-  private startTimer: ReturnType<typeof setTimeout> | undefined;
-  private deadline: ReturnType<typeof setTimeout> | undefined;
+  private watchdog: ReturnType<typeof setInterval> | undefined;
   private envelope: ReturnType<typeof setInterval> | undefined;
   private progressTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -262,8 +262,7 @@ class PlayingTrack {
 
   pause() {
     this.paused = true;
-    clearTimeout(this.startTimer);
-    clearTimeout(this.deadline);
+    clearInterval(this.watchdog);
     clearInterval(this.envelope);
     clearInterval(this.progressTimer);
     this.audio.pause();
@@ -286,18 +285,12 @@ class PlayingTrack {
 
   private attempt() {
     if (this.settled || this.host.isPaused()) return;
-    const { loop, maxMs = 120000, fadeMs, onTime } = this.options;
-    this.startTimer = setTimeout(() => this.finish("timeout"), 4000);
-    if (!loop)
-      this.deadline = setTimeout(
-        () => this.finish("timeout"),
-        Math.max(1000, Math.min(180000, maxMs)),
-      );
+    const { fadeMs, onTime } = this.options;
+    this.watch();
     if (fadeMs) this.envelope = setInterval(this.updateGain, 32);
     void this.audio
       .play()
       .then(() => {
-        clearTimeout(this.startTimer);
         if (this.settled || this.paused) this.audio.pause();
         else if (onTime) {
           clearInterval(this.progressTimer);
@@ -306,6 +299,21 @@ class PlayingTrack {
         }
       })
       .catch(() => this.finish("blocked"));
+  }
+
+  /**
+   * Media time, not wall time: a slow start, a slowed-down voice or a long track keep playing;
+   * only a track whose position stops moving for STALL_MS is given up.
+   */
+  private watch() {
+    clearInterval(this.watchdog);
+    let position = this.audio.currentTime;
+    let idle = 0;
+    this.watchdog = setInterval(() => {
+      idle = this.audio.currentTime === position ? idle + 1000 : 0;
+      position = this.audio.currentTime;
+      if (idle >= STALL_MS) this.finish("timeout");
+    }, 1000);
   }
 
   private readonly updateGain = () => {

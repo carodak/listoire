@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { arrowKeyTabs } from "../../shared/tab-keys.ts";
+import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
+import { PictureIcon } from "../../shared/PictureIcon.tsx";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { CharacterProfile, AttributeDetails } from "../../contracts/character.ts";
@@ -26,6 +30,8 @@ interface Props {
   attributeDetails?: AttributeDetails | null;
   inventoryControls?: ReactNode;
   notes?: ReaderNotesPort;
+  /** Resolved by the reader (published file or uploaded media). */
+  portraitSource?: string;
   open: boolean;
   onToggle: () => void;
 }
@@ -44,32 +50,18 @@ export function CharacterPanel(props: Props) {
         title={t("myCharacter")}
         onClick={props.onToggle}
       >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="7" r="3.5" />
-          <path d="M5 21v-2a7 7 0 0 1 14 0v2M8 21h8" />
-        </svg>
+        <PictureIcon name="character" />
         <span>{t("myCharacter")}</span>
       </button>
       {props.open && (
-        <aside
+        <ReaderSidebar
           id="character-content"
-          className="reader-sidebar character-sidebar"
-          aria-label={t("myCharacter")}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && event.target === event.currentTarget) props.onToggle();
-          }}
+          className="character-sidebar"
+          label={t("myCharacter")}
+          onClose={props.onToggle}
         >
           <CharacterSheet {...props} onClose={props.onToggle} />
-        </aside>
+        </ReaderSidebar>
       )}
     </div>
   );
@@ -84,6 +76,7 @@ function CharacterSheet({
   attributeDetails,
   inventoryControls,
   notes,
+  portraitSource,
   onClose,
   combat = false,
 }: SheetProps) {
@@ -96,14 +89,15 @@ function CharacterSheet({
     <div className={`character-sheet${combat ? " character-sheet-combat" : ""}`}>
       <header className="character-sheet-heading">
         <h2>{t("myCharacter")}</h2>
-        {onClose && (
-          <button className="character-close" onClick={onClose} aria-label={t("close")}>
-            ×
-          </button>
-        )}
+        {onClose && <CloseButton className="character-close" onClick={onClose} />}
       </header>
       <CharacterIdentity bundle={bundle} xp={combat ? undefined : (game?.xp ?? 0)} />
-      <CharacterPortrait bundle={bundle} health={profile.health.current} combat={combat} />
+      <CharacterPortrait
+        bundle={bundle}
+        source={portraitSource}
+        health={profile.health.current}
+        combat={combat}
+      />
       <CharacterStats profile={profile} details={attributeDetails} showHealth={!combat} />
       {!combat && (
         <nav className="character-actions" aria-label={t("myCharacter")}>
@@ -322,6 +316,7 @@ function InventoryContents({
   );
 }
 
+const inventoryTabs: readonly InventoryTab[] = ["equipment", "consumables", "objects"];
 function InventoryTabs({
   label,
   locale,
@@ -338,17 +333,9 @@ function InventoryTabs({
       className="inventory-tabs"
       role="tablist"
       aria-label={label}
-      onKeyDown={(event) => {
-        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-        event.preventDefault();
-        const tabs: InventoryTab[] = ["equipment", "consumables", "objects"];
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        const next = (tabs.indexOf(tab) + direction + tabs.length) % tabs.length;
-        onTab(tabs[next]!);
-        event.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
-      }}
+      onKeyDown={arrowKeyTabs(inventoryTabs, tab, onTab)}
     >
-      {(["equipment", "consumables", "objects"] as const).map((kind) => (
+      {inventoryTabs.map((kind) => (
         <button
           key={kind}
           type="button"
@@ -369,10 +356,12 @@ function InventoryTabs({
 
 function CharacterPortrait({
   bundle,
+  source,
   health,
   combat,
 }: {
   bundle: StoryBundle;
+  source?: string;
   health: number;
   combat: boolean;
 }) {
@@ -398,12 +387,8 @@ function CharacterPortrait({
   const portrait = bundle.assets?.find((asset) => asset.id === bundle.character?.portrait);
   return (
     <div className={`character-portrait-area${damage ? " character-hit" : ""}`}>
-      {portrait && (
-        <img
-          className="character-portrait"
-          src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${portrait.path}`}
-          alt={portrait.alt}
-        />
+      {portrait && source && (
+        <img className="character-portrait themed-art" src={source} alt={portrait.alt} />
       )}
       {damage && (
         <strong key={damage.key} className="character-damage" aria-live="assertive">

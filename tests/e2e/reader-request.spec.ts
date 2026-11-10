@@ -22,6 +22,17 @@ async function enter(page: Page, french = false, skipIntro = true) {
   if (skipIntro) for (let index = 0; index < 3; index++) await next(page);
 }
 
+/** Fixed character rolls (all 6) and dice seed, so a fight always ends the same way. */
+async function fixDice(page: Page, seed: number) {
+  await page.addInitScript((seed) => {
+    crypto.getRandomValues = <T extends ArrayBufferView | null>(values: T) => {
+      if (values instanceof Uint8Array) values.fill(251);
+      if (values instanceof Uint32Array) values.fill(seed);
+      return values;
+    };
+  }, seed);
+}
+
 async function dismissNotice(page: Page) {
   const check = page.locator(".check-roll-modal");
   if (await check.count()) {
@@ -105,14 +116,32 @@ test("places Examine directly under its image and retains zoom and details witho
   await expect(examine).toBeFocused();
 });
 
+/** Pass 7: the healing is a story page, and the HP it gave is a notification (French). */
+async function careOfYsee(page: Page) {
+  if ((await page.locator(".reader-copy").getAttribute("data-passage")) !== "soins") return false;
+  await expect(page.locator(".reader-copy h1")).toHaveText("Les soins d’Ysée");
+  const care = page.locator(".reward-card").filter({ hasText: "PV récupérés" }).last();
+  await expect(care).toBeAttached();
+  // Shown or waiting behind another card, it still counts down its own 10 s.
+  expect(
+    await care
+      .locator(".reward-timer")
+      .evaluate((bar) => bar.getAnimations()[0]?.playState ?? "none"),
+  ).toBe("running");
+  return true;
+}
+
 test("completes the French magic chapter with two combats and visible saved dice", async ({
   page,
 }, info) => {
   test.setTimeout(90000);
+  await fixDice(page, 1); // this seed wins both duels
   await enter(page, true);
   let encounters = 0;
   let rolls = 0;
-  for (let step = 0; step < 42; step++) {
+  let victories = 0;
+  let cared = false;
+  for (let step = 0; step < 46; step++) {
     const combat = page.locator(".reader-combat-modal");
     if (await combat.count()) {
       encounters++;
@@ -147,23 +176,201 @@ test("completes the French magic chapter with two combats and visible saved dice
         await expect(
           combat.getByRole("button", { name: "Utiliser un objet", exact: true }),
         ).toBeDisabled();
+        await expect(combat.locator(".combat-log li").first()).toContainText(
+          "Vous utilisez Baume de soin",
+        );
       }
       for (let turn = 0; (await combat.count()) && turn < 30; turn++) {
+        if (await combat.locator(".combat-ending-title").count()) break;
         await combat.getByRole("button", { name: "Attaque simple", exact: true }).click();
         await expect(page.locator(".reader")).toHaveAttribute("aria-busy", "false");
         await expect(page.locator(".dice-roll")).toBeVisible();
         await expect(page.locator(".dice-result small").first()).toHaveText("d6");
+        const log = combat.locator(".combat-log li");
+        await expect(log.last()).toBeVisible();
+        if (await page.locator(".combat-ending-title").count()) {
+          // A won fight announces itself in the combat window, then continues on its own.
+          await expect(page.locator(".combat-ending-title")).toHaveText("Victoire !");
+          await expect(log.last()).toContainText("Vous attaquez…");
+          victories++;
+        } else {
+          // Chronological: your attack, then the enemy's, as the newest entries.
+          await expect(log.last()).toContainText("L’adversaire attaque…");
+          await expect(log.nth((await log.count()) - 2)).toContainText("Vous attaquez…");
+        }
+        await expect(combat.locator(".combatant-hit")).toHaveCount(0); // reduced motion
         rolls++;
       }
+      await expect(page.locator(".combat-ending")).toHaveCount(0, { timeout: 15000 });
     }
     await dismissNotice(page);
+    cared ||= await careOfYsee(page);
     if (await page.locator(".ending").count()) break;
     await next(page);
   }
   await expect(page.locator(".ending")).toBeVisible();
+  expect(cared).toBe(true);
   expect(encounters).toBe(2);
+  expect(victories).toBe(2);
   expect(rolls).toBeGreaterThanOrEqual(2);
   await expect(page.locator(".reader-copy h1")).toHaveText("Laisser une lumière");
+});
+
+for (const { title, seed, move, line } of [
+  { title: "Defeated", seed: 3, move: "Basic attack", line: "damage received." }, // seed 3 loses
+  { title: "Escaped", seed: 1, move: "Flee", line: "You escape!" },
+]) {
+  test(`announces "${title}" in the combat window, then continues on its own`, async ({ page }) => {
+    test.setTimeout(90000);
+    await fixDice(page, seed);
+    await enter(page);
+    const combat = page.locator(".reader-combat-modal");
+    for (let step = 0; step < 42 && !(await combat.count()); step++) {
+      await dismissNotice(page);
+      await next(page);
+    }
+    // Pass 7: each turn plays in beats and the last one hides the actions before the outcome.
+    const outcome = combat.locator(".combat-ending-title");
+    const button = combat.getByRole("button", { name: move, exact: true });
+    for (let turn = 0; turn < 30; turn++) {
+      await expect
+        .poll(
+          async () =>
+            (await outcome.count()) > 0 ||
+            ((await button.count()) > 0 && (await button.isEnabled())),
+          {
+            timeout: 15000,
+          },
+        )
+        .toBe(true);
+      if (await outcome.count()) break;
+      await button.click();
+    }
+    const ending = page.locator(".combat-ending");
+    await expect(ending.locator(".combat-ending-title")).toHaveText(title);
+    await expect(ending.locator(".combat-log li").last()).toContainText(line);
+    await expect(ending.getByRole("button", { name: "Continue reading" })).toHaveCount(0);
+    await expect(ending).toHaveCount(0, { timeout: 15000 });
+    await expect(page.locator(".reader-modal")).toHaveCount(0);
+  });
+}
+
+async function reachCombat(page: Page) {
+  const combat = page.locator(".reader-combat-modal");
+  for (let step = 0; step < 42 && !(await combat.count()); step++) {
+    await dismissNotice(page);
+    await next(page);
+  }
+  await expect(combat).toBeVisible();
+  return combat;
+}
+
+test("combat: info opens from the keyboard, items open in a popup inside the window", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await fixDice(page, 1); // wins the duel: 8 damage dealt, 2 received on the first turn
+  await enter(page);
+  const combat = await reachCombat(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  // "i" opens on click and from the keyboard (shared Info, native details).
+  const info = combat.locator(".combat-actions .reader-info").first();
+  await info.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(info).toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await expect(info).not.toHaveAttribute("open", "");
+  // Items open in a popup inside the combat window; Escape returns to the actions.
+  const items = combat.getByRole("button", { name: "Use an item", exact: true });
+  await items.click();
+  const popup = combat.getByRole("dialog", { name: "Use an item" });
+  await expect(popup).toBeVisible();
+  const inside = (await popup.boundingBox())!;
+  const window = (await combat.boundingBox())!;
+  expect(inside.x).toBeGreaterThanOrEqual(window.x);
+  expect(inside.x + inside.width).toBeLessThanOrEqual(window.x + window.width);
+  await page.keyboard.press("Escape");
+  await expect(popup).toHaveCount(0);
+  await expect(combat).toBeVisible();
+  await expect(items).toBeFocused();
+});
+
+test("combat: two beats per turn, then the outcome between the portraits and a fade-out", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await fixDice(page, 1); // wins the duel: 8 damage dealt, 2 received on the first turn
+  await enter(page);
+  const combat = await reachCombat(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    new MutationObserver(() => {
+      if (document.querySelector(".reader-combat-modal.combat-closing"))
+        Object.assign(window, { fadedOut: true });
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
+  });
+  // Your blow, then a second later the enemy's, each with its hit and its log line.
+  await combat.getByRole("button", { name: "Basic attack", exact: true }).click();
+  const log = combat.locator(".combat-log li");
+  await expect(log).toHaveCount(1);
+  const acted = Date.now();
+  await expect(log.first()).toContainText("damage dealt");
+  await expect(combat.locator('[data-side="enemy"] .combatant-hit')).toBeAttached();
+  await expect(combat.locator('[data-side="player"] .combatant-hit')).toHaveCount(0);
+  await expect(combat.getByRole("button", { name: "Basic attack", exact: true })).toBeDisabled();
+  await expect(log).toHaveCount(2);
+  expect(Date.now() - acted).toBeGreaterThan(700);
+  await expect(log.last()).toContainText("damage received");
+  await expect(combat.locator('[data-side="player"] .combatant-hit')).toBeAttached();
+  // The log keeps its height and shows the newest line.
+  const height = await combat.locator(".combat-log").evaluate((list) => list.clientHeight);
+  for (let turn = 0; turn < 30 && !(await combat.locator(".combat-ending-title").count()); turn++) {
+    const attack = combat.getByRole("button", { name: "Basic attack", exact: true });
+    if (await attack.isEnabled({ timeout: 500 }).catch(() => false)) await attack.click();
+    else await page.waitForTimeout(200);
+  }
+  expect(await combat.locator(".combat-log").evaluate((list) => list.clientHeight)).toBe(height);
+  // The outcome stands between the portraits; the defeated side fades; then the window closes.
+  const title = combat.locator(".combat-ending-title");
+  await expect(title).toHaveText("Victory!");
+  const [enemy, player, middle] = await Promise.all(
+    [
+      '[data-side="enemy"] .combatant-portrait',
+      '[data-side="player"] .combatant-portrait',
+      ".combat-ending-title",
+    ].map(async (selector) => (await combat.locator(selector).boundingBox())!),
+  );
+  expect(middle.x).toBeGreaterThanOrEqual(enemy!.x + enemy!.width - 1);
+  expect(middle.x + middle.width).toBeLessThanOrEqual(player!.x + 1);
+  await expect(combat.locator('[data-side="enemy"][data-defeated]')).toBeAttached();
+  await expect(combat.locator(".combat-log li").last()).toBeInViewport();
+  await expect(combat).toHaveCount(0, { timeout: 5000 });
+  expect(await page.evaluate(() => "fadedOut" in window)).toBe(true);
+  await expect(page.locator(".reader-copy h1")).not.toHaveText("");
+});
+
+test("reduced motion keeps every combat step and the ending, without animation", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  await fixDice(page, 1);
+  await enter(page);
+  const combat = await reachCombat(page);
+  await combat.getByRole("button", { name: "Basic attack", exact: true }).click();
+  await expect(combat.locator(".combat-log li")).toHaveCount(2);
+  await expect(combat.locator(".combatant-hit")).toHaveCount(0);
+  for (let turn = 0; turn < 30 && !(await combat.locator(".combat-ending-title").count()); turn++) {
+    const attack = combat.getByRole("button", { name: "Basic attack", exact: true });
+    if (await attack.isEnabled({ timeout: 500 }).catch(() => false)) await attack.click();
+    else await page.waitForTimeout(200);
+  }
+  await expect(combat.locator(".combat-ending-title")).toHaveText("Victory!");
+  await expect(combat.locator('[data-side="enemy"] .combatant-portrait')).toHaveCSS(
+    "opacity",
+    "0.08",
+  );
+  expect(await combat.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0);
+  await expect(combat).toHaveCount(0, { timeout: 6000 });
 });
 
 test("dissolves words upward while keeping the page color fixed", async ({ page }) => {
@@ -252,7 +459,7 @@ test("keeps a check on its page until its dice settle and the reader confirms", 
   await expect(page.locator(".choices button").first()).toBeEnabled();
 });
 
-test("uses the whole viewport below the menu for board effects", async ({ page }) => {
+test("board effects light the whole viewport, menu included", async ({ page }) => {
   await page.route("**/stories/house/en.json", async (route) => {
     const response = await route.fetch();
     const bundle = await response.json();
@@ -275,12 +482,15 @@ test("uses the whole viewport below the menu for board effects", async ({ page }
   const effect = page.locator(".reader-viewport-effect");
   await expect(effect).toBeAttached();
   const bounds = (await effect.boundingBox())!;
-  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
   const viewport = page.viewportSize()!;
   expect(bounds.x).toBeCloseTo(0, 0);
   expect(bounds.width).toBeCloseTo(viewport.width, 0);
-  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
-  expect(bounds.height).toBeCloseTo(viewport.height - bounds.y, 0);
+  expect(bounds.y).toBeCloseTo(0, 0);
+  expect(bounds.height).toBeCloseTo(viewport.height, 0);
+  // Painted above the sticky menu, and never in the way of its buttons.
+  await expect(effect).toHaveCSS("pointer-events", "none");
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await expect(page.locator(".reading-sidebar")).toBeVisible();
 });
 
 test("shows a cropped illustration once at its final size and removes the lower fade before Examine", async ({
@@ -381,10 +591,9 @@ test("waits for Fight even after restoring an encounter and animates the combat 
   await expect(feedback).toBeAttached();
   await expect(combat).toHaveCSS("transform", "none");
   const bounds = (await feedback.boundingBox())!;
-  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
   expect(bounds.width).toBeCloseTo(page.viewportSize()!.width, 0);
   expect(bounds.x).toBeCloseTo(0, 0);
-  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
+  expect(bounds.y).toBeCloseTo(0, 0); // the whole view, menu included
   await expect(combat.getByRole("button", { name: "Basic attack", exact: true })).toBeEnabled();
   await combat.getByRole("button", { name: "Use an ability", exact: true }).click();
   await combat.locator(".combat-ability-menu button").first().click();
@@ -409,7 +618,7 @@ test("spends three pages in the ordinary world with relevant layered art before 
   await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
 });
 
-test("shows the item before departure, fades the illustration and dissolves the heading before the next page fades in", async ({
+test("shows the item as a notification, fades the illustration and dissolves the heading before the next page fades in", async ({
   page,
 }) => {
   await enter(page);
@@ -419,11 +628,9 @@ test("shows the item before departure, fades the illustration and dissolves the 
   await page.locator(".reading-sidebar header button").click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(".choices button").first().click();
-  const notice = page.locator(".reader-modal");
-  await expect(notice).toBeVisible();
-  await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
-  await expect(page.locator(".page-word-departure")).toHaveCount(0);
-  await notice.locator(".reader-modal-footer button").click();
+  // Pass 7: no window to close; the reward is a notification and the page turns on its own.
+  await expect(page.locator(".reward-card")).toContainText("The letter from Orée");
+  await expect(page.locator(".reader-modal")).toHaveCount(0);
   await expect(page.locator('[data-departure-heading="true"]').first()).toBeAttached();
   const timing = await page.evaluate(() =>
     document
@@ -682,6 +889,31 @@ test("plays instant-text illustrations from the beginning and keeps them running
       ),
     )
     .toBe(times.length);
+});
+
+test("starts an instant-text illustration below the fold only when it scrolls into view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 340 });
+  await enter(page, false, false);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  const planes = () =>
+    page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.effect instanceof KeyframeEffect &&
+              animation.effect.target instanceof Element &&
+              animation.effect.target.classList.contains("multiplane-plane"),
+          ).length,
+    );
+  await page.waitForTimeout(1500);
+  expect(await planes()).toBe(0);
+  await page.locator(".narrative-media").first().scrollIntoViewIfNeeded();
+  await expect.poll(planes).toBeGreaterThan(0);
 });
 
 test("plays an ordered fullscreen illustration even when the text display is instant", async ({

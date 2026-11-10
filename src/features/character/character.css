@@ -227,7 +227,6 @@
   object-fit: contain;
   display: block;
   margin: 4px auto 8px;
-  mix-blend-mode: var(--illustration-mix, multiply);
 }
 .character-stats {
   display: grid;

@@ -10,6 +10,8 @@ export interface PresentationState {
   paused: boolean;
   blocking: boolean;
   voice: "off" | "playing" | "paused" | "ended" | "unavailable";
+  /** A reached paragraph is still being generated (live narration). */
+  preparing: boolean;
   progress: Record<string, number>;
   synchronized: boolean;
   revealAll: boolean;
@@ -38,6 +40,7 @@ export class PlaybackContext {
     paused: false,
     blocking: false,
     voice: "off",
+    preparing: false,
     progress: {},
     synchronized: false,
     revealAll: false,
@@ -68,6 +71,7 @@ export class PlaybackContext {
       textComplete: restored || this.preferences.reveal === "instant" || reducedMotion,
       blocking: false,
       voice: "off",
+      preparing: false,
       progress: {},
       synchronized: false,
       previousImage:

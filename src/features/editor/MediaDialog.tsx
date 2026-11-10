@@ -1,4 +1,5 @@
 import { illustrationDefaults } from "../../contracts/illustration.ts";
+import { message } from "../../contracts/error-message.ts";
 import { MediaPicker } from "./MediaLibrary.tsx";
 import { VideoUpload } from "./VideoUpload.tsx";
 import { CinematicFields } from "./CinematicFields.tsx";
@@ -71,7 +72,7 @@ export function MediaDialog(props: MediaDialogProps) {
       onApply(next, `// @media ${form.sceneId}/${id}\n`);
       onClose();
     } catch (error) {
-      patch({ error: error instanceof Error ? error.message : String(error) });
+      patch({ error: message(error) });
     }
   }
   const fields: FormProps = { ...props, form, initial, context, patch, previewTarget };

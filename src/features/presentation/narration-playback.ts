@@ -47,6 +47,7 @@ export class NarrationPlayback {
   stop() {
     this.voiceRequest++;
     this.narration.stop();
+    if (this.context.state.preparing) this.context.publish({ preparing: false });
   }
   segmentRevealed = (id: string) => {
     this.context.revealedSegments.add(id);
@@ -96,6 +97,10 @@ export class NarrationPlayback {
           rate: this.context.preferences.narrationRate ?? 1,
           deviceVoice: this.context.preferences.deviceVoice ?? true,
           beforeSegment: this.waitForSegment,
+          onPreparing: (preparing) => {
+            if (current() && this.context.state.preparing !== preparing)
+              this.context.publish({ preparing });
+          },
           settings: () => ({
             rate: this.context.preferences.narrationRate ?? 1,
             voiceId:
@@ -141,6 +146,7 @@ export class NarrationPlayback {
   private finish(result: PlaybackResult) {
     this.context.publish({
       voice: result === "ended" ? "ended" : "unavailable",
+      preparing: false,
       ...(result !== "ended" ? { synchronized: false } : {}),
     });
     if (result !== "ended") {

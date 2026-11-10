@@ -1,4 +1,5 @@
 import snippets from "./vendor/snippets.json";
+import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { commandHelp } from "./tooltips.ts";
 import type { ReactNode } from "react";
 
@@ -217,6 +218,47 @@ interface RibbonProps {
   onInsert: (script: string) => void;
 }
 
+function RibbonTabs({
+  tab,
+  gameMode,
+  collapsed,
+  onTab,
+  onCollapse,
+}: Pick<RibbonProps, "tab" | "gameMode" | "collapsed" | "onTab" | "onCollapse">) {
+  const tabs = (Object.keys(groups) as RibbonTab[]).filter(
+    (t) => t !== "Game" || gameMode !== "narrative",
+  );
+  return (
+    <div
+      className="ribbon-tabs"
+      role="tablist"
+      aria-label="Ribbon categories"
+      onKeyDown={arrowKeyTabs(tabs, tab, onTab)}
+    >
+      {tabs.map((t) => (
+        <button
+          key={t}
+          id={`ribbon-tab-${t}`}
+          role="tab"
+          aria-selected={tab === t}
+          aria-controls="ribbon-commands"
+          tabIndex={tab === t ? 0 : -1}
+          onClick={() => onTab(t)}
+        >
+          {t}
+        </button>
+      ))}
+      <button
+        className="ribbon-collapse"
+        aria-label={collapsed ? "Expand ribbon" : "Minimize ribbon"}
+        onClick={onCollapse}
+      >
+        {collapsed ? "⌄" : "⌃"}
+      </button>
+    </div>
+  );
+}
+
 export function Ribbon({
   textTools,
   tab,
@@ -229,34 +271,19 @@ export function Ribbon({
 }: RibbonProps) {
   return (
     <div className="editor-ribbon">
-      <div className="ribbon-tabs" role="tablist" aria-label="Ribbon categories">
-        {(Object.keys(groups) as RibbonTab[])
-          .filter((t) => t !== "Game" || gameMode !== "narrative")
-          .map((t) => (
-            <button
-              key={t}
-              role="tab"
-              aria-selected={tab === t}
-              aria-controls="ribbon-commands"
-              onClick={() => onTab(t)}
-            >
-              {t}
-            </button>
-          ))}
-        <button
-          className="ribbon-collapse"
-          aria-label={collapsed ? "Expand ribbon" : "Minimize ribbon"}
-          onClick={onCollapse}
-        >
-          {collapsed ? "⌄" : "⌃"}
-        </button>
-      </div>
+      <RibbonTabs
+        tab={tab}
+        gameMode={gameMode}
+        collapsed={collapsed}
+        onTab={onTab}
+        onCollapse={onCollapse}
+      />
       {!collapsed && (
         <div
           id="ribbon-commands"
           className="ribbon-commands"
           role="tabpanel"
-          aria-label={`${tab} commands`}
+          aria-labelledby={`ribbon-tab-${tab}`}
         >
           {tab === "Text" && textTools}
           {groups[tab].map((group) => (

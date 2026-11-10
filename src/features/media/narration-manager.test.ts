@@ -4,7 +4,9 @@ import { textDigest } from "../../contracts/digest.ts";
 import { AudioManager } from "./audio-manager.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 afterEach(() => vi.unstubAllGlobals());
-it("requests the next local paragraph while the first recording is still playing", async () => {
+
+/** A live-narrated bundle whose first paragraph has a published recording, and a fake player. */
+async function publishedFirstParagraph() {
   const bytes = new TextEncoder().encode("prefetch fixture");
   const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (value) =>
     value.toString(16).padStart(2, "0"),
@@ -24,10 +26,6 @@ it("requests the next local paragraph while the first recording is still playing
       approval: { status: "approved", reviewer: "test", rightsReference: "test" },
     },
   ];
-  const fetch = vi.fn(async (_url: unknown, options?: RequestInit) =>
-    options?.method === "POST" ? new Response("{}", { status: 503 }) : new Response(bytes),
-  );
-  vi.stubGlobal("fetch", fetch);
   const node = Object.assign(new EventTarget(), {
     currentTime: 0,
     duration: 1,
@@ -37,7 +35,19 @@ it("requests the next local paragraph while the first recording is still playing
     play: vi.fn(() => Promise.resolve()),
     pause: vi.fn(),
   });
-  const audio = new AudioManager(() => node as unknown as HTMLAudioElement);
+  return {
+    bytes,
+    bundle,
+    node,
+    audio: new AudioManager(() => node as unknown as HTMLAudioElement),
+  };
+}
+it("requests the next local paragraph while the first recording is still playing", async () => {
+  const { bytes, bundle, node, audio } = await publishedFirstParagraph();
+  const fetch = vi.fn(async (_url: unknown, options?: RequestInit) =>
+    options?.method === "POST" ? new Response("{}", { status: 503 }) : new Response(bytes),
+  );
+  vi.stubGlobal("fetch", fetch);
   const scope = new AbortController();
   const playing = new NarrationManager(audio).play(
     {
@@ -229,4 +239,70 @@ it("device narration cancellation releases ducking and ignores late completion",
   scope.abort();
   expect(await playing).toBe("aborted");
   expect(duck).toHaveBeenLastCalledWith(false);
+});
+it("asks for every paragraph of the page in order, one at a time, from the start", async () => {
+  const { bytes, bundle, node, audio } = await publishedFirstParagraph();
+  let inFlight = 0;
+  let most = 0;
+  const asked: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_url: unknown, options?: RequestInit) => {
+      if (options?.method !== "POST") return new Response(bytes);
+      asked.push(JSON.parse(options.body as string).segmentId);
+      most = Math.max(most, ++inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight--;
+      return new Response("{}", { status: 503 });
+    }),
+  );
+  const scope = new AbortController();
+  const playing = new NarrationManager(audio).play(
+    {
+      passageId: "threshold",
+      segments: [
+        { id: "first", text: "First." },
+        { id: "second", text: "Second." },
+        { id: "third", text: "Third." },
+      ],
+      choices: [],
+    },
+    bundle,
+    { rate: 1, deviceVoice: false, settings: () => ({ rate: 1, voiceId: "nano-default" }) },
+    scope.signal,
+    vi.fn(),
+  );
+  // The first paragraph is still playing when the last one is requested.
+  await vi.waitFor(() => expect(asked).toEqual(["second", "third"]));
+  expect(node.play).toHaveBeenCalledOnce();
+  expect(most).toBe(1); // the local generator makes one clip at a time
+  scope.abort();
+  expect(await playing).toBe("aborted");
+  audio.dispose();
+});
+it("says narration is being prepared while a paragraph is still generating", async () => {
+  let answer!: (response: Response) => void;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise<Response>((resolve) => (answer = resolve))),
+  );
+  const preparing = vi.fn();
+  const audio = new AudioManager();
+  const result = new NarrationManager(audio).play(
+    { passageId: "threshold", segments: [{ id: "first", text: "First." }], choices: [] },
+    { ...fixtureBundle(), narrationMode: "ai-live" as const },
+    {
+      rate: 1,
+      deviceVoice: false,
+      settings: () => ({ rate: 1, voiceId: "nano-default" }),
+      onPreparing: preparing,
+    },
+    new AbortController().signal,
+    vi.fn(),
+  );
+  await vi.waitFor(() => expect(preparing).toHaveBeenLastCalledWith(true), { timeout: 2000 });
+  answer(new Response("{}", { status: 503 }));
+  expect(await result).toBe("unavailable");
+  expect(preparing).toHaveBeenLastCalledWith(false);
+  audio.dispose();
 });

@@ -22,7 +22,7 @@ const bundles = ["en", "fr"].map((locale) =>
 );
 
 it.each(bundles)(
-  "plays all 41 $locale pages with saved dice, both encounters and recoverable outcomes",
+  "plays all 42 $locale pages with saved dice, both encounters and recoverable outcomes",
   (bundle) => {
     const character = createCharacter(
       bundle.character!.abilities.map((ability) => ability.id),
@@ -60,9 +60,10 @@ it.each(bundles)(
       engine.choose(choice.id);
       frame = engine.advance();
     }
-    expect(pages).toHaveLength(41);
+    expect(pages).toHaveLength(42); // Pass 7: + "soins", the care of Ysée
     expect(pages.slice(0, 4)).toEqual(["matin-ville", "etabli", "livraison", "atelier"]);
     expect(pages.at(-1)).toBe("fin");
+    expect(pages[pages.indexOf("apres") + 1]).toBe("soins");
     expect(encounters).toEqual(["ysee-training", "broken-guardian"]);
     expect(character.health.current).toBeGreaterThan(0);
     expect(character.abilities).toHaveLength(6);

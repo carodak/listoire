@@ -481,7 +481,6 @@ for (const locale of ["en", "fr"] as const) {
       ...defaultReadingPreferences,
       backgroundColor: "#f5ead7",
       dropCapColor: "#ae8238",
-      reveal: "progressive",
       narration: true,
       narratorVoice: "narrator.linda",
       narrationRate: 1,

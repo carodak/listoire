@@ -1,4 +1,5 @@
 import { compileProject, compileLanguage } from "./compiler.ts";
+import { message } from "../../contracts/error-message.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 
 self.onmessage = async (event: MessageEvent<{ project: StoryProject; locale?: string }>) => {
@@ -9,6 +10,6 @@ self.onmessage = async (event: MessageEvent<{ project: StoryProject; locale?: st
       : await compileProject(project);
     self.postMessage({ bundles });
   } catch (error) {
-    self.postMessage({ error: error instanceof Error ? error.message : String(error) });
+    self.postMessage({ error: message(error) });
   }
 };

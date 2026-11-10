@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { message } from "../../contracts/error-message.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { GameActionSchema } from "../../contracts/game.ts";
 import type { GameDefinition, GameAction } from "../../contracts/game.ts";
@@ -39,7 +40,7 @@ export function GameEditor({ project, locale, command, onApply, onClose }: GameE
       onApply(next, script);
       onClose();
     } catch (error) {
-      setError(error instanceof Error ? error.message : String(error));
+      setError(message(error));
     }
   }
   return (
