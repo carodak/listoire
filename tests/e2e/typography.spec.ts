@@ -154,6 +154,36 @@ test("one setting keeps the others; a preset clears manual changes and undo rest
   await expect(page.locator(".text-summary")).toHaveText("No style. No manual changes.");
 });
 
+test("keyboard shortcuts format the word at the caret and open find and replace", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  const input = page.locator(".ace_text-input");
+  await input.press("ArrowLeft"); // caret inside "BOOM", nothing selected
+  await input.press("ArrowRight");
+  await input.press("ArrowRight");
+  await input.press("Control+b");
+  await expect.poll(() => script(page)).toContain('<typo bold="on">BOOM</typo>');
+  await input.press("Control+u"); // underline, not Ace's "to upper case"
+  await expect.poll(() => script(page)).toContain('<typo bold="on" underline="on">BOOM</typo>');
+  await input.press("Control+Shift+X");
+  await input.press("Control+i");
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo bold="on" italic="on" underline="on" strike="on">BOOM</typo>');
+  await expect(page.getByRole("button", { name: "Strikethrough" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await input.press("Control+\\");
+  await expect.poll(() => script(page)).toContain("A BOOM, then silence.");
+  await page.getByRole("button", { name: "Bold", exact: true }).focus();
+  await page.keyboard.press("Control+h");
+  await expect(page.locator(".ace_search")).toBeVisible();
+  await expect(page.locator(".ace_search .ace_replace_form")).toBeVisible();
+});
+
 test("aligns the paragraph at the caret, shown in the reader, with French labels", async ({
   page,
 }) => {

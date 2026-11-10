@@ -199,6 +199,54 @@ it("shares undo/redo/save shortcuts while keeping unapplied dialog edits local",
   expect(actions.undo).toHaveBeenCalledOnce();
 });
 
+it("formats from the script or toolbar, finds from anywhere, and leaves Ctrl+X as Cut", () => {
+  const actions = {
+    undo: vi.fn(),
+    redo: vi.fn(),
+    save: vi.fn(async () => {}),
+    find: vi.fn(),
+    format: vi.fn(),
+  };
+  const inScript = { closest: (selector: string) => (selector.includes("dialog") ? null : {}) };
+  const elsewhere = { closest: () => null };
+  const press = (key: string, target: object, extra: object = {}) => {
+    const event = {
+      key,
+      ctrlKey: true,
+      metaKey: false,
+      shiftKey: false,
+      target: target as unknown as EventTarget,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      ...extra,
+    };
+    editorShortcut(event, actions);
+    return event;
+  };
+  press("b", inScript);
+  press("I", inScript);
+  press("u", inScript);
+  press("X", inScript, { shiftKey: true });
+  press("\\", inScript);
+  expect(actions.format.mock.calls.map(([command]) => command)).toEqual([
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "clear",
+  ]);
+  expect(press("b", inScript).stopPropagation).toHaveBeenCalled(); // Ace's own keys don't run
+  const cut = press("x", inScript);
+  expect(cut.preventDefault).not.toHaveBeenCalled();
+  press("b", elsewhere, { metaKey: true, ctrlKey: false }); // e.g. the header search field
+  expect(actions.format).toHaveBeenCalledTimes(6);
+  press("f", elsewhere);
+  press("h", elsewhere);
+  expect(actions.find.mock.calls).toEqual([[false], [true]]);
+  press("b", { closest: () => ({}) }); // inside a dialog
+  expect(actions.format).toHaveBeenCalledTimes(6);
+});
+
 it("inserts one stable structural command into both languages without replacing translated prose", () => {
   const rows = original.languages.en!.script.split("\n");
   const end = { row: rows.length - 1, column: rows.at(-1)!.length };

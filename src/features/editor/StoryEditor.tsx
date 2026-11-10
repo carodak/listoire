@@ -103,7 +103,19 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
     view = c.view;
   const tab = view.tab === "Game" && c.project.gameMode === "narrative" ? "Story" : view.tab;
   return (
-    <div className="story-editor" onKeyDownCapture={(event) => editorShortcut(event, c.state)}>
+    <div
+      className="story-editor"
+      onKeyDownCapture={(event) =>
+        editorShortcut(event, {
+          undo: c.state.undo,
+          redo: c.state.redo,
+          save: c.state.save,
+          find: (replace) => actions.open(replace ? "Replace" : "Find"),
+          format: (command) =>
+            command === "clear" ? actions.clearText() : actions.toggleText(command),
+        })
+      }
+    >
       <EditorHeader
         project={c.project}
         locale={c.activeLocale}
