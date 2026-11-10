@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import type { AceEditor, AceRange } from "./ace.ts";
+import type { AceEditor, AcePosition, AceRange } from "./ace.ts";
 import type { EditorView } from "./editor-view.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
 import { message } from "../../contracts/error-message.ts";
@@ -10,15 +10,34 @@ import { insertLocalized } from "./localized-insertion.ts";
 import { outlineEntries } from "./ink-outline.ts";
 import { editMediaScript, mediaInsertionPosition, mediaReferenceLine } from "./media-script.ts";
 import { sceneMediaEntries } from "./scene-media.ts";
-import type { Typography } from "../../contracts/typography.ts";
-import { parseTypography } from "../../contracts/typography.ts";
-import { formatTextSelection } from "./text-formatting.ts";
+import type { ParagraphAlign, Typography } from "../../contracts/typography.ts";
+import { effectiveTypography } from "../../contracts/typography.ts";
+import {
+  alignLine,
+  alignTranslations,
+  formatAt,
+  formatTextSelection,
+  isParagraphLine,
+  lineAlignment,
+  patchTextSelection,
+} from "./text-formatting.ts";
+export type TextToggle = "bold" | "italic" | "underline" | "strike";
+export interface SelectionFormat {
+  format: Typography;
+  align: ParagraphAlign;
+}
+type Handles = {
+  editor: AceEditor | null;
+  selection: AceRange | null;
+  suppress: boolean;
+  onSelection?: () => void;
+};
 export interface EditorActionContext {
   project: StoryProject;
   language: StoryProject["languages"][string];
   activeLocale: string;
   selectedScene: string;
-  handles: RefObject<{ editor: AceEditor | null; selection: AceRange | null; suppress: boolean }>;
+  handles: RefObject<Handles>;
   state: ReturnType<typeof useEditorProject>;
   update: ReturnType<typeof useEditorProject>["update"];
   view: EditorView;
@@ -29,31 +48,63 @@ export class EditorActions {
   constructor(context: EditorActionContext) {
     this.context = context;
   }
-  selectedText = () => {
-    try {
-      return parseTypography(this.context.handles.current.editor?.getSelectedText() ?? "").text;
-    } catch {
-      return "";
-    }
+  /** What the toolbar shows: the settings at the selection (or the caret) and its paragraph. */
+  selectionFormat = (): SelectionFormat => {
+    const editor = this.context.handles.current.editor;
+    if (!editor) return { format: {}, align: "left" };
+    const { start, end } = editor.getSelectionRange();
+    const line = editor.session.getLine(start.row);
+    const caret = start.row === end.row && start.column === end.column;
+    // At a caret, the letter before it (the word being edited, as in other editors).
+    return {
+      format: formatAt(line, caret ? Math.max(0, start.column - 1) : start.column),
+      align: lineAlignment(line),
+    };
   };
-  formatText = (format: Typography): string | undefined => {
+  watchSelection = (listener: () => void) => {
+    const { handles } = this.context;
+    handles.current.onSelection = listener;
+    return () => {
+      if (handles.current.onSelection === listener) handles.current.onSelection = undefined;
+    };
+  };
+  /** A preset gives exactly its look: manual changes on these words are cleared (undo restores). */
+  applyPreset = (style: NonNullable<Typography["style"]>) =>
+    this.rewrite("style", (line, start, end) => formatTextSelection(line, start, end, { style }));
+  patchText = (patch: Omit<Typography, "style">) =>
+    this.rewrite(Object.keys(patch).join(), (line, start, end) =>
+      patchTextSelection(line, start, end, patch),
+    );
+  clearText = () =>
+    this.rewrite("clear", (line, start, end) => formatTextSelection(line, start, end, {}));
+  toggleText = (key: TextToggle) =>
+    this.patchText({
+      [key]: effectiveTypography(this.selectionFormat().format)[key] === "on" ? "off" : "on",
+    });
+  /** Rewrites the selected words in place; a caret first selects the word under it. */
+  private rewrite(
+    change: string,
+    edit: (line: string, start: number, end: number) => ReturnType<typeof formatTextSelection>,
+  ): string | undefined {
     const { handles } = this.context;
     const editor = handles.current.editor;
     if (!editor) return "The script editor is still loading.";
+    const caret = editor.getSelectionRange();
+    if (caret.start.row === caret.end.row && caret.start.column === caret.end.column)
+      editor.selection.selectWord();
     const range = editor.getSelectionRange();
     if (range.start.row !== range.end.row) return "Select words within one paragraph.";
     try {
-      const { start, end, replacement, selection } = formatTextSelection(
+      const { start, end, replacement, selection } = edit(
         editor.session.getLine(range.start.row),
         range.start.column,
         range.end.column,
-        format,
       );
       handles.current.selection = {
         start: { row: range.start.row, column: start },
         end: { row: range.end.row, column: end },
       };
-      this.insert(replacement, false);
+      this.insert(replacement, false, undefined, `Formatted text: ${change}`);
       editor.selection.setRange({
         start: { row: range.start.row, column: selection.start },
         end: { row: range.start.row, column: selection.end },
@@ -61,6 +112,30 @@ export class EditorActions {
     } catch (error) {
       return message(error);
     }
+  }
+  /** Aligns every paragraph the selection touches, here and in the other translations. */
+  alignText = (align: ParagraphAlign): string | undefined => {
+    const { handles, project, activeLocale } = this.context;
+    const editor = handles.current.editor;
+    if (!editor) return "The script editor is still loading.";
+    const range = editor.getSelectionRange();
+    const last =
+      range.end.row > range.start.row && range.end.column === 0 ? range.end.row - 1 : range.end.row;
+    const lines: string[] = [];
+    for (let row = range.start.row; row <= last; row++) lines.push(editor.session.getLine(row));
+    if (!lines.some(isParagraphLine)) return "editor.text.errors.noParagraph";
+    const aligned = lines.map((line) => alignLine(line, align));
+    handles.current.selection = {
+      start: { row: range.start.row, column: 0 },
+      end: { row: last, column: lines.at(-1)!.length },
+    };
+    const translated = alignTranslations(project, activeLocale, lines, align);
+    this.insert(aligned.join("\n"), false, translated, "Aligned paragraphs");
+    const clip = (position: AcePosition) => ({
+      row: position.row,
+      column: Math.min(position.column, editor.session.getLine(position.row).length),
+    });
+    editor.selection.setRange({ start: clip(range.start), end: clip(range.end) });
   };
   changeScript = (script: string) => {
     const { handles, update, project, activeLocale, language } = this.context;
@@ -73,7 +148,13 @@ export class EditorActions {
       `Edited ${activeLocale} Ink`,
     );
   };
-  insert = (text: string, structural = true, base = this.context.project) => {
+  insert = (
+    text: string,
+    structural = true,
+    base = this.context.project,
+    // Same-label changes within 750 ms share one undo step (typing); formatting has its own.
+    label = "Inserted Ink command",
+  ) => {
     const { handles, selectedScene, activeLocale, state, patchView, update } = this.context;
     const instance = handles.current.editor;
     if (!instance) return;
@@ -101,7 +182,7 @@ export class EditorActions {
     instance.insert(text);
     handles.current.suppress = false;
     next.languages[activeLocale]!.script = instance.getValue();
-    update(next, "Inserted Ink command");
+    update(next, label);
     handles.current.selection = null;
     instance.focus();
   };
@@ -221,6 +302,7 @@ export class EditorActions {
     const entry = outlineEntries(language.script)
       .filter((entry) => entry.row <= row)
       .at(-1);
+    this.context.handles.current.onSelection?.();
     if (entry && (entry.path !== view.selectedPath || entry.knot !== selectedScene))
       patchView({ selectedPath: entry.path, selectedScene: entry.knot });
   };

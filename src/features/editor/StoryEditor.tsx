@@ -3,7 +3,6 @@ import { uploadChosenFile } from "./Fields.tsx";
 import type { ReactNode } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import type { AceEditor, AceRange } from "./ace.ts";
 import type { EditorView } from "./editor-view.ts";
 import { EditorActions } from "./editor-actions.ts";
 import type { EditorActionContext } from "./editor-actions.ts";
@@ -58,11 +57,11 @@ function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
     (before: EditorView, change: Partial<EditorView>) => ({ ...before, ...change }),
     initialView,
   );
-  const handles = useRef<{
-    editor: AceEditor | null;
-    selection: AceRange | null;
-    suppress: boolean;
-  }>({ editor: null, selection: null, suppress: false });
+  const handles = useRef<EditorActionContext["handles"]["current"]>({
+    editor: null,
+    selection: null,
+    suppress: false,
+  });
   const activeLocale = project.languages[view.locale] ? view.locale : project.defaultLocale;
   const language = project.languages[activeLocale]!;
   const context: EditorActionContext = {
@@ -116,7 +115,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         onFind={actions.find}
       />
       <Ribbon
-        textTools={<TextToolbar selection={actions.selectedText} apply={actions.formatText} />}
+        textTools={<TextToolbar actions={actions} />}
         tab={tab}
         collapsed={view.collapsed}
         gameMode={c.project.gameMode}

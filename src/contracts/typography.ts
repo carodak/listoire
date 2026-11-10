@@ -58,6 +58,23 @@ export function typographySettings(format: Typography): Typography {
   return { ...presets[format.style ?? "default"], ...format };
 }
 
+const plain = {
+  size: "normal",
+  font: "inherit",
+  color: "inherit",
+  direction: "horizontal",
+  spacing: "normal",
+  shape: "normal",
+  bold: "off",
+  italic: "off",
+  underline: "off",
+  strike: "off",
+} as const satisfies Required<Omit<Typography, "style">>;
+/** Every setting these words really get: manual changes, then the preset, then plain text. */
+export function effectiveTypography(format: Typography): Required<Typography> {
+  return { style: "default", ...plain, ...typographySettings(format) };
+}
+
 function attributes(tag: string): Typography {
   const source = tag.slice(5, -1);
   const entries = [...source.matchAll(/\s+([a-z]+)="([a-z-]+)"/g)];

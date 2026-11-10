@@ -42,6 +42,9 @@ async function openTypographyStory(page: Page, narration = false, extra = "") {
   await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence.");
 }
 
+// Ace soft-wraps long lines, which adds spaces to the rendered script.
+const shoutedBoom = /<typo style="shout" direction="diagonal-up" spacing="wide"\s*>BOOM<\/typo>/;
+
 test("formats selected words, previews on hover and retains typography through undo, save and reload", async ({
   page,
 }) => {
@@ -51,15 +54,21 @@ test("formats selected words, previews on hover and retains typography through u
   await page.getByLabel("Close search", { exact: true }).click();
   await page.getByRole("tab", { name: "Text", exact: true }).click();
   await page.locator(".text-style-menu summary").click();
-  const shout = page.getByRole("button", { name: "shout", exact: true });
+  const shout = page.getByRole("button", { name: /^Shout/ });
+  // Pass 8: the small sample is gone; each preset previews itself, drawn in its own style,
+  // before it is applied, and hovering changes nothing in the script.
   await shout.hover();
-  await expect(page.locator(".text-style-preview .type-style-shout")).toHaveText("BOOM");
+  await expect(shout.locator(".type-style-shout")).toHaveText("Shout");
   await expect(page.locator(".ace_content")).not.toContainText("<typo");
   await shout.click();
-  await page.getByLabel("Text direction", { exact: true }).selectOption("diagonal-up");
-  await page.getByLabel("Text spacing", { exact: true }).selectOption("wide");
-  await page.getByRole("button", { name: "Apply to selection", exact: true }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Typography applied" })).toBeVisible();
+  // Each change applies at once to the selected words, without an Apply step.
+  await page.locator(".text-more summary").click();
+  await page.getByLabel("Direction", { exact: true }).selectOption("diagonal-up");
+  await page.getByLabel("Spacing", { exact: true }).selectOption("wide");
+  await expect(page.locator(".ace_content")).toContainText(shoutedBoom);
+  await expect(page.locator(".text-summary")).toHaveText(
+    "Shout sets: Huge · Sans-serif · Crimson · Bold. Your changes: Diagonal up · Wide spacing.",
+  );
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   const word = page.locator(".preview-slot .prose .type-style-shout");
   await expect(word).toHaveText("BOOM");
@@ -71,15 +80,114 @@ test("formats selected words, previews on hover and retains typography through u
   await expect(page.locator(".preview-slot .prose")).toContainText("The next page begins.");
   await expect(page.locator(".page-word-departure")).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  // One undo step per change (preset, direction, spacing).
+  for (let step = 0; step < 3; step++)
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect(page.locator(".ace_content")).not.toContainText("<typo");
-  await page.getByRole("button", { name: "Redo", exact: true }).click();
-  await expect(page.locator(".ace_content")).toContainText("<typo");
+  for (let step = 0; step < 3; step++)
+    await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await expect(page.locator(".ace_content")).toContainText(shoutedBoom);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator(".editor-status")).toContainText(/Saved|Published/);
   await page.reload();
   await expect(page.locator(".preview-slot .type-style-shout")).toHaveText("BOOM");
   await page.screenshot({ path: ".fallow/typography-editor.png" });
+});
+
+/** The script as stored, not as Ace renders it (soft wrap adds spaces). */
+const script = (page: Page) =>
+  page
+    .locator(".ink-editor")
+    .evaluate((node) =>
+      (node as unknown as { env: { editor: { getValue(): string } } }).env.editor.getValue(),
+    );
+
+async function selectBoom(page: Page) {
+  await page.getByLabel("Find in Ink", { exact: true }).fill("BOOM");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  await page.getByRole("tab", { name: "Text", exact: true }).click();
+}
+
+test("one setting keeps the others; a preset clears manual changes and undo restores them", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  await page.locator(".text-style-menu summary").click();
+  await page.getByRole("button", { name: /^Shout/ }).click();
+  await page.getByLabel("Size", { exact: true }).selectOption("large");
+  await page.getByRole("button", { name: "Italic", exact: true }).click();
+  // Shout stays: only size and italic changed.
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo style="shout" size="large" italic="on">BOOM</typo>');
+  await expect(page.getByRole("button", { name: "Italic", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  // Shout already makes it bold: the button shows it, and the font shows where it comes from.
+  await expect(page.getByRole("button", { name: "Bold", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByLabel("Font", { exact: true }).locator("option:checked")).toHaveText(
+    "Sans-serif (from Shout)",
+  );
+  await expect(page.locator(".text-setting.changed")).toHaveCount(1); // size
+  await expect(page.locator(".text-summary")).toHaveText(
+    "Shout sets: Huge · Sans-serif · Crimson · Bold. Your changes: Large · Italic.",
+  );
+  // Choosing a preset gives exactly that preset; undo brings the manual changes back.
+  await page.locator(".text-style-menu summary").click();
+  await page.getByRole("button", { name: /^Mystery/ }).click();
+  await expect.poll(() => script(page)).toContain('<typo style="mystery">BOOM</typo>');
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo style="shout" size="large" italic="on">BOOM</typo>');
+  // Undo puts the caret back at its column, now inside the longer tag: select the word again.
+  await selectBoom(page);
+  await page.getByRole("button", { name: "Clear formatting" }).click();
+  await expect.poll(() => script(page)).toContain("A BOOM, then silence.");
+  expect(await script(page)).not.toContain("<typo");
+  await expect(page.locator(".text-summary")).toHaveText("No style. No manual changes.");
+});
+
+test("aligns the paragraph at the caret, shown in the reader, with French labels", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Language: English", exact: true }).click();
+  await page.getByRole("button", { name: "Français", exact: true }).click();
+  await openTypographyStory(page);
+  await selectBoom(page);
+  const tools = page.getByRole("group", { name: "Mise en forme du texte" });
+  await expect(tools.getByRole("button", { name: "Gras", exact: true })).toBeVisible();
+  await expect(tools.getByRole("button", { name: "Aligner à gauche" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await tools.getByRole("button", { name: "Centrer", exact: true }).click();
+  await expect.poll(() => script(page)).toContain("A BOOM, then silence. # align:center");
+  await expect(tools.getByRole("button", { name: "Centrer", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.locator(".preview-slot .prose p").filter({ hasText: "A BOOM" })).toHaveCSS(
+    "text-align",
+    "center",
+  );
+  await tools.getByRole("button", { name: "Aligner à gauche" }).click();
+  await expect.poll(() => script(page)).toContain("A BOOM, then silence.\n");
+  expect(await script(page)).not.toContain("align:");
+  // A line that is not a paragraph explains itself, in French.
+  await page.locator(".ace_text-input").press("Control+Home");
+  await tools.getByRole("button", { name: "Centrer", exact: true }).click();
+  await expect(tools.getByRole("status")).toHaveText(
+    "Placez le curseur dans un paragraphe du récit.",
+  );
 });
 
 test("starts narration on every following page after pause, cancel and replay", async ({

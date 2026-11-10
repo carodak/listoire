@@ -24,7 +24,7 @@ export interface AceEditor {
   highlight(line: number | null): void;
   setOptions(options: Record<string, unknown>): void;
   on(event: string, callback: () => void): void;
-  selection: { setRange(range: AceRange): void };
+  selection: { setRange(range: AceRange): void; selectWord(): void };
   session: {
     setMode(mode: unknown): void;
     getLine(row: number): string;

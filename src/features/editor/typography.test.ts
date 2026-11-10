@@ -1,7 +1,18 @@
 import { expect, it } from "vitest";
 import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
-import { parseTypography, typographySettings } from "../../contracts/typography.ts";
-import { formatTextSelection } from "./text-formatting.ts";
+import {
+  effectiveTypography,
+  parseTypography,
+  typographySettings,
+} from "../../contracts/typography.ts";
+import {
+  alignLine,
+  alignTranslations,
+  formatAt,
+  formatTextSelection,
+  lineAlignment,
+  patchTextSelection,
+} from "./text-formatting.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 import { houseProject } from "../../../tests/fixtures/house-project.ts";
@@ -161,4 +172,83 @@ it("lets each translation align its paragraphs without breaking the shared struc
     `-> start\n=== start ===\nWords. # segment:start.p1${align}\n-> END`;
   expect(structure(line(" # align:center"))).toBe(structure(line("")));
   expect(structure(line(" # align:center"))).not.toBe(structure(line(" # other:tag")));
+});
+
+it("changes one setting and keeps the others: wide spacing on a Shout word keeps Shout", () => {
+  const line = 'A <typo style="shout">BOOM</typo> nearby.';
+  const start = line.indexOf("BOOM");
+  const wide = patchTextSelection(line, start, start + 4, { spacing: "wide" });
+  expect(wide.replacement).toBe('A <typo style="shout" spacing="wide">BOOM</typo> nearby.');
+  // Back to the preset's own value is no longer a change: the override goes.
+  const back = patchTextSelection(wide.replacement, wide.selection.start, wide.selection.end, {
+    spacing: "normal",
+  });
+  expect(back.replacement).toBe(line);
+  // Turning off what the preset turns on is stored; turning it on again removes it.
+  const light = patchTextSelection(line, start, start + 4, { bold: "off" });
+  expect(light.replacement).toBe('A <typo style="shout" bold="off">BOOM</typo> nearby.');
+  expect(
+    patchTextSelection(light.replacement, light.selection.start, light.selection.end, {
+      bold: "on",
+    }).replacement,
+  ).toBe(line);
+});
+
+it("patches each styled piece of a mixed selection on its own, and plain words too", () => {
+  const line = 'A <typo style="shout">red</typo> and <typo color="ocean">green</typo> sky.';
+  const start = line.indexOf("red"),
+    end = line.indexOf("green") + 5;
+  const result = patchTextSelection(line, start, end, { bold: "on" });
+  expect(parseTypography(result.replacement)).toEqual({
+    text: "A red and green sky.",
+    typography: [
+      { start: 2, end: 5, format: { style: "shout" } },
+      { start: 5, end: 10, format: { bold: "on" } },
+      { start: 10, end: 15, format: { color: "ocean", bold: "on" } },
+    ],
+  });
+  expect(result.replacement.slice(result.selection.start, result.selection.end)).toContain("red");
+  expect(result.replacement.slice(result.selection.start, result.selection.end)).toContain("green");
+});
+
+it("reads the settings at a column, ignoring markup being typed", () => {
+  const line = 'A <typo style="mystery" bold="on">quiet</typo> word.';
+  expect(formatAt(line, line.indexOf("quiet") + 2)).toEqual({ style: "mystery", bold: "on" });
+  expect(formatAt(line, 0)).toEqual({});
+  expect(formatAt(line, 5)).toEqual({});
+  expect(formatAt('<typo style="shout">open', 22)).toEqual({});
+  expect(effectiveTypography({ style: "mystery" })).toMatchObject({
+    font: "serif",
+    color: "violet",
+    size: "normal",
+    bold: "off",
+  });
+});
+
+it("aligns paragraphs with one tag, removes it for left and leaves other lines alone", () => {
+  expect(alignLine("Words. # segment:a.p1", "center")).toBe("Words. # segment:a.p1 # align:center");
+  expect(alignLine("Words. # align:center # segment:a.p1", "right")).toBe(
+    "Words. # segment:a.p1 # align:right",
+  );
+  expect(alignLine("Words. # align:center", "left")).toBe("Words.");
+  for (const line of ["* [Go] -> next", "=== knot ===", "~ x = 1", "// note", "-> END", ""])
+    expect(alignLine(line, "center")).toBe(line);
+  expect(lineAlignment("Words. # align:justify")).toBe("justify");
+  expect(lineAlignment("Words. # align:middle")).toBe("left");
+  expect(lineAlignment("Words.")).toBe("left");
+});
+
+it("aligns the same paragraph in the other translations by its segment ID", () => {
+  const project = structuredClone(houseProject);
+  project.languages.en!.script = "=== a ===\nOne. # segment:a.p1\nTwo. # segment:a.p2";
+  project.languages.fr = {
+    ...project.languages.en!,
+    script: "=== a ===\nUn. # segment:a.p1\nDeux. # segment:a.p2",
+  };
+  const next = alignTranslations(project, "en", ["One. # segment:a.p1"], "center");
+  expect(next.languages.fr!.script).toBe(
+    "=== a ===\nUn. # segment:a.p1 # align:center\nDeux. # segment:a.p2",
+  );
+  expect(next.languages.en).toBe(project.languages.en);
+  expect(alignTranslations(project, "en", ["No ID here."], "center")).toBe(project);
 });

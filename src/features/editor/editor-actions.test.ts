@@ -127,12 +127,10 @@ describe("EditorActions compile actions", () => {
 });
 
 describe("EditorActions editor commands", () => {
-  it("formatText explains why it cannot format yet", () => {
-    expect(setup(null).actions.formatText({ style: "whisper" })).toBe(
-      "The script editor is still loading.",
-    );
+  it("applyPreset explains why it cannot format yet", () => {
+    expect(setup(null).actions.applyPreset("whisper")).toBe("The script editor is still loading.");
     const multiline = fakeEditor(undefined, { start: 0, end: 1 });
-    expect(setup(multiline).actions.formatText({ style: "whisper" })).toBe(
+    expect(setup(multiline).actions.applyPreset("whisper")).toBe(
       "Select words within one paragraph.",
     );
   });
