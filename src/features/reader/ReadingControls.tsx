@@ -20,6 +20,8 @@ interface Props extends PreferencesProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   navigation?: ReactNode;
+  /** The editor's preview always shows text instantly: no "Text display" choice. */
+  preview?: boolean;
 }
 export function ReadingControls({
   preferences,
@@ -29,6 +31,7 @@ export function ReadingControls({
   open,
   onOpenChange,
   navigation,
+  preview,
 }: Props) {
   const { t } = useTranslation();
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
@@ -68,7 +71,7 @@ export function ReadingControls({
       </button>
       {open && (
         <PreferencesPanel
-          {...{ preferences, onChange }}
+          {...{ preferences, onChange, preview }}
           defaultPaperColor={bundle.readingDefaults?.backgroundColor}
           voices={availableVoices}
           unavailable={media.voice === "unavailable"}
@@ -94,6 +97,7 @@ function useReaderVoices(presentation: PresentationSession, bundle: StoryBundle)
 function PreferencesPanel({
   preferences,
   onChange,
+  preview,
   defaultPaperColor,
   voices,
   unavailable,
@@ -102,6 +106,7 @@ function PreferencesPanel({
   Pick<NarrationPreferencesProps, "voices" | "unavailable"> & {
     defaultPaperColor?: string;
     onClose: () => void;
+    preview?: boolean;
   }) {
   const { t } = useTranslation();
   return (
@@ -120,7 +125,7 @@ function PreferencesPanel({
           color={preferences.backgroundColor ?? defaultPaperColor}
           onChange={(backgroundColor) => onChange({ ...preferences, backgroundColor })}
         />
-        <BookTypography preferences={preferences} onChange={onChange} />
+        <BookTypography preferences={preferences} onChange={onChange} preview={preview} />
         <BookSound
           preferences={preferences}
           onChange={onChange}
@@ -182,9 +187,14 @@ const typography = [
   ["lineHeight", ["comfortable", "spacious"]],
   ["reveal", ["progressive", "instant"]],
 ] as const;
-function BookTypography({ preferences, onChange }: PreferencesProps) {
+function BookTypography({
+  preferences,
+  onChange,
+  preview,
+}: PreferencesProps & { preview?: boolean }) {
   const { t } = useTranslation();
-  return typography.map(([field, options]) => (
+  const fields = typography.filter(([field]) => !preview || field !== "reveal");
+  return fields.map(([field, options]) => (
     <label key={field}>
       {t(field === "reveal" ? "textReveal" : field)}
       <select

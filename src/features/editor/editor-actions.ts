@@ -31,6 +31,12 @@ type Handles = {
   selection: AceRange | null;
   suppress: boolean;
   onSelection?: () => void;
+  /** Counts preview compiles, so a late one never replaces a newer preview. */
+  compiles?: number;
+  /** The last live-preview compile error, cleared once the script compiles again. */
+  liveIssue?: string;
+  /** The project version the preview was compiled from: no refresh needed for it. */
+  previewed?: StoryProject;
 };
 export interface EditorActionContext {
   project: StoryProject;
@@ -41,7 +47,7 @@ export interface EditorActionContext {
   state: ReturnType<typeof useEditorProject>;
   update: ReturnType<typeof useEditorProject>["update"];
   view: EditorView;
-  patchView: (view: Partial<EditorView>) => void;
+  patchView: (view: Partial<EditorView> | ((view: EditorView) => Partial<EditorView>)) => void;
 }
 export class EditorActions {
   private readonly context: EditorActionContext;
@@ -238,16 +244,48 @@ export class EditorActions {
     }
   };
   play = async (knot = "", source = this.context.project) => {
-    const { patchView, activeLocale, state } = this.context;
+    const { patchView, activeLocale, state, handles } = this.context;
     patchView({ busy: true });
+    const compile = (handles.current.compiles = (handles.current.compiles ?? 0) + 1);
+    handles.current.previewed = source;
     try {
       const bundles = await compileInWorker(source, activeLocale);
+      if (handles.current.compiles !== compile) return;
       patchView({ preview: { bundle: bundles[activeLocale]!, knot, key: crypto.randomUUID() } });
     } catch (error) {
       state.setIssues([message(error)]);
       patchView({ dialog: "Issues" });
     } finally {
       patchView({ busy: false });
+    }
+  };
+  /** Live preview after an edit: the passage at the cursor, in its final state. */
+  refresh = async () => {
+    const { handles, patchView, activeLocale, state, project, language, view } = this.context;
+    // ▷ Preview may already show this version (it then keeps its full playback).
+    if (!view.preview || handles.current.previewed === project) return;
+    const compile = (handles.current.compiles = (handles.current.compiles ?? 0) + 1);
+    handles.current.previewed = project;
+    const row = handles.current.editor?.getCursorPosition().row ?? 0;
+    const knot =
+      outlineEntries(language.script)
+        .filter((entry) => entry.row <= row)
+        .at(-1)?.path ?? "";
+    try {
+      const bundle = (await compileInWorker(project, activeLocale))[activeLocale]!;
+      if (handles.current.compiles !== compile) return;
+      if (state.issues.length === 1 && state.issues[0] === handles.current.liveIssue)
+        state.setIssues([]);
+      // Never reopens a preview closed meanwhile; keeps its key, so it isn't rebuilt.
+      patchView((current) =>
+        current.preview
+          ? { preview: { bundle, knot, key: current.preview.key, settled: true } }
+          : {},
+      );
+    } catch (error) {
+      if (handles.current.compiles !== compile) return;
+      handles.current.liveIssue = message(error);
+      state.setIssues([handles.current.liveIssue]);
     }
   };
   applyLanguage = (next: EditorActionContext["language"], label: string) => {

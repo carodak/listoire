@@ -246,3 +246,20 @@ it("rejects a checkpoint for another story before writing the current slot", asy
   );
   expect(await saves.backup(bundle)).toBe(backup);
 });
+
+it("can present a fresh start settled, as a reopened page, and later pages as usual", async () => {
+  const presentation = { start: vi.fn(), cancel: vi.fn(), dispose: vi.fn() };
+  const director = new StoryDirector(
+    bundle,
+    new InkNarrativeEngine(bundle),
+    saves,
+    undefined,
+    presentation,
+  );
+  await director.load(true);
+  expect(presentation.start.mock.calls.at(-1)?.[2]).toBe(true);
+  expect(director.getSnapshot().restored).toBe(true);
+  await director.choose("listen", director.getSnapshot().occurrenceId!);
+  expect(presentation.start.mock.calls.at(-1)?.[2]).toBe(false);
+  expect(director.getSnapshot().restored).toBe(false);
+});

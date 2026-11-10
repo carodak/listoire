@@ -111,7 +111,8 @@ export class StoryDirector implements ReaderController {
     }
   }
 
-  async load(): Promise<void> {
+  /** `settled`: a fresh start appears like a reopened page (final state, no entrance or voice). */
+  async load(settled = false): Promise<void> {
     await this.run(async () => {
       const save = await this.saves.read(this.bundle);
       if (this.disposed) return;
@@ -120,7 +121,7 @@ export class StoryDirector implements ReaderController {
         this.activate(save, true);
       } else {
         this.engine.restore(this.initialState);
-        await this.commitFrame(null);
+        await this.commitFrame(null, undefined, undefined, settled);
       }
     });
   }
@@ -129,6 +130,7 @@ export class StoryDirector implements ReaderController {
     expected: SaveData | null | undefined,
     update?: { character: CharacterProfile; game: GameState },
     retainedFrame?: Frame,
+    restored = false,
   ): Promise<void> {
     const { character, game } = update ?? startPlayer(this.bundle, expected, this.createCharacter);
     if (!expected && character && game && this.bundle.game)
@@ -152,7 +154,7 @@ export class StoryDirector implements ReaderController {
     };
     await this.saves.commit(this.bundle, save, expected);
     if (this.disposed) return;
-    this.activate(save, false, Boolean(retainedFrame));
+    this.activate(save, restored, Boolean(retainedFrame));
   }
 
   async choose(choiceId: string, occurrenceId: string): Promise<void> {

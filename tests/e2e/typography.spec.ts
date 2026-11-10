@@ -3,7 +3,12 @@ import type { Page } from "@playwright/test";
 import { defaultReadingPreferences } from "../../src/contracts/presentation.ts";
 test.setTimeout(60_000);
 
-async function openTypographyStory(page: Page, narration = false, extra = "") {
+async function openTypographyStory(
+  page: Page,
+  narration = false,
+  extra = "",
+  reveal: "instant" | "progressive" = "instant",
+) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
   await expect(page.locator(".ace_text-input")).toHaveCount(1, { timeout: 20_000 });
@@ -29,7 +34,7 @@ async function openTypographyStory(page: Page, narration = false, extra = "") {
               ...defaultReadingPreferences,
               pageTurn: true,
               narration,
-              reveal: "instant",
+              reveal,
               narratorVoice: "device:test",
             },
             narrationMode: "ai-live",
@@ -41,6 +46,43 @@ async function openTypographyStory(page: Page, narration = false, extra = "") {
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence.");
 }
+
+/** A device voice that records what it speaks (and holds it while paused). */
+async function fakeSpeech(page: Page) {
+  await page.addInitScript(() => {
+    class Utterance {
+      constructor(public text: string) {}
+    }
+    let paused = false;
+    let pending: Utterance | undefined;
+    const spoken: string[] = [];
+    const synth = Object.assign(new EventTarget(), {
+      getVoices: () => [{ voiceURI: "test", lang: "en-US", name: "Test voice" }],
+      pause: () => {
+        paused = true;
+      },
+      resume: () => {
+        paused = false;
+        if (pending) {
+          spoken.push(pending.text);
+          pending = undefined;
+        }
+      },
+      cancel: () => {
+        pending = undefined;
+      },
+      speak: (value: Utterance) => {
+        if (!paused) spoken.push(value.text);
+        else pending = value;
+      },
+    });
+    Object.defineProperty(window, "speechSynthesis", { value: synth });
+    Object.defineProperty(window, "SpeechSynthesisUtterance", { value: Utterance });
+    Object.assign(window, { spoken });
+  });
+}
+const spoken = (page: Page) =>
+  page.evaluate(() => (window as unknown as { spoken: string[] }).spoken);
 
 // Ace soft-wraps long lines, which adds spaces to the rendered script.
 const shoutedBoom = /<typo style="shout" direction="diagonal-up" spacing="wide"\s*>BOOM<\/typo>/;
@@ -220,49 +262,90 @@ test("aligns the paragraph at the caret, shown in the reader, with French labels
   );
 });
 
+test("the preview follows typing in its final state, with instant text, its scroll and the caret", async ({
+  page,
+}) => {
+  await fakeSpeech(page);
+  const long = Array.from(
+    { length: 14 },
+    (_, index) =>
+      `Paragraph ${index + 1} is long enough to take a while to type out, letter by letter, in a progressive story.`,
+  ).join("\n");
+  await openTypographyStory(page, true, long, "progressive");
+  // Full playback (▷ Preview) still narrates; text is never typed out in the editor.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect.poll(async () => (await spoken(page)).join(" ")).toContain("A BOOM, then silence.");
+  const before = (await spoken(page)).length;
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  // The new preview has replaced the previous one once it narrates its page again.
+  await expect.poll(async () => (await spoken(page)).length).toBeGreaterThan(before);
+  const voices = (await spoken(page)).length;
+  const last = page.locator(".preview-slot .prose p").filter({ hasText: "Paragraph 14" });
+  await expect(last.locator("[aria-hidden]")).toHaveText(/in a progressive story\.$/, {
+    timeout: 1000,
+  });
+  const scroller = page.locator(".preview-slot .reader-board");
+  await scroller.evaluate((node) => (node.scrollTop = 240));
+  const top = await scroller.evaluate((node) => node.scrollTop);
+  expect(top).toBeGreaterThan(100);
+  // Type at the end of the first line: no click on Preview.
+  await page.getByLabel("Find in Ink", { exact: true }).fill("silence.");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  const input = page.locator(".ace_text-input");
+  await input.press("End");
+  await input.pressSequentially(" Hello");
+  await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence. Hello");
+  await expect(input).toBeFocused();
+  await input.pressSequentially(" world");
+  await expect.poll(() => script(page)).toContain("A BOOM, then silence. Hello world");
+  await expect(page.locator(".preview-slot .prose")).toContainText("silence. Hello world");
+  // The refreshed page is settled: same scroll, nothing spoken again, text complete.
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBeCloseTo(top, -1);
+  await page.waitForTimeout(700);
+  expect(await spoken(page)).toHaveLength(voices);
+  await expect(last.locator("[aria-hidden]")).toHaveText(/in a progressive story\.$/);
+  // The preview offers no "Text display" choice.
+  await page.locator(".preview-slot").getByRole("button", { name: "Reading preferences" }).click();
+  await expect(
+    page.locator(".preview-slot").getByRole("combobox", { name: "Text size" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".preview-slot").getByRole("combobox", { name: "Text display" }),
+  ).toHaveCount(0);
+});
+
+test("a compile error while typing keeps the last preview and shows in the status bar", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await page.getByLabel("Find in Ink", { exact: true }).fill("silence.");
+  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
+  await page.getByLabel("Close search", { exact: true }).click();
+  const input = page.locator(".ace_text-input");
+  await input.press("End");
+  await input.press("Enter");
+  await input.pressSequentially("-> nowhere");
+  await expect(page.locator(".editor-status")).toContainText("1 issue(s)");
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence.");
+  await expect(input).toBeFocused();
+  for (let index = 0; index < "-> nowhere".length; index++) await input.press("Backspace");
+  await expect(page.locator(".editor-status")).toContainText("No reported issues");
+});
+
 test("starts narration on every following page after pause, cancel and replay", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    class Utterance {
-      constructor(public text: string) {}
-    }
-    let paused = false;
-    let pending: Utterance | undefined;
-    const spoken: string[] = [];
-    const synth = Object.assign(new EventTarget(), {
-      getVoices: () => [{ voiceURI: "test", lang: "en-US", name: "Test voice" }],
-      pause: () => {
-        paused = true;
-      },
-      resume: () => {
-        paused = false;
-        if (pending) {
-          spoken.push(pending.text);
-          pending = undefined;
-        }
-      },
-      cancel: () => {
-        pending = undefined;
-      },
-      speak: (value: Utterance) => {
-        if (!paused) spoken.push(value.text);
-        else pending = value;
-      },
-    });
-    Object.defineProperty(window, "speechSynthesis", { value: synth });
-    Object.defineProperty(window, "SpeechSynthesisUtterance", { value: Utterance });
-    Object.assign(window, { spoken });
-  });
+  await fakeSpeech(page);
   await openTypographyStory(page, true);
-  const spoken = () => page.evaluate(() => (window as unknown as { spoken: string[] }).spoken);
-  await expect.poll(spoken).toContain("A BOOM, then silence.");
+  await expect.poll(() => spoken(page)).toContain("A BOOM, then silence.");
   await page.getByRole("button", { name: "Pause", exact: true }).click();
   await page.getByRole("button", { name: /Continue$/ }).click();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
-  await expect.poll(spoken).toContain("The next page begins.");
+  await expect.poll(() => spoken(page)).toContain("The next page begins.");
   await page.getByRole("button", { name: /Continue again$/ }).click();
-  await expect.poll(spoken).toContain("The final page begins.");
+  await expect.poll(() => spoken(page)).toContain("The final page begins.");
 });
 
 test("centers the Story Editor label within its landing button", async ({ page }) => {

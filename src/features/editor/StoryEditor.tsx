@@ -1,4 +1,4 @@
-import { useRef, useReducer, useEffect } from "react";
+import { useRef, useReducer, useEffect, useEffectEvent } from "react";
 import { uploadChosenFile } from "./Fields.tsx";
 import type { ReactNode } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
@@ -20,8 +20,12 @@ interface StoryEditorProps {
     project: StoryProject,
     knot: string,
     onClose: () => void,
+    settled: boolean,
   ) => ReactNode;
 }
+type ViewChange = Partial<EditorView> | ((view: EditorView) => Partial<EditorView>);
+/** How long the script must stay unchanged before the preview follows it. */
+const LIVE_PREVIEW_MS = 600;
 
 const initialView: EditorView = {
   leftWidth: 215,
@@ -54,7 +58,10 @@ interface LoadedProps extends StoryEditorProps {
 }
 function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
   const [view, patchView] = useReducer(
-    (before: EditorView, change: Partial<EditorView>) => ({ ...before, ...change }),
+    (before: EditorView, change: ViewChange) => ({
+      ...before,
+      ...(typeof change === "function" ? change(before) : change),
+    }),
     initialView,
   );
   const handles = useRef<EditorActionContext["handles"]["current"]>({
@@ -83,11 +90,21 @@ function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
       void actions.play();
     }
   });
+  // Each change refreshes the open preview once typing pauses.
+  const refresh = useEffectEvent(() => void actions.refresh());
+  useEffect(() => {
+    const timer = setTimeout(refresh, LIVE_PREVIEW_MS);
+    return () => clearTimeout(timer);
+  }, [project]);
   useEditorTooltips(true);
   const preview = view.preview ? (
     <div className="preview-slot" key={view.preview.key}>
-      {renderPreview(view.preview.bundle, project, view.preview.knot, () =>
-        patchView({ preview: null }),
+      {renderPreview(
+        view.preview.bundle,
+        project,
+        view.preview.knot,
+        () => patchView({ preview: null }),
+        Boolean(view.preview.settled),
       )}
     </div>
   ) : null;

@@ -217,7 +217,7 @@ export interface ReaderSnapshot {
 }
 
 export interface ReaderController {
-  load(): Promise<void>;
+  load(settled?: boolean): Promise<void>;
   getSnapshot(): ReaderSnapshot;
   subscribe(listener: () => void): () => void;
   choose(choiceId: string, occurrenceId: string): Promise<void>;
