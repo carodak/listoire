@@ -1330,3 +1330,158 @@ two new paragraphs (en/fr) have no published clip: they narrate live in dev unti
 Screenshots + recordings: `p7-before|p7-after/frame-{top,scrolled,pagedown}-{desktop,mobile}.png`,
 `frame-{desktop,mobile}.webm` (desktop 1440×700: before, the side art scrolls away; after, it
 stays; mobile is unchanged by design).
+
+## Pass 8 — Story Editor: Text toolbar and Media → Image (branch `features/editor-ux`)
+
+Own dev server on 4175 (`playwright.local.config.ts`); 4173/4180 not used. The health score's
+coverage is captured with the same steps as `npm run test:coverage`, except that its e2e step runs
+through `playwright.local.config.ts` (the script itself is hard-wired to 4173). Warm both `/` and
+`/editor` before a run, and a page with dice: a cold server fails with Vite's "Outdated Optimize
+Dep" (504) when it discovers a dependency mid-run (`/editor`, then the lazy dice model), which
+made 19, then 13 e2e tests fail on the first attempts. After one restart with all dependencies
+discovered, the run was 52/53; the one failure ("edits both languages…") passed twice on its own
+(flaky under coverage).
+
+Baseline 95 (Pass 7 ended at 92.2): the report now shows 0 churn hotspots, so the hotspot penalty
+that held Pass 6–7 down is gone. Nothing in the code changed between the two measurements.
+
+| Commit    | Item                                                                 | Score |
+| --------- | -------------------------------------------------------------------- | ----- |
+| `5036779` | Baseline                                                             | 95    |
+| `ee3e97f` | 0. e2e: French « Défaite » and « Fuite réussie » endings (test only) | 95    |
+
+Baseline `fallow security --gate new --changed-since main`: PASS, 0 items. `fallow dupes`: no
+duplication.
+
+### 0. French combat endings — `ee3e97f`
+
+The endings table in `reader-request.spec.ts` now has four cases: "Defeated", "Escaped",
+« Défaite » (seed 3, Attaque simple, last line "… dégâts subis.") and « Fuite réussie » (seed 1,
+Fuir, last line « Vous vous échappez ! »). Each checks the title between the portraits, the last
+log line, that there is no « Continuer la lecture » button, and that the window closes on its
+own. 4/4 green.
+
+### 1. Text toolbar — design note (waiting for your OK)
+
+Screenshots: `review-screenshots/editor-before/text-tab.png`, `text-ribbon.png`,
+`text-style-menu.png` (Orée, "nour" selected).
+
+**Current problems**
+
+1. Two steps: you pick settings, then press "Apply to selection". The controls don't show what
+   the selected words already have, and applying **replaces the whole format**: setting "wide
+   spacing" on a word that is already Shout removes Shout unless you pick Shout again by hand.
+2. Every select says "From style", which doesn't tell you the value you get (Mystery gives serif,
+   violet, wide).
+3. "Style: Default" is a `<details>` summary: it looks like a button, not a picker.
+4. The sample on the right ("A whisper… then BOOM!", or the last selection) repeats what the
+   large preview already shows.
+5. Direction, Spacing and Shape (rarely used) take as much room as Size, Font and Colour. The
+   labels are 11 px and English-only.
+6. No bold, italic, underline, strikethrough, clear formatting, nor Ctrl+B/I/U.
+7. The large preview only updates when you click ▷ Preview, and it replays the story's
+   typewriter reveal.
+
+**What the story format and the reader support today**
+
+| Feature                                            | Stored as                                                                       | Reader renders it | Needed                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------- |
+| Style preset (8)                                   | `<typo style="…">`                                                              | yes               | —                                                                          |
+| Size, font, colour, direction, spacing, shape      | `<typo size="…" …>`                                                             | yes               | —                                                                          |
+| Clear formatting                                   | no `<typo>`                                                                     | yes               | nothing: applying "no settings" already removes the tag                    |
+| Bold                                               | — (only Shout/Impact get weight 900, through their CSS class)                   | **no**            | new key                                                                    |
+| Italic                                             | — (only Whisper, through its CSS class)                                         | **no**            | new key                                                                    |
+| Underline, strikethrough                           | —                                                                               | **no**            | new keys                                                                   |
+| `em` / `strong`                                    | only an illustrative type in `DATA_CONTRACTS.md:93`; **never implemented**      | no                | covered by the keys above                                                  |
+| Alignment                                          | nothing paragraph-level exists; `<typo>` is inline only                         | **no**            | ⚠ decision 2                                                               |
+| Highlight, links, lists, headings, super/subscript | —                                                                               | no                | not proposed (not book typography, or no meaning in the reader)            |
+| Undo / redo                                        | header buttons; Ctrl/Cmd+Z, Ctrl+Y, Ctrl+Shift+Z                                | —                 | keep                                                                       |
+| Find / replace                                     | header field; Ace's box on Ctrl+F / Ctrl+H, **only while the script has focus** | —                 | Ctrl+F / Ctrl+H anywhere in the editor (outside dialogs) open the same box |
+
+**Contract extension (additive, ⚠ decision 1).** Four optional keys in `TypographySchema`:
+`bold`, `italic`, `underline`, `strike`, each `"on" | "off"`. `"off"` exists so a manual change
+can turn off what a preset sets (Whisper without italic). The presets declare them (Shout and
+Impact `bold: on`, Whisper `italic: on`), and the CSS moves from
+`.type-style-shout { font-weight: 900 }` to `.type-bold-on` (same 900), so existing stories render
+exactly as before. Stored projects have none of these keys and load unchanged. Tests: parse and
+serialise round trip, old markup keeps its computed weight and italic, `off` overriding a preset.
+
+**Selection model**
+
+- The toolbar follows the Ace selection: inside styled words it shows that span's settings.
+- Each control **applies at once** and changes **only its own setting**; the other settings stay.
+  On a selection that covers several styled pieces, each piece keeps its own other settings
+  (`formatTextSelection` merges per piece instead of replacing).
+- A value equal to what the preset gives is not stored (it is not an override). So each dropdown
+  simply lists real values; the preset's value reads "Serif (from Mystery)", and choosing it
+  removes the override. No "From style" entry.
+- Picking a preset gives exactly that preset (it clears manual changes on the selection);
+  changes made afterwards sit on top (⚠ decision 4).
+- With only a caret, a command first selects the word under the caret (as in Word), so Ctrl+B in
+  a word bolds it. Typing doesn't continue a style (the tags live in the script).
+- Selections across paragraphs or inside Ink tags are still refused, with the message in the
+  toolbar's status line, as today. Each change is one undo step (existing history).
+
+**Proposed layout** (Text tab):
+
+```
+[ Mystery ▾ ] │ [ Serif (from Mystery) ▾ ] [ Normal ▾ ] [ Violet (from Mystery) ▾ ] │ B I U S │ T̸ │ ⋯ ▾
+Mystery sets: serif · violet · wide spacing.   Your changes: bold.
+                                                            ⋯ = More: Direction, Spacing, Shape
+```
+
+- Style picker: a button with the preset name and a chevron, so it looks like a picker. Its menu
+  keeps each preset drawn in its own style, plus one line saying what it sets, generated from the
+  presets table (e.g. Shout: "huge · sans · crimson · bold").
+- Font, size, colour: compact selects with an accessible name and a tooltip. A changed control
+  carries a small dot, and its tooltip says "Changed (Mystery: Serif)".
+- B I U S: icon buttons (the usual letters) with `aria-pressed` and tooltips that give the shortcut
+  ("Bold (Ctrl+B)"). Clear formatting (T̸, Ctrl+\). "More" opens a small popover with Direction,
+  Spacing and Shape, and shows a dot when one of them is changed.
+- The status line under the toolbar says what the preset sets and what you changed, or shows the
+  error. This makes preset vs. manual change obvious.
+- **Removed:** "Apply to selection"; the small sample; the hint "Select words…, preview a style,
+  then apply" (replaced by the status line). All new text goes through i18n (en + fr).
+
+**Shortcuts** (focus anywhere in the editor, not in a dialog): Ctrl/Cmd+B, I, U;
+Ctrl+Shift+X strikethrough; Ctrl+\ clear formatting; Ctrl+F find and Ctrl+H replace, also from
+outside the script. Existing Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z / Ctrl+S are kept. Ctrl+U replaces
+Ace's undocumented "to upper case".
+
+**Preview**
+
+- Auto-refresh: 600 ms after the last script change, the same worker compile as ▷ Preview runs and
+  shows the passage under the cursor. If that passage is already shown, its scroll position is
+  kept. The reader never takes focus in preview mode (already true), so the caret and selection
+  stay in Ace. A late compile is dropped when a newer one has started. A compile error keeps the
+  last good preview and shows the error in the status bar (the Issues dialog no longer pops up
+  while you type; ▷ Preview and Compile still open it).
+- Text in the editor preview is always instant (`reveal: "instant"` is forced, whatever the
+  story's default or the preference), and the "Text display" preference is hidden in the
+  preview. The reader keeps its animations. The page-turn word dissolve after a choice stays: it
+  is the page transition, triggered by your click, never by a refresh.
+- ⚠ decision 3: a refresh restarts the page, so its entrance (camera moves, sounds, narration)
+  would replay every time you pause typing. I propose that an auto-refresh shows the page in its
+  final state, the way a reopened saved page is shown (no entrance, no narration auto-start).
+  ▷ Preview and choices keep the full playback.
+
+**Tests**: unit tests for per-piece merging, the new keys and the effective-value labels.
+`typography.spec.ts` "formats selected words…" is adapted to the new interaction with the same
+assertions (Shout + diagonal + wide in the preview, undo/redo, save, reload). **Changed
+assertion:** its hover check on the removed sample (`.text-style-preview`) moves to the preset
+menu item. Added: Ctrl+B, clear formatting, auto-refresh without clicking Preview, instant text
+with a progressive story, caret kept.
+
+**⚠ Decisions for you**
+
+1. Add `bold`, `italic`, `underline`, `strike` (`on`/`off`) to `<typo>`? **Recommended: yes.**
+2. Alignment: the reader has nothing paragraph-level. (a) Leave it out; or (b) add a
+   per-paragraph Ink tag `# align:center|right` that the reader applies to that paragraph
+   (contract on frame segments plus reader CSS; narration unaffected). **Recommended: (a)**, unless
+   you need centred lines (letters, signs, poems); then (b).
+3. Auto-refresh shows the page in its final state, without replaying its entrance?
+   **Recommended: yes.**
+4. Choosing a preset clears the manual changes on the selection? **Recommended: yes.**
+
+Planned commits once approved: (1) contract and reader keys, with tests; (2) per-piece formatting
+and the new toolbar; (3) shortcuts; (4) live instant preview.
