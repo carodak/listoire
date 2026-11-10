@@ -1345,13 +1345,22 @@ discovered, the run was 52/53; the one failure ("edits both languages…") passe
 Baseline 95 (Pass 7 ended at 92.2): the report now shows 0 churn hotspots, so the hotspot penalty
 that held Pass 6–7 down is gone. Nothing in the code changed between the two measurements.
 
-| Commit    | Item                                                                 | Score |
-| --------- | -------------------------------------------------------------------- | ----- |
-| `5036779` | Baseline                                                             | 95    |
-| `ee3e97f` | 0. e2e: French « Défaite » and « Fuite réussie » endings (test only) | 95    |
+| Commit    | Item                                                                  | Score |
+| --------- | --------------------------------------------------------------------- | ----- |
+| `5036779` | Baseline                                                              | 95    |
+| `ee3e97f` | 0. e2e: French « Défaite » and « Fuite réussie » endings (test only)  | 95    |
+| `d7b61b1` | `E2E_PORT` for e2e and `npm run test:coverage` (default 4173)         | 95    |
+| `4d65f7d` | 1. bold / italic / underline / strike settings                        | 95    |
+| `b09ec23` | fix: the combat outcome holds its full 2 s (found by the new e2e)     | 95    |
+| `06465f9` | 1. per-paragraph alignment (`# align:`) in the reader                 | 95    |
+| `225ffa5` | 1. new Text toolbar, immediate, keeps other settings                  | 95    |
+| `e077a8e` | 1. shortcuts Ctrl+B/I/U, Ctrl+Shift+X, Ctrl+\, Ctrl+F/H               | 95    |
+| `1932886` | 1. live preview: settled refresh, instant text, scroll and caret kept | 95    |
+| `b85d3c6` | 1. fix: "(from Shout)" only for values the style sets                 | 95    |
 
-Baseline `fallow security --gate new --changed-since main`: PASS, 0 items. `fallow dupes`: no
-duplication.
+`fallow security --gate new --changed-since main`: PASS, 0 items, after every commit.
+`fallow dupes`: no duplication after every commit. Dead code: 0 (one unused type between
+`06465f9` and `225ffa5`, used by the toolbar).
 
 ### 0. French combat endings — `ee3e97f`
 
@@ -1485,3 +1494,80 @@ with a progressive story, caret kept.
 
 Planned commits once approved: (1) contract and reader keys, with tests; (2) per-piece formatting
 and the new toolbar; (3) shortcuts; (4) live instant preview.
+
+**Your decisions:** 1 yes (plus fix "one setting keeps the others", with a test); 2 yes, as a
+per-paragraph option left / center / right / justify, rendered in the reader, en + fr labels;
+3 yes; 4 yes (undo brings the manual changes back, with a test). Changed hover assertion: OK if it
+covers the same behaviour.
+
+### 1. Text toolbar — result
+
+Screenshots: `review-screenshots/editor-before/` vs `editor-after/` (`text-tab`, `text-ribbon`,
+`text-style-menu`; after only: `text-ribbon-styled`, `text-ribbon-more`,
+`text-styled-live-preview`). Recording: `editor-after/live-preview.webm` (typing, then Shout and
+Ctrl+I, with the preview following).
+
+- **`4d65f7d` bold / italic / underline / strike.** `<typo bold="on" …>`; `off` cancels a preset
+  (Whisper without italic). Shout and Impact declare `bold: on`, Whisper `italic: on`; their CSS
+  keeps the same computed values. **Proven on the old code:** the same e2e with only old markup
+  (Shout/Impact weight 900, Whisper italic) passes before and after.
+- **`06465f9` alignment.** `# align:center|right|justify` per paragraph → `segment.align` →
+  `<p data-align>`. Left is the default and is never written, so existing text is unchanged.
+  Centred and right-aligned paragraphs drop the drop cap. Found on the way and handled:
+  - a progressive reveal renders only the revealed letters, so a centred line would re-centre on
+    each letter: aligned paragraphs now lay out the rest invisibly;
+  - the compiler compares Ink tags across languages, so aligning only the English paragraph would
+    have blocked publishing ("narrative structure differs"). `align:` tags (and trailing spaces in
+    tags) are now ignored by that check. The toolbar also aligns the same paragraph (same
+    `# segment:` ID) in the other translations.
+- **`225ffa5` toolbar.** As in the note. **The bug** (applying one setting replaced the whole
+  format) is fixed by a per-piece patch (`patchTextSelection`): wide spacing on a Shout word keeps
+  Shout; on a mixed selection each piece keeps its own settings. `formatTextSelection` (exact
+  format) stays for presets and Clear, and its tests are unchanged. A value equal to the preset's
+  own is not stored. Each change is its own undo step: formatting changes get their own history
+  label (same-label changes within 750 ms are merged, which is meant for typing).
+  **Changed assertions in "formats selected words…":** (1) hover: the sample is gone, so the test
+  checks that the hovered preset is drawn in its own style and that the script is unchanged, as
+  before; (2) one Undo became three (preset, direction, spacing are three steps now); the
+  assertions after them are the same. Also adapted: `editor-actions.test` "formatText explains…"
+  now calls `applyPreset` with the same assertions.
+- **`e077a8e` shortcuts.** Ctrl/Cmd+B, I, U, Ctrl+Shift+X, Ctrl+\ (from the script or the toolbar;
+  other fields keep their keys; Ctrl+X stays Cut); Ctrl+F, Ctrl+H from anywhere outside a dialog
+  (before: only while the script had focus). Undo/redo/save already had theirs.
+- **`1932886` live preview.** 600 ms after the last change, the passage at the cursor, presented
+  like a reopened page (the director's `load(settled)`: no entrance, sound or narration). The
+  reader stays mounted (its key no longer includes the knot), so open panels stay open, and the
+  text frame's scroll is restored once the new page has laid out. Instant text is forced in the
+  editor preview only, and its "Text display" choice is hidden. ▷ Preview keeps the full playback;
+  a refresh never replaces a version ▷ Preview already shows (found by the e2e: a refresh pending
+  from an edit replaced the full playback you had just started), and a late compile never replaces
+  a newer one. A compile error keeps the last good preview and shows "1 issue(s)" in the status
+  bar; it clears when the script compiles again.
+- **`b85d3c6`** "(from Mystery)" appeared on values Mystery doesn't set (e.g. "Horizontal").
+
+**Bug found by the new French e2e — `b09ec23`.** The combat outcome was meant to stay 2 s, but for
+one render between "dice settled" and the enemy's beat the fight looked finished. So the 2 s hold
+started early and the title hid during the beat: on a slow machine it showed for almost nothing
+(the « Défaite » e2e timed out twice under coverage). The log is now busy from that first render;
+a static-render unit test fails on the old code.
+
+**Tests added:** unit 423 → 438 (per-piece patch, preset values, format at a column, alignment
+lines and translations, the new keys, static render of the reserved text, combat log busy, settled
+director load, shortcut routing, live refresh rules); e2e +7 (bold/italic/… rendering, alignment
+in the reader, keep-the-others + preset clears + undo, French labels + alignment, keyboard
+shortcuts, live preview, compile error while typing).
+
+**Limits:**
+
+- After Undo, the caret returns to its old column, which may now fall inside a longer `<typo>` tag;
+  formatting then says "select words outside the tag attributes" until you select the words again.
+- A shortcut that can't apply (caret on a knot line) does nothing and shows no message; the
+  toolbar buttons show it.
+- Alignment applies to the active language and to paragraphs with the same `# segment:` ID; a
+  translation without segment IDs keeps its own alignment.
+
+**How to try:** `npm run dev`, open `/editor`, Text tab. Select a few words in a paragraph: pick
+Mystery, then Bold and Large (they apply at once); the line under the toolbar says what Mystery
+sets and what you changed. Choose Shout: your changes go; Ctrl+Z brings them back. Click Center
+with the caret in a paragraph. Press Ctrl+B with the caret in a word. Type in the script: the
+preview follows after a short pause, without moving or replaying.
