@@ -56,6 +56,8 @@ export function validateInkFrame(bundle: StoryBundle, frame: Frame): Frame {
   return frame;
 }
 
+type Segment = Frame["segments"][number];
+
 export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
   const segments: Frame["segments"] = [];
   const mediaAnchors: NonNullable<Frame["mediaAnchors"]> = [];
@@ -78,7 +80,13 @@ export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
       "segment",
       bundle.authored ? `${passageId}.line-${steps}` : undefined,
     );
-    segments.push({ id: segmentId, ...parseTypography(text) });
+    const align = tag(tags, "align", "left");
+    segments.push({
+      id: segmentId,
+      ...parseTypography(text),
+      // FrameSchema below rejects any other value as a content error.
+      ...(align === "left" ? {} : { align: align as NonNullable<Segment["align"]> }),
+    });
   }
   const facts = Object.fromEntries(
     (bundle.variables ?? []).map((name) => [name, story.variablesState[name]]),

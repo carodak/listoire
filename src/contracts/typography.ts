@@ -15,6 +15,10 @@ export const typographyOptions = {
   strike: ["on", "off"],
 } as const;
 
+/** Per-paragraph alignment, from an Ink `# align:` tag; "left" is the default and never stored. */
+export const paragraphAlignments = ["left", "center", "right", "justify"] as const;
+export type ParagraphAlign = (typeof paragraphAlignments)[number];
+
 export const TypographySchema = z
   .object({
     style: z.enum(typographyOptions.style).optional(),

@@ -7,11 +7,32 @@ export function TypographicText({
   text,
   typography = [],
   visible = text.length,
+  reserve = false,
 }: {
   text: string;
   typography?: TypographySpan[];
   visible?: number;
+  /** Lay out the unrevealed text invisibly, so centred or right-aligned lines don't move. */
+  reserve?: boolean;
 }) {
+  const shown = styledText(text, typography, visible);
+  if (!reserve || visible >= text.length) return shown;
+  const rest = typography
+    .filter((span) => span.end > visible)
+    .map((span) => ({
+      ...span,
+      start: Math.max(0, span.start - visible),
+      end: span.end - visible,
+    }));
+  return (
+    <>
+      {shown}
+      <span className="type-reserve">{styledText(text.slice(visible), rest, text.length)}</span>
+    </>
+  );
+}
+
+function styledText(text: string, typography: TypographySpan[], visible: number) {
   const parts = [];
   let cursor = 0;
   for (const span of typography) {
@@ -28,7 +49,7 @@ export function TypographicText({
     cursor = span.end;
   }
   parts.push(text.slice(cursor, visible));
-  return <>{parts}</>;
+  return parts;
 }
 
 function StyledWords({

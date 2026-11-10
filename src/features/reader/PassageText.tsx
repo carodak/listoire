@@ -159,13 +159,14 @@ function NarrativeParagraph({ presentation, segment, onClick }: NarrativeParagra
   }, [segment, presentation]);
   if (!segment) return null;
   return (
-    <p ref={node} onClick={onClick} data-segment={segment.id}>
+    <p ref={node} onClick={onClick} data-segment={segment.id} data-align={segment.align}>
       <span className="sr-only">{segment.text}</span>
       <span aria-hidden="true">
         <TypographicText
           text={segment.text}
           typography={segment.typography}
           visible={segment.visible.length}
+          reserve={Boolean(segment.align)}
         />
       </span>
     </p>

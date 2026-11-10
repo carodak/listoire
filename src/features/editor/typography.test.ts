@@ -1,8 +1,8 @@
 import { expect, it } from "vitest";
-import { FrameSchema } from "../../contracts/story.ts";
+import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
 import { parseTypography, typographySettings } from "../../contracts/typography.ts";
 import { formatTextSelection } from "./text-formatting.ts";
-import { compileLanguage } from "./compiler.ts";
+import { compileLanguage, structure } from "./compiler.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 import { houseProject } from "../../../tests/fixtures/house-project.ts";
 
@@ -122,4 +122,43 @@ it("compiles typography through real Ink, restores choices and validates saved o
   const invalid = structuredClone(frame);
   invalid.segments[0]!.typography![0]!.end = 999;
   expect(FrameSchema.safeParse(invalid).success).toBe(false);
+});
+
+it("aligns each paragraph from its # align tag; left is the default and old frames stay valid", async () => {
+  const project = structuredClone(houseProject);
+  project.gameMode = "narrative";
+  project.languages.en!.configuration = { title: "Align", chapter: "Test" };
+  project.languages.en!.script = [
+    "-> start",
+    "=== start ===",
+    "A plain line.",
+    "A centred line. # align:center",
+    "# align:right",
+    "A right line.",
+    "A justified line. # align:justify",
+    "A left line. # align:left",
+    "-> END",
+  ].join("\n");
+  const frame = new InkNarrativeEngine(await compileLanguage(project, "en")).advance();
+  expect(frame.segments.map((segment) => segment.align)).toEqual([
+    undefined,
+    "center",
+    "right",
+    "justify",
+    undefined,
+  ]);
+  expect(frame.segments.map((segment) => segment.text)).toContain("A right line.");
+  expect(FrameSchema.parse(JSON.parse(JSON.stringify(frame)))).toEqual(frame);
+  const old = { passageId: "start", segments: [{ id: "start.p1", text: "Old." }], choices: [] };
+  expect(FrameSchema.parse(old)).toEqual(old);
+  project.languages.en!.script = "-> start\n=== start ===\nOops. # align:middle\n-> END";
+  const invalid = new InkNarrativeEngine(await compileLanguage(project, "en"));
+  expect(() => invalid.advance()).toThrow(ReaderFailure);
+});
+
+it("lets each translation align its paragraphs without breaking the shared structure", () => {
+  const line = (align: string) =>
+    `-> start\n=== start ===\nWords. # segment:start.p1${align}\n-> END`;
+  expect(structure(line(" # align:center"))).toBe(structure(line("")));
+  expect(structure(line(" # align:center"))).not.toBe(structure(line(" # other:tag")));
 });

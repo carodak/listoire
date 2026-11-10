@@ -95,6 +95,9 @@
   -webkit-text-fill-color: var(--paper, #fff9ef);
   text-shadow: 0.04em 0.04em 0 var(--paper, #fff9ef);
 }
+.type-reserve {
+  visibility: hidden;
+}
 .type-letter {
   display: inline-block;
   white-space: pre;

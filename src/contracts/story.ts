@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { mp3DataUrl } from "./same-origin-fetch.ts";
-import { TypographySpanSchema, validTypographySpans } from "./typography.ts";
+import { paragraphAlignments, TypographySpanSchema, validTypographySpans } from "./typography.ts";
 import { GameDefinitionSchema, GameStateSchema } from "./game.ts";
 import type { GameDefinition, GameState, CombatOption, CheckOption, PlayerMove } from "./game.ts";
 import { validateSceneModels } from "./scene3d.ts";
@@ -24,7 +24,12 @@ export type Locale = z.infer<typeof LocaleSchema>;
 
 const typography = z.array(TypographySpanSchema).max(500).optional();
 const SegmentSchema = z
-  .object({ id, text: z.string().min(1).max(10_000), typography })
+  .object({
+    id,
+    text: z.string().min(1).max(10_000),
+    typography,
+    align: z.enum(paragraphAlignments).exclude(["left"]).optional(),
+  })
   .strict()
   .refine(validTypographySpans);
 const ChoiceSchema = z

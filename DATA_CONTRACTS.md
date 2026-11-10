@@ -38,6 +38,9 @@ Implemented inline formatting (`src/contracts/typography.ts`): narrative words c
 sets). Presets declare their bold/italic (Shout, Impact bold; Whisper italic). All keys are
 optional, so markup written before a key existed parses unchanged. The illustrative `Inline`
 type below (`emphasis: em | strong`) was never implemented; the typography spans replace it.
+Paragraph alignment is an Ink line tag, `# align:center|right|justify` (`left`, the default, is
+never stored), read into the segment's optional `align`. Translations may align differently:
+the cross-language structure check ignores `align:` tags. Any other value is a content error.
 
 Each choice uses the run ID/revision as its occurrence identity; the director rejects stale commands and concurrent writes. IndexedDB's atomic read/compare/update replaces the proposed generic single-writer lease, with less browser-specific infrastructure. Restore verifies the saved choices against Ink without calling Continue. Exact-build/language compatibility is enforced, and settings use a separate key. Whole-paragraph instant display means no partial-reveal cursor is needed yet.
 

@@ -160,6 +160,29 @@ test("renders vertical, falling, waved and handwritten words in the reader", asy
   await page.locator(".experience-preview").screenshot({ path: ".fallow/typography-styles.png" });
 });
 
+test("aligns each paragraph on its own; unaligned text stays left with its drop cap", async ({
+  page,
+}) => {
+  await openTypographyStory(
+    page,
+    false,
+    "Centred words. # align:center\nRight words. # align:right\nJustified words. # align:justify",
+  );
+  const paragraph = (text: string) =>
+    page.locator(".preview-slot .prose p").filter({ hasText: text });
+  await expect(paragraph("A BOOM")).toHaveCSS("text-align", "start");
+  await expect(paragraph("A BOOM")).not.toHaveAttribute("data-align");
+  const dropCap = (text: string) =>
+    paragraph(text)
+      .locator("[aria-hidden]")
+      .evaluate((node) => getComputedStyle(node, "::first-letter").float);
+  expect(await dropCap("A BOOM")).toBe("left");
+  await expect(paragraph("Centred")).toHaveCSS("text-align", "center");
+  await expect(paragraph("Right")).toHaveCSS("text-align", "right");
+  await expect(paragraph("Justified")).toHaveCSS("text-align", "justify");
+  await expect(page.locator(".preview-slot .prose .sr-only").nth(1)).toHaveText("Centred words.");
+});
+
 test("keeps preset weights and renders bold, italic, underline and strikethrough", async ({
   page,
 }) => {
