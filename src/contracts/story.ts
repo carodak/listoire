@@ -57,6 +57,11 @@ export const BundleSchema = z
     title: z.string().min(1),
     chapter: z.string().min(1),
     inkDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    /** Earlier Ink of this release whose saves still load (the author added pages, nothing moved). */
+    compatibleInkDigests: z
+      .array(z.string().regex(/^[a-f0-9]{64}$/))
+      .max(20)
+      .optional(),
     inkjsVersion: z.string().min(1),
     authored: z.boolean().optional(),
     narrationMode: z.enum(["ai-live", "ai-pregenerated", "human", "disabled"]).optional(),

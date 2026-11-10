@@ -125,7 +125,8 @@ test("completes the French magic chapter with two combats and visible saved dice
   let encounters = 0;
   let rolls = 0;
   let victories = 0;
-  for (let step = 0; step < 42; step++) {
+  let cared = false;
+  for (let step = 0; step < 46; step++) {
     const combat = page.locator(".reader-combat-modal");
     if (await combat.count()) {
       encounters++;
@@ -188,10 +189,24 @@ test("completes the French magic chapter with two combats and visible saved dice
       await expect(page.locator(".combat-ending")).toHaveCount(0, { timeout: 15000 });
     }
     await dismissNotice(page);
+    if ((await page.locator(".reader-copy").getAttribute("data-passage")) === "soins") {
+      // Pass 7: the healing is a story page, and the HP it gave is a notification.
+      await expect(page.locator(".reader-copy h1")).toHaveText("Les soins d’Ysée");
+      const care = page.locator(".reward-card").filter({ hasText: "PV récupérés" }).last();
+      await expect(care).toBeAttached();
+      // Shown or waiting behind another card, it still counts down its own 10 s.
+      expect(
+        await care
+          .locator(".reward-timer")
+          .evaluate((bar) => bar.getAnimations()[0]?.playState ?? "none"),
+      ).toBe("running");
+      cared = true;
+    }
     if (await page.locator(".ending").count()) break;
     await next(page);
   }
   await expect(page.locator(".ending")).toBeVisible();
+  expect(cared).toBe(true);
   expect(encounters).toBe(2);
   expect(victories).toBe(2);
   expect(rolls).toBeGreaterThanOrEqual(2);

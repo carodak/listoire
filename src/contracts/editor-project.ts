@@ -15,6 +15,7 @@ export const StoryConfigurationSchema = z
   .object({
     title: shape.title,
     checkpointId: shape.checkpointId,
+    compatibleInkDigests: shape.compatibleInkDigests,
     chapter: shape.chapter,
     scenes: shape.scenes,
     assets: shape.assets,
