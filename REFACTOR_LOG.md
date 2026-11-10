@@ -1,6 +1,100 @@
 # Refactor log
 
-## ☀ Summary — Pass 6 (read this first)
+## ☀ Summary — Pass 7 (read this first)
+
+Branch `features/reader-combat-editor`, 13 commits on top of `ddeb027` (nothing pushed, nothing
+on `main`). **All items (1a–d, 2–6) are done**, plus the approved test-only fixture story. Two
+things need you (⚠).
+
+|                                         | Start (`ddeb027`) | Now (`c19d209`)               |
+| --------------------------------------- | ----------------- | ----------------------------- |
+| Health (`--score --hotspots`), floor 92 | 92.5              | **92.2**                      |
+| Production TS LOC (src + tools)         | 21,023            | 21,354 (+331)                 |
+| Unit tests                              | 414               | **423** (+ 1 Python test)     |
+| E2E, chromium (fresh server)            | 85/85             | **102/102 green** (+17 tests) |
+| `fallow security`                       | 10                | 10 (same findings)            |
+
+### What was done
+
+- **Fixture story** `cc26d73`: compiled inside the test, served to that page only; restores the
+  photograph-discovery test and adds a browser test for the effect fade.
+- **1a** `0cb39c9`: Back after a fight or reward restored the page with post-fight HP/XP/items
+  (history saved the page as it was _left_). Now it keeps the page as it was reached. Test first.
+- **1b** `b1f3b75`: **measured** with your local generator — after a page turn during a
+  generation, the new page's requests got **429 after 2 s** and the page stayed silent. Server now
+  queues, answers cached clips at once and drops abandoned requests; the reader asks for the whole
+  page in order; "Preparing narration…" while a paragraph generates. Earlier audio fixes confirmed
+  in the browser (unlock in reader and editor, sound effects, music, a 7 s download).
+- **1c** `3bf07d9`: the flash covered only the page below the menu; now the whole view, with an
+  even wash. **1d** `bb393f6`: shake ≈ 9 px instead of 1.7 px, over 600 ms; none under reduced motion.
+- **2** `8407bde` + `920053e`: compact reward cards (your reference image) instead of the blocking
+  item/ability window; far right on wide screens, over the menu's title row on narrow screens and
+  mobile; 10 s bar, pause on hover/focus, ×, translated, `role="status"`.
+- **3** `5144b5c` + `322663d`: "The Care of Ysée" / « Les soins d'Ysée » is a new Orée page
+  (en + fr) after the guardian fight, with "+N HP" as a notification. Old saves keep loading
+  (see ⚠ below for how).
+- **4** `a5d0ee2`: one combat window from first turn to the end; two beats per turn (your blow,
+  1 s, the enemy's), item/ability popup inside the window, fixed-height log, the outcome between
+  the portraits, the defeated side fades, the window fades out.
+- **5** `9266bf8`: your two PNG icons in the toolbar, tinted with the text colour (CSS mask).
+- **6** `c19d209`: fixed frame above 760 px; only the text scrolls; side art stays; mobile keeps
+  page scroll.
+
+### ⚠ Needs you
+
+- **Restart your narration server** (`narration.py serve`, still running the old code since
+  7:37 PM) to get the 1b server fix. Then re-run the timing probe:
+  `npx playwright test -c review-screenshots/probe.config.ts` (`FAST=1` for quick page turns).
+  The two new "soins" paragraphs have no published clip yet (`narration.py prepare` would
+  generate them; I didn't load a second model beside yours).
+- **Story updates and saves:** any Ink edit used to make every save "another story version".
+  I added an optional, author-declared `compatibleInkDigests` (earlier digests of the same
+  release whose saves still load if they restore exactly at their page). Orée lists its previous
+  en/fr build. Please confirm you're happy with this rule (documented in `DATA_CONTRACTS.md`).
+
+### Design choices to review
+
+- Rewards: no stack existed in the code — the old reward was a modal; I built the stack and
+  removed that modal. Narrow screens/mobile: one card at a time over the menu's title row (the
+  only place that never covers text); the others count down unseen.
+- A reward choice now continues the story immediately (no "Continue reading" stop).
+- Abilities use the same in-window popup as items (one code path).
+- The combat outcome is centred between the portraits on a paper pill (a 3-column layout
+  clipped the player on mobile); on phones it overlaps the portraits' edges slightly.
+- Icons are PNG (237 KB and 497 KB for 24 px icons): a small export or SVG would load faster.
+- Fixed frame only above 760 px; phones keep normal page scroll (reasons in the task 6 note).
+
+### Screenshots and recordings (untracked, `review-screenshots/p7-before|p7-after/`)
+
+- `flash-*`, `shake-*`, `effects-*.webm` (1c/1d) · `toolbar-*`, `page-*` (5, three themes)
+- `reward-*.png/.webm` (2) · `care-*` (3) · `duel-*.png`, `duel-*.webm` (4) · `frame-*.png/.webm` (6)
+- Specs to re-run them: `effects`, `shots` (SCENES=page), `rewards`, `care`, `combat`, `frame`
+  in `review-screenshots/` with `-c review-screenshots/shots.config.ts` (server on 4175).
+
+### How to try it
+
+`npm run dev`, then in the reader:
+
+- **Back after a fight:** win the duel with Ysée, continue, press Back: HP/XP are as before the fight.
+- **Narration:** restart `narration.py serve`, turn pages quickly: each page narrates; while a
+  paragraph generates, the toolbar shows "Preparing narration…".
+- **Flash/shake:** page "A coin suspended in the air" (flash, menu included); page "The watch
+  without a spring" (shake).
+- **Rewards:** accept Nour's letter: a card at the far right (or over the title on a narrow window).
+- **Event page:** after the guardian, "Let Ysée tend your injuries" → "The Care of Ysée" + "+N HP".
+- **Combat:** the training duel: Use an item (popup, Escape), attack (two beats), win (outcome
+  between portraits, fade-out).
+- **Fixed page:** a long page on a desktop window: scroll — the menu and Nour's portrait stay.
+- E2E: keep one dev server on 4175 and warm it first (a cold server fails its first test).
+
+### Skipped / next steps
+
+- Prefetching the _next_ page's narration (unknown until the reader chooses).
+- The 15 s no-progress narration limit has unit tests only (a browser stall can't be produced
+  reliably).
+- Editor Text UX and Media → Image UX remain for a later session.
+
+## ☀ Summary — Pass 6 (previous session)
 
 Branch `features/reader-combat-editor`, 22 commits on top of `8a78885` (nothing pushed, nothing
 on `main`). **Tasks 1–4 are done.** Two items need a decision from you (marked ⚠ below).
@@ -940,3 +1034,299 @@ from reverting on its own; (c) a Fallow hotspot exclusion for that file (I did n
   (the character feature may not import presentation, per the architecture rules) and passes the
   URL down; `Combatant` lost its hand-built fallback URL. New e2e `themed-art.spec`.
   `ReaderToolbar` crossed 60 lines, so its home/title/language group became `ToolbarStart`.
+
+## Pass 7 — bugs, rewards, event pages, combat redesign, icons, fixed page
+
+Floor for `fallow health --score --hotspots` is now 92 (decision on Pass 6).
+
+### Fixture story (approved)
+
+`cc26d73` `tests/e2e/fixture-story.ts`: a small Ink story compiled inside the test with the
+editor's own `compileProject` and served in place of Orée's `en.json` to that test page only
+(nothing is added to `public/`). It covers what Orée doesn't use:
+
+- a photograph hotspot whose hidden `# interaction` choice sets a fact → the "Photograph clue"
+  inventory entry, which survives reload (restores the Pass 6 gap);
+- an offensive ability "Dawn" with a stun, dice seeded (seed 19) so the stun shows for one turn
+  and ends on the next attack → the ended indicator is present, `aria-hidden` and animating.
+
+Found on the way: a run that starts its own Vite server always fails its first test (the first
+page of a cold server takes ~60 s). Keep one server running on 4175 and warm it first.
+
+### 1a. Back after a combat — `0cb39c9`
+
+Root cause: the history pushed the save from just before leaving the page. A fight or reward
+resolved on the page (the frame is retained) had already changed HP, XP, items, effects and the
+dice state, so Back showed the page with the post-combat stats. The director now remembers the
+page as it was reached (`reachedPage()` beside `beforeCheck()` in `game-session.ts`); a
+checkpoint reloaded mid-fight has no clean start and keeps the old behaviour. Test first:
+`game.test.ts` "back after battle|letter restores the page with the stats it had then" failed
+(inventory still held the letter; HP/XP after the fight), passes now. Save format unchanged.
+Health: the extra branch pushed `director.ts` over the hotspot line (50.2); moving the pure
+rule out of the director brought it back to 47 (92.4 overall).
+
+### 1c. Lightning flash covers the whole view — `3bf07d9`
+
+Cause: `.reader-viewport-effect` was `inset: var(--reader-toolbar-height) 0 0`, so the flash
+stopped at the menu's lower edge and the menu stayed unlit. Now `inset: 0` above the sticky
+menu (still `pointer-events: none`), and the bolt adds an even wash (`strength / 2`) on top of
+the falloff where it lands, so page and menu brighten together. Combat feedback uses the same
+rule. **Assertion changed on purpose:** `reader-request` "uses the whole viewport below the
+menu" → "board effects light the whole viewport, menu included" (top 0, full height; checks the
+menu still opens through the overlay).
+
+### 1d. Board shake — `bb393f6`
+
+Orée authors `screen-shake` at intensity 0.12–0.22 over 2 s, which moved the board 1.7–3px as a
+slow wobble. Intensity now maps to 0.5–1.5 of the base jolt (≈ 9–10px peak, small roll) and the
+motion fits in the first 600 ms whatever the duration. Reduced motion: the engine already skips
+every effect. Unit test added.
+
+Screenshots: `review-screenshots/p7-before|p7-after/flash-*`, `shake-*` (frozen frames; the
+shake still frames freeze the text reveal too, the recordings show it best) and recordings
+`effects-{paper,dark}-{desktop,mobile}.webm` (page "atelier" shake, then page "preuve" flash).
+Re-run: `SHOTS=p7-after npx playwright test -c review-screenshots/shots.config.ts effects.spec.ts`.
+
+### 1b. Live narration (ai-live) late or silent — `b1f3b75`
+
+**Measured** with the local Chatterbox server (your process on 8765) and a browser probe
+(`review-screenshots/narration-timing.spec.ts`, page shown → `POST /api/narration` → `play()`),
+reading each page for 20 s:
+
+| Page        | Page shown | First audio | What happened                                                                                   |
+| ----------- | ---------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| matin-ville | 2.9 s      | 2.9 s       | cached clips (0.0 s)                                                                            |
+| etabli      | 23.0 s     | 23.2 s      | cached; p3 started generating at 35.3 s                                                         |
+| livraison   | 43.1 s     | **never**   | p3 of the previous page still generating; p1 got **429 after 2 s**, p2 too → page stayed silent |
+| atelier     | 63.1 s     | 63.3 s      | p1 cached; p2 generated in 9.9 s while p1 played                                                |
+| messagere   | 83.2 s     | **never**   | same race as livraison                                                                          |
+
+Diagnosis: not generation latency alone. **A dropped request caused by a page-change race.** The
+generator does one clip at a time (`LOCK`); a clip abandoned by the browser kept generating, and
+the new page's request gave up on the lock after 2 s (`429`), which the client treats as
+"narration unavailable". Also, paragraph n+1 was only requested once paragraph n−1 had finished
+playing.
+
+Fixed:
+
+- `tools/narration.py`: cached clips answer at once (no lock); new ones wait their turn (up to
+  120 s) instead of a 2 s refusal; a request whose browser connection is gone leaves the line
+  without generating. Python test (`NarrationQueueTests`) reproduces the race: a request waiting
+  2.5 s behind a generation gets 200 (was 429 after 2 s), the abandoned one never generates.
+- Prefetch: the reader asks for every paragraph of the page in order, one request at a time,
+  from the page start (unit test: the 3rd paragraph is requested while the 1st plays, never two
+  in flight — failed before).
+- "Preparing narration…" / « Préparation de la narration… » (`role="status"` in the toolbar,
+  pulsing dot; words hidden under 760 px, still announced; no pulse under reduced motion) while a
+  reached paragraph is still generating and the wait exceeds 400 ms. Unit + e2e tests.
+
+**Needs you:** your narration server still runs the old code. Restart `narration.py serve` to
+get the fix, then re-run the probe to see the after numbers:
+`npx playwright test -c review-screenshots/probe.config.ts` (normal pace; `FAST=1` for quick
+page turns). I did not restart your process or load a second model beside it.
+
+Not done (logged): prefetching the _next_ page (unknown until the reader chooses).
+
+**Earlier audio fixes confirmed in the browser** (all chromium e2e):
+
+- unlock in the first click, reader and editor (`audio-start` ×2, existing);
+- sound effects / ambience and **music actually play** (time advances) on page "atelier" (new);
+- a clip that takes **7 s to download** (old limit 5 s) still plays (new, `narration.spec`);
+- the 15 s no-progress limit is covered by unit tests (`audio-manager.test.ts`); a browser stall
+  cannot be produced reliably with route interception, so no e2e.
+
+### 5. Your home and My Character icons — `9266bf8`
+
+`public/home-icon.png` and `public/rpg-icon.png` (the two untracked files, added **unchanged**)
+replace the glyphs I redrew last pass, in the reader toolbar's Home and My Character buttons —
+the only two places these actions have an icon (the welcome screen uses the text wordmark; the
+editor has no Home button). They are **PNG**, so no `currentColor` edit is possible; they have
+transparent backgrounds, so `PictureIcon` uses them as a CSS mask filled with the text colour.
+They follow light, paper and dark live, at 24 px like the previous home icon; accessible names
+unchanged. The old `home`/`character` paths were deleted from `ToolbarGlyph`. E2E: the icons use
+those files and the text colour, also on dark.
+
+To know: the files are 237 KB and 497 KB (1300 px) for 24 px icons. I didn't alter them; a
+96 px export (or an SVG) would load faster on mobile.
+
+Screenshots: `p7-before|p7-after/toolbar-{light,paper,dark}-{desktop,mobile}.png` (close-up) and
+`page-*`.
+
+### 2. Reward notifications — `8407bde` (+ `fff9971`)
+
+**Found:** there was no right-hand stack in the code; a reward (item, learned ability) opened a
+centred **modal** that blocked the story until "Continue reading" (`GameResultNotice`). I built
+the stack after your reference image and removed that modal (`GameResultNotice`, the
+`seenResults` plumbing and the `.spell-learned-modal` / `.reader-event-message` CSS).
+
+- What: `rewardChanges(before, after)` (pure, unit-tested) lists what the reader **gained**:
+  item received, ability learned, ability rank, XP (counted across a level-up: Δxp + 5 × Δbase
+  max HP), level up, HP restored. Losses (damage, used items) are not notified.
+- When: from the last shown state. A fight, a check or a combat ending keeps its window first; what
+  it gave appears when the window closes (e.g. "+1 XP" after a check). Load and Back show
+  nothing.
+- A reward choice no longer stops: the card appears and the story continues (`RewardEvent`
+  finishes the pending event; a failed save is retried by the existing "Try again", which
+  reloads and finishes it).
+- Card: small icon tile, title, one short detail line, shared `CloseButton`, 2 px bar that
+  shrinks over 10 s and pauses on hover/focus (its `animationend` dismisses the card).
+  `role="status"` region labelled "Rewards"/"Récompenses". Reduced motion: no entrance, no
+  moving bar (an invisible 10 s animation still times it).
+- Placement (design choice): **wide screens** — fixed, far right, 16 px below the toolbar, 252 px,
+  in the margin beside the 768 px column (from 1340 px; from 1684 px on pages with art on the
+  right, which make the reading area 1116 px). **Narrower screens and mobile** — there is no
+  margin, so one card at a time sits **over the toolbar's title row** (home + title), never
+  over the text; the next card waits and its timer starts when it is shown. Checked by e2e at
+  1440, 1024 and 390 px (no overlap with the text or the side art, no horizontal scroll).
+- **Assertion changed on purpose:** `reader-request` "shows the item before departure" now
+  expects the notification and no window ("…as a notification…"). `fff9971`: the combat
+  flash's vertical position (whole view since 1c).
+
+Screenshots: `p7-before|p7-after/reward-{wide-desktop,narrow-desktop,mobile}.png` and `.webm`
+(before: the modal; after: the card).
+
+`920053e` (follow-up to 2): cards that don't fit were `display: none`, which **stops their CSS
+countdown**, so on narrow screens a backlog built up and the card shown could be minutes old
+(found on the task 3 screenshot). Hidden cards now stay invisible but keep counting; every card
+lasts 10 s from its arrival. E2E checks a waiting card's timer is running.
+
+### 3. Narrative events become story pages — `5144b5c`
+
+**Design note.** Where events come from today:
+
+- Rewards are **game actions** on Ink choices (`+ [Accept the letter # game:take-letter] -> preuve`):
+  give-item, learn, heal, xp, train. The director applies the action, keeps the page with a
+  `pendingEvent`, and when the event finishes Ink follows the choice's divert.
+- Checks and fights are game actions too, with their own windows; their outcome passages are
+  already authored pages (`apres`, check results).
+- `scenes[passage].events` are presentation cues (sound, effect), not story events.
+
+So an important event can be a page **in the content itself**: point the choice at a new Ink
+knot that describes the event, then continue. The reward stays on the existing game action, and
+task 2's stack shows the stat change. No generic mechanism was needed.
+
+One blocker: any Ink edit changes the bundle's digest, and `validateCheckpoint` rejected every
+existing save as "another story version" (earlier releases worked around it by bumping
+`checkpointId`, which starts a fresh slot — old saves did not load either). To keep old saves
+loading without changing the save format: a language configuration may list earlier digests of
+the same release as compatible (`compatibleInkDigests`, optional, copied into the bundle); such
+a save is accepted only if the existing Ink restore check puts it exactly at its saved frame
+(choices, interactions, facts), and the next save writes the new digest. Documented in
+`DATA_CONTRACTS.md`. Unit test (`story-update.test.ts`, failed before): a v1 save loads in v2 and
+its choice reaches the new page; without the declaration it stays incompatible. One-off check
+against the real story: Orée saves made with the previous en/fr build on `messagere`, `duel`,
+`apres` and `infirmerie` all load in the new build; from `apres` the old save continues to the
+new page.
+
+**Orée — becomes a page:**
+
+| Event                                         | Page                                                                                                                                  | Notification |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Ysée heals you after the guardian (`recover`) | new `soins`: "The Care of Ysée" / « Les soins d’Ysée » (your text, in the story's present tense; then "Follow Ysée to the infirmary") | "+N HP"      |
+
+**Already a page (no change):** meeting Nour (`messagere`), Ysée (`portail`…), the duel and the
+guardian fight (combat window + `apres`), every check result, each spell lesson (the page after
+`learn-*` narrates it).
+
+**Notification only (minor rewards):** the letter, the alder pen, the school seal, the healing
+balm (items); Little Light, Thread of Air, Counter-song, Dawnstroke (abilities learned — their
+lesson pages already tell the story); XP from checks and fights; level-ups.
+
+**Assertion changed on purpose:** `magic.test.ts` "plays all 41 … pages" → 42 (+ `soins` follows
+`apres`). The French chapter e2e now checks the page title and the "PV récupérés" card.
+Live narration: `npm run narration:export` was run so the local generator accepts the new text
+(local file, untracked).
+
+Screenshots: `p7-after/care-{desktop,mobile}.png` (no "before": the choice used to go straight
+to the infirmary page).
+
+### 4. Combat redesign — `a5d0ee2`
+
+- **"i" buttons**: they already were the shared `Info` (a native `<details>`), so they open on
+  click and from the keyboard (Tab, Enter/Space); nothing opened on hover. Kept; now e2e-tested.
+- **Use an item** (and Use an ability, same code path — one component) opens a popup **inside
+  the combat window** (`role="dialog"`, shared `CloseButton`, focus moves in, Escape returns to the
+  actions without closing the combat window, focus back on the button).
+- **Turn sequence**: dice → your blow (slash + red flash on the enemy, your log line) → **1 s** →
+  the enemy's blow (red flash + shake on your portrait, its log line). The rules apply both blows
+  at once, so each HP bar moves with its beat; moves wait until the turn has played out. The old
+  board shake on damage (`use-combat-feedback`) moved to the portrait.
+- **Log**: fixed height (6.6 lines), scrolls, newest line kept in view; focusable for keyboard
+  scrolling.
+- **Ending, same window** (before: a second window with a broken layout, see `p7-before/duel-ending-*`):
+  the window stays mounted from the first turn to the end and keeps the last encounter (the rules
+  delete it). Final roll and blows as usual → the defeated side's portrait fades (victory/charm:
+  the enemy; defeat/escape: you) → the outcome appears **between the two portraits** (centred at
+  their mid-height on a paper pill — a 3-column layout clipped the player on mobile) → 2 s →
+  the window fades out (450 ms) → the story continues. A failed save keeps the window with
+  Continue, as before.
+- **Reduced motion**: no hit, shake, fade, entrance or fade-out; every beat, the log and the
+  outcome stay (the defeated portrait is shown dimmed directly).
+- i18n: the strings of this window moved to `combat.*` (en + fr), replacing the inline
+  `french ? … : …` pairs in `CombatControls`/`CombatActions`/`Combatant` (REVIEW #7).
+- Tests: new e2e "combat: info opens from the keyboard, items open in a popup…", "combat: two
+  beats per turn, then the outcome between the portraits and a fade-out" (enemy line ≥ 0.7 s after
+  yours, hits on the right portraits, log height constant, title between portraits, fade-out seen),
+  "reduced motion keeps every combat step…". **Assertions changed on purpose:**
+  `combat-ending.test.ts` (static render: the title now appears after the final beats, so it
+  checks the single window, the translated title and the final line through `combatLines`);
+  `reader-request` "announces Defeated/Escaped" waits for the next turn or the outcome instead
+  of clicking a button that the ending hides.
+- Health: splitting `CombatControls` (`useCombatTurn`, `CombatStage`) kept unit size in check
+  (92.2).
+
+Screenshots + recordings: `p7-before|p7-after/duel-{start,items,turn-*,ending-*,after}-{desktop,mobile}.png`,
+`duel-{desktop,mobile}.webm` (seeded training duel, motion on).
+
+### 6. Fixed page, only the text scrolls
+
+**Design note (written before the change).**
+
+- **Fixed:** the top menu, the page background (colour, paper grain, `background` media — already
+  `position: fixed`), the side art, the reward notifications (already fixed), viewport effects.
+- **Scrolls:** the reading column — title, text, inline and `wide` media, examination buttons,
+  choices, progress and the footer. `.reader` becomes a full-height frame (100dvh, no page scroll)
+  and `.reader-board` the single scroll container. The board bleeds into the gutters (like the
+  toolbar already does), so its scrollbar sits at the window's right edge — one scrollbar, as
+  before.
+- **`right` media (side art):** sticky at the top of the board while the text scrolls, so it
+  stays in view. Below 1240 px the art already sits above the text (no side column); there it
+  scrolls with the text like any illustration.
+- **`fullscreen` media / cinematics, combat, checks, modals:** native `<dialog>` top layer,
+  unaffected.
+- **New page / Back:** the board belongs to the keyed page component, so each page (and Back)
+  mounts a fresh board scrolled to the top. Focus still moves to the page heading, which sits in
+  the board, so Page Up/Down, Space, arrows, Home/End scroll the text straight away; if focus is
+  elsewhere outside the board and not in a control (e.g. after a toolbar click), those keys are
+  forwarded to the board. The board is a labelled region ("Story text" / « Texte de l'histoire »).
+- **1c (scroll-driven media):** the IntersectionObserver uses the viewport as root
+  (`root: null`), which already accounts for clipping by a scrolling ancestor; no change
+  expected, checked by its e2e.
+- **Mobile (≤ 760 px): normal page scroll, kept on purpose.** The menu takes two rows (112 px)
+  there; a fixed frame would permanently take that height from a small screen, and an inner
+  scroll container stops mobile browsers from hiding their address bar while reading and
+  changes the familiar pull-to-scroll behaviour. With page scroll the sticky menu still stays at
+  the top and the reward cards sit over it.
+
+**Result — `c19d209`.** As in the note. The side art sticks at its own top margin (46 px), so it
+does not move at all. Scroll keys pressed outside the text and outside any control/window (e.g.
+after clicking Pause) are forwarded to the board; inputs, selects, sidebars, `<details>` and
+dialogs keep their keys, and Space on a button still presses it.
+E2E (`page-frame.spec.ts`, 1440×700 on page "messagere"): the wheel scrolls the board while
+`scrollY` stays 0, the menu stays at y = 0 and the side art does not move; no page or sideways
+scroll; a new page and Back start at the top; Page Down/Home/End work from the heading and after
+a toolbar click; no sideways scroll at 1024 and 320 px. 1c's "starts an instant-text illustration
+below the fold…" passes unchanged (`root: null` sees the board's clipping).
+**Assertion changed on purpose:** `reader.spec` "wide cinematic canvas" measures the board's
+content box (the board now spans the window so its scrollbar is at the edge).
+
+Found while checking (`322663d`): adding the care page had silently dropped Orée's published
+narration clip from the bundle — the build only attaches published clips when
+`stories/house/narration.json` names the current Ink digests. The only published clip still
+matches its text, so the digests moved to the new build (what `narration.py prepare` writes). The
+two new paragraphs (en/fr) have no published clip: they narrate live in dev until the next
+`narration.py prepare` (needs the model; I did not load a second one beside your server).
+
+Screenshots + recordings: `p7-before|p7-after/frame-{top,scrolled,pagedown}-{desktop,mobile}.png`,
+`frame-{desktop,mobile}.webm` (desktop 1440×700: before, the side art scrolls away; after, it
+stays; mobile is unchanged by design).
