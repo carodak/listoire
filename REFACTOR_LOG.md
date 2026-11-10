@@ -1,6 +1,109 @@
 # Refactor log
 
-## ☀ Summary — branch `features/reader-combat-editor` (read this first)
+## ☀ Summary — Pass 6 (read this first)
+
+Branch `features/reader-combat-editor`, 19 commits on top of `8a78885` (nothing pushed, nothing
+on `main`). **Tasks 1–4 are done.** Two items need a decision from you (marked ⚠ below).
+
+|                                        | Start (`8a78885`)       | Now (`a631fd3`)                                  |
+| -------------------------------------- | ----------------------- | ------------------------------------------------ |
+| Health score (`--score --hotspots`)    | 94.8                    | **92.5** ⚠ (95.0 without the one churn hotspot)  |
+| Production LOC (src + tools, no tests) | 20,712                  | 21,019 (+307)                                    |
+| Unit tests                             | 397                     | **414**                                          |
+| E2E, chromium                          | 79, 18 outdated failing | **SUITE_TOTAL passing** on my server (port 4175) |
+| `fallow security`                      | 10                      | 10 (no new candidate)                            |
+
+### What was done
+
+1. **Combat** — `a79eaba` escape, defeat (and charm) end in the combat window like victory
+   (translated title, last log line, auto-continue, Continue only if saving fails); same code
+   path. `9ff0ded` an effect that expires or is replaced fades out (600 ms, none under reduced
+   motion); effect names now translated (they were raw English "stun (1)").
+   **1c** — design note `a03b7a0`, implementation **`41bc1c0` (revert this one commit to drop
+   it)**: in instant text, inline/wide/right media start their entrance, cues and `durationMs`
+   when they scroll into view (IntersectionObserver). Before: a below-the-fold illustration was
+   already 4 s into its animation when first seen; after: it starts on scroll.
+2. **E2E** — all 18 approved tests retargeted at Orée by passage ID (`data-passage` /
+   `data-segment` added to the page), fixtures by route interception (Nour's examination gets a
+   reverse side; the narration endpoint answers with a real MP3 + digest). Found and fixed a real
+   bug on the way: at 320px the language chevron made the page scroll sideways (`e7dcf3c`).
+   Also found: the French combat e2e was random (lost the duel on ~half the seeds); dice are now
+   seeded in that test.
+3. **Audio** — root cause of narration stopping (`18a938d`): a fixed 4 s start timer and a
+   wall-clock deadline fixed at start (slow start, slowed voice or buffering → "timeout"), plus
+   5 s to download clips up to 10 MB. Now one watchdog gives up only when playback makes no
+   progress for 15 s; the download allowance grows with the clip. REVIEW #9 (`743031b`): skipping
+   a cinematic no longer drops delayed images or their expiry. `0c2cd0d`: sound is on by default
+   and audio is unlocked inside the first click/key press (Play, or the editor).
+4. **Visual** — `f83591c` branching lightning (jagged channel + forks, accent glow, light
+   falloff, multi-strike flicker) for light-flicker and spell effects; `4aa2936` new home and
+   My Character icons in `ToolbarGlyph`; `a631fd3` portraits (My Character, combat) use the same
+   theme blend as illustrations, live with the page colour; their URLs go through the
+   presentation session (REVIEW #6).
+
+### ⚠ Needs your decision
+
+- **Health 92.5 < 94.8.** Only the hotspot penalty changed: Fallow counts files whose
+  churn × complexity score is ≥ 50, and `scene-playback.ts` crossed it (56) because 1c and #9
+  both changed it this pass. Every other penalty is at or below its starting value. Options and
+  what I tried are in "Task 3 — Audio" below. I did not add an exclusion or pad the file.
+- **Photograph hotspot discovery is no longer covered by e2e** (Orée has no discoverable detail;
+  it needs an Ink action). Author one in Orée, or approve a small e2e-only fixture story.
+
+### Design choices to review
+
+- Charm also ends in the combat window ("Charmed" / "Adversaire charmé"). French titles are
+  nouns ("Fuite réussie", "Défaite") to avoid gendered participles.
+- 1c applies only to instant text, not to fullscreen/background media or restored pages;
+  `show.delay` stays ignored in instant mode, `durationMs` counts from entry.
+- Sound on by default: changed the app default **and Orée's en/fr reading defaults** (data);
+  the editor's "Sound enabled by default" remains the author's switch. The AudioContext unlock
+  is real but story audio plays through `HTMLAudioElement`, so **iOS Safari was not verified**.
+- Lightning glow uses the page accent so it reads on light paper; on a light page a light bolt
+  is naturally subtler than on dark pages.
+- Portraits on dark pages are ink-inverted exactly like the story illustrations (sketch art
+  reads as light lines); full-colour art would be inverted too.
+- Items have no images in this app: their "icons" are text glyphs drawn in the theme's text
+  colour, so they already follow the theme (checked on the screenshots; no change).
+
+### Screenshots (untracked, `review-screenshots/`)
+
+`before/` and `after/`, themes light (#faf8f2), paper (#f5ead7) and dark (#222b31), desktop and
+mobile, motion on:
+
+- `page-*`, `toolbar-*` (after only, close-up) — icons.
+- `character-*`, `combat-*` — portraits and theme (compare the `dark` ones).
+- `flicker-500ms-*`, `flicker-1000ms-*` — lightning on page "preuve".
+- **`after/combat-hit-{100,250,400}ms-*`** — the claw slash + red flash, frozen at fixed times.
+- `1c-above-fold.png`, `1c-scrolled.png`, `1c-scroll.webm` — scroll-driven media, before/after.
+- Re-run: `SHOTS=after SCENES=page,character,flicker,combat npx playwright test -c review-screenshots/shots.config.ts shots.spec.ts`
+  (needs a dev server on 4175).
+
+### How to try it
+
+`npm run dev`, then:
+
+- **Combat endings:** play to the duel with Ysée (page "duel"); press Flee, or lose: the window
+  says "Escaped"/"Defeated" with the last line, then the story continues.
+- **Effect fade:** an ability that stuns (Dawnstroke, later in Orée): when the stun ends, its
+  indicator fades out.
+- **Scroll-driven media:** narrow the window so the first illustration is below the fold, Replay
+  page, wait, then scroll: its camera move starts as it appears.
+- **Audio:** fresh profile → Play: sound effects and music play without opening the settings.
+  Narration: throttle the network (DevTools "Slow 3G") — it now starts late instead of failing.
+- **Lightning:** page "A coin suspended in the air" (after accepting the letter), any page colour.
+- **Icons / theme:** Reading preferences → page colour dark, then open My Character and a combat.
+- E2E: `npx playwright test -c playwright.local.config.ts --project=chromium` (warm the server
+  once first; a fresh Vite server needs ~60 s for its first page).
+
+### Skipped / next steps
+
+- Editor Text UX and Media → Image UX (parts 4–5): not started, as agreed.
+- Fade-out of combat effects is not e2e-tested (no Orée path reaches an effect on first choices).
+- Possible follow-ups: an e2e fixture story with a hotspot and an effect ability; decide the
+  `scene-playback.ts` split; dead CSS rule `.reader.text-large .prose { font-size: 22px }`.
+
+## ☀ Summary — Pass 5 (previous session)
 
 All work is on `features/reader-combat-editor` (13 commits on top of `main`, nothing pushed,
 nothing committed to `main`). **Partially done:** Parts 0 and 1 are complete. Parts 2–5 were
@@ -640,7 +743,7 @@ Check after every item: unit tests, oxlint, tsc, oxfmt, `vite build`, Fallow hea
 | `a79eaba` | Escape, defeat and charm end in the combat window like victory               | 2 reuse (victory window)                                  | +15        | 94.8  |
 | `9ff0ded` | Ended combat effects fade out; effect names translated                       | 6 minimal new code                                        | +60        | 94.9  |
 | `a03b7a0` | 1c design note                                                               | —                                                         | 0          | 94.9  |
-| (1c)      | Instant text: in-flow media start on scroll entry (revert this commit alone) | 3 platform (IntersectionObserver) + 2 reuse (queueTarget) | +37        | 94.9  |
+| `41bc1c0` | Instant text: in-flow media start on scroll entry (revert this commit alone) | 3 platform (IntersectionObserver) + 2 reuse (queueTarget) | +37        | 94.9  |
 
 **1a notes**
 
@@ -812,3 +915,28 @@ penalty is unchanged. I tried moving its stateless rules to a helper file: 55.2 
 +0.2, so I reverted it. Options: (a) accept until the churn ages out; (b) split `ScenePlayback`
 (media timers / scroll gate / effect dispatch) as a planned refactor — note this would stop 1c
 from reverting on its own; (c) a Fallow hotspot exclusion for that file (I did not add one).
+
+### Task 4 — Visual
+
+| Commit    | Item                                                     | Ponytail step                                                      | Prod LOC Δ |
+| --------- | -------------------------------------------------------- | ------------------------------------------------------------------ | ---------- |
+| `f83591c` | Lightning and spell effects                              | 2 reuse (effects overlay, combat/spell feedback) + 6 one generator | +95        |
+| `4aa2936` | Home and My Character icons                              | 2 reuse (`ToolbarGlyph`)                                           | +8         |
+| `a631fd3` | Portraits follow the reading theme; URLs via the session | 2 reuse (`--illustration-mix`/`--ink-filter`, `useAssetSource`)    | +10        |
+
+- **Lightning:** `lightning.ts` builds one SVG per strike: midpoint-displaced main channel
+  (jagged at every scale) with 2–3 forks, each drawn as a wide accent-tinted glow stroke under a
+  bright core (no full-screen blur), over a radial light falloff centred where it lands. CSS gives
+  a strike and fading return strokes. Used by `light-flicker` (its flicker keyframes now strike
+  several times), spell casts in combat and spell checks; the old flat `clip-path` zigzag and its
+  `spell-arc` keyframes are deleted. Reduced motion: never created (engine) and hidden (CSS).
+  Tests: shape is deterministic per seed, forks start on the channel, stays in the viewport.
+- **Icons:** `home` (house with eaves, chimney, arched door) and new `character` (head, cloak,
+  clasped collar) in `ToolbarGlyph`; the character tab used a one-off inline SVG before.
+- **Theme:** `.themed-art` in `app.css` (portrait in My Character, both combat portraits) applies
+  `mix-blend-mode: var(--illustration-mix)` and `filter: var(--ink-filter)`, the variables
+  `readerTheme()` already sets for illustrations, so a page-colour change applies at once. The
+  reader toolbar resolves the character portrait with `useAssetSource(presentation.resolveAsset)`
+  (the character feature may not import presentation, per the architecture rules) and passes the
+  URL down; `Combatant` lost its hand-built fallback URL. New e2e `themed-art.spec`.
+  `ReaderToolbar` crossed 60 lines, so its home/title/language group became `ToolbarStart`.
