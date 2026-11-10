@@ -2196,8 +2196,9 @@
 }
 .reader-viewport-effect,
 .reader-viewport-feedback {
+  /* The whole view, menu included, so page and toolbar light up together. */
   position: fixed;
-  inset: var(--reader-toolbar-height, 72px) 0 0;
+  inset: 0;
   width: auto;
   height: auto;
   max-width: none;

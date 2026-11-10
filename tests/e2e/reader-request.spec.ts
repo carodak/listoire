@@ -314,7 +314,7 @@ test("keeps a check on its page until its dice settle and the reader confirms", 
   await expect(page.locator(".choices button").first()).toBeEnabled();
 });
 
-test("uses the whole viewport below the menu for board effects", async ({ page }) => {
+test("board effects light the whole viewport, menu included", async ({ page }) => {
   await page.route("**/stories/house/en.json", async (route) => {
     const response = await route.fetch();
     const bundle = await response.json();
@@ -337,12 +337,15 @@ test("uses the whole viewport below the menu for board effects", async ({ page }
   const effect = page.locator(".reader-viewport-effect");
   await expect(effect).toBeAttached();
   const bounds = (await effect.boundingBox())!;
-  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
   const viewport = page.viewportSize()!;
   expect(bounds.x).toBeCloseTo(0, 0);
   expect(bounds.width).toBeCloseTo(viewport.width, 0);
-  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
-  expect(bounds.height).toBeCloseTo(viewport.height - bounds.y, 0);
+  expect(bounds.y).toBeCloseTo(0, 0);
+  expect(bounds.height).toBeCloseTo(viewport.height, 0);
+  // Painted above the sticky menu, and never in the way of its buttons.
+  await expect(effect).toHaveCSS("pointer-events", "none");
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await expect(page.locator(".reading-sidebar")).toBeVisible();
 });
 
 test("shows a cropped illustration once at its final size and removes the lower fade before Examine", async ({

@@ -103,6 +103,18 @@ export function lightningElement({
       { offset: String(offset), "stop-color": color, "stop-opacity": String(opacity) },
       gradient,
     );
+  // An even wash lights the whole view; the falloff adds light where the bolt lands.
+  make(
+    "rect",
+    {
+      class: "lightning-wash",
+      width: "100",
+      height: "100",
+      fill: color,
+      opacity: String(strength / 2),
+    },
+    svg,
+  );
   make("rect", { class: "lightning-light", width: "100", height: "100", fill: `url(#${id})` }, svg);
   for (const [kind, d] of [...forks.map((d) => ["fork", d] as const), ["main", main] as const])
     for (const layer of ["glow", "core"])
