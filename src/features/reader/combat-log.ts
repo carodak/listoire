@@ -81,5 +81,7 @@ export function useCombatLog(
       ENEMY_DELAY_MS,
     );
   }, [result, ready, t, itemName]);
-  return log;
+  // A settled result the effect hasn't logged yet is busy too: otherwise, for one render, the
+  // combat looks finished before its last beats (and the ending's hold starts too early).
+  return { ...log, busy: log.busy || (ready && result !== undefined && result !== log.acted) };
 }
