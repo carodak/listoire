@@ -446,10 +446,9 @@ test("waits for Fight even after restoring an encounter and animates the combat 
   await expect(feedback).toBeAttached();
   await expect(combat).toHaveCSS("transform", "none");
   const bounds = (await feedback.boundingBox())!;
-  const menu = (await page.locator(".reader-toolbar").boundingBox())!;
   expect(bounds.width).toBeCloseTo(page.viewportSize()!.width, 0);
   expect(bounds.x).toBeCloseTo(0, 0);
-  expect(bounds.y).toBeCloseTo(menu.y + menu.height, 0);
+  expect(bounds.y).toBeCloseTo(0, 0); // the whole view, menu included
   await expect(combat.getByRole("button", { name: "Basic attack", exact: true })).toBeEnabled();
   await combat.getByRole("button", { name: "Use an ability", exact: true }).click();
   await combat.locator(".combat-ability-menu button").first().click();
