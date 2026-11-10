@@ -2,7 +2,7 @@ import { useCombatChoice } from "./use-combat-choice.ts";
 import { ReaderToolbar } from "./ReaderToolbar.tsx";
 import type { StoryPlayerProps as Props } from "./ReaderToolbar.tsx";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { Ref } from "react";
+import type { KeyboardEvent, Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { FailureCode, Frame } from "../../contracts/story.ts";
 import type { ReaderSnapshot } from "../../contracts/story.ts";
@@ -94,6 +94,7 @@ function ReaderPassage(props: ReaderPassageProps) {
   const { bundle, presentation, preferences } = player;
   const heading = useRef<HTMLHeadingElement>(null);
   const page = useRef<HTMLElement>(null);
+  const board = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => presentation.bindPage(page.current!), [presentation]);
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const className = `reader font-${preferences.fontFamily} text-${preferences.fontSize} lines-${preferences.lineHeight}`;
@@ -109,6 +110,7 @@ function ReaderPassage(props: ReaderPassageProps) {
       lang={bundle.locale}
       aria-busy={state.busy}
       style={pageStyle(player)}
+      onKeyDown={(event) => scrollText(event, board.current)}
     >
       <ReaderToolbar
         player={player}
@@ -116,20 +118,19 @@ function ReaderPassage(props: ReaderPassageProps) {
         characterOpen={characterOpen}
         onCharacterToggle={onCharacterToggle}
       />
-      <ReaderBoard {...props} media={media} heading={heading} />
+      <ReaderBoard {...props} media={media} heading={heading} board={board} />
       <PageEffects layers={media.layers} />
     </main>
   );
 }
 
-function ReaderBoard({
-  player,
-  state,
-  failure,
-  onFailure,
-  media,
-  heading,
-}: ReaderPassageProps & { media: PresentationState; heading: Ref<HTMLHeadingElement> }) {
+interface BoardProps extends ReaderPassageProps {
+  media: PresentationState;
+  heading: Ref<HTMLHeadingElement>;
+  board: Ref<HTMLDivElement>;
+}
+
+function ReaderBoard({ player, state, failure, onFailure, media, heading, board }: BoardProps) {
   const { bundle, director, presentation, backup, preferences } = player;
   const { t } = useTranslation();
   const scene = bundle.scenes?.[state.frame.passageId];
@@ -139,7 +140,13 @@ function ReaderBoard({
     Boolean(failure) || media.blocking,
   );
   return (
-    <div className="reader-board" style={{ visibility: media.departed ? "hidden" : undefined }}>
+    <div
+      ref={board}
+      className="reader-board"
+      role="region"
+      aria-label={t("storyText")}
+      style={{ visibility: media.departed ? "hidden" : undefined }}
+    >
       <GamePanel
         bundle={bundle}
         director={director}
@@ -208,6 +215,33 @@ function PageEffects({ layers }: { layers: PresentationState["layers"] }) {
         ))}
     </>
   );
+}
+
+const SCROLL_KEYS = new Set(["PageDown", "PageUp", "ArrowDown", "ArrowUp", "Home", "End", " "]);
+
+/**
+ * Scroll keys pressed outside the text (after a toolbar click) still scroll the text when the
+ * board is the scroll container (fixed frame). Controls and windows keep their own keys.
+ */
+function scrollText(event: KeyboardEvent<HTMLElement>, board: HTMLDivElement | null) {
+  const target = event.target as HTMLElement;
+  if (
+    !board ||
+    !SCROLL_KEYS.has(event.key) ||
+    board.contains(target) ||
+    board.scrollHeight <= board.clientHeight ||
+    target.closest("input, select, textarea, dialog, .reader-sidebar, details") ||
+    (event.key === " " && target.closest("button, a, summary"))
+  )
+    return;
+  event.preventDefault();
+  const page = board.clientHeight * 0.9;
+  const top = { Home: 0, End: board.scrollHeight }[event.key];
+  if (top !== undefined) board.scrollTo({ top });
+  else
+    board.scrollBy({
+      top: { PageDown: page, " ": page, PageUp: -page, ArrowDown: 40, ArrowUp: -40 }[event.key],
+    });
 }
 
 function pageStyle({ bundle, preferences }: Pick<Props, "bundle" | "preferences">) {

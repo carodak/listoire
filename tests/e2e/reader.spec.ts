@@ -196,7 +196,13 @@ test("reader keeps a wide cinematic canvas and a centered readable text column",
   await enterStory(page);
   await readTo(page, "messagere"); // a page with right-page artwork
   const toolbar = (await page.locator(".reader-toolbar").boundingBox())!;
-  const canvas = (await page.locator(".reader-board").boundingBox())!;
+  // Pass 7: the board scrolls and spans the window; the canvas is its content box.
+  const board = page.locator(".reader-board");
+  const inner = await board.evaluate((element) =>
+    parseFloat(getComputedStyle(element).paddingLeft),
+  );
+  const box = (await board.boundingBox())!;
+  const canvas = { ...box, width: box.width - 2 * inner };
   expect(toolbar.y).toBeLessThan(25);
   expect(canvas.y).toBeGreaterThanOrEqual(toolbar.y + toolbar.height - 1);
   const hero = (await page.locator(".story-scene-heading").boundingBox())!;

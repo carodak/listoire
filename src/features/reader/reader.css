@@ -3011,3 +3011,32 @@
     filter: grayscale(1);
   }
 }
+
+/* Fixed frame (Pass 7): above 760px the menu, background and side art stay; only the board
+   (title, text, inline media, choices) scrolls. Mobile keeps the normal page scroll. */
+@media (min-width: 761px) {
+  .reader {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+  .reader > .reader-toolbar {
+    flex: none;
+  }
+  .reader > .reader-board {
+    flex: 1;
+    min-height: 0;
+    margin-inline: calc(-1 * var(--reader-gutter));
+    padding: 0 var(--reader-gutter) 48px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* Sticks at its own top margin (46px), so it does not move at all. */
+  .reader .reader-scene[data-illustrated="true"] .story-art {
+    position: sticky;
+    top: 46px;
+  }
+}

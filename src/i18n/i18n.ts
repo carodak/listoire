@@ -20,6 +20,7 @@ const en = {
   voiceRate: "Voice speed",
   voiceUnavailable: "Narration is unavailable. You can continue reading.",
   narrationPreparing: "Preparing narration…",
+  storyText: "Story text",
   audioChannels: {
     sfx: "Sound volume",
     ambience: "Ambience volume",
@@ -187,6 +188,7 @@ const fr: typeof en = {
   voiceRate: "Vitesse de la voix",
   voiceUnavailable: "La narration est indisponible. Vous pouvez poursuivre la lecture.",
   narrationPreparing: "Préparation de la narration…",
+  storyText: "Texte de l’histoire",
   audioChannels: {
     sfx: "Volume des sons",
     ambience: "Volume de l’ambiance",
