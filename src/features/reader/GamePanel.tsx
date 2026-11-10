@@ -8,7 +8,6 @@ import { inventoryCategory } from "../character/inventory-category.ts";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import { CombatControls } from "./CombatControls.tsx";
 import { DiceRoll } from "./DiceRoll.tsx";
-import { SpellFeedback } from "../presentation/SpellFeedback.tsx";
 import { useTranslation } from "react-i18next";
 import { combatLines } from "./combat-log.ts";
 
@@ -16,7 +15,6 @@ interface GamePanelProps {
   bundle: StoryBundle;
   director: ReaderController;
   state: ReaderSnapshot & { frame: Frame };
-  seenResults?: WeakSet<object>;
   presentation?: PresentationSession;
   combatReady?: boolean;
 }
@@ -25,7 +23,6 @@ export function GamePanel({
   bundle,
   director,
   state,
-  seenResults,
   presentation,
   combatReady = false,
 }: GamePanelProps) {
@@ -54,13 +51,7 @@ export function GamePanel({
           presentation={presentation}
         />
       )}
-      <GameNotifications
-        bundle={bundle}
-        state={state}
-        director={director}
-        seenResults={seenResults}
-        presentation={presentation}
-      />
+      <RewardEvent director={director} state={state} />
     </>
   );
 }
@@ -140,92 +131,17 @@ function CombatEnding({
   );
 }
 
-function GameNotifications({ bundle, director, state, seenResults, presentation }: GamePanelProps) {
-  const [dismissed, setDismissed] = useState<object | null>(null);
-  const game = state.game;
-  const result = game?.lastResult;
-  if (
-    !result ||
-    game?.combat ||
-    game?.pendingCheck ||
-    (state.restored && !game?.pendingEvent) ||
-    result === dismissed ||
-    seenResults?.has(result) ||
-    combatEnding(game)
-  )
-    return null;
-  const received = bundle.game?.items.find((item) => item.id === result.itemId);
-  return (
-    <GameResultNotice
-      bundle={bundle}
-      result={result}
-      received={received}
-      presentation={presentation}
-      dismiss={() => {
-        if (game?.pendingEvent) {
-          setDismissed(result);
-          void director.finishEvent(state.occurrenceId!).then(() => {
-            if (director.getSnapshot().failure) setDismissed(null);
-          });
-        } else {
-          seenResults?.add(result);
-          setDismissed(result);
-        }
-      }}
-    />
-  );
-}
-
-function GameResultNotice({
-  bundle,
-  result,
-  received,
-  presentation,
-  dismiss,
-}: {
-  bundle: StoryBundle;
-  result: NonNullable<NonNullable<ReaderSnapshot["game"]>["lastResult"]>;
-  received?: NonNullable<StoryBundle["game"]>["items"][number];
-  presentation?: PresentationSession;
-  dismiss: () => void;
-}) {
-  const french = bundle.locale.startsWith("fr");
-  const [settled, setSettled] = useState(!result.dice?.length);
-  const finishDice = useCallback(() => setSettled(true), []);
-  useModalPause(presentation);
-  const labels = french
-    ? {
-        event: "Événement",
-        item: "Objet reçu",
-        adventure: "Votre aventure",
-        continue: "Continuer la lecture",
-        inventory: "Retrouvez cet objet dans votre inventaire.",
-      }
-    : {
-        event: "Story update",
-        item: "Item received",
-        adventure: "Your adventure",
-        continue: "Continue reading",
-        inventory: "You can find this item in your inventory.",
-      };
-  return (
-    <ReaderModal
-      title={received?.name ?? labels.event}
-      eyebrow={received ? labels.item : labels.adventure}
-      closeLabel={labels.continue}
-      onDismiss={settled ? dismiss : undefined}
-      className={result.abilityId ? "spell-learned-modal" : undefined}
-    >
-      <SpellFeedback ability={result.abilityId} />
-      {settled && (
-        <p className="reader-event-message" role="status">
-          {result.message}
-        </p>
-      )}
-      <DiceRoll result={result} french={french} onSettled={finishDice} />
-      {received && <p className="reader-event-detail">{labels.inventory}</p>}
-    </ReaderModal>
-  );
+/**
+ * A reward (item, ability, healing, XP) no longer stops the story: the reader sees it in the
+ * notification stack and the page continues. A restored or retried event finishes the same way.
+ */
+function RewardEvent({ director, state }: Pick<GamePanelProps, "director" | "state">) {
+  const pending = Boolean(state.game?.pendingEvent) && !combatEnding(state.game);
+  const { occurrenceId, failure, busy } = state;
+  useEffect(() => {
+    if (pending && !failure && !busy) void director.finishEvent(occurrenceId!);
+  }, [pending, failure, busy, director, occurrenceId]);
+  return null;
 }
 
 export function GameInventory({ bundle, director, state }: GamePanelProps) {

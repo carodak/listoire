@@ -48,6 +48,16 @@ const en = {
   xpLabel: "Experience · XP",
   xpProgress: "Progress to next level",
   inventory: "Inventory",
+  rewards: {
+    label: "Rewards",
+    dismiss: "Dismiss",
+    item: "Item received",
+    ability: "Ability learned",
+    rank: "Rank {{rank}}",
+    xp: { title: "Experience gained", detail: "+{{count}} XP" },
+    level: { title: "Level up", detail: "+{{count}} max HP, one attribute improved" },
+    hp: { title: "HP restored", detail: "+{{count}} HP" },
+  },
   combat: {
     title: "Combat",
     outcome: {
@@ -191,6 +201,16 @@ const fr: typeof en = {
   xpLabel: "Expérience · XP",
   xpProgress: "Progression vers le prochain niveau",
   inventory: "Inventaire",
+  rewards: {
+    label: "Récompenses",
+    dismiss: "Fermer",
+    item: "Objet reçu",
+    ability: "Capacité apprise",
+    rank: "Rang {{rank}}",
+    xp: { title: "Expérience gagnée", detail: "+{{count}} XP" },
+    level: { title: "Niveau supérieur", detail: "+{{count}} PV max, un attribut amélioré" },
+    hp: { title: "PV récupérés", detail: "+{{count}} PV" },
+  },
   combat: {
     title: "Combat",
     outcome: {

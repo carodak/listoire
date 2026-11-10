@@ -9,6 +9,7 @@ import type { ReaderSnapshot } from "../../contracts/story.ts";
 import { PassageText } from "./PassageText.tsx";
 import { CheckpointControls } from "./CheckpointControls.tsx";
 import { GamePanel } from "./GamePanel.tsx";
+import { RewardNotifications, useRewards } from "./RewardNotifications.tsx";
 import { ReactBitsLayer } from "../presentation/react-bits/ReactBitsLayer.tsx";
 import type { PresentationState } from "../presentation/playback-context.ts";
 import "./reader.css";
@@ -19,12 +20,7 @@ export function StoryPlayer(props: Props) {
   usePresentationLifecycle(props);
   const state = useSyncExternalStore(props.director.subscribe, props.director.getSnapshot);
   const [characterOpen, setCharacterOpen] = useState(false);
-  const [seenGameResults] = useState(() => new WeakSet<object>());
-  // Restoring a saved page must not replay an old item/combat notification.
-  useEffect(() => {
-    if (state.restored && state.game?.lastResult && !state.game.pendingEvent)
-      seenGameResults.add(state.game.lastResult);
-  }, [state.restored, state.game?.lastResult, state.game?.pendingEvent, seenGameResults]);
+  const rewards = useRewards(state, props.bundle);
   const [localFailure, setLocalFailure] = useState<FailureCode | null>(null);
   const failure = state.failure ?? localFailure;
   const frame = state.frame;
@@ -43,16 +39,18 @@ export function StoryPlayer(props: Props) {
       </main>
     );
   return (
-    <ReaderPassage
-      key={state.occurrenceId!}
-      player={props}
-      state={{ ...state, frame }}
-      characterOpen={characterOpen}
-      onCharacterToggle={() => setCharacterOpen(!characterOpen)}
-      failure={failure}
-      onFailure={setLocalFailure}
-      seenGameResults={seenGameResults}
-    />
+    <>
+      <ReaderPassage
+        key={state.occurrenceId!}
+        player={props}
+        state={{ ...state, frame }}
+        characterOpen={characterOpen}
+        onCharacterToggle={() => setCharacterOpen(!characterOpen)}
+        failure={failure}
+        onFailure={setLocalFailure}
+      />
+      <RewardNotifications {...rewards} style={pageStyle(props)} />
+    </>
   );
 }
 
@@ -89,7 +87,6 @@ interface ReaderPassageProps {
   onCharacterToggle: () => void;
   failure: FailureCode | null;
   onFailure: (code: FailureCode | null) => void;
-  seenGameResults: WeakSet<object>;
 }
 
 function ReaderPassage(props: ReaderPassageProps) {
@@ -130,7 +127,6 @@ function ReaderBoard({
   state,
   failure,
   onFailure,
-  seenGameResults,
   media,
   heading,
 }: ReaderPassageProps & { media: PresentationState; heading: Ref<HTMLHeadingElement> }) {
@@ -149,7 +145,6 @@ function ReaderBoard({
         director={director}
         state={state}
         combatReady={combatReady}
-        seenResults={seenGameResults}
         presentation={presentation}
       />
       <PassageText

@@ -473,7 +473,7 @@ test("spends three pages in the ordinary world with relevant layered art before 
   await expect(page.locator(".reader-copy h1")).toHaveText("The watch without a spring");
 });
 
-test("shows the item before departure, fades the illustration and dissolves the heading before the next page fades in", async ({
+test("shows the item as a notification, fades the illustration and dissolves the heading before the next page fades in", async ({
   page,
 }) => {
   await enter(page);
@@ -483,11 +483,9 @@ test("shows the item before departure, fades the illustration and dissolves the 
   await page.locator(".reading-sidebar header button").click();
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(".choices button").first().click();
-  const notice = page.locator(".reader-modal");
-  await expect(notice).toBeVisible();
-  await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
-  await expect(page.locator(".page-word-departure")).toHaveCount(0);
-  await notice.locator(".reader-modal-footer button").click();
+  // Pass 7: no window to close; the reward is a notification and the page turns on its own.
+  await expect(page.locator(".reward-card")).toContainText("The letter from Orée");
+  await expect(page.locator(".reader-modal")).toHaveCount(0);
   await expect(page.locator('[data-departure-heading="true"]').first()).toBeAttached();
   const timing = await page.evaluate(() =>
     document
