@@ -259,6 +259,8 @@
 .image-picker-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Cards keep their size and the grid scrolls (rows would otherwise shrink to fit). */
+  grid-auto-rows: max-content;
   gap: 6px;
   max-height: 58dvh;
   overflow-y: auto;

@@ -551,6 +551,12 @@ test("the picker shows In this story and Library as tabs, each filtered by depth
   await filters.getByRole("button", { name: "Background", exact: true }).click();
   await expect(asset(misty)).toBeVisible();
   await expect(asset(fern)).toHaveCount(0);
+  // A long list scrolls; its cards keep their full thumbnail and name.
+  await filters.getByRole("button", { name: "All", exact: true }).click();
+  const first = panel.locator("button[data-asset]").first();
+  expect((await first.locator("img").boundingBox())!.height).toBeGreaterThan(60);
+  await expect(first.locator("span")).toBeVisible();
+  await filters.getByRole("button", { name: "Background", exact: true }).click();
   await filters.getByRole("button", { name: "All", exact: true }).click();
   // The arrow keys move between the tabs.
   await library.press("ArrowLeft");
