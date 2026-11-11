@@ -17,21 +17,23 @@ export function applyGameConfiguration(
     else continue;
     const definitions = language.configuration.game!;
     const existing = language.configuration.character;
+    const kept = definitions.abilities.filter((item) =>
+      existing?.abilities.some((ability) => ability.id === item.id),
+    );
     language.configuration.character = {
       portrait: existing?.portrait ?? "",
       inventory: existing?.inventory ?? [],
       encounters: existing?.encounters ?? [],
-      abilities: definitions.abilities
-        .filter((item) => !existing || existing.abilities.some((ability) => ability.id === item.id))
-        .slice(0, 2)
-        .map(
-          (item) =>
-            existing?.abilities.find((ability) => ability.id === item.id) ?? {
-              id: item.id,
-              name: item.id,
-              description: "",
-            },
-        ),
+      // A character needs at least one ability: when none of the starting ones is left
+      // (renamed or removed), start with the first two defined.
+      abilities: (kept.length ? kept : definitions.abilities).slice(0, 2).map(
+        (item) =>
+          existing?.abilities.find((ability) => ability.id === item.id) ?? {
+            id: item.id,
+            name: item.id,
+            description: "",
+          },
+      ),
     };
   }
   next.gameMode = valid.actions.some((action) => action.kind === "combat")
