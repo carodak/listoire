@@ -12,7 +12,7 @@ test("keeps the illustration visible while choosing duplicate layer instances in
   await page.getByRole("button", { name: "Image", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
   // Pass 9: no mode select; the starters are offered in the empty state.
-  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await readyMade(dialog, "Character in forest");
   const beforeGallery = (await dialog.boundingBox())!;
   await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
   // The picker is for a new layer (it used to preselect a "foreground" depth filter).
@@ -147,6 +147,11 @@ const character = "sketch.curly-haired-woman-standing-001";
 
 const misty = "sketch.misty-conifer-plain-001";
 const fern = "sketch.fern-fronds-001";
+/** Opens the start area's ready-made scenes (Pass 11: a toggle) and applies one. */
+async function readyMade(dialog: Locator, scene: string) {
+  await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
+  await dialog.getByRole("button", { name: scene, exact: true }).click();
+}
 /** Searches the open picker and clicks that image: one click. */
 async function pick(dialog: Locator, picker: string, image: string) {
   const list = dialog.getByRole("region", { name: picker, exact: true });
@@ -169,7 +174,8 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
   await expect(dialog.locator(".image-more")).not.toHaveAttribute("open");
-  // The ready-made scenes are offered while the image is empty.
+  // The ready-made scenes are offered while the image is empty (Pass 11: behind a toggle).
+  await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
   for (const scene of ["Landscape", "Character in forest", "Two moons"])
     await expect(dialog.getByRole("button", { name: scene, exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
@@ -247,7 +253,7 @@ test("drag and drop: moves the selected picture, and a picture to another depth"
   page,
 }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await readyMade(dialog, "Character in forest");
   const middle = dialog.getByRole("group", { name: "Middle", exact: true });
   await middle.locator(".image-picture").click();
   const person = plane(dialog, character);
@@ -279,7 +285,7 @@ test("drag and drop: moves the selected picture, and a picture to another depth"
 
 test("Duplicate adds the same picture again, shifted, and both are applied", async ({ page }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await readyMade(dialog, "Character in forest");
   await dialog
     .getByRole("group", { name: "Middle", exact: true })
     .locator(".image-picture")
@@ -371,7 +377,7 @@ test("corner handles resize the selected image in the preview; the slider stays 
   page,
 }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await readyMade(dialog, "Character in forest");
   await dialog
     .getByRole("group", { name: "Middle", exact: true })
     .locator(".image-picture")
@@ -406,7 +412,7 @@ test("removes an image with its × or Delete in the preview, and Undo brings it 
   page,
 }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await readyMade(dialog, "Character in forest");
   const planes = dialog.locator(".multiplane-plane");
   await expect(planes).toHaveCount(3);
   // A visible × on each layer, with its tooltip.
@@ -461,4 +467,27 @@ test("the start area holds Choose an image while there is none; then + Add layer
   await pick(dialog, "Replace image", fern);
   await expect(plane(dialog, fern)).toHaveCount(1);
   await expect(plane(dialog, character)).toHaveCount(0);
+});
+
+test("ready-made scenes are a closed toggle in the start area, and only there", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  const start = dialog.getByRole("region", { name: "Start with an image", exact: true });
+  const toggle = start.getByRole("button", { name: "Ready-made scenes", exact: true });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    dialog.getByRole("button", { name: "Character in forest", exact: true }),
+  ).toHaveCount(0);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const scenes = start.getByRole("group", { name: "Ready-made scenes", exact: true });
+  await expect(scenes.getByRole("button")).toHaveCount(5);
+  await scenes.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await expect(dialog.locator(".multiplane-plane")).toHaveCount(3);
+  // No second copy further down the dialog.
+  await expect(start).toHaveCount(0);
+  await dialog.getByText("More options", { exact: true }).click();
+  await expect(dialog.getByText("Ready-made scenes")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Landscape", exact: true })).toHaveCount(0);
 });

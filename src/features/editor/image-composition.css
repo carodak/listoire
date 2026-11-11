@@ -309,6 +309,12 @@
   color: white;
   font-weight: 600;
 }
+.editor-dialog .image-starters-toggle {
+  border: none;
+  background: none;
+  color: #315c4a;
+  text-decoration: underline;
+}
 .illustration-starters {
   display: flex;
   flex-wrap: wrap;

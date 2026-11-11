@@ -376,7 +376,7 @@ const en = {
       },
       empty: {
         title: "Start with an image",
-        hint: "Then add more with “+ Add layer”. Or start from a ready-made scene:",
+        hint: "Then add more with “+ Add layer”.",
       },
       starters: {
         Landscape: "Landscape",
@@ -775,7 +775,7 @@ const fr: typeof en = {
       },
       empty: {
         title: "Commencez par une image",
-        hint: "Ajoutez-en d’autres ensuite avec « + Ajouter un calque ». Ou partez d’une scène toute prête :",
+        hint: "Ajoutez-en d’autres ensuite avec « + Ajouter un calque ».",
       },
       starters: {
         Landscape: "Paysage",

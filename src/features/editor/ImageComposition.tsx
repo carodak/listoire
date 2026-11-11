@@ -59,6 +59,7 @@ export function ImageEditor(props: ImageEditorProps) {
   const { t } = useTranslation();
   const [selected, select] = useState(-1);
   const [picking, setPicking] = useState<Picking | null>(null);
+  const [starters, showStarters] = useState(false);
   // A single image's frame follows the image's shape until the author picks a frame.
   const [frameChosen, setFrameChosen] = useState(false);
   // The last removal, until something else changes: Undo puts the image back.
@@ -198,10 +199,22 @@ export function ImageEditor(props: ImageEditorProps) {
               {t("editor.image.chooseFirst")}
             </button>
             <p>{t("editor.image.empty.hint")}</p>
-            <IllustrationStarters
-              assets={assets}
-              onApply={(image, next) => apply({ image, value: next })}
-            />
+            <button
+              type="button"
+              className="image-starters-toggle"
+              aria-expanded={starters}
+              title={t("editor.image.startersHint")}
+              onClick={() => showStarters(!starters)}
+            >
+              {t("editor.image.groups.starters")}{" "}
+              <span aria-hidden="true">{starters ? "▾" : "▸"}</span>
+            </button>
+            {starters && (
+              <IllustrationStarters
+                assets={assets}
+                onApply={(image, next) => apply({ image, value: next })}
+              />
+            )}
           </section>
         )}
         <MediaLayout layout={form.layout} onLayout={(layout) => patch({ layout })} />
@@ -221,7 +234,6 @@ export function ImageEditor(props: ImageEditorProps) {
             if (next.aspect !== value.aspect) setFrameChosen(true);
             setValue(next);
           }}
-          apply={apply}
         />
       </div>
     </div>
@@ -237,11 +249,9 @@ function MoreOptions({
   scenes,
   value,
   setValue,
-  apply,
 }: ImageEditorProps & {
   value: Illustration;
   setValue: (value: Illustration) => void;
-  apply: (next: Composition) => void;
 }) {
   const { t } = useTranslation();
   const { draft, layout } = form;
@@ -333,13 +343,6 @@ function MoreOptions({
           <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
         </fieldset>
       )}
-      <fieldset>
-        <legend>{t("editor.image.groups.starters")}</legend>
-        <IllustrationStarters
-          assets={form.language.configuration.assets ?? []}
-          onApply={(image, next) => apply({ image, value: next })}
-        />
-      </fieldset>
     </details>
   );
 }

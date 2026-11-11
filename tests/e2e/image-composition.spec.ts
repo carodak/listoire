@@ -104,6 +104,7 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
+  await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
   await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(3);
   await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
