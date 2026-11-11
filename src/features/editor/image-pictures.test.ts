@@ -7,6 +7,7 @@ import {
   patchPicture,
   picturesOf,
   removePicture,
+  shapeOf,
 } from "./image-pictures.ts";
 
 const empty = { image: "", value: illustrationDefaults() };
@@ -33,7 +34,11 @@ it("changes, moves and removes a picture; removing the main one promotes the nex
   const promoted = removePicture(scene, -1);
   expect(promoted).toEqual({
     image: "girl",
-    value: { ...scene.value, base: { role: "midground", x: 0, y: 0, scale: 1 }, layers: [] },
+    value: {
+      ...scene.value,
+      base: { role: "midground", x: 0, y: 0, scale: 1, fit: "contain" },
+      layers: [],
+    },
   });
   expect(removePicture(promoted, -1).image).toBe("");
   expect(removePicture(scene, 0).value.layers).toEqual([]);
@@ -50,5 +55,27 @@ it("duplicates a picture at its depth, shifted a little and kept inside the fram
     x: 75,
     y: -4,
     scale: 0.8,
+    fit: "contain",
   });
+});
+
+it("a new or changed image is shown whole; the frame can follow its shape", () => {
+  // Pass 10: every image the dialog adds or changes carries fit "contain".
+  const scene = addPicture(addPicture(empty, "field", "background"), "girl", "midground");
+  expect(scene.value.base.fit).toBe("contain");
+  expect(scene.value.layers[0]!.fit).toBe("contain");
+  const old = {
+    image: "field",
+    value: {
+      ...illustrationDefaults(),
+      base: { role: "background" as const, x: 0, y: 0, scale: 1 },
+    },
+  };
+  expect(changePicture(old, -1, "sky").value.base.fit).toBe("contain");
+  const asset = (width: number, height: number) =>
+    ({ id: "a", path: "a.webp", type: "image", alt: "", dimensions: { width, height } }) as const;
+  expect(shapeOf(asset(3000, 2000))).toBe("landscape");
+  expect(shapeOf(asset(1200, 2000))).toBe("portrait");
+  expect(shapeOf(asset(2048, 2022))).toBe("square");
+  expect(shapeOf(undefined)).toBeUndefined();
 });

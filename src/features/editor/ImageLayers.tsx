@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
@@ -25,12 +25,62 @@ const steps: Record<string, [number, number]> = {
   ArrowDown: [0, 1],
 };
 
+/** The part of an image element where its picture is drawn (object-fit "contain" letterboxes). */
+export function drawnBox(image: HTMLImageElement) {
+  const box = image.getBoundingClientRect();
+  if (getComputedStyle(image).objectFit !== "contain" || !image.naturalWidth) return box;
+  const ratio = image.naturalWidth / image.naturalHeight;
+  const width = Math.min(box.width, box.height * ratio);
+  const height = width / ratio;
+  return new DOMRect(
+    box.x + (box.width - width) / 2,
+    box.y + (box.height - height) / 2,
+    width,
+    height,
+  );
+}
+
+/** Whether a picture goes past the frame (watched each frame: sizes change as images load). */
+function useOverflow() {
+  const stage = useRef<HTMLElement>(null);
+  const [overflow, setOverflow] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const check = () => {
+      const view = stage.current?.querySelector(".multiplane-viewport");
+      const bounds = view?.getBoundingClientRect();
+      const outside =
+        !!bounds &&
+        [...view!.querySelectorAll<HTMLImageElement>(".multiplane-plane img")].some((image) => {
+          const box = drawnBox(image);
+          return (
+            box.left < bounds.left - 1 ||
+            box.top < bounds.top - 1 ||
+            box.right > bounds.right + 1 ||
+            box.bottom > bounds.bottom + 1
+          );
+        });
+      setOverflow(outside);
+      frame = requestAnimationFrame(check);
+    };
+    check();
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return { stage, overflow };
+}
+
 /** The live preview: drag (or the arrow keys) moves the selected picture. */
 export function ImageStage({ layer, onLayerChange, ...preview }: StageProps) {
   const { t } = useTranslation();
   const [margins, showMargins] = useState(false);
+  const { stage, overflow } = useOverflow();
   return (
-    <section className="image-stage" aria-label={t("editor.image.preview")}>
+    <section
+      className="image-stage"
+      ref={stage}
+      data-overflow={overflow}
+      aria-label={t("editor.image.preview")}
+    >
       <ImageDragStage layer={layer} onChange={onLayerChange}>
         <CompositionPreview {...preview} margins={margins} />
       </ImageDragStage>

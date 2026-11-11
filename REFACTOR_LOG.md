@@ -2468,3 +2468,37 @@ three, and that a layer's own button changes that layer's image. Changed selecto
 `editor.spec.ts` (two tests) and `image-composition.spec.ts` ("Choose a picture" → "Choose
 image"). In `editor.spec.ts` I staged only those two lines (the file also holds the other
 writer's uncommitted test).
+
+### 10-3. Added images show whole; a single image's frame follows its shape; overflow shows
+
+- **Why sizes looked wrong:** an image at the back filled the frame (`object-fit: cover`), so a
+  picture whose shape differs from the 3:2 frame was cut; and a single untouched image was drawn
+  at full width and natural height in the dialog (no cap), so it looked enormous and cut.
+- **Format (additive):** optional `fit` on a picture (`contain` | `cover`), which overrides the
+  depth's default. The dialog sets `fit: "contain"` on every image it adds or changes (first
+  image, + Add layer, Choose image); Duplicate copies it. Stored compositions have no `fit` and
+  draw exactly as before (the references hold). `DATA_CONTRACTS.md` updated.
+- **Frame:** when a single image gets its picture, its frame becomes the picture's own shape
+  (portrait / landscape / square, from the asset's stored dimensions: ratio > 1.15, < 0.87,
+  else square), unless the author picked a Frame in this dialog (then it stays). Decision:
+  "picked" means changed during this dialog session; an existing image's stored frame is kept
+  until its picture changes.
+- **Never silently cropped:** around the frame, a ring (in the column gaps, so the frame keeps
+  its size) shows whatever goes outside the frame, faded; the reader still crops at the frame.
+  While something is outside, the dialog lifts the paper-edge mask (it would hide the outside);
+  the soft edge is back as soon as everything fits, and the reader preview beside the dialog
+  always has it. A single untouched image is capped at 56 % of the screen height in the dialog.
+- Starter scenes are kept as they are (no `fit`): they are ready-made compositions.
+
+**Changed assertions** (both mine, Pass 9, `image-pictures.test.ts`): the promoted main picture
+and the duplicate now include `fit: "contain"`, the behaviour this item asks for.
+
+Tests: unit (new and changed images carry `contain`; `shapeOf`); e2e "an added image shows
+whole, a single image's frame follows its shape, and overflow shows faded" (portrait frame for a
+portrait image; at 2× the image goes 1.5× past the frame, the frame doesn't clip in the dialog
+and has its veil, the reader preview still clips; a back layer added later is `contain`; a frame
+the author picked stays when the image changes). References: 10/10.
+
+Found: some catalogue images aren't published locally (only 18 `.webp` in
+`public/stories/house/media/`; e.g. `sketch.misty-conifer-plain-001` returns the app's HTML),
+so they show as broken in the editor. Not changed (local asset library).

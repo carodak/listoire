@@ -143,6 +143,7 @@ function ImagePlane({ asset, autoCrop, solitary, layer, resolveAsset }: ImagePla
         src={source || undefined}
         alt={asset.alt}
         draggable={false}
+        data-fit={layer.fit}
         style={
           {
             "--layer-x": `${layer.x}%`,

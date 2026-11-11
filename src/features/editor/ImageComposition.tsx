@@ -23,6 +23,7 @@ import {
   patchPicture,
   picturesOf,
   removePicture,
+  shapeOf,
 } from "./image-pictures.ts";
 import type { Composition } from "./image-pictures.ts";
 import "./image-composition.css";
@@ -58,6 +59,8 @@ export function ImageEditor(props: ImageEditorProps) {
   const { t } = useTranslation();
   const [selected, select] = useState(-1);
   const [picking, setPicking] = useState<Picking | null>(null);
+  // A single image's frame follows the image's shape until the author picks a frame.
+  const [frameChosen, setFrameChosen] = useState(false);
   const value = form.illustration ?? illustrationDefaults();
   const assets = form.language.configuration.assets ?? [];
   const title = (id: string) => pictureTitle(id, assets, library);
@@ -67,6 +70,9 @@ export function ImageEditor(props: ImageEditorProps) {
   const setValue = (illustration: Illustration) =>
     patch({ illustration, motion: { ...form.motion, layers: [] } });
   const apply = (next: Composition & { index?: number }) => {
+    const shape = shapeOf(assets.find((asset) => asset.id === next.image));
+    if (!next.value.layers.length && !frameChosen && shape && next.image !== form.asset)
+      next = { ...next, value: { ...next.value, aspect: shape } };
     if (next.image !== form.asset)
       onAsset(next.image, { illustration: next.value, motion: { ...form.motion, layers: [] } });
     else setValue(next.value);
@@ -162,7 +168,15 @@ export function ImageEditor(props: ImageEditorProps) {
           value={form.draft.alt}
           onChange={(event) => patch({ draft: { ...form.draft, alt: event.target.value } })}
         />
-        <MoreOptions {...props} value={value} setValue={setValue} apply={apply} />
+        <MoreOptions
+          {...props}
+          value={value}
+          setValue={(next) => {
+            if (next.aspect !== value.aspect) setFrameChosen(true);
+            setValue(next);
+          }}
+          apply={apply}
+        />
       </div>
     </div>
   );

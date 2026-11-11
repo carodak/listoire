@@ -316,3 +316,51 @@ test("Duplicate adds the same picture again, shifted, and both are applied", asy
     .find((items) => items.filter((item) => item.image === character).length === 2)!;
   expect(layers.at(-1)).toMatchObject({ image: character, x: 29, y: 11, tiltY: 10, flip: true });
 });
+
+test("an added image shows whole, a single image's frame follows its shape, and overflow shows faded", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Choose image", exact: true }).click();
+  await pick(dialog, "Choose image", character);
+  await dialog.getByText("More options", { exact: true }).click();
+  const frame = dialog.getByLabel("Frame", { exact: true });
+  // A portrait image gets a portrait frame.
+  await expect(frame).toHaveValue("portrait");
+  // Larger than the frame: the reader will crop it; here the outside shows, faded.
+  for (let step = 0; step < 20; step++)
+    await dialog.getByLabel("Size", { exact: true }).press("ArrowRight");
+  const viewport = dialog.locator(".multiplane-viewport");
+  await expect(viewport).toHaveAttribute("data-aspect", "portrait");
+  const image = plane(dialog, character).locator("img");
+  await expect(image).toHaveAttribute("data-fit", "contain");
+  await expect(image).toHaveCSS("object-fit", "contain");
+  const sizes = await image.evaluate((node) => {
+    const frame = node.closest(".multiplane-viewport")!;
+    return {
+      image: node.getBoundingClientRect().height,
+      frame: frame.getBoundingClientRect().height,
+      overflow: getComputedStyle(frame).overflow,
+      veil: getComputedStyle(frame, "::after").boxShadow,
+    };
+  });
+  expect(sizes.image).toBeGreaterThan(sizes.frame * 1.5);
+  expect(sizes.overflow).toBe("visible");
+  expect(sizes.veil).not.toBe("none");
+  // The reader still crops at the frame.
+  await expect(page.locator(".preview-slot .multiplane-viewport").first()).toHaveCSS(
+    "overflow",
+    "hidden",
+  );
+  // A background layer added now is whole too (not cropped to fill the frame).
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
+  await pick(dialog, "Add a layer", misty);
+  await expect(plane(dialog, misty).locator("img")).toHaveCSS("object-fit", "contain");
+  // A frame the author picks stays when the image changes.
+  await frame.selectOption("square");
+  await dialog
+    .getByRole("button", { name: "Choose image for Curly-haired woman standing" })
+    .click();
+  await pick(dialog, "Choose image", fern);
+  await expect(frame).toHaveValue("square");
+});

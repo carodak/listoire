@@ -613,7 +613,10 @@ additional image layers (the same picture may appear more than once), landscape/
 aspect, none/soft/paper blending and none/left/right text wrapping. Every placement has a
 background/midground/foreground role, finite bounded X/Y offsets and scale, and optionally a
 rotation, a tilt (`tiltX` forward/back, `tiltY` left/right, −75° to 75°) and `flip` (mirror);
-pictures without tilt or flip draw exactly as before. Bundle validation rejects unknown or
+pictures without tilt or flip draw exactly as before. An optional `fit` (`contain`: the whole
+image; `cover`: fill the frame) overrides the depth's default (the back fills the frame, the
+others are whole); the editor sets `contain` on every image it adds or changes, and pictures
+without `fit` draw as before. Bundle validation rejects unknown or
 non-image layer references, mixed legacy `motion.layers` and illustration layers, and wrapping
 outside Inline layout.
 The existing block image, five layouts, examination, visibility, persistence and

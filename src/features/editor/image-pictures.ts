@@ -1,4 +1,5 @@
 import type { Illustration } from "../../contracts/illustration.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
 
 type Role = Illustration["base"]["role"];
@@ -24,15 +25,26 @@ export function patchPicture(value: Illustration, index: number, patch: Partial<
   };
 }
 
-/** Adds a picture at a depth; the first picture becomes the main one. Returns its index. */
+/** The frame that suits an image's own shape, from its stored dimensions. */
+export function shapeOf(asset?: MediaAsset): Illustration["aspect"] | undefined {
+  const size = asset?.dimensions;
+  if (!size?.width || !size.height) return;
+  const ratio = size.width / size.height;
+  return ratio > 1.15 ? "landscape" : ratio < 0.87 ? "portrait" : "square";
+}
+
+/**
+ * Adds a picture at a depth, whole in the frame ("contain"); the first picture becomes the
+ * main one. Returns its index.
+ */
 export function addPicture({ image, value }: Composition, picture: string, role: Role) {
   if (!image)
     return {
       image: picture,
-      value: { ...value, base: illustrationDefaults(role).base },
+      value: { ...value, base: { ...illustrationDefaults(role).base, fit: "contain" as const } },
       index: -1,
     };
-  const layer = { image: picture, role, x: 0, y: 0, scale: 1 };
+  const layer = { image: picture, role, x: 0, y: 0, scale: 1, fit: "contain" as const };
   return {
     image,
     value: { ...value, layers: [...value.layers, layer] },
@@ -40,13 +52,15 @@ export function addPicture({ image, value }: Composition, picture: string, role:
   };
 }
 
+/** A new image for a picture: same place and size, shown whole. */
 export function changePicture({ image, value }: Composition, index: number, picture: string) {
-  if (index < 0) return { image: picture, value };
+  const whole = patchPicture(value, index, { fit: "contain" });
+  if (index < 0) return { image: picture, value: whole };
   return {
     image,
     value: {
-      ...value,
-      layers: value.layers.map((layer, at) =>
+      ...whole,
+      layers: whole.layers.map((layer, at) =>
         at === index ? { ...layer, image: picture } : layer,
       ),
     },

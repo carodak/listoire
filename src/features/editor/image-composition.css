@@ -218,14 +218,47 @@
   white-space: nowrap;
 }
 
-/* The preview and its empty state. */
+/* The preview and its empty state. Around the frame, a ring where whatever goes outside it
+   shows faded while editing (the reader crops it there). */
 .image-stage {
   position: relative;
+  overflow: hidden;
+  /* The ring takes the column gaps, so the frame keeps its size (and the references hold). */
+  margin-inline: -20px;
+  padding: 20px;
+  border-radius: 6px;
+  background: #e9ece6;
+}
+.image-stage .image-composition-preview,
+.image-stage .multiplane-viewport {
+  overflow: visible;
+}
+/* Lift the paper edge only while something goes past the frame, so the outside shows. */
+.image-stage[data-overflow="true"] .illustration-blend {
+  mask-image: none;
+}
+/* A single untouched image is drawn at its own shape: keep it within the dialog. */
+.image-stage .isolated-image {
+  display: block;
+  position: static;
+  width: 100%;
+  height: auto;
+  max-height: 56dvh;
+  object-fit: contain;
+}
+.image-stage .multiplane-viewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: 0 0 0 100vmax color-mix(in srgb, #e9ece6 72%, transparent);
 }
 .editor-dialog .image-safe-frame {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
+  bottom: 28px;
+  left: 28px;
+  z-index: 4;
   padding: 5px 9px;
   background: #fffc;
   font-size: 12px;
