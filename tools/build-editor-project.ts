@@ -1,6 +1,6 @@
 import { writeBundle } from "./write-bundle.ts";
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
+import { mkdir, readFile, writeFile, readdir, rm } from "node:fs/promises";
 import type { StoryBundle } from "../src/contracts/story.ts";
 import { compileProject } from "../src/features/editor/compiler.ts";
 import { BundleSchema } from "../src/contracts/story.ts";
@@ -173,10 +173,21 @@ async function copyAssets(
     const signature = `${asset.path}:${expected}`;
     if (copied.get(asset.id) === signature) continue;
     if (copied.has(asset.id)) throw new Error(`Localized asset identity mismatch: ${asset.id}`);
-    const bytes = await readFile(new URL(source, root));
+    // The library cache is local and ignored; a fresh checkout builds from the copy kept
+    // beside the story, which every build with the cache refreshes.
+    const kept = new URL(`stories/house/${asset.path}`, root);
+    const cached = await readFile(new URL(source, root)).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") throw error;
+      return null;
+    });
+    const bytes = cached ?? (await readFile(kept));
     if (createHash("sha256").update(bytes).digest("hex") !== expected)
       throw new Error(`Stale editor asset ${asset.id}`);
-    await copyFile(new URL(source, root), new URL(asset.path, output));
+    if (cached && kept.href !== new URL(source, root).href) {
+      await mkdir(new URL("./", kept), { recursive: true });
+      await writeFile(kept, bytes);
+    }
+    await writeFile(new URL(asset.path, output), bytes);
     copied.set(asset.id, signature);
     referenced.add(asset.path.slice("media/".length));
   }
