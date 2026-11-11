@@ -4,6 +4,7 @@ import {
   cssColor,
   effectiveTypography,
   parseTypography,
+  pointSize,
   typographySettings,
 } from "../../contracts/typography.ts";
 import {
@@ -297,6 +298,25 @@ it("stores any colour as six hex digits (no Ink tag) next to the named colours",
       color: "inherit",
     }).replacement,
   ).toBe("A word.");
+});
+
+it("stores point sizes from 8 to 48 next to the named sizes", () => {
+  expect(parseTypography('<typo style="shout" size="24pt">BIG</typo>').typography).toEqual([
+    { start: 0, end: 3, format: { style: "shout", size: "24pt" } },
+  ]);
+  for (const size of ["7pt", "49pt", "14", "14.5pt", "014pt", "14px", "pt"])
+    expect(() => parseTypography(`<typo size="${size}">x</typo>`)).toThrow();
+  expect([pointSize("8pt"), pointSize("48pt"), pointSize("large"), pointSize()]).toEqual([
+    8,
+    48,
+    undefined,
+    undefined,
+  ]);
+  const line = 'A <typo size="large">word</typo>.';
+  const start = line.indexOf("word");
+  expect(patchTextSelection(line, start, start + 4, { size: "13pt" }).replacement).toBe(
+    'A <typo size="13pt">word</typo>.',
+  );
 });
 
 it("aligns paragraphs with one tag, removes it for left and leaves other lines alone", () => {

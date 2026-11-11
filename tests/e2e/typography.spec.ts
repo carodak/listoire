@@ -1,15 +1,55 @@
 import { expect, test } from "./test.ts";
 import type { Page } from "@playwright/test";
 import { defaultReadingPreferences } from "../../src/contracts/presentation.ts";
+import { compileProject } from "../../src/features/editor/compiler.ts";
+import { StoryProjectSchema } from "../../src/contracts/editor-project.ts";
 test.setTimeout(60_000);
 
-async function openTypographyStory(
-  page: Page,
+/** The small test story: "A BOOM, then silence.", then `extra` lines, then two more pages. */
+function typographyProject(
   narration = false,
   extra = "",
   reveal: "instant" | "progressive" = "instant",
   backgroundColor?: string,
 ) {
+  return {
+    schemaVersion: 1,
+    storyId: "house",
+    release: "typography-test",
+    defaultLocale: "en",
+    gameMode: "narrative",
+    variables: [],
+    languages: {
+      en: {
+        script: `-> start
+=== start ===
+A BOOM, then silence.
+${extra}
+* [Continue] -> next
+=== next ===
+The next page begins.
+* [Continue again] -> last
+=== last ===
+The final page begins.
+-> END`,
+        description: "",
+        missingTranslation: false,
+        configuration: { title: "Typography test", chapter: "Test" },
+        defaults: {
+          ...defaultReadingPreferences,
+          pageTurn: true,
+          narration,
+          reveal,
+          narratorVoice: "device:test",
+          backgroundColor,
+        },
+        narrationMode: "ai-live",
+      },
+    },
+  } as const;
+}
+
+async function openTypographyStory(page: Page, ...options: Parameters<typeof typographyProject>) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
   await expect(page.locator(".ace_text-input")).toHaveCount(1, { timeout: 20_000 });
@@ -17,33 +57,7 @@ async function openTypographyStory(
   await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles({
     name: "type.json",
     mimeType: "application/json",
-    buffer: Buffer.from(
-      JSON.stringify({
-        schemaVersion: 1,
-        storyId: "house",
-        release: "typography-test",
-        defaultLocale: "en",
-        gameMode: "narrative",
-        variables: [],
-        languages: {
-          en: {
-            script: `-> start\n=== start ===\nA BOOM, then silence.\n${extra}\n* [Continue] -> next\n=== next ===\nThe next page begins.\n* [Continue again] -> last\n=== last ===\nThe final page begins.\n-> END`,
-            description: "",
-            missingTranslation: false,
-            configuration: { title: "Typography test", chapter: "Test" },
-            defaults: {
-              ...defaultReadingPreferences,
-              pageTurn: true,
-              narration,
-              reveal,
-              narratorVoice: "device:test",
-              backgroundColor,
-            },
-            narrationMode: "ai-live",
-          },
-        },
-      }),
-    ),
+    buffer: Buffer.from(JSON.stringify(typographyProject(...options))),
   });
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence.");
@@ -374,6 +388,85 @@ test("any color from the picker, named swatches, and a contrast warning for ligh
   await pick("#ffff66");
   await expect.poll(() => script(page)).toContain('<typo color="ffff66">BOOM</typo>');
   await expect(warning).toBeVisible();
+});
+
+/** Font size of the words, relative to their paragraph's. */
+const sizeRatio = (word: import("@playwright/test").Locator) =>
+  word.evaluate(
+    (node) =>
+      parseFloat(getComputedStyle(node).fontSize) /
+      parseFloat(getComputedStyle(node.closest("p")!).fontSize),
+  );
+
+test("point sizes from the list or typed, following the reader's text size", async ({ page }) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  await page.getByLabel("Size", { exact: true }).selectOption("24pt");
+  await expect.poll(() => script(page)).toContain('<typo size="24pt">BOOM</typo>');
+  await expect(page.getByLabel("Point size", { exact: true })).toHaveValue("24");
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  const word = page.locator(".preview-slot .prose .type-size-points");
+  // 12 pt is the reader's text size, so 24 pt is twice the paragraph's size, whatever it is.
+  expect(await sizeRatio(word)).toBeCloseTo(2, 1);
+  const before = parseFloat(await word.evaluate((node) => getComputedStyle(node).fontSize));
+  await page.locator(".preview-slot").getByRole("button", { name: "Reading preferences" }).click();
+  await page
+    .locator(".preview-slot")
+    .getByRole("combobox", { name: "Text size" })
+    .selectOption("large");
+  await expect
+    .poll(async () => parseFloat(await word.evaluate((node) => getComputedStyle(node).fontSize)))
+    .toBeGreaterThan(before);
+  expect(await sizeRatio(word)).toBeCloseTo(2, 1);
+  // Any whole size can be typed; the list then shows it.
+  const typed = page.getByLabel("Point size", { exact: true });
+  await typed.fill("13");
+  await typed.press("Enter");
+  await expect.poll(() => script(page)).toContain('<typo size="13pt">BOOM</typo>');
+  await expect(page.getByLabel("Size", { exact: true }).locator("option:checked")).toHaveText(
+    "13 pt",
+  );
+  // Out of range: nothing changes and the toolbar says why.
+  await page.getByLabel("Point size", { exact: true }).fill("60");
+  await page.getByLabel("Point size", { exact: true }).press("Enter");
+  await expect(page.locator(".text-toolbar").getByRole("status")).toHaveText(
+    "Type a whole point size from 8 to 48.",
+  );
+  expect(await script(page)).toContain('<typo size="13pt">BOOM</typo>');
+  // The named sizes stay quick choices.
+  await page.getByLabel("Size", { exact: true }).selectOption("huge");
+  await expect.poll(() => script(page)).toContain('<typo size="huge">BOOM</typo>');
+  // Keys that apply a setting never reach the script (they would replace the words).
+  await page.getByRole("button", { name: "Bold", exact: true }).press("Enter");
+  await expect.poll(() => script(page)).toContain('<typo size="huge" bold="on">BOOM</typo>');
+  await page.getByRole("button", { name: "Italic", exact: true }).press("Space");
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo size="huge" bold="on" italic="on">BOOM</typo>');
+  expect(await script(page)).toContain("A <typo");
+});
+
+test("on a phone, a 48 pt word shrinks to fit the column", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const project = StoryProjectSchema.parse(
+    typographyProject(false, 'A <typo size="48pt">Extraordinarily</typo> long word.'),
+  );
+  const bundle = (await compileProject(project)).en!;
+  await page.route("**/stories/house/en.json", (route) => route.fulfill({ json: bundle }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+  const word = page.locator(".prose .type-size-points");
+  await expect(word).toHaveText("Extraordinarily");
+  // Uncapped it would be 4 times the text size; here it is smaller, and stays inside.
+  expect(await sizeRatio(word)).toBeLessThan(3);
+  const fits = await word.evaluate((node) => {
+    const paragraph = node.closest("p")!.getBoundingClientRect();
+    const box = node.getBoundingClientRect();
+    return box.left >= paragraph.left - 1 && box.right <= paragraph.right + 1;
+  });
+  expect(fits).toBe(true);
+  expect(await word.evaluate((node) => node.getClientRects().length)).toBe(1); // not broken
 });
 
 test("aligns the paragraph at the caret, shown in the reader, with French labels", async ({

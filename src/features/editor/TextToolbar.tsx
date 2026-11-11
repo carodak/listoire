@@ -5,6 +5,7 @@ import type { TFunction } from "i18next";
 import {
   cssColor,
   effectiveTypography,
+  pointSize,
   paragraphAlignments,
   typographyOptions,
   typographySettings,
@@ -45,6 +46,8 @@ const swatches: Record<string, string> = {
   gold: "#866016",
   violet: "#75508b",
 };
+/** The usual point sizes; any whole size from 8 to 48 can also be typed. */
+const pointSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48];
 /** Below this contrast with the page, styled words are hard to read (WCAG AA, body text). */
 const MIN_CONTRAST = 4.5;
 
@@ -52,6 +55,8 @@ const MIN_CONTRAST = 4.5;
 function valueLabel(t: TFunction, key: Exclude<keyof Typography, "style">, value: string) {
   const color = key === "color" && cssColor(value);
   if (color) return color.toUpperCase();
+  const points = key === "size" && pointSize(value);
+  if (points) return t("editor.text.points", { points });
   return value === "on" ? t(`editor.text.${key}`) : t(`editor.text.values.${key}.${value}`);
 }
 function settingsText(t: TFunction, format: Typography) {
@@ -99,7 +104,18 @@ export function TextToolbar({ actions, paper }: { actions: Actions; paper?: stri
       <div className="text-toolbar-row">
         <StylePicker style={style} onPick={(next) => run(actions.applyPreset(next))} />
         <Separator />
-        {(["font", "size"] as const).map(select)}
+        {select("font")}
+        {select("size")}
+        <PointSizeField
+          points={pointSize(effective.size)}
+          onChange={(points) =>
+            run(
+              points === undefined
+                ? "editor.text.errors.pointSize"
+                : actions.patchText({ size: `${points}pt` }),
+            )
+          }
+        />
         <ColorSetting format={format} onChange={(color) => run(actions.patchText({ color }))} />
         <Separator />
         {toggles.map((key) => (
@@ -232,7 +248,13 @@ function SettingSelect({
   const fromStyle = typographySettings({ style })[setting] !== undefined;
   const changed = format[setting] !== undefined;
   const name = t(`editor.text.${setting}`);
-  const label = (value: string) => t(`editor.text.values.${setting}.${value}`);
+  const label = (value: string) => valueLabel(t, setting, value);
+  const value = format[setting] ?? inherited;
+  // Sizes also list points, and the current one if it was typed.
+  const points =
+    setting === "size"
+      ? [...new Set([...pointSizes, pointSize(value) ?? 12])].sort((a, b) => a - b)
+      : [];
   return (
     <span className={`text-setting${changed ? " changed" : ""}`}>
       <select
@@ -242,7 +264,7 @@ function SettingSelect({
             ? t("editor.text.changed", { name, style: styleName, value: label(inherited) })
             : name
         }
-        value={format[setting] ?? inherited}
+        value={value}
         onChange={(event) => onChange(event.target.value)}
       >
         {typographyOptions[setting].map((value) => (
@@ -252,8 +274,53 @@ function SettingSelect({
               : label(value)}
           </option>
         ))}
+        {points.length > 0 && (
+          <optgroup label={t("editor.text.pointSizes")}>
+            {points.map((size) => (
+              <option key={size} value={`${size}pt`}>
+                {label(`${size}pt`)}
+              </option>
+            ))}
+          </optgroup>
+        )}
       </select>
     </span>
+  );
+}
+
+/** Any whole point size, typed; applies on Enter or when the field is left. */
+function PointSizeField({
+  points,
+  onChange,
+}: {
+  points?: number;
+  onChange: (points: number | undefined) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <input
+      key={points ?? ""}
+      className="text-points"
+      type="number"
+      min={8}
+      max={48}
+      step={1}
+      placeholder="pt"
+      aria-label={t("editor.text.pointSize")}
+      title={t("editor.text.pointSizeHint")}
+      defaultValue={points}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter") return;
+        // Consumed: applying focuses the script, which would otherwise receive this Enter.
+        event.preventDefault();
+        event.currentTarget.blur();
+      }}
+      onBlur={(event) => {
+        const typed = event.currentTarget.value;
+        if (!typed || Number(typed) === points) return;
+        onChange(pointSize(`${typed}pt`));
+      }}
+    />
   );
 }
 

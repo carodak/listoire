@@ -1814,3 +1814,31 @@ Tests: unit (hex parse + rejects `#…`, upper case, short or 7-digit values; pa
 to named, back to plain; custom colour rendered inline; contrast ratios and page colour); e2e
 "any color from the picker…" (dark page: dark grey → warning and rendered rgb(34, 34, 34); Ocean
 swatch → no warning; light page: dark grey → no warning, pale yellow → warning).
+
+### 1d. Size: point sizes, typed or from a list
+
+- **Format (additive):** `<typo size="…">` keeps small / normal / large / huge and also takes a
+  whole point size from 8 to 48 (`size="14pt"`; `7pt`, `49pt`, `14.5pt`, `014pt`, `14px` are
+  refused by the contract). `DATA_CONTRACTS.md` updated.
+- **Reader (my choices):** 12 pt = the reader's text size (`1em`), so 24 pt is twice the text,
+  whatever Text size the reader picked (small/medium/large) — sizes scale with it. The size is
+  capped at 13 % of the paragraph's width (`min(… em, 13cqi)`), so on a phone a 48 pt word
+  shrinks to fit the column instead of being cut; a word too long even then still wraps (the
+  existing `overflow-wrap: anywhere`). Only paragraphs that contain a point size become size
+  containers (`p:has(.type-size-points)`), so the layout of existing stories is untouched (a
+  container on the whole `.prose` would have resized its photographs, which use `cqw`).
+  For comparison, the named sizes are about 10 pt (small), 17 pt (large), 22 pt (huge).
+- **Toolbar:** the Size select keeps the four named sizes first, then a "Point sizes" group
+  (8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, plus the current size if it was
+  typed). Next to it, a small "Point size" field takes any whole size, applied on Enter or when
+  the field is left; out of range, the toolbar says "Type a whole point size from 8 to 48."
+- **Bug found and fixed before committing:** pressing Enter in that field applied the size, the
+  script took focus, and the same Enter keystroke then reached the script and replaced the words
+  with a line break. The field now consumes its Enter. The e2e checks that Enter on Bold and
+  Space on Italic don't reach the script either.
+
+Tests: unit (parse, refuse, `pointSize`, patch, rendered class + `--type-points`, named sizes
+unchanged); e2e "point sizes from the list or typed…" (24 pt = 2× the text before and after
+switching the preview to Large text; typed 13 → "13 pt" listed; 60 refused; Huge; keyboard
+safety) and "on a phone, a 48 pt word shrinks to fit the column" (reader at 360 px: under 3× the
+text size, inside the paragraph, on one line).

@@ -185,6 +185,11 @@ const en = {
       glyph: { bold: "B", italic: "I", underline: "U", strike: "S" },
       clear: "Clear formatting",
       customColor: "Any color",
+      points: "{{points}} pt",
+      pointSizes: "Point sizes",
+      pointSize: "Point size",
+      pointSizeHint:
+        "Any size from 8 to 48 pt. 12 pt is the reader's text size: sizes follow the reader's Text size setting, and big words shrink to fit a phone's column.",
       lowContrast:
         "Low contrast with this story's page color ({{ratio, number}}:1): these words may be hard to read. Aim for 4.5:1 or more.",
       more: "More text settings",
@@ -204,6 +209,7 @@ const en = {
         noSelection: "Select words in the Ink script first.",
         notNarrative: "Select story words, not an Ink instruction or tag.",
         notWords: "Select story words on one line, without Ink tags or expressions.",
+        pointSize: "Type a whole point size from 8 to 48.",
       },
       values: {
         style: {
@@ -440,6 +446,11 @@ const fr: typeof en = {
       glyph: { bold: "G", italic: "I", underline: "S", strike: "B" },
       clear: "Effacer la mise en forme",
       customColor: "Toute couleur",
+      points: "{{points}} pt",
+      pointSizes: "Tailles en points",
+      pointSize: "Taille en points",
+      pointSizeHint:
+        "Toute taille de 8 à 48 pt. 12 pt correspond au texte du lecteur : les tailles suivent son réglage de taille du texte, et les grands mots rétrécissent pour tenir dans la colonne d’un téléphone.",
       lowContrast:
         "Contraste faible avec la couleur des pages de cette histoire ({{ratio, number}}:1) : ces mots risquent d’être difficiles à lire. Visez au moins 4,5:1.",
       more: "Autres réglages du texte",
@@ -464,6 +475,7 @@ const fr: typeof en = {
         noSelection: "Sélectionnez d’abord des mots dans le script Ink.",
         notNarrative: "Sélectionnez des mots du récit, pas une instruction ni une balise Ink.",
         notWords: "Sélectionnez des mots du récit sur une ligne, sans balise ni expression Ink.",
+        pointSize: "Saisissez une taille entière de 8 à 48 points.",
       },
       values: {
         style: {

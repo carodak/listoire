@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Typography, TypographySpan } from "../../contracts/typography.ts";
-import { cssColor, typographySettings } from "../../contracts/typography.ts";
+import { cssColor, pointSize, typographySettings } from "../../contracts/typography.ts";
 import "./typography.css";
 
 export function TypographicText({
@@ -62,17 +62,21 @@ function StyledWords({
   visible: number;
 }) {
   const settings = typographySettings(format);
-  // Named values are classes; an author's own colour is an inline style.
+  // Named values are classes; an author's own colour or point size is an inline style.
   const color = cssColor(settings.color);
+  const points = pointSize(settings.size);
+  const custom: Record<string, string | undefined> = {
+    color: color ? "custom" : undefined,
+    size: points ? "points" : undefined,
+  };
   const className = [
     "narrative-type",
-    ...Object.entries(settings).map(
-      ([key, value]) => `type-${key}-${key === "color" && color ? "custom" : value}`,
-    ),
+    ...Object.entries(settings).map(([key, value]) => `type-${key}-${custom[key] ?? value}`),
   ].join(" ");
+  const style = { color, "--type-points": points } as CSSProperties;
   const shaped = settings.shape === "wave" || settings.shape === "cascade";
   return (
-    <span className={className} style={color ? { color } : undefined}>
+    <span className={className} style={color || points ? style : undefined}>
       {shaped
         ? Array.from(
             new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text),

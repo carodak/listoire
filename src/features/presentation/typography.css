@@ -39,6 +39,16 @@
 .type-size-huge {
   font-size: 1.85em;
 }
+/* An author's point size: 12 pt is the reader's text size, so it follows the reader's Text size
+   setting. It is capped by the paragraph's width, so on a phone a big word still fits the column
+   (and a very long one still wraps, see .narrative-type). */
+.type-size-points {
+  font-size: min(calc(var(--type-points) * 1em / 12), 13cqi);
+  line-height: 1.15;
+}
+.prose p:has(.type-size-points) {
+  container-type: inline-size;
+}
 .type-font-serif {
   font-family: Georgia, serif;
 }

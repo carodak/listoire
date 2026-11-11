@@ -233,3 +233,12 @@
   height: 28px;
   padding: 0 2px;
 }
+.story-editor .text-points {
+  width: 58px;
+  height: 34px;
+  margin-left: 2px;
+  padding: 0 6px;
+  border: 1px solid var(--editor-line);
+  border-radius: 5px;
+  font: inherit;
+}

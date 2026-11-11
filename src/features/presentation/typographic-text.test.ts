@@ -34,3 +34,12 @@ it("draws an author's own colour inline and keeps named colours as classes", () 
     render({ text: "Hi", typography: [{ start: 0, end: 2, format: { style: "shout" } }] }),
   ).toContain("type-color-crimson");
 });
+
+it("gives a point size its own class and its points, and keeps named sizes as classes", () => {
+  expect(render({ text: "Hi", typography: [{ start: 0, end: 2, format: { size: "18pt" } }] })).toBe(
+    '<span class="narrative-type type-size-points" style="--type-points:18">Hi</span>',
+  );
+  expect(render({ text: "Hi", typography: [{ start: 0, end: 2, format: { size: "huge" } }] })).toBe(
+    '<span class="narrative-type type-size-huge">Hi</span>',
+  );
+});

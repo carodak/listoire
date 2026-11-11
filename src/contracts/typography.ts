@@ -24,10 +24,22 @@ const customColor = /^[0-9a-f]{6}$/;
 export const cssColor = (color?: string) =>
   color && customColor.test(color) ? `#${color}` : undefined;
 
+/** The points of a point size ("14pt" → 14), from 8 to 48; undefined for named sizes. */
+export function pointSize(size?: string) {
+  const points = Number(size?.match(/^([1-9]\d?)pt$/)?.[1]);
+  return points >= 8 && points <= 48 ? points : undefined;
+}
+
 export const TypographySchema = z
   .object({
     style: z.enum(typographyOptions.style).optional(),
-    size: z.enum(typographyOptions.size).optional(),
+    // A named size, or a point size from 8 to 48 ("14pt"; 12 pt is the reader's text size).
+    size: z
+      .union([
+        z.enum(typographyOptions.size),
+        z.string().refine((size) => pointSize(size) !== undefined),
+      ])
+      .optional(),
     font: z.enum(typographyOptions.font).optional(),
     // A named colour (it adapts to light and dark pages) or any colour as six lowercase hex
     // digits, without "#": in Ink, "#" starts a tag anywhere on a line.

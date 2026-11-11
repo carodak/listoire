@@ -38,7 +38,9 @@ Implemented inline formatting (`src/contracts/typography.ts`): narrative words c
 sets). Presets declare their bold/italic (Shout, Impact bold; Whisper italic). All keys are
 optional, so markup written before a key existed parses unchanged. `color` is a named colour
 (the reader mixes it with the page's text colour) or any colour as six lowercase hex digits
-without `#` (`color="336699"`, drawn exactly; `#` would start an Ink tag). The illustrative `Inline`
+without `#` (`color="336699"`, drawn exactly; `#` would start an Ink tag). `size` is a named
+size or a whole point size from 8 to 48 (`size="14pt"`): 12 pt is the reader's text size, so
+point sizes follow the reader's Text size setting; the reader caps them by the paragraph's width. The illustrative `Inline`
 type below (`emphasis: em | strong`) was never implemented; the typography spans replace it.
 Paragraph alignment is an Ink line tag, `# align:center|right|justify` (`left`, the default, is
 never stored), read into the segment's optional `align`. Translations may align differently:
