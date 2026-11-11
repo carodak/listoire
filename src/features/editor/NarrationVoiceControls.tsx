@@ -1,3 +1,4 @@
+import { defaultVolumes } from "../../contracts/presentation.ts";
 import { Field } from "./Fields.tsx";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 type Language = StoryProject["languages"][string];
@@ -47,9 +48,7 @@ export function VoiceControls({ language, onChange }: VoiceControlsProps) {
             defaults: {
               ...language.defaults,
               volumes: {
-                sfx: 0.65,
-                ambience: 0.3,
-                music: 0.3,
+                ...defaultVolumes,
                 ...language.defaults.volumes,
                 narration: Number(event.target.value),
               },

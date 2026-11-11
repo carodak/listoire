@@ -198,6 +198,12 @@ export const ReadingPreferencesSchema = z
   })
   .strict();
 export type ReadingPreferences = z.infer<typeof ReadingPreferencesSchema>;
+/** Channel volumes used until the reader or the story sets their own. */
+export const defaultVolumes = { sfx: 0.65, ambience: 0.3, music: 0.3, narration: 0.8 };
+/** Device voices are a fallback only where the story does not require recorded narration. */
+export function allowsDeviceVoice(narrationMode: string | undefined) {
+  return !["disabled", "human", "ai-pregenerated"].includes(narrationMode ?? "");
+}
 export const defaultReadingPreferences: ReadingPreferences = {
   fontSize: "medium",
   fontFamily: "serif",

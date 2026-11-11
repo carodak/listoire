@@ -1,3 +1,4 @@
+import { message } from "../contracts/error-message.ts";
 import { appPath } from "../contracts/app-path.ts";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -117,8 +118,7 @@ function useReadingPlayer(
         await director.load();
       })
       .catch((error) => {
-        if (!scope.signal.aborted)
-          setFailed(error instanceof Error ? error.message : "Content unavailable");
+        if (!scope.signal.aborted) setFailed(message(error));
       });
     return () => {
       scope.abort();

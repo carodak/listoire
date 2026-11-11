@@ -1,3 +1,4 @@
+import { allowsDeviceVoice } from "../../contracts/presentation.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { NarrationProgress } from "../../contracts/media.ts";
 import { AudioManager } from "./audio-manager.ts";
@@ -36,9 +37,7 @@ export class NarrationManager {
     this.stop();
     options = {
       ...options,
-      deviceVoice:
-        options.deviceVoice &&
-        !["disabled", "human", "ai-pregenerated"].includes(bundle.narrationMode ?? ""),
+      deviceVoice: options.deviceVoice && allowsDeviceVoice(bundle.narrationMode),
     };
     const scope = new AbortController();
     this.scope = scope;
