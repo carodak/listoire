@@ -17,6 +17,7 @@ const ranges: Record<Slider, [number, number, number]> = {
 /** The selected picture: the usual size and turn, its actions, then tilt, flip and exact position. */
 export function LayerTransform({
   layer,
+  layered,
   name,
   onChange,
   onPick,
@@ -24,6 +25,8 @@ export function LayerTransform({
   onRemove,
 }: {
   layer: Placement;
+  /** Depth only means something once there are several layers. */
+  layered: boolean;
   name: string;
   onChange: (change: Partial<Placement>) => void;
   onPick: () => void;
@@ -57,17 +60,19 @@ export function LayerTransform({
       <div className="image-selected-fields">
         {slider("scale", t("editor.image.size"))}
         {slider("rotation", t("editor.image.turn"))}
-        <SelectField
-          label={t("editor.image.depthLabel")}
-          value={layer.role}
-          options={illustrationRoles}
-          labels={{
-            foreground: t("editor.image.depth.foreground"),
-            midground: t("editor.image.depth.midground"),
-            background: t("editor.image.depth.background"),
-          }}
-          onChange={(role) => onChange({ role })}
-        />
+        {layered && (
+          <SelectField
+            label={t("editor.image.depthLabel")}
+            value={layer.role}
+            options={illustrationRoles}
+            labels={{
+              foreground: t("editor.image.depth.foreground"),
+              midground: t("editor.image.depth.midground"),
+              background: t("editor.image.depth.background"),
+            }}
+            onChange={(role) => onChange({ role })}
+          />
+        )}
       </div>
       <div className="image-selected-actions">
         <button type="button" onClick={onPick}>

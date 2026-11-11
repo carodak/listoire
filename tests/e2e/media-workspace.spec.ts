@@ -14,9 +14,9 @@ test("keeps the illustration visible while choosing duplicate layer instances in
   // Pass 9: no mode select; the starters are offered in the empty state.
   await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
   const beforeGallery = (await dialog.boundingBox())!;
-  await dialog.getByRole("button", { name: "Add a picture in front", exact: true }).click();
-  // The picker is for the front (it used to preselect a "foreground" depth filter).
-  const gallery = dialog.getByRole("region", { name: "Add a picture: Front", exact: true });
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
+  // The picker is for a new layer (it used to preselect a "foreground" depth filter).
+  const gallery = dialog.getByRole("region", { name: "Add a layer", exact: true });
   await expect(gallery).toBeVisible();
   const withGallery = (await dialog.boundingBox())!;
   expect(Math.abs(withGallery.width - beforeGallery.width)).toBeLessThan(2);
@@ -122,6 +122,19 @@ async function openNewImage(page: Page) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
   await expect(page.locator(".preview-slot .prose")).toBeVisible({ timeout: 20_000 });
+  // Add it to an existing page ("chemin"), as an author would, from that page's text.
+  await page.locator(".ink-editor").evaluate((node) => {
+    const editor = (
+      node as unknown as {
+        env: { editor: { getValue(): string; gotoLine(row: number, column: number): void } };
+      }
+    ).env.editor;
+    const row = editor
+      .getValue()
+      .split("\n")
+      .findIndex((line) => line.startsWith("=== chemin ==="));
+    editor.gotoLine(row + 2, 0);
+  });
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   return page.getByRole("dialog", { name: "Add Image", exact: true });
@@ -132,50 +145,89 @@ const layerStyle = (target: Locator, name: string) =>
   target.locator("img").evaluate((image, key) => image.style.getPropertyValue(key), name);
 const character = "sketch.curly-haired-woman-standing-001";
 
-test("a new image starts with one clear step and the ready-made scenes", async ({ page }) => {
+const misty = "sketch.misty-conifer-plain-001";
+const fern = "sketch.fern-fronds-001";
+/** Searches the open picker and clicks that image: one click. */
+async function pick(dialog: Locator, picker: string, image: string) {
+  const list = dialog.getByRole("region", { name: picker, exact: true });
+  await list.getByLabel("Search pictures", { exact: true }).fill(image);
+  await list.locator(`button[data-asset="${image}"]`).click();
+  await expect(list).toHaveCount(0);
+}
+
+test("a new image is one image: choose it, and it is stored as a single image", async ({
+  page,
+}) => {
   const dialog = await openNewImage(page);
-  const empty = dialog.getByRole("region", { name: "Start with a picture", exact: true });
-  await expect(empty.getByRole("button", { name: "Choose a picture", exact: true })).toBeVisible();
-  for (const scene of [
-    "Landscape",
-    "Character in forest",
-    "Two moons",
-    "Forest conversation",
-    "Solitary traveller",
-  ])
-    await expect(empty.getByRole("button", { name: scene, exact: true })).toBeVisible();
-  await expect(dialog.getByRole("group", { name: "Back", exact: true })).toContainText(
-    "Start here",
-  );
-  // Nothing about a picture or a camera until there is one.
+  const image = dialog.getByRole("region", { name: "Image", exact: true });
+  await expect(image.locator(".image-layer")).toHaveCount(1);
+  await expect(image).toContainText("No image yet");
+  await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeDisabled();
+  // No depths, no camera, no selected-image settings until there is an image.
+  await expect(dialog.getByRole("group", { name: "Back", exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
   await expect(dialog.locator(".image-more")).not.toHaveAttribute("open");
+  // The ready-made scenes are offered while the image is empty.
+  for (const scene of ["Landscape", "Character in forest", "Two moons"])
+    await expect(dialog.getByRole("button", { name: scene, exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText("Select a licensed image.");
+  // The image's own button chooses it.
+  await image.getByRole("button", { name: "Choose image", exact: true }).click();
+  await pick(dialog, "Choose image", misty);
+  await expect(image).toContainText("Misty conifer plain");
+  await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByLabel("Depth", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  // Stored like every single image: the image, no layers.
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await download).path())!, "utf8"));
+  const blocks = Object.values(
+    backup.languages.en.configuration.scenes as Record<
+      string,
+      { blocks?: { image?: string; illustration?: { layers: unknown[] } }[] }
+    >,
+  ).flatMap((scene) => scene.blocks ?? []);
+  const block = blocks.find((item) => item.image === misty && item.illustration)!;
+  expect(block.illustration!.layers).toEqual([]);
 });
 
-test("adds a picture at each depth in two clicks", async ({ page }) => {
+test("+ Add layer makes a layered scene in two clicks, at the depth each image suits", async ({
+  page,
+}) => {
   const dialog = await openNewImage(page);
-  for (const [depth, button] of [
-    ["Back", "Add a picture at the back"],
-    ["Middle", "Add a picture in the middle"],
-    ["Front", "Add a picture in front"],
+  await dialog.getByRole("button", { name: "Choose image", exact: true }).click();
+  await pick(dialog, "Choose image", misty);
+  for (const [image, depth] of [
+    [character, "Middle"],
+    [fern, "Front"],
   ] as const) {
-    await dialog.getByRole("button", { name: button, exact: true }).click(); // 1
-    const picker = dialog.getByRole("region", { name: `Add a picture: ${depth}`, exact: true });
-    await picker.locator("button[data-asset]").first().click(); // 2
-    await expect(picker).toHaveCount(0);
+    await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click(); // 1
+    await pick(dialog, "Add a layer", image); // 2 (typing the search is not a click)
     await expect(
       dialog.getByRole("group", { name: depth, exact: true }).locator(".image-picture"),
     ).toHaveCount(1);
   }
+  await expect(dialog.getByRole("region", { name: "Layers, front to back" })).toBeVisible();
   const roles = await dialog
     .locator(".multiplane-plane")
     .evaluateAll((planes) => planes.map((item) => (item as HTMLElement).dataset.role).sort());
   expect(roles).toEqual(["background", "foreground", "midground"]);
-  // With several pictures, the camera list appears.
+  // With several layers, the camera list and the depth appear; a layer can change depth.
   await expect(dialog.getByLabel("Camera", { exact: true })).toBeVisible();
+  await dialog
+    .getByRole("group", { name: "Middle", exact: true })
+    .locator(".image-picture")
+    .click();
+  await dialog.getByLabel("Depth", { exact: true }).selectOption("foreground");
+  await expect(
+    dialog.getByRole("group", { name: "Front", exact: true }).locator(".image-picture"),
+  ).toHaveCount(2);
 });
 
 test("drag and drop: moves the selected picture, and a picture to another depth", async ({

@@ -49,8 +49,8 @@ interface ImageEditorProps {
   /** Scenes an image can be added to; editing an existing image keeps its scene. */
   scenes?: string[];
 }
-/** What the picker is for: adding at a depth, changing a picture, or the first picture. */
-type Picking = { role: Role } | { change: number } | { first: true };
+/** What the picker is for: a layer's image (the first one included), or a new layer. */
+type Picking = { change: number } | { layer: true };
 
 /** The Image dialog: pictures by depth, the live preview, and the few settings most images need. */
 export function ImageEditor(props: ImageEditorProps) {
@@ -72,31 +72,32 @@ export function ImageEditor(props: ImageEditorProps) {
     else setValue(next.value);
     select(next.index ?? -1);
   };
+  // A new image takes the depth its catalogue entry suggests (scenery at the back…).
+  const depth = (id: string, fallback: Role) =>
+    library.find((entry) => entry.id === id)?.layerRoles?.[0] ?? fallback;
   const choose = (id: string) => {
     const composition = { image: form.asset, value };
     setPicking(null);
     if (!picking) return;
-    if ("change" in picking)
-      return apply({ ...changePicture(composition, picking.change, id), index: picking.change });
-    if ("role" in picking) return apply(addPicture(composition, id, picking.role));
-    // The first picture takes the depth its catalogue entry suggests.
-    const role = library.find((entry) => entry.id === id)?.layerRoles?.[0] ?? "background";
-    apply(addPicture(composition, id, role));
+    if (!form.asset) return apply(addPicture(composition, id, depth(id, "background")));
+    if ("layer" in picking) return apply(addPicture(composition, id, depth(id, "foreground")));
+    apply({ ...changePicture(composition, picking.change, id), index: picking.change });
   };
-  const pickerTitle = !picking
-    ? ""
-    : "role" in picking
-      ? t("editor.image.picker.add", { depth: t(`editor.image.depth.${picking.role}`) })
-      : "change" in picking
-        ? t("editor.image.picker.change")
-        : t("editor.image.picker.choose");
+  const pickerTitle =
+    picking && "layer" in picking
+      ? t("editor.image.picker.layer")
+      : t("editor.image.picker.change");
   return (
     <div className="image-editor">
       <div className="image-editor-side">
         {picking ? (
           <ImagePicker
             title={pickerTitle}
-            role={"role" in picking ? picking.role : undefined}
+            role={
+              "change" in picking
+                ? pictures.find((item) => item.index === picking.change)?.role
+                : undefined
+            }
             language={form.language}
             library={library}
             onChoose={choose}
@@ -110,12 +111,14 @@ export function ImageEditor(props: ImageEditorProps) {
               selected={picture.index}
               title={title}
               onSelect={select}
-              onAdd={(role) => setPicking({ role })}
+              onChoose={(index) => setPicking({ change: index })}
+              onAddLayer={() => setPicking({ layer: true })}
               onMove={(index, role) => setValue(patchPicture(value, index, { role }))}
             />
             {form.asset && (
               <LayerTransform
                 layer={picture}
+                layered={value.layers.length > 0}
                 name={title(picture.image)}
                 onChange={(change) => setValue(patchPicture(value, picture.index, change))}
                 onPick={() => setPicking({ change: picture.index })}
@@ -143,7 +146,7 @@ export function ImageEditor(props: ImageEditorProps) {
         ) : (
           <section className="image-empty" aria-label={t("editor.image.empty.title")}>
             <h3>{t("editor.image.empty.title")}</h3>
-            <button type="button" className="primary" onClick={() => setPicking({ first: true })}>
+            <button type="button" className="primary" onClick={() => setPicking({ change: -1 })}>
               {t("editor.image.empty.choose")}
             </button>
             <p>{t("editor.image.empty.starters")}</p>

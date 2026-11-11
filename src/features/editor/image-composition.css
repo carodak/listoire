@@ -96,6 +96,27 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+.image-layer {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.image-layer > .image-picture {
+  flex: 1;
+}
+.editor-dialog .image-choose {
+  flex: none;
+  font-size: 12px;
+}
+.image-picture .image-placeholder {
+  display: block;
+  flex: none;
+  width: 56px;
+  height: 40px;
+  border: 1px dashed #aab8aa;
+  border-radius: 3px;
+}
 .editor-dialog .image-add {
   justify-self: start;
   display: inline-flex;

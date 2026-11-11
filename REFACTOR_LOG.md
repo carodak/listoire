@@ -2416,3 +2416,41 @@ After: `review-screenshots/pass9-after/part4-4-ribbon-height/` (all `*-ribbon.pn
   a timing flake under coverage, nothing changed.
 - `fallow security --gate new --changed-since main`: pass after every commit. `fallow dupes`: 0.
   `fallow dead-code`: 0 (after removing three exports in `f6cdff0`).
+
+## Pass 10 — Media → Image feedback, then what was left (branch `features/editor-ux`)
+
+Your feedback on the new dialog (keep moving images in the preview), in five commits, each with
+an e2e test; then the camera e2e failure (bisect and fix). Parts 1c, 1d, 3 and 4 were already
+done in Pass 9 (see above), so nothing else was left from the original prompt.
+
+**Another writer in the checkout.** While I worked, uncommitted changes appeared that are not
+mine: `src/features/editor/scene-script.ts` and its test (new), `compiler.ts`,
+`use-editor-project.ts`, `tests/e2e/editor.spec.ts` (a new test, "synchronizes story.json after
+deleting Ink scenes…", which fails here), `docs/story-editor/implementation.md`. The other
+Claude session on this machine (`listoire-4a`) says they aren't its own either. I didn't touch,
+stage or commit them: every Pass 10 commit stages only my own paths. They do affect this pass's
+checks (the health score and the coverage run include them, and that test fails).
+
+### 10-1. A single image first; "+ Add layer" makes a layered scene
+
+- The left column starts with **one row, "Image"**: an empty thumbnail, "No image yet" and the
+  image's own **"Choose image"** button. That's a single image: no depth, no camera, no depth
+  groups. Stored as today: the main image, `layers: []` (e2e checks the exported backup).
+- **"+ Add layer"** (enabled once there is an image) opens the picker; one click on an image adds
+  it as a layer: 2 clicks. From then on the panel is **"Layers, front to back"**, grouped Front /
+  Middle / Back, each row with its own "Choose image"; the Camera list and the Depth select
+  appear.
+- **Decision:** a new layer goes to the depth its catalogue entry suggests (scenery at the back,
+  characters in the middle, framing plants in front), in front when the catalogue says nothing;
+  the Depth select or dragging its row changes it. The first image too (back by default, as
+  before).
+- Removed: the three per-depth "+ Add" buttons and "Start here" (and their strings).
+- Tests: e2e "a new image is one image: choose it, and it is stored as a single image" and
+  "+ Add layer makes a layered scene in two clicks, at the depth each image suits" replace "a
+  new image starts with one clear step…" and "adds a picture at each depth in two clicks"
+  (Pass 9): the flows they tested are gone by your request; the new ones check the same things
+  (empty start, 2 clicks per image, depths, camera) plus the stored single image. Changed
+  selectors only in "keeps the illustration visible…" and "…layered…" ("Add a picture in
+  front" → "+ Add layer", picker "Add a picture: Front" → "Add a layer"). The new-image tests now
+  start from the "chemin" page (they used the editor's default scene "intro", which Orée doesn't
+  have and which the other writer's scene sync removes).

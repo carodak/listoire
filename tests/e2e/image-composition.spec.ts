@@ -106,8 +106,8 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
   await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(3);
-  await dialog.getByRole("button", { name: "Add a picture in front", exact: true }).click();
-  const library = dialog.getByRole("region", { name: "Add a picture: Front", exact: true });
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
+  const library = dialog.getByRole("region", { name: "Add a layer", exact: true });
   await library.getByLabel("Search pictures", { exact: true }).fill("fern-fronds-001");
   await library.locator('button[data-asset$="fern-fronds-001"]').first().click();
   await dialog.getByLabel("Size", { exact: true }).press("ArrowRight");
@@ -179,7 +179,7 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await page.getByLabel("Search pictures", { exact: true }).fill("curly-haired-woman-standing-001");
   await dialog.locator('button[data-asset="sketch.curly-haired-woman-standing-001"]').click();
   await expect(dialog.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Add a picture in front", exact: true }).click();
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("fern-fronds-001");
   await dialog.locator('button[data-asset$="fern-fronds-001"]').first().click();
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
