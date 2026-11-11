@@ -1,3 +1,4 @@
+import { reducedMotionMedia } from "../../contracts/reduced-motion.ts";
 import { narrationLead, advanceReveal, revealParagraphs } from "./text-reveal.ts";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from "react";
 import type { Frame } from "../../contracts/story.ts";
@@ -66,7 +67,7 @@ function useRevealClock(
   const [count, setCount] = useState(0);
   useEffect(() => {
     if (instant || paused) return;
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = matchMedia(reducedMotionMedia);
     const reduce = () => {
       if (motion.matches) finish();
     };

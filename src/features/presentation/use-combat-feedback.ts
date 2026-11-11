@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 import type { GameState } from "../../contracts/game.ts";
@@ -14,7 +15,7 @@ export function useCombatFeedback(
     previous.current = result;
     const canvas = target.current;
     if (!canvas || result === before || !result?.dice?.length) return;
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = prefersReducedMotion();
     // A blow received now shakes the reader's portrait in its own beat (Combatant).
     const board = canvas.closest("dialog") ?? canvas;
     const viewport = document.createElement("div");

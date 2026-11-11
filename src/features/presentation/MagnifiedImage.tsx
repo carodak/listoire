@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { boundedCameraOffset, cameraTransform, imagePoint } from "./camera.ts";
@@ -37,7 +38,7 @@ function useMagnifier(zoom: number) {
       image.current!.parentElement!,
       { id: "fade-in", duration: 250 },
       scope.signal,
-      matchMedia("(prefers-reduced-motion: reduce)").matches,
+      prefersReducedMotion(),
     );
     return () => {
       observer.disconnect();

@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
 import { defaultVolumes } from "../../contracts/presentation.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
@@ -204,9 +205,7 @@ export class ScenePlayback {
     this.context.publish({ departed: true });
   }
   reducedMotion() {
-    return (
-      typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
+    return prefersReducedMotion();
   }
   showSegmentMedia(id: string) {
     for (const block of this.blocks)

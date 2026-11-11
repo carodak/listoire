@@ -1,3 +1,4 @@
+import { reducedMotionMedia } from "../../../contracts/reduced-motion.ts";
 import { Component, Suspense, lazy, useEffect, useRef, useState } from "react";
 import type { ComponentType, LazyExoticComponent, ReactNode } from "react";
 import type { ReactBitsEffect } from "../../../contracts/effects.ts";
@@ -50,7 +51,7 @@ export function ReactBitsLayer({ effect, imageUrl }: ReactBitsLayerProps) {
   const [permitted, setPermitted] = useState(false);
   const Component = components[effect.id];
   useEffect(() => {
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = matchMedia(reducedMotionMedia);
     const check = () => {
       const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
         .connection;

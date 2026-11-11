@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
 import { CheckboxField, SelectField } from "./Fields.tsx";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -135,7 +136,7 @@ function useCompositionCamera(image: string, layers: number, motion: Cinematic, 
       },
       { canvas: camera.current, image: camera.current },
       controller.signal,
-      matchMedia("(prefers-reduced-motion: reduce)").matches,
+      prefersReducedMotion(),
     );
     return () => {
       controller.abort();
