@@ -160,7 +160,8 @@ test("a new image is one image: choose it, and it is stored as a single image", 
 }) => {
   const dialog = await openNewImage(page);
   const image = dialog.getByRole("region", { name: "Image", exact: true });
-  await expect(image.locator(".image-layer")).toHaveCount(1);
+  // Pass 11: no layer row until an image is chosen (in the start area).
+  await expect(image.locator(".image-layer")).toHaveCount(0);
   await expect(image).toContainText("No image yet");
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeDisabled();
   // No depths, no camera, no selected-image settings until there is an image.
@@ -173,18 +174,18 @@ test("a new image is one image: choose it, and it is stored as a single image", 
     await expect(dialog.getByRole("button", { name: scene, exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText("Select a licensed image.");
-  // One way to choose: the image's own button (nothing on the preview's side).
+  // One way to choose: the start area's own button (Pass 11; nothing in the layers).
   await expect(dialog.getByRole("button", { name: /^Choose/ })).toHaveCount(1);
-  await expect(dialog.getByRole("region", { name: "Start with an image" })).toContainText(
-    "Choose it on the left",
-  );
-  await image.getByRole("button", { name: "Choose image", exact: true }).click();
-  await pick(dialog, "Choose image", misty);
+  const start = dialog.getByRole("region", { name: "Start with an image" });
+  await start.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
   await expect(image).toContainText("Misty conifer plain");
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel("Depth", { exact: true })).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeEnabled();
-  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(1);
+  // Pass 11: no "Choose" once there is an image; the selected image's "Replace image" changes it.
+  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: /^Replace/ })).toHaveCount(1);
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   // Stored like every single image: the image, no layers.
@@ -206,8 +207,8 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
   page,
 }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Choose image", exact: true }).click();
-  await pick(dialog, "Choose image", misty);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
   for (const [image, depth] of [
     [character, "Middle"],
     [fern, "Front"],
@@ -219,10 +220,12 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
     ).toHaveCount(1);
   }
   await expect(dialog.getByRole("region", { name: "Layers, front to back" })).toBeVisible();
-  // Each layer has its own "Choose image", and it is the only way to choose one.
-  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(3);
-  await dialog.getByRole("button", { name: "Choose image for Fern fronds" }).click();
-  await pick(dialog, "Choose image", character);
+  // Pass 11: no "Choose" once there is an image; the selected layer's "Replace image" changes it.
+  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Select Fern fronds" }).click();
+  await expect(dialog.getByRole("button", { name: /^Replace/ })).toHaveCount(1);
+  await dialog.getByRole("button", { name: "Replace image", exact: true }).click();
+  await pick(dialog, "Replace image", character);
   await expect(plane(dialog, character)).toHaveCount(2);
   const roles = await dialog
     .locator(".multiplane-plane")
@@ -321,8 +324,8 @@ test("an added image shows whole, a single image's frame follows its shape, and 
   page,
 }) => {
   const dialog = await openNewImage(page);
-  await dialog.getByRole("button", { name: "Choose image", exact: true }).click();
-  await pick(dialog, "Choose image", character);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", character);
   await dialog.getByText("More options", { exact: true }).click();
   const frame = dialog.getByLabel("Frame", { exact: true });
   // A portrait image gets a portrait frame.
@@ -358,10 +361,9 @@ test("an added image shows whole, a single image's frame follows its shape, and 
   await expect(plane(dialog, misty).locator("img")).toHaveCSS("object-fit", "contain");
   // A frame the author picks stays when the image changes.
   await frame.selectOption("square");
-  await dialog
-    .getByRole("button", { name: "Choose image for Curly-haired woman standing" })
-    .click();
-  await pick(dialog, "Choose image", fern);
+  await dialog.getByRole("button", { name: "Select Curly-haired woman standing" }).click();
+  await dialog.getByRole("button", { name: "Replace image", exact: true }).click();
+  await pick(dialog, "Replace image", fern);
   await expect(frame).toHaveValue("square");
 });
 
@@ -433,4 +435,30 @@ test("removes an image with its × or Delete in the preview, and Undo brings it 
   await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
   await dialog.getByLabel("Size", { exact: true }).press("ArrowRight");
   await expect(status).toHaveCount(0);
+});
+
+test("the start area holds Choose an image while there is none; then + Add layer adds more", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  const start = dialog.getByRole("region", { name: "Start with an image", exact: true });
+  const layers = dialog.getByRole("region", { name: "Image", exact: true });
+  await expect(start.getByRole("button", { name: "Choose an image", exact: true })).toBeVisible();
+  await expect(layers.getByRole("button", { name: /^Choose/ })).toHaveCount(0);
+  await expect(layers).toContainText("No image yet");
+  await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeDisabled();
+  await start.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
+  // Once there is an image: no start area, no "Choose", and more images come from + Add layer.
+  await expect(start).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: /^Choose/ })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
+  await pick(dialog, "Add a layer", character);
+  await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
+  await expect(dialog.getByRole("button", { name: /^Choose/ })).toHaveCount(0);
+  // The selected image can still be replaced, keeping its place and size.
+  await dialog.getByRole("button", { name: "Replace image", exact: true }).click();
+  await pick(dialog, "Replace image", fern);
+  await expect(plane(dialog, fern)).toHaveCount(1);
+  await expect(plane(dialog, character)).toHaveCount(0);
 });

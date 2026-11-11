@@ -108,10 +108,11 @@ export function ImageEditor(props: ImageEditorProps) {
     if ("layer" in picking) return apply(addPicture(composition, id, depth(id, "foreground")));
     apply({ ...changePicture(composition, picking.change, id), index: picking.change });
   };
-  const pickerTitle =
-    picking && "layer" in picking
+  const pickerTitle = !picking
+    ? ""
+    : "layer" in picking
       ? t("editor.image.picker.layer")
-      : t("editor.image.picker.change");
+      : t(form.asset ? "editor.image.picker.replace" : "editor.image.picker.first");
   return (
     <div
       className="image-editor"
@@ -145,7 +146,6 @@ export function ImageEditor(props: ImageEditorProps) {
               selected={picture.index}
               title={title}
               onSelect={select}
-              onChoose={(index) => setPicking({ change: index })}
               onAddLayer={() => setPicking({ layer: true })}
               onMove={(index, role) => setValue(patchPicture(value, index, { role }))}
               onRemove={remove}
@@ -164,6 +164,7 @@ export function ImageEditor(props: ImageEditorProps) {
                 layered={value.layers.length > 0}
                 name={title(picture.image)}
                 onChange={(change) => setValue(patchPicture(value, picture.index, change))}
+                onReplace={() => setPicking({ change: picture.index })}
                 onDuplicate={() =>
                   apply(duplicatePicture({ image: form.asset, value }, picture.index))
                 }
@@ -189,6 +190,13 @@ export function ImageEditor(props: ImageEditorProps) {
         ) : (
           <section className="image-empty" aria-label={t("editor.image.empty.title")}>
             <h3>{t("editor.image.empty.title")}</h3>
+            <button
+              type="button"
+              className="image-start"
+              onClick={() => setPicking({ change: -1 })}
+            >
+              {t("editor.image.chooseFirst")}
+            </button>
             <p>{t("editor.image.empty.hint")}</p>
             <IllustrationStarters
               assets={assets}

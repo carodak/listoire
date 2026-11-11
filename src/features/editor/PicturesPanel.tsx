@@ -9,7 +9,8 @@ const depths: Role[] = ["foreground", "midground", "background"];
 
 /**
  * The image's layers. A single image is one row; "+ Add layer" makes a layered scene, whose
- * layers are then listed by depth, front to back, as image editors do.
+ * layers are then listed by depth, front to back, as image editors do. The first image is
+ * chosen in the preview's start area.
  */
 export function PicturesPanel({
   pictures,
@@ -17,7 +18,6 @@ export function PicturesPanel({
   selected,
   title,
   onSelect,
-  onChoose,
   onAddLayer,
   onMove,
   onRemove,
@@ -27,8 +27,6 @@ export function PicturesPanel({
   selected: number;
   title: (id: string) => string;
   onSelect: (index: number) => void;
-  /** Opens the picker for this layer's image. */
-  onChoose: (index: number) => void;
   onAddLayer: () => void;
   onMove: (index: number, role: Role) => void;
   onRemove: (index: number) => void;
@@ -54,14 +52,6 @@ export function PicturesPanel({
           {asset ? <VisualPreview asset={asset} /> : <span className="image-placeholder" />}
           <span>{name || t("editor.image.noImage")}</span>
         </button>
-        <button
-          type="button"
-          className="image-choose"
-          aria-label={name ? t("editor.image.chooseFor", { name }) : t("editor.image.choose")}
-          onClick={() => onChoose(picture.index)}
-        >
-          {t("editor.image.choose")}
-        </button>
         {name && (
           <CloseButton
             className="image-remove"
@@ -79,27 +69,31 @@ export function PicturesPanel({
       aria-label={t(layered ? "editor.image.layers" : "editor.image.single")}
     >
       <h3>{t(layered ? "editor.image.layers" : "editor.image.single")}</h3>
-      {layered
-        ? depths.map((role) => (
-            <div
-              key={role}
-              className="image-depth"
-              role="group"
-              aria-label={t(`editor.image.depth.${role}`)}
-              // Drop a layer's row here to move it to this depth.
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                const index = Number(event.dataTransfer.getData("text/x-picture"));
-                if (!Number.isNaN(index)) onMove(index, role);
-              }}
-            >
-              <span className="image-depth-name">{t(`editor.image.depth.${role}`)}</span>
-              <div className="image-depth-pictures">
-                {pictures.filter((picture) => picture.role === role).map(row)}
-              </div>
+      {!pictures[0]?.image ? (
+        <p className="image-none">{t("editor.image.noImage")}</p>
+      ) : layered ? (
+        depths.map((role) => (
+          <div
+            key={role}
+            className="image-depth"
+            role="group"
+            aria-label={t(`editor.image.depth.${role}`)}
+            // Drop a layer's row here to move it to this depth.
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              const index = Number(event.dataTransfer.getData("text/x-picture"));
+              if (!Number.isNaN(index)) onMove(index, role);
+            }}
+          >
+            <span className="image-depth-name">{t(`editor.image.depth.${role}`)}</span>
+            <div className="image-depth-pictures">
+              {pictures.filter((picture) => picture.role === role).map(row)}
             </div>
-          ))
-        : row(pictures[0]!)}
+          </div>
+        ))
+      ) : (
+        row(pictures[0]!)
+      )}
       <button
         type="button"
         className="image-add"

@@ -20,6 +20,7 @@ export function LayerTransform({
   layered,
   name,
   onChange,
+  onReplace,
   onDuplicate,
 }: {
   layer: Placement;
@@ -27,6 +28,8 @@ export function LayerTransform({
   layered: boolean;
   name: string;
   onChange: (change: Partial<Placement>) => void;
+  /** Opens the picker for another image in the same place and size. */
+  onReplace: () => void;
   onDuplicate: () => void;
 }) {
   const { t } = useTranslation();
@@ -71,6 +74,9 @@ export function LayerTransform({
         )}
       </div>
       <div className="image-selected-actions">
+        <button type="button" onClick={onReplace}>
+          {t("editor.image.replace")}
+        </button>
         <button type="button" onClick={onDuplicate}>
           {t("editor.image.duplicate")}
         </button>

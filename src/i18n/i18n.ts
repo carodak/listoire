@@ -263,8 +263,8 @@ const en = {
       single: "Image",
       layers: "Layers, front to back",
       noImage: "No image yet",
-      choose: "Choose image",
-      chooseFor: "Choose image for {{name}}",
+      chooseFirst: "Choose an image",
+      replace: "Replace image",
       addLayer: "+ Add layer",
       addLayerHint:
         "Adds an image in front or behind: the image becomes a layered scene, with a camera.",
@@ -366,7 +366,8 @@ const en = {
       sameEverywhereHint: "Uncheck to change this language only. The default is in Settings.",
       picker: {
         layer: "Add a layer",
-        change: "Choose image",
+        first: "Choose an image",
+        replace: "Replace image",
         search: "Search pictures",
         inStory: "In this story",
         library: "Library",
@@ -375,7 +376,7 @@ const en = {
       },
       empty: {
         title: "Start with an image",
-        hint: "Choose it on the left with “Choose image”, or start from a ready-made scene:",
+        hint: "Then add more with “+ Add layer”. Or start from a ready-made scene:",
       },
       starters: {
         Landscape: "Landscape",
@@ -658,8 +659,8 @@ const fr: typeof en = {
       single: "Image",
       layers: "Calques, de l’avant vers le fond",
       noImage: "Pas encore d’image",
-      choose: "Choisir l’image",
-      chooseFor: "Choisir l’image pour {{name}}",
+      chooseFirst: "Choisir une image",
+      replace: "Remplacer l’image",
       addLayer: "+ Ajouter un calque",
       addLayerHint:
         "Ajoute une image devant ou derrière : l’image devient une scène en calques, avec une caméra.",
@@ -764,7 +765,8 @@ const fr: typeof en = {
         "Décochez pour ne modifier que cette langue. Le réglage par défaut est dans les Paramètres.",
       picker: {
         layer: "Ajouter un calque",
-        change: "Choisir l’image",
+        first: "Choisir une image",
+        replace: "Remplacer l’image",
         search: "Chercher une image",
         inStory: "Dans cette histoire",
         library: "Bibliothèque",
@@ -773,7 +775,7 @@ const fr: typeof en = {
       },
       empty: {
         title: "Commencez par une image",
-        hint: "Choisissez-la à gauche avec « Choisir l’image », ou partez d’une scène toute prête :",
+        hint: "Ajoutez-en d’autres ensuite avec « + Ajouter un calque ». Ou partez d’une scène toute prête :",
       },
       starters: {
         Landscape: "Paysage",

@@ -143,7 +143,7 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Close search", { exact: true }).click();
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
-  await page.getByRole("button", { name: "Choose image", exact: true }).click();
+  await page.getByRole("button", { name: "Choose an image", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
   await page.getByText("More options", { exact: true }).click();
@@ -465,7 +465,7 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Add Image" })).toBeVisible();
-  await page.getByRole("button", { name: "Choose image", exact: true }).click();
+  await page.getByRole("button", { name: "Choose an image", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
   await page.getByLabel("Alt text").fill("A girl standing beside a house");

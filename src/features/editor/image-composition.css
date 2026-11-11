@@ -116,9 +116,9 @@
   margin: 0;
   color: var(--editor-muted, #6d7872);
 }
-.editor-dialog .image-choose {
-  flex: none;
-  font-size: 12px;
+.image-none {
+  margin: 0;
+  color: var(--editor-muted, #6d7872);
 }
 .image-picture .image-placeholder {
   display: block;
@@ -301,6 +301,13 @@
 .image-empty p {
   margin: 0;
   color: var(--editor-muted, #6d7872);
+}
+.editor-dialog .image-start {
+  padding: 8px 18px;
+  border-color: #427257;
+  background: #427257;
+  color: white;
+  font-weight: 600;
 }
 .illustration-starters {
   display: flex;
