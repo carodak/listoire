@@ -41,18 +41,37 @@ async function caretTo(page: Page, prefix: string) {
     editor.focus();
   }, prefix);
 }
+/**
+ * Waits until every image of the area is drawn and the camera is still. A layer has no `src`
+ * until its file is resolved (and cropped), and an `<img>` without one is `complete`, so each
+ * image must have a source and real pixels, unchanged over a few frames, with no movement left.
+ */
 const loaded = (area: Locator) =>
-  area
-    .locator("img")
-    .evaluateAll((images) =>
-      Promise.all(
-        (images as HTMLImageElement[]).map((image) =>
-          image.complete
-            ? image.decode().catch(() => {})
-            : new Promise((done) => (image.onload = image.onerror = done)),
-        ),
-      ),
-    );
+  area.evaluate(async (node) => {
+    const frame = () => new Promise((done) => requestAnimationFrame(done));
+    const images = () => [...node.querySelectorAll("img")];
+    const moving = () =>
+      node
+        .getAnimations({ subtree: true })
+        .some(
+          (animation) =>
+            animation.playState === "running" &&
+            animation.effect?.getComputedTiming().iterations !== Infinity,
+        );
+    let drawn = "";
+    for (let still = 0; still < 3;) {
+      await frame();
+      const list = images();
+      const ready =
+        list.length > 0 &&
+        !moving() &&
+        list.every((image) => image.currentSrc && image.complete && image.naturalWidth > 0);
+      const now = ready ? list.map((image) => image.currentSrc).join("\n") : "";
+      still = now && now === drawn ? still + 1 : 0;
+      drawn = now;
+    }
+    await Promise.all(images().map((image) => image.decode()));
+  });
 /** Each layer as the dialog draws it, independent of the preview's size. */
 const layers = (viewport: Locator) =>
   viewport.evaluate((view) => {
