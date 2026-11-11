@@ -147,7 +147,12 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
   // Pass 11: no "More options"; each settings category is its own folded section.
-  for (const section of [/^Description & caption/, /^When it appears/, /^Look on the page/])
+  for (const section of [
+    /^Description & caption/,
+    /^When it appears/,
+    /^Look on the page/,
+    /^Interactivity/,
+  ])
     await page.locator(".image-section > summary").filter({ hasText: section }).click();
   await page.getByLabel("Caption (shown under the image)").fill("After the girl");
   await page.getByRole("button", { name: "Wide", exact: true }).click();

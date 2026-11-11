@@ -620,7 +620,7 @@ test("no More options: each settings category is its own section, closed by defa
   await readyMade(dialog, "Character in forest");
   await expect(dialog.getByText("More options")).toHaveCount(0);
   const sections = dialog.locator(".image-section");
-  await expect(sections).toHaveCount(4);
+  await expect(sections).toHaveCount(5);
   await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
   // Each opens on its own.
   await openSection(dialog, "Look on the page");
@@ -665,4 +665,26 @@ test("Description & caption: each label says where its text goes", async ({ page
     "Conifers fading into the mist",
   );
   await expect(figure.getByText("Conifers fading into the mist")).toHaveCount(0);
+});
+
+test("Interactivity: image examination has its own section", async ({ page }) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
+  const summary = dialog.locator(".image-section > summary").filter({ hasText: /^Interactivity/ });
+  await expect(summary.locator("..")).not.toHaveAttribute("open");
+  // Not with the description and caption any more.
+  const described = dialog.locator(".image-section").filter({
+    has: page.locator("summary", { hasText: /^Description & caption/ }),
+  });
+  await expect(described).toHaveCount(1);
+  await expect(described.getByLabel("Media examinable", { exact: true })).toHaveCount(0);
+  await openSection(dialog, "Interactivity");
+  await dialog.getByLabel("Media examinable", { exact: true }).check();
+  await expect(dialog.getByLabel("Examination title", { exact: true })).toBeVisible();
+  await openSection(dialog, "Interactivity");
+  await expect(summary).toContainText("set: examine");
+  // A cinematic (full-screen) image disappears: nothing to examine, no section.
+  await dialog.getByRole("button", { name: "Cinematic", exact: true }).click();
+  await expect(summary).toHaveCount(0);
 });

@@ -344,6 +344,7 @@ const en = {
       },
       groups: {
         description: "Description & caption",
+        interactivity: "Interactivity",
         when: "When it appears",
         look: "Look on the page",
         cameraDetails: "Camera details",
@@ -745,6 +746,7 @@ const fr: typeof en = {
       },
       groups: {
         description: "Description et légende",
+        interactivity: "Interactivité",
         when: "Quand elle apparaît",
         look: "Aspect sur la page",
         cameraDetails: "Réglages de la caméra",

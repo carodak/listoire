@@ -306,11 +306,7 @@ function ImageSettings({
     <>
       <Section
         title={t("editor.image.groups.description")}
-        set={[
-          draft.alt && "description",
-          draft.caption && "caption",
-          draft.examination && "examine",
-        ]}
+        set={[draft.alt && "description", draft.caption && "caption"]}
       >
         <Field
           label={t("editor.image.description")}
@@ -323,14 +319,20 @@ function ImageSettings({
           value={draft.caption}
           onChange={(event) => onDraft({ caption: event.target.value })}
         />
-        {layout !== "fullscreen" && (
+      </Section>
+      {/* Gameplay on the image; a cinematic image disappears, so it can't be examined. */}
+      {layout !== "fullscreen" && (
+        <Section
+          title={t("editor.image.groups.interactivity")}
+          set={[draft.examination && "examine"]}
+        >
           <ExaminationFields
             value={draft.examination ?? null}
             onChange={(examination) => onDraft({ examination })}
             locale={locale}
           />
-        )}
-      </Section>
+        </Section>
+      )}
       <Section
         title={t("editor.image.groups.when")}
         set={[
