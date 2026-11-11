@@ -147,9 +147,9 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
   // Pass 11: no "More options"; each settings category is its own folded section.
-  for (const section of [/^Text/, /^When it appears/, /^Look on the page/])
+  for (const section of [/^Description & caption/, /^When it appears/, /^Look on the page/])
     await page.locator(".image-section > summary").filter({ hasText: section }).click();
-  await page.getByLabel("Caption", { exact: true }).fill("After the girl");
+  await page.getByLabel("Caption (shown under the image)").fill("After the girl");
   await page.getByRole("button", { name: "Wide", exact: true }).click();
   await page.getByLabel("Override default position", { exact: true }).check();
   await page.getByLabel("X (%)", { exact: true }).fill("5");
@@ -470,7 +470,14 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("button", { name: "Choose an image", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
-  await page.getByLabel("Alt text").fill("A girl standing beside a house");
+  // Pass 11: the description is in its own section, with a plain label.
+  await page
+    .locator(".image-section > summary")
+    .filter({ hasText: /^Description/ })
+    .click();
+  await page
+    .getByLabel("Description (not shown, read aloud by screen readers)")
+    .fill("A girl standing beside a house");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("tab", { name: "Scene Media", exact: true }).click();
   await expect(page.locator(".editor-outline")).toContainText("intro.image-");

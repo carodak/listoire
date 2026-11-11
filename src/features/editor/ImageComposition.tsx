@@ -241,12 +241,6 @@ export function ImageEditor(props: ImageEditorProps) {
         {value.layers.length > 0 && (
           <CameraSelect motion={form.motion} onChange={(motion) => patch({ motion })} />
         )}
-        <Field
-          label={t("editor.image.description")}
-          help={t("editor.image.descriptionHint")}
-          value={form.draft.alt}
-          onChange={(event) => patch({ draft: { ...form.draft, alt: event.target.value } })}
-        />
         <ImageSettings
           {...props}
           value={value}
@@ -311,9 +305,19 @@ function ImageSettings({
   return (
     <>
       <Section
-        title={t("editor.image.groups.text")}
-        set={[draft.caption && "caption", draft.examination && "examine"]}
+        title={t("editor.image.groups.description")}
+        set={[
+          draft.alt && "description",
+          draft.caption && "caption",
+          draft.examination && "examine",
+        ]}
       >
+        <Field
+          label={t("editor.image.description")}
+          help={t("editor.image.descriptionHint")}
+          value={draft.alt}
+          onChange={(event) => onDraft({ alt: event.target.value })}
+        />
         <Field
           label={t("editor.image.caption")}
           value={draft.caption}

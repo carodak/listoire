@@ -116,12 +116,12 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await dialog.getByRole("button", { name: "Safe frame", exact: true }).click();
   await expect(dialog.locator(".image-safe-margin")).toBeVisible();
   // Pass 11: no "More options"; each settings category is its own folded section.
-  for (const section of [/^Look on the page/, /^Camera details/, /^Text/])
+  for (const section of [/^Look on the page/, /^Camera details/, /^Description & caption/])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("right");
   await dialog.getByLabel("Camera", { exact: true }).selectOption("gentle-depth");
   await dialog.getByLabel("Movement duration (seconds)", { exact: true }).fill("6.5");
-  await dialog.getByLabel("Caption", { exact: true }).fill("Layered forest test");
+  await dialog.getByLabel("Caption (shown under the image)").fill("Layered forest test");
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   const figure = page

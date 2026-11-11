@@ -629,10 +629,40 @@ test("no More options: each settings category is its own section, closed by defa
   await openSection(dialog, "Look on the page");
   await expect(dialog.getByLabel("Frame", { exact: true })).toBeHidden();
   // A closed section says what is set inside it.
-  await openSection(dialog, "Text");
-  await dialog.getByLabel("Caption", { exact: true }).fill("Under the trees");
-  await openSection(dialog, "Text");
+  await openSection(dialog, "Description & caption");
+  await dialog.getByLabel("Caption (shown under the image)").fill("Under the trees");
+  await openSection(dialog, "Description & caption");
   await expect(
-    dialog.locator(".image-section > summary").filter({ hasText: /^Text/ }),
-  ).toContainText("set: caption");
+    dialog.locator(".image-section > summary").filter({ hasText: /^Description & caption/ }),
+  ).toContainText(/set: .*caption/);
+});
+
+test("Description & caption: each label says where its text goes", async ({ page }) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
+  await expect(dialog.locator(".image-section > summary").filter({ hasText: /^Text/ })).toHaveCount(
+    0,
+  );
+  await openSection(dialog, "Description & caption");
+  const description = dialog.getByLabel("Description (not shown, read aloud by screen readers)", {
+    exact: true,
+  });
+  const caption = dialog.getByLabel("Caption (shown under the image)", { exact: true });
+  // The description starts from the picture's own.
+  await expect(description).not.toHaveValue("");
+  await description.fill("Conifers fading into the mist");
+  await caption.fill("The plain at dawn");
+  await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
+  await page.getByRole("button", { name: "Preview from chemin", exact: true }).click();
+  const figure = page
+    .locator(".preview-slot figure")
+    .filter({ has: page.getByText("The plain at dawn", { exact: true }) });
+  await expect(figure).toBeVisible();
+  // The caption shows; the description is the picture's text alternative, not shown.
+  await expect(figure.locator("img").first()).toHaveAttribute(
+    "alt",
+    "Conifers fading into the mist",
+  );
+  await expect(figure.getByText("Conifers fading into the mist")).toHaveCount(0);
 });
