@@ -1,3 +1,4 @@
+import { appPath } from "../../contracts/app-path.ts";
 import { useTranslation } from "react-i18next";
 import { useWelcomeIntro } from "./use-welcome-intro.ts";
 import "./welcome.css";
@@ -26,7 +27,7 @@ export function WelcomeScreen({ onPlay }: Props) {
         <button className="welcome-play" disabled={!intro.complete} onClick={onPlay}>
           {t("welcome.play")}
         </button>
-        <a className="welcome-create" href="/editor">
+        <a className="welcome-create" href={appPath("editor")}>
           Story Editor
         </a>
       </div>

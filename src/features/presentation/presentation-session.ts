@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
@@ -39,7 +40,7 @@ export class PresentationSession implements NarrativePresentationPort {
     this.resolveAsset =
       resolveAsset ??
       (async (asset) => ({
-        url: `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+        url: storyFileUrl(bundle.storyId, asset.path),
         dispose() {},
       }));
     this.getSnapshot = this.context.getSnapshot;

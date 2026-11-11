@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import { useAssetSource } from "../presentation/use-asset-source.ts";
 import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
@@ -165,7 +166,7 @@ function MediaCard({
       {["image", "video"].includes(asset.type) ? (
         <VisualPreview asset={asset} />
       ) : (
-        <audio controls preload="none" src={audio ?? `/stories/house/${asset.path}`} />
+        <audio controls preload="none" src={audio ?? storyFileUrl("house", asset.path)} />
       )}
       <strong>{entry?.title ?? asset.id}</strong>
       <p>{asset.alt || asset.id}</p>

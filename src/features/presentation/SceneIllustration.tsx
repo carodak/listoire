@@ -117,7 +117,7 @@ function IllustrationContent({
         edges={illustration?.scene3d?.pageEdges}
       />
       <ShotAtmosphere atmosphere={atmosphere} />
-      <EffectLayers bundle={bundle} block={block} state={state} />
+      <EffectLayers bundle={bundle} block={block} state={state} resolveAsset={resolveAsset} />
     </div>
   );
 }
@@ -185,7 +185,14 @@ function IllustrationVisual({
           source={videoSource}
         />
       )}
-      {!block.illustration && <DepthLayers bundle={bundle} block={block} bindNode={bindNode} />}
+      {!block.illustration && (
+        <DepthLayers
+          bundle={bundle}
+          block={block}
+          bindNode={bindNode}
+          resolveAsset={resolveAsset}
+        />
+      )}
     </>
   );
 }
@@ -274,26 +281,48 @@ function DepthLayers({
   bundle,
   block,
   bindNode,
-}: Pick<IllustrationProps, "bundle" | "block" | "bindNode">) {
+  resolveAsset,
+}: Pick<IllustrationProps, "bundle" | "block" | "bindNode" | "resolveAsset">) {
   return (
     <>
       {block.motion?.layers.map((id, index) => {
         const asset = bundle.assets?.find((asset) => asset.id === id && asset.type === "image");
         return asset ? (
-          <img
-            className={imageClass(asset, "parallax-layer")}
+          <DepthLayer
             key={id}
-            ref={(node) => {
-              bindNode("layer", node, index);
-            }}
-            alt=""
-            aria-hidden="true"
-            src={`${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`}
-            style={{ objectFit: block.fit ?? "cover" }}
+            asset={asset}
+            fit={block.fit ?? "cover"}
+            resolveAsset={resolveAsset}
+            bind={(node) => bindNode("layer", node, index)}
           />
         ) : null;
       })}
     </>
+  );
+}
+function DepthLayer({
+  asset,
+  fit,
+  resolveAsset,
+  bind,
+}: {
+  asset: MediaAsset;
+  fit: NonNullable<IllustrationProps["block"]["fit"]>;
+  resolveAsset: PresentationSession["resolveAsset"];
+  bind: (node: HTMLImageElement | null) => void;
+}) {
+  const source = useAssetSource(asset, resolveAsset);
+  return (
+    <img
+      className={imageClass(asset, "parallax-layer")}
+      ref={(node) => {
+        bind(node);
+      }}
+      alt=""
+      aria-hidden="true"
+      src={source || undefined}
+      style={{ objectFit: fit }}
+    />
   );
 }
 
@@ -303,27 +332,34 @@ function EffectLayers({
   bundle,
   block,
   state,
-}: Pick<IllustrationProps, "bundle" | "block" | "state">) {
+  resolveAsset,
+}: Pick<IllustrationProps, "bundle" | "block" | "state" | "resolveAsset">) {
   return (
     <>
       {state.layers
         .filter((layer) => layer.blockId === block.id)
-        .map((layer) => {
-          const resource = bundle.assets?.find(
-            (asset) => asset.id === layer.effect.image && asset.type === "image",
-          );
-          return (
-            <ReactBitsLayer
-              key={layer.id}
-              effect={layer.effect}
-              imageUrl={
-                resource
-                  ? `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${resource.path}`
-                  : undefined
-              }
-            />
-          );
-        })}
+        .map((layer) => (
+          <EffectLayer
+            key={layer.id}
+            effect={layer.effect}
+            image={bundle.assets?.find(
+              (asset) => asset.id === layer.effect.image && asset.type === "image",
+            )}
+            resolveAsset={resolveAsset}
+          />
+        ))}
     </>
   );
+}
+function EffectLayer({
+  effect,
+  image,
+  resolveAsset,
+}: {
+  effect: IllustrationProps["state"]["layers"][number]["effect"];
+  image: MediaAsset | undefined;
+  resolveAsset: PresentationSession["resolveAsset"];
+}) {
+  const source = useAssetSource(image, resolveAsset);
+  return <ReactBitsLayer effect={effect} imageUrl={source || undefined} />;
 }

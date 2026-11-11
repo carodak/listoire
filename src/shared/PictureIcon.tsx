@@ -1,3 +1,4 @@
+import { appPath } from "../contracts/app-path.ts";
 /**
  * The author's own PNG icons (public/), drawn in the text colour through a CSS mask so they
  * follow every page colour without editing the files.
@@ -12,7 +13,7 @@ export function PictureIcon({ name, size = 24 }: { name: keyof typeof icons; siz
       style={{
         width: size,
         height: size,
-        maskImage: `url(${import.meta.env.BASE_URL}${icons[name]})`,
+        maskImage: `url(${appPath(icons[name])})`,
       }}
     />
   );

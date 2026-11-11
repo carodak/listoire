@@ -1,3 +1,4 @@
+import { appPath } from "../../contracts/app-path.ts";
 import { NarrationClipSchema } from "../../contracts/media.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
 import type { VoiceProfile, SpeechSettings } from "../../contracts/speech.ts";
@@ -20,7 +21,7 @@ export async function requestLocalNarration(
   if (!import.meta.env.DEV) return null;
   try {
     const response = await sameOriginFetch(
-      `${import.meta.env.BASE_URL}api/narration${editorPreview ? "/editor-preview" : ""}`,
+      appPath(`api/narration${editorPreview ? "/editor-preview" : ""}`),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,7 +44,7 @@ export async function requestLocalNarration(
       (request.settingsKey !== undefined && clip.settingsKey !== request.settingsKey)
     )
       return null;
-    return { clip, audioUrl: `${import.meta.env.BASE_URL}${data.audioPath.slice(1)}` };
+    return { clip, audioUrl: appPath(data.audioPath.slice(1)) };
   } catch {
     return null;
   }

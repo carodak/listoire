@@ -1,3 +1,4 @@
+import { appPath } from "./contracts/app-path.ts";
 import { createRoot } from "react-dom/client";
 import { lazy, Suspense } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -19,11 +20,13 @@ await i18n.changeLanguage(initialSettings.language);
 for (const type of ["click", "keydown"])
   addEventListener(type, unlockAudio, { capture: true, once: true });
 const EditorRoute = lazy(() => import("./app/EditorRoute.tsx"));
-if (window.location.pathname === "/editor/") window.history.replaceState(null, "", "/editor");
+const editorPath = appPath("editor");
+if (window.location.pathname === `${editorPath}/`)
+  window.history.replaceState(null, "", editorPath);
 createRoot(document.getElementById("root")!).render(
   <I18nextProvider i18n={i18n}>
     <Suspense fallback={<p role="status">Loading Story Editor…</p>}>
-      {/^\/editor\/?$/.test(window.location.pathname) ? (
+      {window.location.pathname === editorPath ? (
         <EditorRoute />
       ) : (
         <App saves={saves} initialSettings={initialSettings} />

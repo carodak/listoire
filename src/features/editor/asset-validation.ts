@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import { readUploadedMedia } from "../../persistence/media-store.ts";
 import { storyAssetIds } from "../../contracts/story-assets.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
@@ -10,9 +11,9 @@ export async function verifyMediaAssets(bundles: Record<string, StoryBundle>) {
     const ids = storyAssetIds(bundle);
     for (const asset of bundle.assets ?? []) {
       if (!ids.has(asset.id)) continue;
-      if (asset.upload) await readUploadedMedia(asset);
+      if (asset.upload) await readUploadedMedia(asset, bundle.storyId);
       else if (!bundle.embeddedAudio?.[asset.id])
-        paths.add(`/stories/${bundle.storyId}/${asset.path}`);
+        paths.add(storyFileUrl(bundle.storyId, asset.path));
     }
   }
   await Promise.all(

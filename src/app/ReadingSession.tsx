@@ -1,3 +1,4 @@
+import { appPath } from "../contracts/app-path.ts";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Locale, StoryBundle } from "../contracts/story.ts";
@@ -50,7 +51,7 @@ export function ReadingSession({
       <main id="story" className="notice" role="alert">
         <p>{t("errors.content")}</p>
         <p>{failed}</p>
-        <a href="/editor">Open Story Editor</a>
+        <a href={appPath("editor")}>Open Story Editor</a>
         <button onClick={retry}>{t("retry")}</button>
       </main>
     );

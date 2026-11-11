@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
 import { RuntimeAssetSchema } from "../contracts/presentation.ts";
 import { storeUploadedMedia, readUploadedMedia } from "./media-store.ts";
 import { splitStoryArchive, decodeUploadedFile } from "../contracts/story-archive.ts";
@@ -52,4 +52,27 @@ it("stores immutable video bytes separately, verifies restored archives and reje
     new Uint8Array(await decodeUploadedFile(asset, archive.uploadedFiles[asset.id]!).arrayBuffer()),
   ).toEqual(bytes);
   expect(() => decodeUploadedFile(asset, "https://example.org/video.mp4")).toThrow(/Invalid/);
+});
+it("fetches a missing upload from its story, under the deployed base path (REVIEW #6)", async () => {
+  const bytes = new TextEncoder().encode("not stored in this browser");
+  const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  const asset = RuntimeAssetSchema.parse({
+    id: `upload.${digest}`,
+    path: `media/upload.${digest}.webp`,
+    type: "image",
+    alt: "Test",
+    upload: { digest, size: bytes.length, mime: "image/webp", rights: "Synthetic fixture" },
+  });
+  const fetch = vi.fn(async (_url: string | URL) => new Response(null, { status: 404 }));
+  vi.stubGlobal("fetch", fetch);
+  vi.stubEnv("BASE_URL", "/books/");
+  try {
+    await expect(readUploadedMedia(asset, "tale")).rejects.toThrow(/Missing uploaded media/);
+    expect(String(fetch.mock.calls[0]![0])).toBe(`/books/stories/tale/media/upload.${digest}.webp`);
+  } finally {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  }
 });

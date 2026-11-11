@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import type { NarrativeEvent } from "../../contracts/narrative-events.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { AudioManager } from "../media/audio-manager.ts";
@@ -19,8 +20,7 @@ export class SceneAudio {
     );
     if (!asset) return;
     const url =
-      this.bundle.embeddedAudio?.[asset.id] ??
-      `${import.meta.env.BASE_URL}stories/${this.bundle.storyId}/${asset.path}`;
+      this.bundle.embeddedAudio?.[asset.id] ?? storyFileUrl(this.bundle.storyId, asset.path);
     const persistent = this.bundle.authored && action.channel !== "sfx";
     const signature = JSON.stringify(action);
     if (persistent && this.tracks.get(action.channel) === signature) return;
