@@ -1,0 +1,78 @@
+import type { Illustration } from "../../contracts/illustration.ts";
+import { illustrationDefaults } from "../../contracts/illustration.ts";
+
+type Role = Illustration["base"]["role"];
+type Placement = Illustration["base"];
+/** A picture of a composition: the main one (index -1, `image`) or a layer (its index). */
+export type Picture = Placement & { image: string; index: number };
+/** The main picture and the composition, as the dialog edits them together. */
+export interface Composition {
+  image: string;
+  value: Illustration;
+}
+
+export const picturesOf = ({ image, value }: Composition): Picture[] => [
+  { image, ...value.base, index: -1 },
+  ...value.layers.map((layer, index) => ({ ...layer, index })),
+];
+
+export function patchPicture(value: Illustration, index: number, patch: Partial<Placement>) {
+  if (index < 0) return { ...value, base: { ...value.base, ...patch } };
+  return {
+    ...value,
+    layers: value.layers.map((layer, at) => (at === index ? { ...layer, ...patch } : layer)),
+  };
+}
+
+/** Adds a picture at a depth; the first picture becomes the main one. Returns its index. */
+export function addPicture({ image, value }: Composition, picture: string, role: Role) {
+  if (!image)
+    return {
+      image: picture,
+      value: { ...value, base: illustrationDefaults(role).base },
+      index: -1,
+    };
+  const layer = { image: picture, role, x: 0, y: 0, scale: 1 };
+  return {
+    image,
+    value: { ...value, layers: [...value.layers, layer] },
+    index: value.layers.length,
+  };
+}
+
+export function changePicture({ image, value }: Composition, index: number, picture: string) {
+  if (index < 0) return { image: picture, value };
+  return {
+    image,
+    value: {
+      ...value,
+      layers: value.layers.map((layer, at) =>
+        at === index ? { ...layer, image: picture } : layer,
+      ),
+    },
+  };
+}
+
+/** Removes a picture; removing the main one makes the next picture the main one. */
+export function removePicture({ image, value }: Composition, index: number): Composition {
+  if (index >= 0)
+    return { image, value: { ...value, layers: value.layers.filter((_, at) => at !== index) } };
+  const [next, ...layers] = value.layers;
+  if (!next) return { image: "", value: { ...value, base: illustrationDefaults().base } };
+  const { image: promoted, ...base } = next;
+  return { image: promoted, value: { ...value, base, layers } };
+}
+
+/** The same picture again, at the same depth, slightly shifted so both show. */
+export function duplicatePicture(composition: Composition, index: number) {
+  const picture = picturesOf(composition).find((item) => item.index === index)!;
+  const { image, index: _, ...placement } = picture;
+  const shift = (offset: number) => Math.max(-75, Math.min(75, offset + 6));
+  const layer = { ...placement, image, x: shift(placement.x), y: shift(placement.y) };
+  const { value } = composition;
+  return {
+    image: composition.image,
+    value: { ...value, layers: [...value.layers, layer] },
+    index: value.layers.length,
+  };
+}

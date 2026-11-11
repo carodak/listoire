@@ -1,106 +1,286 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
-import type { MediaEdit } from "./media-edit.ts";
-import { MediaPicker } from "./MediaLibrary.tsx";
+import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { MediaLayout } from "./MediaLayout.tsx";
-import { ImageLayers } from "./ImageLayers.tsx";
+import { ImageStage } from "./ImageLayers.tsx";
+import { ImagePicker, pictureTitle } from "./ImagePicker.tsx";
+import { PicturesPanel } from "./PicturesPanel.tsx";
+import { LayerTransform } from "./LayerTransform.tsx";
 import { IllustrationStarters } from "./IllustrationStarters.tsx";
 import { PageCompositionFields } from "./IllustrationPreview.tsx";
+import { CameraSelect, CinematicOptions } from "./CinematicFields.tsx";
+import { ExaminationFields } from "./ExaminationFields.tsx";
+import { ImagePlacement, ImageTiming } from "./MediaFields.tsx";
+import { Field, SelectField } from "./Fields.tsx";
+import {
+  addPicture,
+  changePicture,
+  duplicatePicture,
+  patchPicture,
+  picturesOf,
+  removePicture,
+} from "./image-pictures.ts";
+import type { Composition } from "./image-pictures.ts";
 import "./image-composition.css";
-interface Props {
-  image: string;
-  value: Illustration | null;
-  onChange: (value: Illustration | null) => void;
-  onImage: (id: string) => void;
-  language: StoryProject["languages"][string];
-  library: StoryProject["mediaLibrary"];
-  motion: Cinematic;
+
+type Language = StoryProject["languages"][string];
+type Role = Illustration["base"]["role"];
+interface ImageForm {
+  language: Language;
+  sceneId: string;
+  asset: string;
   layout: MediaEdit["layout"];
-  onLayout: (layout: MediaEdit["layout"]) => void;
-  kind: string;
-  previewTarget?: HTMLElement | null;
+  motion: Cinematic;
+  illustration: Illustration | null;
+  draft: ImageDraft;
 }
-export function ImageComposition(props: Props) {
-  const [mode, setMode] = useState(props.value?.layers.length ? "layered" : "single");
-  if (props.kind !== "Image") return null;
-  const { image, value, onChange, onImage, language, library, motion, layout, onLayout } = props;
-  const current = value ?? illustrationDefaults();
+interface ImageEditorProps {
+  form: ImageForm;
+  /** Sets the main picture (its description follows it). */
+  onAsset: (asset: string, change?: Partial<ImageForm>) => void;
+  patch: (change: Partial<ImageForm>) => void;
+  library: NonNullable<StoryProject["mediaLibrary"]>;
+  locale: string;
+  segments: string[];
+  /** Scenes an image can be added to; editing an existing image keeps its scene. */
+  scenes?: string[];
+}
+/** What the picker is for: adding at a depth, changing a picture, or the first picture. */
+type Picking = { role: Role } | { change: number } | { first: true };
+
+/** The Image dialog: pictures by depth, the live preview, and the few settings most images need. */
+export function ImageEditor(props: ImageEditorProps) {
+  const { form, patch, library, onAsset } = props;
+  const { t } = useTranslation();
+  const [selected, select] = useState(-1);
+  const [picking, setPicking] = useState<Picking | null>(null);
+  const value = form.illustration ?? illustrationDefaults();
+  const assets = form.language.configuration.assets ?? [];
+  const title = (id: string) => pictureTitle(id, assets, library);
+  const pictures = picturesOf({ image: form.asset, value });
+  const picture = pictures.find((item) => item.index === selected) ?? pictures[0]!;
+  // A new composition drops the legacy camera layers, as the old dialog did.
+  const setValue = (illustration: Illustration) =>
+    patch({ illustration, motion: { ...form.motion, layers: [] } });
+  const apply = (next: Composition & { index?: number }) => {
+    if (next.image !== form.asset)
+      onAsset(next.image, { illustration: next.value, motion: { ...form.motion, layers: [] } });
+    else setValue(next.value);
+    select(next.index ?? -1);
+  };
+  const choose = (id: string) => {
+    const composition = { image: form.asset, value };
+    setPicking(null);
+    if (!picking) return;
+    if ("change" in picking)
+      return apply({ ...changePicture(composition, picking.change, id), index: picking.change });
+    if ("role" in picking) return apply(addPicture(composition, id, picking.role));
+    // The first picture takes the depth its catalogue entry suggests.
+    const role = library.find((entry) => entry.id === id)?.layerRoles?.[0] ?? "background";
+    apply(addPicture(composition, id, role));
+  };
+  const pickerTitle = !picking
+    ? ""
+    : "role" in picking
+      ? t("editor.image.picker.add", { depth: t(`editor.image.depth.${picking.role}`) })
+      : "change" in picking
+        ? t("editor.image.picker.change")
+        : t("editor.image.picker.choose");
   return (
-    <fieldset className="image-composition">
-      <legend>Illustration</legend>
-      <IllustrationMode
-        value={mode}
-        onChange={(mode) => {
-          setMode(mode);
-          if (mode === "single") onChange({ ...current, layers: [] });
-        }}
-      />
-      <MediaLayout layout={layout} onLayout={onLayout} />
-      <MediaPicker
-        language={language}
-        embedded
-        kind="Image"
-        asset={image}
-        library={library ?? []}
-        onAsset={(id) => {
-          onImage(id);
-          onChange({
-            ...current,
-            base: illustrationDefaults(library?.find((entry) => entry.id === id)?.layerRoles?.[0])
-              .base,
-          });
-        }}
-      />
-      {mode === "layered" && (
-        <IllustrationStarters
-          assets={language.configuration.assets ?? []}
-          onApply={(image, value) => {
-            onImage(image);
-            onChange(value);
-          }}
-        />
-      )}
-      {image && (
-        <>
-          <ImageLayers
-            key={mode}
-            previewTarget={props.previewTarget}
-            {...{ image, onChange, language, library, motion, layout }}
-            value={current}
-            layered={mode === "layered"}
+    <div className="image-editor">
+      <div className="image-editor-side">
+        {picking ? (
+          <ImagePicker
+            title={pickerTitle}
+            role={"role" in picking ? picking.role : undefined}
+            language={form.language}
+            library={library}
+            onChoose={choose}
+            onClose={() => setPicking(null)}
           />
-          <PageCompositionFields value={current} onChange={onChange} layout={layout} />
-        </>
-      )}
-    </fieldset>
+        ) : (
+          <>
+            <PicturesPanel
+              pictures={pictures}
+              assets={assets}
+              selected={picture.index}
+              title={title}
+              onSelect={select}
+              onAdd={(role) => setPicking({ role })}
+              onMove={(index, role) => setValue(patchPicture(value, index, { role }))}
+            />
+            {form.asset && (
+              <LayerTransform
+                layer={picture}
+                name={title(picture.image)}
+                onChange={(change) => setValue(patchPicture(value, picture.index, change))}
+                onPick={() => setPicking({ change: picture.index })}
+                onDuplicate={() =>
+                  apply(duplicatePicture({ image: form.asset, value }, picture.index))
+                }
+                onRemove={() => apply(removePicture({ image: form.asset, value }, picture.index))}
+              />
+            )}
+          </>
+        )}
+      </div>
+      <div className="image-editor-main">
+        {form.asset ? (
+          <ImageStage
+            image={form.asset}
+            value={value}
+            assets={assets}
+            paper={form.language.defaults.backgroundColor}
+            motion={form.motion}
+            layout={form.layout}
+            layer={picture}
+            onLayerChange={(change) => setValue(patchPicture(value, picture.index, change))}
+          />
+        ) : (
+          <section className="image-empty" aria-label={t("editor.image.empty.title")}>
+            <h3>{t("editor.image.empty.title")}</h3>
+            <button type="button" className="primary" onClick={() => setPicking({ first: true })}>
+              {t("editor.image.empty.choose")}
+            </button>
+            <p>{t("editor.image.empty.starters")}</p>
+            <IllustrationStarters
+              assets={assets}
+              onApply={(image, next) => apply({ image, value: next })}
+            />
+          </section>
+        )}
+        <MediaLayout layout={form.layout} onLayout={(layout) => patch({ layout })} />
+        {value.layers.length > 0 && (
+          <CameraSelect motion={form.motion} onChange={(motion) => patch({ motion })} />
+        )}
+        <Field
+          label={t("editor.image.description")}
+          help={t("editor.image.descriptionHint")}
+          value={form.draft.alt}
+          onChange={(event) => patch({ draft: { ...form.draft, alt: event.target.value } })}
+        />
+        <MoreOptions {...props} value={value} setValue={setValue} apply={apply} />
+      </div>
+    </div>
   );
 }
-interface IllustrationModeProps {
-  value: string;
-  onChange: (value: string) => void;
-}
 
-function IllustrationMode({ value, onChange }: IllustrationModeProps) {
+/** Everything most images don't need, folded; its summary says what is set. */
+function MoreOptions({
+  form,
+  patch,
+  locale,
+  segments,
+  scenes,
+  value,
+  setValue,
+  apply,
+}: ImageEditorProps & {
+  value: Illustration;
+  setValue: (value: Illustration) => void;
+  apply: (next: Composition) => void;
+}) {
+  const { t } = useTranslation();
+  const { draft, layout } = form;
+  const onDraft = (change: Partial<ImageDraft>) => patch({ draft: { ...draft, ...change } });
+  const layered = value.layers.length > 0;
+  const set = [
+    draft.caption && "caption",
+    draft.examination && "examine",
+    draft.show !== "page" && "timing",
+    draft.persistence > 0 && "hide",
+    !layered && draft.effect !== "none" && "entrance",
+    (draft.width !== 100 || draft.positionOverride || value.wrap !== "none") && "page",
+  ].filter((item): item is string => Boolean(item));
+  const draftProps = { kind: "Image", draft, onDraft, segments };
   return (
-    <label
-      className="illustration-mode-select"
-      title="Single Image uses one catalogue asset. Layered Composition arranges independent image instances with depth."
-    >
-      Illustration
-      <select
-        aria-label="Illustration mode"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="single">Single Image</option>
-        <option value="layered">Layered Composition</option>
-        <option value="auto" disabled>
-          Auto Compose (future)
-        </option>
-      </select>
-    </label>
+    <details className="image-more">
+      <summary>
+        {t("editor.image.more")}
+        {set.length > 0 && (
+          <small>
+            {" · "}
+            {t("editor.image.moreSet", {
+              items: set.map((item) => t(`editor.image.set.${item}`)).join(", "),
+            })}
+          </small>
+        )}
+      </summary>
+      <fieldset>
+        <legend>{t("editor.image.groups.text")}</legend>
+        <Field
+          label={t("editor.image.caption")}
+          value={draft.caption}
+          onChange={(event) => onDraft({ caption: event.target.value })}
+        />
+        {layout !== "fullscreen" && (
+          <ExaminationFields
+            value={draft.examination ?? null}
+            onChange={(examination) => onDraft({ examination })}
+            locale={locale}
+          />
+        )}
+      </fieldset>
+      <fieldset>
+        <legend>{t("editor.image.groups.when")}</legend>
+        {scenes && (
+          <SelectField
+            label={t("editor.image.scene")}
+            value={form.sceneId}
+            options={scenes}
+            onChange={(sceneId) => patch({ sceneId })}
+          />
+        )}
+        <ImageTiming {...draftProps} />
+        {layout !== "fullscreen" && (
+          <Field
+            label={t("editor.image.hideAfter")}
+            type="number"
+            min={0}
+            max={180}
+            step={0.5}
+            value={draft.persistence / 1000}
+            onChange={(event) =>
+              onDraft({ persistence: Math.round(Number(event.target.value) * 1000) })
+            }
+          />
+        )}
+        {!layered && (
+          <SelectField
+            label={t("editor.image.entrance")}
+            value={draft.effect as "none" | "fade-in" | "fade-out"}
+            options={["none", "fade-in", "fade-out"] as const}
+            labels={{
+              none: t("editor.image.entrances.none"),
+              "fade-in": t("editor.image.entrances.fade-in"),
+              "fade-out": t("editor.image.entrances.fade-out"),
+            }}
+            onChange={(effect) => onDraft({ effect })}
+          />
+        )}
+      </fieldset>
+      <fieldset>
+        <legend>{t("editor.image.groups.look")}</legend>
+        <PageCompositionFields value={value} onChange={setValue} layout={layout} />
+        <ImagePlacement {...draftProps} />
+      </fieldset>
+      {layered && (
+        <fieldset>
+          <legend>{t("editor.image.groups.cameraDetails")}</legend>
+          <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
+        </fieldset>
+      )}
+      <fieldset>
+        <legend>{t("editor.image.groups.starters")}</legend>
+        <IllustrationStarters
+          assets={form.language.configuration.assets ?? []}
+          onApply={(image, next) => apply({ image, value: next })}
+        />
+      </fieldset>
+    </details>
   );
 }

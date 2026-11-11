@@ -41,12 +41,16 @@ export function EditorDialog({
 export function EditorFormActions({
   onClose,
   children,
+  start,
 }: {
   onClose: () => void;
   children: ReactNode;
+  /** A setting shown at the start of the footer, before the buttons. */
+  start?: ReactNode;
 }) {
   return (
     <footer>
+      {start}
       <button type="button" onClick={onClose}>
         Cancel
       </button>

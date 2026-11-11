@@ -168,7 +168,7 @@ const page = {
 };
 /** How many previous pages a save keeps for Back after a reload. */
 export const SAVED_PAGES = 20;
-export const SavedPageSchema = z.object(page).strict();
+const SavedPageSchema = z.object(page).strict();
 export type SavedPage = z.infer<typeof SavedPageSchema>;
 
 export const SaveSchema = z

@@ -2,15 +2,15 @@ import { illustrationDefaults } from "../../contracts/illustration.ts";
 import { message } from "../../contracts/error-message.ts";
 import { MediaPicker } from "./MediaLibrary.tsx";
 import { VideoUpload } from "./VideoUpload.tsx";
-import { CinematicFields } from "./CinematicFields.tsx";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { applyMediaEdit } from "./media-authoring.ts";
 import { imageDraft, imageInput, mediaDefaults, mediaContext } from "./media-form.ts";
 import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { ImageFields, AnimationFields, AudioFields, TimingFields } from "./MediaFields.tsx";
-import { ImageComposition } from "./ImageComposition.tsx";
+import { ImageEditor } from "./ImageComposition.tsx";
 
 interface MediaDialogProps {
   kind: string;
@@ -31,7 +31,6 @@ interface FormProps {
   initial: MediaEdit;
   context: ReturnType<typeof mediaContext>;
   patch: (patch: Partial<MediaForm>) => void;
-  previewTarget: HTMLElement | null;
   selectedId?: string;
 }
 /** Image and Video edit a typed draft; the other kinds still read their form fields. */
@@ -43,8 +42,8 @@ const mediaFields = {
 };
 export function MediaDialog(props: MediaDialogProps) {
   const { kind, project, locale, passageId, selectedId, onApply, onClose } = props;
+  const { t } = useTranslation();
   const [form, setForm] = useState(() => initialForm(kind, passageId, selectedId, project, locale));
-  const [previewTarget, setPreviewTarget] = useState<HTMLDivElement | null>(null);
   const patch = (patch: Partial<MediaForm>) => setForm((before) => ({ ...before, ...patch }));
   const id = selectedId ?? form.newId;
   const initial = mediaDefaults(
@@ -73,22 +72,60 @@ export function MediaDialog(props: MediaDialogProps) {
       patch({ error: message(error) });
     }
   }
-  const fields: FormProps = { ...props, form, initial, context, patch, previewTarget };
+  const fields: FormProps = { ...props, form, initial, context, patch };
+  if (kind === "Image") {
+    const scenes = Object.keys(form.language.configuration.scenes ?? {});
+    return (
+      <EditorDialog
+        title={t(selectedId ? "editor.image.edit" : "editor.image.add")}
+        onClose={onClose}
+      >
+        <form onSubmit={apply} className="image-dialog">
+          <ImageEditor
+            form={form}
+            patch={patch}
+            onAsset={(asset, change) =>
+              patch({
+                ...change,
+                asset,
+                draft: { ...form.draft, alt: altText(form.language, asset) },
+              })
+            }
+            library={project.mediaLibrary ?? []}
+            locale={locale}
+            segments={context.segmentIds}
+            scenes={selectedId ? undefined : [...new Set([...scenes, form.sceneId])]}
+          />
+          {form.error && <p role="alert">{form.error}</p>}
+          <EditorFormActions
+            onClose={onClose}
+            start={
+              <label className="check" title={t("editor.image.sameEverywhereHint")}>
+                <input
+                  type="checkbox"
+                  checked={form.draft.shared}
+                  onChange={(event) =>
+                    patch({ draft: { ...form.draft, shared: event.target.checked } })
+                  }
+                />
+                {t("editor.image.sameEverywhere")}
+              </label>
+            }
+          >
+            {t("editor.image.apply")}
+          </EditorFormActions>
+        </form>
+      </EditorDialog>
+    );
+  }
   return (
     <EditorDialog title={`${selectedId ? "Edit" : "Add"} ${kind}`} onClose={onClose}>
       <form onSubmit={apply} key={form.sceneId}>
-        <fieldset className="media-dialog-fields" data-image={kind === "Image"}>
+        <fieldset className="media-dialog-fields">
           <div className="media-settings-column">
             <MediaInputs {...fields} />
             <MediaConfiguration {...fields} />
           </div>
-          {kind === "Image" && (
-            <aside className="media-preview-column" aria-label="Illustration preview">
-              <h3>Live preview</h3>
-              {!form.asset && <p>Choose an image or a composition preset to preview it here.</p>}
-              <div ref={setPreviewTarget} />
-            </aside>
-          )}
         </fieldset>
         {form.error && <p role="alert">{form.error}</p>}
         <EditorFormActions onClose={onClose}>Apply {kind}</EditorFormActions>
@@ -96,7 +133,7 @@ export function MediaDialog(props: MediaDialogProps) {
     </EditorDialog>
   );
 }
-function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: FormProps) {
+function MediaInputs({ kind, project, form, patch, selectedId }: FormProps) {
   const scenes = Object.keys(form.language.configuration.scenes ?? {});
   // A new picture brings its own description (the field used to keep the previous one's).
   const setAsset = (asset: string) =>
@@ -123,19 +160,6 @@ function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: 
         asset={form.asset}
         setAsset={setAsset}
         library={project.mediaLibrary}
-      />
-      <ImageComposition
-        kind={kind}
-        previewTarget={previewTarget}
-        image={form.asset}
-        value={form.illustration}
-        onChange={(illustration) => patch({ illustration, motion: { ...form.motion, layers: [] } })}
-        onImage={setAsset}
-        language={form.language}
-        library={project.mediaLibrary}
-        motion={form.motion}
-        layout={form.layout}
-        onLayout={(layout) => patch({ layout })}
       />
     </>
   );
@@ -167,15 +191,6 @@ function MediaConfiguration({ kind, locale, form, initial, context, patch }: For
           />
         )}
       </details>
-      <CinematicFields
-        kind={kind}
-        motion={form.motion}
-        image={context.assetUrl}
-        layerCount={form.illustration?.layers.length ?? 0}
-        effect={form.draft.effect}
-        onEffect={(effect) => onDraft({ effect })}
-        onChange={(motion) => patch({ motion })}
-      />
       {!["Image", "Video"].includes(kind) && form.target !== "transition" && (
         <TimingFields {...content} blocks={context.blocks} trigger={context.trigger} />
       )}

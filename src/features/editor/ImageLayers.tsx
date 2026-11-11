@@ -1,228 +1,94 @@
-import { createPortal } from "react-dom";
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
-import { illustrationRoles } from "../../contracts/illustration.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
-import { MediaLibrary, VisualPreview } from "./MediaLibrary.tsx";
 import { CompositionPreview } from "./IllustrationPreview.tsx";
-import { LayerTransform } from "./LayerTransform.tsx";
-import { CheckboxField } from "./Fields.tsx";
-interface Props {
+
+type Placement = Illustration["base"];
+interface StageProps {
   image: string;
   value: Illustration;
-  language: StoryProject["languages"][string];
-  library: StoryProject["mediaLibrary"];
+  assets: NonNullable<StoryProject["languages"][string]["configuration"]["assets"]>;
+  paper?: string;
   motion: Cinematic;
   layout: string;
-  layered: boolean;
-  previewTarget?: HTMLElement | null;
-  onChange: (value: Illustration) => void;
+  layer: Placement;
+  onLayerChange: (change: Partial<Placement>) => void;
 }
-export function ImageLayers(props: Props) {
-  const { image, value, language, library, layered, onChange } = props;
-  const [selected, select] = useState(-1);
-  const [gallery, setGallery] = useState<Illustration["base"]["role"] | null>(null);
-  const layer = selected < 0 ? value.base : (value.layers[selected] ?? value.base);
-  const update = (patch: Partial<Illustration["base"]>) =>
-    onChange(patchLayer(value, selected, patch));
+const clamp = (value: number) => Math.max(-75, Math.min(75, value));
+const steps: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+
+/** The live preview: drag (or the arrow keys) moves the selected picture. */
+export function ImageStage({ layer, onLayerChange, ...preview }: StageProps) {
+  const { t } = useTranslation();
   const [margins, showMargins] = useState(false);
-  const preview = (
-    <CompositionStage
-      {...props}
-      layer={layer}
-      onLayerChange={update}
-      margins={margins}
-      onMargins={showMargins}
-    />
-  );
   return (
-    <>
-      {props.previewTarget ? createPortal(preview, props.previewTarget) : preview}
-      {layered && (
-        <LayerList
-          image={image}
-          value={value}
-          assets={language.configuration.assets ?? []}
-          selected={selected}
-          onSelect={select}
-          onRemove={(index) => {
-            onChange({ ...value, layers: value.layers.filter((_, at) => at !== index) });
-            select(-1);
-          }}
-          onAdd={setGallery}
-        />
-      )}
-      <LayerTransform layer={layer} onChange={update} />
-      {gallery && (
-        <MediaLibrary
-          key={gallery}
-          embedded
-          language={language}
-          library={library ?? []}
-          kind="image"
-          role={gallery}
-          onChoose={(id) => {
-            onChange({
-              ...value,
-              layers: [...value.layers, { image: id, role: gallery, x: 0, y: 0, scale: 1 }],
-            });
-            select(value.layers.length);
-          }}
-          onClose={() => setGallery(null)}
-        />
-      )}
-    </>
-  );
-}
-function patchLayer(
-  value: Illustration,
-  selected: number,
-  patch: Partial<Illustration["base"]>,
-): Illustration {
-  if (selected < 0) return { ...value, base: { ...value.base, ...patch } };
-  return {
-    ...value,
-    layers: value.layers.map((item, index) => (index === selected ? { ...item, ...patch } : item)),
-  };
-}
-
-function CompositionStage({
-  image,
-  value,
-  language,
-  motion,
-  layout,
-  layer,
-  onLayerChange,
-  margins,
-  onMargins,
-}: Props & {
-  margins: boolean;
-  onMargins: (show: boolean) => void;
-  layer: Illustration["base"];
-  onLayerChange: (patch: Partial<Illustration["base"]>) => void;
-}) {
-  return (
-    <>
+    <section className="image-stage" aria-label={t("editor.image.preview")}>
       <ImageDragStage layer={layer} onChange={onLayerChange}>
-        <CompositionPreview
-          image={image}
-          value={value}
-          assets={language.configuration.assets ?? []}
-          paper={language.defaults.backgroundColor}
-          motion={motion}
-          layout={layout}
-          margins={margins}
-        />
+        <CompositionPreview {...preview} margins={margins} />
       </ImageDragStage>
-      <CheckboxField
-        label="Show crop / safe margins"
-        help="Check the inset frame for exposed edges before applying camera movement."
-        checked={margins}
-        onChange={(event) => onMargins(event.target.checked)}
-      />
-    </>
+      <button
+        type="button"
+        className="image-safe-frame"
+        aria-pressed={margins}
+        title={t("editor.image.safeFrameHint")}
+        onClick={() => showMargins(!margins)}
+      >
+        {t("editor.image.safeFrame")}
+      </button>
+    </section>
   );
 }
 
-interface ImageDragStageProps {
-  layer: Illustration["base"];
-  onChange: (change: Partial<Illustration["base"]>) => void;
+function ImageDragStage({
+  layer,
+  onChange,
+  children,
+}: {
+  layer: Placement;
+  onChange: (change: Partial<Placement>) => void;
   children: ReactNode;
-}
-
-function ImageDragStage({ layer, onChange, children }: ImageDragStageProps) {
+}) {
+  const { t } = useTranslation();
+  const [drag, setDrag] = useState<{ x: number; y: number; origin: Placement } | null>(null);
+  const move = (event: PointerEvent<HTMLDivElement>) => {
+    if (!drag) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    onChange({
+      x: clamp(drag.origin.x + ((event.clientX - drag.x) / rect.width) * 100),
+      y: clamp(drag.origin.y + ((event.clientY - drag.y) / rect.height) * 100),
+    });
+  };
+  const nudge = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = steps[event.key];
+    if (!step || event.target !== event.currentTarget) return;
+    event.preventDefault();
+    onChange({ x: clamp(layer.x + step[0]), y: clamp(layer.y + step[1]) });
+  };
   return (
     <div
       className="illustration-drag-stage"
-      title="Drag to move the selected image; use the sliders for precise size and rotation."
+      tabIndex={0}
+      title={t("editor.image.dragHint")}
+      aria-label={t("editor.image.dragHint")}
+      onKeyDown={nudge}
       onPointerDown={(event) => {
         if ((event.target as HTMLElement).closest("button")) return;
-        const node = event.currentTarget,
-          rect = node.getBoundingClientRect(),
-          origin = { ...layer },
-          start = { x: event.clientX, y: event.clientY };
-        node.setPointerCapture(event.pointerId);
-        node.onpointermove = (move) =>
-          onChange({
-            x: Math.max(
-              -75,
-              Math.min(75, origin.x + ((move.clientX - start.x) / rect.width) * 100),
-            ),
-            y: Math.max(
-              -75,
-              Math.min(75, origin.y + ((move.clientY - start.y) / rect.height) * 100),
-            ),
-          });
-        node.onpointerup = node.onpointercancel = () => {
-          node.onpointermove = null;
-          node.onpointerup = null;
-          node.onpointercancel = null;
-        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setDrag({ x: event.clientX, y: event.clientY, origin: { ...layer } });
       }}
+      onPointerMove={move}
+      onPointerUp={() => setDrag(null)}
+      onPointerCancel={() => setDrag(null)}
     >
       {children}
     </div>
-  );
-}
-interface LayerListProps {
-  image: string;
-  value: Illustration;
-  assets: NonNullable<Props["language"]["configuration"]["assets"]>;
-  selected: number;
-  onSelect: (index: number) => void;
-  onRemove: (index: number) => void;
-  onAdd: (role: Illustration["base"]["role"]) => void;
-}
-
-function LayerList(props: LayerListProps) {
-  const { image, value, assets, selected, onSelect, onRemove, onAdd } = props;
-  return (
-    <>
-      <div className="image-layer-list" aria-label="Image instances">
-        {[{ image, ...value.base }, ...value.layers].map((item, index) => {
-          const asset = assets.find((asset) => asset.id === item.image);
-          return (
-            <div key={index}>
-              <button
-                type="button"
-                aria-pressed={selected === index - 1}
-                onClick={() => onSelect(index - 1)}
-              >
-                {asset && <VisualPreview asset={asset} />}
-                <span>
-                  {index === 0 ? "Base" : `${item.role} · ${index}`}
-                  <small>{asset?.alt || "Choose an image"}</small>
-                </span>
-              </button>
-              {index > 0 && (
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.role} layer ${index}`}
-                  title="Remove this instance; the catalogue file remains unchanged."
-                  onClick={() => onRemove(index - 1)}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="layer-gallery-actions">
-        {illustrationRoles.map((role) => (
-          <button
-            type="button"
-            key={role}
-            disabled={value.layers.length >= 11}
-            onClick={() => onAdd(role)}
-          >
-            + {role === "midground" ? "Middleground / character" : role}
-          </button>
-        ))}
-      </div>
-    </>
   );
 }

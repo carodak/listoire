@@ -106,18 +106,18 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Close search", { exact: true }).click();
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
-  await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("house.night");
-  await page.getByRole("button", { name: "Use this media", exact: true }).click();
+  await page.getByRole("button", { name: "Choose a picture", exact: true }).click();
+  await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
+  await page.locator('.image-picker button[data-asset="house.night"]').click();
+  await page.getByText("More options", { exact: true }).click();
   await page.getByLabel("Caption", { exact: true }).fill("After the girl");
   await page.getByRole("button", { name: "Wide", exact: true }).click();
-  await page.getByText(/Size and positioning/).click();
   await page.getByLabel("Override default position", { exact: true }).check();
   await page.getByLabel("X (%)", { exact: true }).fill("5");
   await page.getByLabel("Y (%)", { exact: true }).fill("0");
   await expect(page.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "cinematic push in", exact: true })).toHaveCount(0);
-  await page.getByRole("combobox", { name: "Simple effect", exact: true }).selectOption("fade-in");
+  await page.getByRole("combobox", { name: "Entrance", exact: true }).selectOption("fade-in");
   await page.getByLabel("Media examinable", { exact: true }).check();
   await page
     .getByLabel("Image details (one per line)", { exact: true })
@@ -428,9 +428,9 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Add Image" })).toBeVisible();
-  await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("house.night");
-  await page.getByRole("button", { name: "Use this media", exact: true }).click();
+  await page.getByRole("button", { name: "Choose a picture", exact: true }).click();
+  await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
+  await page.locator('.image-picker button[data-asset="house.night"]').click();
   await page.getByLabel("Alt text").fill("A girl standing beside a house");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("tab", { name: "Scene Media", exact: true }).click();

@@ -1747,6 +1747,7 @@ camera, outside this pass).
 | `6156c51` | 2b. reference renders (test only)                            | 94.4  |
 | `f2309f1` | 2c-1. tilt and flip (contract, reader)                       | 94.4  |
 | `2f18ec2` | 2b. references for the four single images (test only)        | 94.4  |
+| `3db8444` | 2c-2. typed draft instead of hidden JSON inputs              | 94.3  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -2096,3 +2097,74 @@ Tests: unit "the Image and Video draft (typed form state)" (starting values, exa
 defaults and French label, single vs layered, cinematic without examination, video keeps its
 stored values); e2e: the ten references, image-composition, media-workspace, editor (27/28; the
 28th is the known failure).
+
+### 2c-3. The new Image dialog
+
+Built as in the design note above. Screenshots and a recording:
+`review-screenshots/pass9-after/image-new-empty.png` (empty state), `image-chemin.png` (Orée's
+3-picture "chemin"), `image-chemin-selected.png`, `image-chemin-picker.png` (adding to the
+middle), `image-chemin-more.png` (More options open), `image-built.png` and
+`image-two-clicks.webm` (three pictures added in two clicks each, a drag, Duplicate, a camera).
+Before: `review-screenshots/image-before/chemin-1…5.png` (Pass 8, five screens high).
+
+What is where now:
+
+- **Left:** "Pictures, front to back" — Front / Middle / Back, each with its pictures and
+  "+ Add". While adding or changing a picture, the picker takes this column, so the preview
+  stays visible. Under it, the selected picture: Size, Turn, Depth, Change… / Duplicate /
+  Remove / Reset, and "Tilt, flip and exact position" (folded).
+- **Right:** the preview (drag or arrow keys move the selected picture; Replay movement; Safe
+  frame), On the page (5 placements), Camera (named list, only with 2+ pictures), Description
+  (alt text), More options (folded; its summary lists what is set).
+- **Footer:** Same in all languages · Cancel · Apply Image.
+
+**Decisions I made while building** (beyond the note):
+
+- The picker opens in the left column, not over the preview: you see the scene while choosing
+  what to add (it also keeps the dialog's size, which an existing test checks).
+- Depth can be changed by dragging a picture's row onto another depth, or with a "Depth" select
+  in the selected picture's block (the keyboard way; the note said "a row menu" — one select
+  for the selected picture is simpler and does the same).
+- "Change…" keeps the picture's place, size and depth; only the image changes. The very first
+  picture ("Choose a picture") takes the depth its catalogue entry suggests, as before.
+- Removing the main picture makes the next picture the main one (before, the main picture had
+  no ×). Removing the last one returns to the empty state.
+- Duplicate shifts the copy by 6 % right and down (kept inside the frame) and selects it.
+- "Hide after" is in seconds (stored in milliseconds, as before).
+- The preview's drag uses React pointer handlers instead of assigning `node.onpointermove`
+  (REVIEW §4, "imperative DOM").
+- "Smart auto-crop" now uses the shared `CheckboxField` (REVIEW §5 #13).
+- The embedded library (and its `embedded` mode in `MediaLibrary` / `MediaPicker`) is gone:
+  only the image dialog used it. Audio and video keep the full library dialog.
+- Found by `fallow dead-code`: `SavedPageSchema` (part 3) was exported but only used inside
+  `story.ts`; it isn't exported any more.
+
+New UI text is in `editor.image.*` (en + fr): titles, depths, buttons, picker, empty state,
+starters, placements and their tooltips, the 16 camera names, groups. Existing field labels moved
+into More options (Frame, Page blend, Text wrapping, Width, Override default position, the
+examination fields, camera details) keep their English labels, like the rest of the editor.
+
+**Changed selectors (same assertions)** — the controls they used are gone or renamed:
+
+| Test                                                                                         | Old step                                                                                                                 | New step                                                                                                                                              |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `media-workspace` "keeps the illustration visible while choosing duplicate layer instances…" | mode select → layered                                                                                                    | removed (no mode)                                                                                                                                     |
+| same                                                                                         | "+ foreground", region "Media library", depth filter = foreground, filter cleared                                        | "Add a picture in front", region "Add a picture: Front" (the picker is for the front; there is no depth filter)                                       |
+| same                                                                                         | "Search media", card "Use this media"                                                                                    | "Search pictures", the picture's button                                                                                                               |
+| same                                                                                         | "Rotation (degrees)"                                                                                                     | "Turn (°)"                                                                                                                                            |
+| same                                                                                         | camera grid button scrolled into view; complementary "Illustration preview" in view                                      | "Camera" select scrolled into view; region "Preview" in view                                                                                          |
+| `image-composition` "…layered…"                                                              | mode select; "+ foreground"; "Use this media"; "Image scale"; "Show crop / safe margins" checkbox; "gentle depth" button | removed; "Add a picture in front"; the picture's button; "Size"; "Safe frame" button; `Camera` = gentle-depth                                         |
+| same                                                                                         | "Text wrapping", "Movement duration", "Caption"                                                                          | the same, after opening "More options"                                                                                                                |
+| `image-composition` "upgrades legacy image layers…"                                          | "Browse media library", "Use this media", mode select, "+ foreground", "Remove foreground layer 1", "Simple effect"      | "Choose a picture", the picture's button, removed, "Add a picture in front", "Remove …" of the selected (just added) fern, "Entrance" in More options |
+| `editor.spec` "…(Wide image)…" and "…Scene Media…"                                           | "Browse media library", "Search media", "Use this media", opening "Size and positioning", "Simple effect"                | "Choose a picture", "Search pictures", the picture's button, "More options", "Entrance"                                                               |
+
+All their assertions are unchanged (planes, blend, wrap, stored layers and scale, duration,
+caption, examination, backup round trip, dialog size while picking, preview in view…).
+
+Tests added: unit `image-pictures.test.ts` (add, change, move, remove with promotion, duplicate
+with clamping); e2e in `media-workspace.spec.ts`: "a new image starts with one clear step and
+the ready-made scenes" (empty state), "adds a picture at each depth in two clicks", "drag and
+drop: moves the selected picture, and a picture to another depth" (pointer drag in the preview,
+arrow key, dragging a row onto Front), "Duplicate adds the same picture again, shifted, and both
+are applied" (with tilt and flip, checked in the preview and in the exported backup). The ten
+references still match.

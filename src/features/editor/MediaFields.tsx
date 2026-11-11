@@ -49,7 +49,10 @@ export function ImageFields(props: ImageFieldsProps) {
           locale={locale}
         />
       )}
-      <ImagePlacement {...props} />
+      <details>
+        <summary>Size and positioning (optional)</summary>
+        <ImagePlacement {...props} />
+      </details>
       <Field
         label="Alt text"
         value={draft.alt}
@@ -110,7 +113,7 @@ function DraftNumber({
     />
   );
 }
-function PositionFields(props: ImageFieldsProps) {
+function PositionFields(props: DraftProps) {
   const { draft, onDraft } = props;
   return (
     <fieldset>
@@ -232,11 +235,12 @@ export function TimingFields({ input, segments, trigger, blocks }: TimingFieldsP
   );
 }
 
-function ImagePlacement(props: ImageFieldsProps) {
+type DraftProps = Pick<ImageFieldsProps, "kind" | "draft" | "onDraft" | "segments">;
+/** Width, offset and alignment on the page. */
+export function ImagePlacement(props: DraftProps) {
   const { kind, draft, onDraft } = props;
   return (
-    <details>
-      <summary>Size and positioning (optional)</summary>{" "}
+    <>
       <DraftNumber {...props} field="width" label="Width (%)" min={10} max={100} />
       <PositionFields {...props} />
       <SelectField
@@ -254,11 +258,12 @@ function ImagePlacement(props: ImageFieldsProps) {
           onChange={(fit) => onDraft({ fit })}
         />
       )}
-    </details>
+    </>
   );
 }
 
-function ImageTiming(props: ImageFieldsProps) {
+/** When the picture appears: with the page, at a line of text, or after a delay. */
+export function ImageTiming(props: DraftProps) {
   const { draft, onDraft, segments } = props;
   return (
     <>
