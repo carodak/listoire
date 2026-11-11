@@ -25,6 +25,43 @@ async function appendInk(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
+test("synchronizes story.json after deleting Ink scenes and retains it after reload", async ({
+  page,
+}) => {
+  await openEditor(page);
+  const script = "-> start\n=== start ===\nA new beginning. # segment:start.one\n-> END";
+  await page.locator(".ace_text-input").focus();
+  await page.keyboard.press("Control+Home");
+  await page.keyboard.press("Control+A");
+  await page.keyboard.insertText(script);
+  const properties = async () => {
+    await page.getByRole("button", { name: "⚙ story.json", exact: true }).click();
+    const value = JSON.parse(
+      await page.getByLabel("Properties JSON", { exact: true }).inputValue(),
+    );
+    await page.keyboard.press("Escape");
+    return value;
+  };
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  expect((await properties()).scenes.intro).toBeDefined();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(
+    page.getByText("Draft saved · fix issues to update the reader", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await download).path())!, "utf8"));
+  expect(backup.languages.en.configuration.scenes).toEqual({});
+  expect(backup.languages.en.script).not.toContain("@media intro/");
+});
+
 test("opens media from its selected Ink reference and reports lines without a reference", async ({
   page,
 }) => {

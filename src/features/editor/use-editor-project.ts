@@ -10,6 +10,7 @@ import { withMediaReferences } from "./media-script.ts";
 import { refreshDefaultArtwork } from "../../contracts/artwork-refresh.ts";
 import { addIllustrationLibrary } from "./illustration-pack.ts";
 import { loadDefaultProject, readActiveProject } from "./default-project.ts";
+import { synchronizeScenes } from "./scene-script.ts";
 
 type Versions = NonNullable<Awaited<ReturnType<typeof readEditorRecord>>>["history"];
 
@@ -22,6 +23,7 @@ interface Session {
   dirty: boolean;
   mounted: boolean;
   ui: EditorUi;
+  keptScenes: NonNullable<Parameters<typeof synchronizeScenes>[1]>;
 }
 
 interface EditorUi {
@@ -60,7 +62,10 @@ export function useEditorProject() {
 
   function update(next: StoryProject, label: string) {
     const latest = session.current.latest;
-    next = withMediaReferences(refreshDefaultArtwork(next, latest));
+    if (label === "Restored project backup") session.current.keptScenes.clear();
+    next = withMediaReferences(
+      synchronizeScenes(refreshDefaultArtwork(next, latest), session.current.keptScenes),
+    );
     if (!latest || next === latest) return;
     history.record(latest, next, label);
     replaceProject(session.current, next, label);
@@ -93,6 +98,7 @@ export function useEditorProject() {
 function createSession(ui: EditorUi): Session {
   return {
     ui,
+    keptScenes: new Map(),
     latest: null,
     revision: 0,
     serial: Promise.resolve(),
@@ -120,7 +126,10 @@ async function loadSession(session: Session, signal: AbortSignal) {
   const built = await loadDefaultProject(record?.draft, signal);
   const raw = record?.draft ?? built!;
   const seed = withMediaReferences(
-    addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
+    synchronizeScenes(
+      addIllustrationLibrary(refreshDefaultArtwork(raw, built), built),
+      session.keptScenes,
+    ),
   );
   await loadAce();
   if (signal.aborted) return;

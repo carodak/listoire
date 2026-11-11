@@ -6,7 +6,7 @@ import type { StoryBundle } from "../../contracts/story.ts";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import packageInfo from "../../../package.json" with { type: "json" };
-import { knotNames } from "./ink-outline.ts";
+import { declaredPassages } from "./scene-script.ts";
 import { parseTypography } from "../../contracts/typography.ts";
 import { sha256 } from "../../contracts/digest.ts";
 
@@ -86,20 +86,6 @@ export async function compileLanguage(
     narrationMode: language.narrationMode,
     readingDefaults: language.defaults,
   });
-}
-function declaredPassages(script: string) {
-  const passages: Record<string, string[]> = {};
-  let passage = "start";
-  for (const line of script.split("\n")) {
-    const tag = line.match(/#\s*passage:([a-z][a-z0-9.-]*)/);
-    if (tag) passage = tag[1]!;
-    const segment = line.match(/#\s*segment:([a-z][a-z0-9.-]*)/);
-    if (segment) (passages[passage] ??= []).push(segment[1]!);
-  }
-  for (const name of knotNames(script))
-    passages[name.toLowerCase().replace(/_/g, "-")] ??= ["text"];
-  if (!Object.keys(passages).length) passages.start = ["text"];
-  return passages;
 }
 function validateScenes(
   scenes: NonNullable<StoryBundle["scenes"]>,
