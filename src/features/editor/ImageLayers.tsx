@@ -32,7 +32,7 @@ const steps: Record<string, [number, number]> = {
 };
 
 /** The part of an image element where its picture is drawn (object-fit "contain" letterboxes). */
-export function drawnBox(image: HTMLImageElement) {
+function drawnBox(image: HTMLImageElement) {
   const box = image.getBoundingClientRect();
   if (getComputedStyle(image).objectFit !== "contain" || !image.naturalWidth) return box;
   const ratio = image.naturalWidth / image.naturalHeight;
