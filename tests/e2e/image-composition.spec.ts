@@ -197,7 +197,7 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
   // The fern, just added, is the selected picture.
   await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
-  for (const section of [/^When it appears/, /^Look on the page/])
+  for (const section of [/^When to display the media/, /^Look on the page/])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog
     .getByRole("group", { name: "Entrance", exact: true })
@@ -386,7 +386,7 @@ test("camera and entrance presets preview their movement on hover or focus, stil
     await dialog.getByRole("button", { name, exact: true }).click();
   await dialog
     .locator(".image-section > summary")
-    .filter({ hasText: /^When it appears/ })
+    .filter({ hasText: /^When to display the media/ })
     .click();
   const entrance = dialog.getByRole("group", { name: "Entrance", exact: true });
   await expect(entrance.getByRole("button")).toHaveText(["None", "Fade in", "Fade out"]);

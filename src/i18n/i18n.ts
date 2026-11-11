@@ -338,7 +338,7 @@ const en = {
         changed: "changed",
         caption: "caption",
         examine: "examine",
-        timing: "when it appears",
+        timing: "when to display",
         hide: "hides",
         entrance: "entrance",
         page: "look on the page",
@@ -346,7 +346,7 @@ const en = {
       groups: {
         description: "Description & caption",
         interactivity: "Interactivity",
-        when: "When it appears",
+        when: "When to display the media",
         look: "Look on the page",
         cameraDetails: "Camera settings",
         starters: "Ready-made scenes",
@@ -749,7 +749,7 @@ const fr: typeof en = {
       groups: {
         description: "Description et légende",
         interactivity: "Interactivité",
-        when: "Quand elle apparaît",
+        when: "Quand afficher le média",
         look: "Aspect sur la page",
         cameraDetails: "Réglages de la caméra",
         starters: "Scènes toutes prêtes",

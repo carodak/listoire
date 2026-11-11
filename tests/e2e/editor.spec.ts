@@ -149,7 +149,7 @@ test("inserts images at their source position and preserves video uploads in com
   // Pass 11: no "More options"; each settings category is its own folded section.
   for (const section of [
     /^Description & caption/,
-    /^When it appears/,
+    /^When to display the media/,
     /^Look on the page/,
     /^Interactivity/,
   ])

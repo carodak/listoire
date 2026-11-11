@@ -293,7 +293,7 @@ function Section({
   );
 }
 
-/** The settings, one folded section per category: page, camera, timing, text, gameplay. */
+/** The settings, one folded section per category: page, camera, timing, gameplay, text. */
 function ImageSettings({
   form,
   patch,
@@ -372,6 +372,19 @@ function ImageSettings({
           />
         )}
       </Section>
+      {/* Gameplay on the image; a cinematic image disappears, so it can't be examined. */}
+      {layout !== "fullscreen" && (
+        <Section
+          title={t("editor.image.groups.interactivity")}
+          set={[draft.examination && "examine"]}
+        >
+          <ExaminationFields
+            value={draft.examination ?? null}
+            onChange={(examination) => onDraft({ examination })}
+            locale={locale}
+          />
+        </Section>
+      )}
       <Section
         title={t("editor.image.groups.description")}
         set={[draft.alt && "description", draft.caption && "caption"]}
@@ -388,19 +401,6 @@ function ImageSettings({
           onChange={(event) => onDraft({ caption: event.target.value })}
         />
       </Section>
-      {/* Gameplay on the image; a cinematic image disappears, so it can't be examined. */}
-      {layout !== "fullscreen" && (
-        <Section
-          title={t("editor.image.groups.interactivity")}
-          set={[draft.examination && "examine"]}
-        >
-          <ExaminationFields
-            value={draft.examination ?? null}
-            onChange={(examination) => onDraft({ examination })}
-            locale={locale}
-          />
-        </Section>
-      )}
     </>
   );
 }

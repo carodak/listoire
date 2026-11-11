@@ -730,7 +730,7 @@ test("the camera is a folded section, with its settings folded right under the p
   await expect(settings.locator("summary")).toContainText("set: changed");
 });
 
-test("settings order: Look on the page (with On the page), Camera, When it appears, Description & caption", async ({
+test("settings order: Look on the page (with On the page), Camera, When to display the media, Interactivity, Description & caption", async ({
   page,
 }) => {
   const dialog = await openNewImage(page);
@@ -742,9 +742,9 @@ test("settings order: Look on the page (with On the page), Camera, When it appea
   expect(titles).toEqual([
     "Look on the page",
     "Camera",
-    "When it appears",
-    "Description & caption",
+    "When to display the media",
     "Interactivity",
+    "Description & caption",
   ]);
   await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
   // "On the page" is inside "Look on the page", whose summary shows the layout.
