@@ -103,7 +103,11 @@ export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
 }
 function continueInkLine(story: Story, authored: boolean) {
   if (!authored) return story.Continue();
-  story.ContinueAsync(50);
+  // ContinueAsync runs one time slice; a slow device or a cold start needs several for a
+  // line. 100 slices (5 s) still stops an authored loop that never ends a line.
+  let slices = 0;
+  do story.ContinueAsync(50);
+  while (!story.asyncContinueComplete && ++slices < 100);
   if (!story.asyncContinueComplete) throw new ReaderFailure("content");
   return story.currentText;
 }

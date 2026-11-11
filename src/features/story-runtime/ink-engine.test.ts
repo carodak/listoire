@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { Compiler } from "inkjs/full";
 import { Story } from "inkjs";
 import { InkNarrativeEngine } from "./ink-engine.ts";
@@ -80,4 +80,34 @@ it("keeps translated IDs and branch structure aligned", () => {
     }));
   };
   expect(structure("fr")).toEqual(structure("en"));
+});
+
+/** Makes every other ContinueAsync slice run out of time before doing anything. */
+function starveInk(always = false) {
+  const slice = Story.prototype.ContinueAsync;
+  let starved = false;
+  const spies = [
+    vi.spyOn(Story.prototype, "ContinueAsync").mockImplementation(function (this: Story, limit) {
+      starved = always || !starved;
+      if (!starved) slice.call(this, limit);
+    }),
+    vi.spyOn(Story.prototype, "asyncContinueComplete", "get").mockImplementation(() => !starved),
+  ];
+  return () => spies.forEach((spy) => spy.mockRestore());
+}
+it("continues an authored line over several time slices, and stops one that never ends (REVIEW #8)", () => {
+  const bundle = { ...fixtureBundle(), authored: true };
+  const expected = new InkNarrativeEngine(bundle).advance();
+  let restore = starveInk();
+  try {
+    expect(new InkNarrativeEngine(bundle).advance()).toEqual(expected);
+  } finally {
+    restore();
+  }
+  restore = starveInk(true);
+  try {
+    expect(() => new InkNarrativeEngine(bundle).advance()).toThrow("content");
+  } finally {
+    restore();
+  }
 });
