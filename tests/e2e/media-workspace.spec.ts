@@ -152,6 +152,13 @@ async function readyMade(dialog: Locator, scene: string) {
   await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
   await dialog.getByRole("button", { name: scene, exact: true }).click();
 }
+/** Opens (or closes) a folded settings section by its title. */
+async function openSection(dialog: Locator, title: string) {
+  await dialog
+    .locator(".image-section > summary")
+    .filter({ hasText: new RegExp(`^${title}`) })
+    .click();
+}
 /** Searches the open picker and clicks that image: one click. */
 async function pick(dialog: Locator, picker: string, image: string) {
   const list = dialog.getByRole("region", { name: picker, exact: true });
@@ -173,7 +180,9 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   await expect(dialog.getByRole("group", { name: "Background", exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
-  await expect(dialog.locator(".image-more")).not.toHaveAttribute("open");
+  // Pass 11: the settings are folded sections, all closed (no "More options").
+  await expect(dialog.locator(".image-section")).not.toHaveCount(0);
+  await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
   // The ready-made scenes are offered while the image is empty (Pass 11: behind a toggle).
   await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
   for (const scene of ["Landscape", "Character in forest", "Two moons"])
@@ -332,7 +341,7 @@ test("an added image shows whole, a single image's frame follows its shape, and 
   const dialog = await openNewImage(page);
   await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
   await pick(dialog, "Choose an image", character);
-  await dialog.getByText("More options", { exact: true }).click();
+  await openSection(dialog, "Look on the page");
   const frame = dialog.getByLabel("Frame", { exact: true });
   // A portrait image gets a portrait frame.
   await expect(frame).toHaveValue("portrait");
@@ -487,7 +496,8 @@ test("ready-made scenes are a closed toggle in the start area, and only there", 
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(3);
   // No second copy further down the dialog.
   await expect(start).toHaveCount(0);
-  await dialog.getByText("More options", { exact: true }).click();
+  for (const summary of await dialog.locator(".image-section > summary").all())
+    await summary.click();
   await expect(dialog.getByText("Ready-made scenes")).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "Landscape", exact: true })).toHaveCount(0);
 });
@@ -601,4 +611,28 @@ test("the layers panel: one row per layer, front to back, with an eye, depth, dr
   // The eye shows it again.
   await eye.click();
   await expect(plane(dialog, fern)).toHaveCSS("visibility", "visible");
+});
+
+test("no More options: each settings category is its own section, closed by default", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await readyMade(dialog, "Character in forest");
+  await expect(dialog.getByText("More options")).toHaveCount(0);
+  const sections = dialog.locator(".image-section");
+  await expect(sections).toHaveCount(4);
+  await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
+  // Each opens on its own.
+  await openSection(dialog, "Look on the page");
+  await expect(dialog.locator(".image-section[open]")).toHaveCount(1);
+  await expect(dialog.getByLabel("Frame", { exact: true })).toBeVisible();
+  await openSection(dialog, "Look on the page");
+  await expect(dialog.getByLabel("Frame", { exact: true })).toBeHidden();
+  // A closed section says what is set inside it.
+  await openSection(dialog, "Text");
+  await dialog.getByLabel("Caption", { exact: true }).fill("Under the trees");
+  await openSection(dialog, "Text");
+  await expect(
+    dialog.locator(".image-section > summary").filter({ hasText: /^Text/ }),
+  ).toContainText("set: caption");
 });

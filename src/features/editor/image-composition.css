@@ -191,23 +191,22 @@
   margin-block: 6px;
 }
 .image-selected-more > summary,
-.image-more > summary {
+.image-section > summary {
   cursor: pointer;
   font-weight: 600;
 }
-.image-more > summary small {
+/* Each settings category folds on its own, closed by default. */
+.image-section {
+  padding: 10px 12px;
+  border: 1px solid var(--editor-line, #dce2dc);
+  border-radius: 6px;
+}
+.image-section > summary small {
   color: var(--editor-muted, #6d7872);
   font-weight: normal;
 }
-.image-more {
-  display: grid;
-  gap: 12px;
-}
-.image-more[open] > summary {
-  margin-bottom: 12px;
-}
-.image-more > fieldset + fieldset {
-  margin-top: 12px;
+.image-section[open] > summary {
+  margin-bottom: 8px;
 }
 
 /* The picker, in place of the pictures while it is open. */

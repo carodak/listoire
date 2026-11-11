@@ -332,7 +332,6 @@ const en = {
       description: "Description (alt text)",
       descriptionHint:
         "What the picture shows, for readers who can't see it. Used everywhere the story shows this picture.",
-      more: "More options",
       moreSet: "set: {{items}}",
       set: {
         caption: "caption",
@@ -733,7 +732,6 @@ const fr: typeof en = {
       description: "Description (texte alternatif)",
       descriptionHint:
         "Ce que montre l’image, pour les lecteurs qui ne la voient pas. Utilisée partout où l’histoire montre cette image.",
-      more: "Plus d’options",
       moreSet: "réglé : {{items}}",
       set: {
         caption: "légende",

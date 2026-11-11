@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
@@ -246,7 +247,7 @@ export function ImageEditor(props: ImageEditorProps) {
           value={form.draft.alt}
           onChange={(event) => patch({ draft: { ...form.draft, alt: event.target.value } })}
         />
-        <MoreOptions
+        <ImageSettings
           {...props}
           value={value}
           setValue={(next) => {
@@ -259,8 +260,38 @@ export function ImageEditor(props: ImageEditorProps) {
   );
 }
 
-/** Everything most images don't need, folded; its summary says what is set. */
-function MoreOptions({
+/** A settings category, folded until opened; its summary says what is set inside. */
+function Section({
+  title,
+  set = [],
+  children,
+}: {
+  title: string;
+  set?: (string | false | null | undefined)[];
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const items = set.filter((item): item is string => Boolean(item));
+  return (
+    <details className="image-section">
+      <summary>
+        {title}
+        {items.length > 0 && (
+          <small>
+            {" · "}
+            {t("editor.image.moreSet", {
+              items: items.map((item) => t(`editor.image.set.${item}`)).join(", "),
+            })}
+          </small>
+        )}
+      </summary>
+      {children}
+    </details>
+  );
+}
+
+/** Everything most images don't need, one folded section per category. */
+function ImageSettings({
   form,
   patch,
   locale,
@@ -276,30 +307,13 @@ function MoreOptions({
   const { draft, layout } = form;
   const onDraft = (change: Partial<ImageDraft>) => patch({ draft: { ...draft, ...change } });
   const layered = value.layers.length > 0;
-  const set = [
-    draft.caption && "caption",
-    draft.examination && "examine",
-    draft.show !== "page" && "timing",
-    draft.persistence > 0 && "hide",
-    !layered && draft.effect !== "none" && "entrance",
-    (draft.width !== 100 || draft.positionOverride || value.wrap !== "none") && "page",
-  ].filter((item): item is string => Boolean(item));
   const draftProps = { kind: "Image", draft, onDraft, segments };
   return (
-    <details className="image-more">
-      <summary>
-        {t("editor.image.more")}
-        {set.length > 0 && (
-          <small>
-            {" · "}
-            {t("editor.image.moreSet", {
-              items: set.map((item) => t(`editor.image.set.${item}`)).join(", "),
-            })}
-          </small>
-        )}
-      </summary>
-      <fieldset>
-        <legend>{t("editor.image.groups.text")}</legend>
+    <>
+      <Section
+        title={t("editor.image.groups.text")}
+        set={[draft.caption && "caption", draft.examination && "examine"]}
+      >
         <Field
           label={t("editor.image.caption")}
           value={draft.caption}
@@ -312,9 +326,15 @@ function MoreOptions({
             locale={locale}
           />
         )}
-      </fieldset>
-      <fieldset>
-        <legend>{t("editor.image.groups.when")}</legend>
+      </Section>
+      <Section
+        title={t("editor.image.groups.when")}
+        set={[
+          draft.show !== "page" && "timing",
+          draft.persistence > 0 && "hide",
+          !layered && draft.effect !== "none" && "entrance",
+        ]}
+      >
         {scenes && (
           <SelectField
             label={t("editor.image.scene")}
@@ -350,18 +370,19 @@ function MoreOptions({
             onChange={(effect) => onDraft({ effect })}
           />
         )}
-      </fieldset>
-      <fieldset>
-        <legend>{t("editor.image.groups.look")}</legend>
+      </Section>
+      <Section
+        title={t("editor.image.groups.look")}
+        set={[(draft.width !== 100 || draft.positionOverride || value.wrap !== "none") && "page"]}
+      >
         <PageCompositionFields value={value} onChange={setValue} layout={layout} />
         <ImagePlacement {...draftProps} />
-      </fieldset>
+      </Section>
       {layered && (
-        <fieldset>
-          <legend>{t("editor.image.groups.cameraDetails")}</legend>
+        <Section title={t("editor.image.groups.cameraDetails")}>
           <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
-        </fieldset>
+        </Section>
       )}
-    </details>
+    </>
   );
 }

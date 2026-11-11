@@ -146,7 +146,9 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByRole("button", { name: "Choose an image", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
   await page.locator('.image-picker button[data-asset="house.night"]').click();
-  await page.getByText("More options", { exact: true }).click();
+  // Pass 11: no "More options"; each settings category is its own folded section.
+  for (const section of [/^Text/, /^When it appears/, /^Look on the page/])
+    await page.locator(".image-section > summary").filter({ hasText: section }).click();
   await page.getByLabel("Caption", { exact: true }).fill("After the girl");
   await page.getByRole("button", { name: "Wide", exact: true }).click();
   await page.getByLabel("Override default position", { exact: true }).check();

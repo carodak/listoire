@@ -115,7 +115,9 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await dialog.getByLabel("Size", { exact: true }).press("ArrowRight");
   await dialog.getByRole("button", { name: "Safe frame", exact: true }).click();
   await expect(dialog.locator(".image-safe-margin")).toBeVisible();
-  await dialog.getByText("More options", { exact: true }).click();
+  // Pass 11: no "More options"; each settings category is its own folded section.
+  for (const section of [/^Look on the page/, /^Camera details/, /^Text/])
+    await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("right");
   await dialog.getByLabel("Camera", { exact: true }).selectOption("gentle-depth");
   await dialog.getByLabel("Movement duration (seconds)", { exact: true }).fill("6.5");
@@ -186,7 +188,8 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
   // The fern, just added, is the selected picture.
   await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
-  await dialog.getByText("More options", { exact: true }).click();
+  for (const section of [/^When it appears/, /^Look on the page/])
+    await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Entrance", { exact: true }).selectOption("none");
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("left");
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
