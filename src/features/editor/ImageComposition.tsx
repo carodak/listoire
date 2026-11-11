@@ -31,7 +31,6 @@ export function ImageComposition(props: Props) {
   return (
     <fieldset className="image-composition">
       <legend>Illustration</legend>
-      <input type="hidden" name="illustration" value={JSON.stringify(current)} />
       <IllustrationMode
         value={mode}
         onChange={(mode) => {

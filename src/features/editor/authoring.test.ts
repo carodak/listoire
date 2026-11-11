@@ -12,7 +12,8 @@ import {
 } from "./media-script.ts";
 import { animationOptions } from "./animation-options.ts";
 import { applyMediaEdit } from "./media-authoring.ts";
-import { mediaDefaults } from "./media-form.ts";
+import { imageDraft, imageInput, mediaDefaults } from "./media-form.ts";
+import { illustrationDefaults } from "../../contracts/illustration.ts";
 import { addLanguage } from "./add-language.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
@@ -546,5 +547,83 @@ describe("cutting and pasting a // @media line (REVIEW #3)", () => {
     // Without the session's buffer (a reload), a pasted line stays a dead comment, as before.
     const reloaded = editMediaScript(removed, annotated.script);
     expect(blockAt(reloaded)).toBe(-1);
+  });
+});
+
+describe("the Image and Video draft (typed form state)", () => {
+  const language = original.languages.en!;
+  const scene = language.configuration.scenes!.intro;
+  const form = (kind: string) => {
+    const initial = mediaDefaults(kind, "intro", "intro.illustration", scene);
+    const draft = imageDraft(initial, { alt: "A photograph", shared: true, locale: "en" });
+    return { initial, draft };
+  };
+
+  it("starts from the stored values and the picture's description", () => {
+    const { initial, draft } = form("Image");
+    expect(draft).toMatchObject({
+      alt: "A photograph",
+      shared: true,
+      caption: initial.caption,
+      show: initial.show,
+      examination: null,
+    });
+    const stored = {
+      title: "Photo",
+      descriptions: ["a"],
+      reverse: "",
+      image: "x",
+      actionId: "look",
+    };
+    expect(
+      imageDraft({ ...initial, examination: stored }, { alt: "", shared: false, locale: "fr" })
+        .examination,
+    ).toEqual({
+      ...stored,
+      buttonLabel: "Examiner la photographie",
+    });
+  });
+
+  it("stores what the form shows: a single image stays still, layers keep the camera", () => {
+    const { initial, draft } = form("Image");
+    const motion = CinematicSchema.parse({ preset: "gentle-depth" });
+    const base = {
+      asset: "photo",
+      layout: "inline" as const,
+      motion,
+      draft: { ...draft, effect: "fade-in" },
+    };
+    const single = imageInput(initial, { ...base, illustration: null });
+    expect(single).toMatchObject({
+      effect: "fade-in",
+      motion: { preset: "none" },
+      examination: null,
+    });
+    expect(single.illustration).toEqual(illustrationDefaults());
+    const layers = illustrationDefaults("background", ["tree"]);
+    const layered = imageInput(initial, { ...base, illustration: layers });
+    expect(layered).toMatchObject({ effect: "none", motion, illustration: layers });
+    // A cinematic can't be examined; a video keeps its stored composition and effect.
+    const exam = {
+      ...base.draft,
+      examination: { title: "T", descriptions: [], reverse: "", image: "" },
+    };
+    expect(
+      imageInput(initial, { ...base, layout: "fullscreen", illustration: null, draft: exam })
+        .examination,
+    ).toBeNull();
+    const video = form("Video");
+    expect(
+      imageInput(video.initial, {
+        ...base,
+        illustration: layers,
+        draft: { ...video.draft, fit: "cover" },
+      }),
+    ).toMatchObject({
+      effect: video.initial.effect,
+      motion: video.initial.motion,
+      illustration: video.initial.illustration,
+      fit: "cover",
+    });
   });
 });

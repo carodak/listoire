@@ -8,7 +8,6 @@ export function MediaLayout({ layout, onLayout }: MediaLayoutProps) {
   return (
     <fieldset>
       <legend title="Choose where the illustration appears on the reading page.">Type</legend>
-      <input type="hidden" name="layout" value={layout} />
       <div className="media-layout-cards">
         {(["inline", "wide", "right", "background", "fullscreen"] as const).map((type) => (
           <button

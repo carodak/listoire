@@ -1,6 +1,8 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { CinematicSchema } from "../../contracts/cinematic.ts";
-import type { MediaEdit, MediaBlock, Scene } from "./media-edit.ts";
+import type { ImageDraft, MediaEdit, MediaBlock, Scene } from "./media-edit.ts";
+import type { ImageExamination } from "../../contracts/presentation.ts";
+import { illustrationDefaults } from "../../contracts/illustration.ts";
 
 const emptyMedia: Omit<MediaEdit, "kind" | "sceneId" | "id" | "loop"> = {
   shared: false,
@@ -145,5 +147,83 @@ export function mediaContext(
     assetUrl: chosen ? `/stories/house/${chosen.path}` : undefined,
     blocks: blocks.filter((b) => b.kind === "media").map((b) => b.id),
     trigger: events.find((e) => e.id === selectedId)?.trigger.kind ?? "passage",
+  };
+}
+
+const emptyExamination = { image: "", title: "Image", descriptions: [""], reverse: "" };
+/** An examination as the form edits it: stored values, defaults, and a button label. */
+export function examinationDraft(
+  initial: ImageExamination | null | undefined,
+  locale: string,
+): ImageExamination {
+  const french = locale.startsWith("fr");
+  const label = initial?.actionId
+    ? french
+      ? "Examiner la photographie"
+      : "Examine the photograph"
+    : french
+      ? "Examiner l’image"
+      : "Examine the image";
+  return { ...emptyExamination, ...initial, buttonLabel: initial?.buttonLabel ?? label };
+}
+
+/** What the Image and Video forms start from: the stored values and the picture's alt text. */
+export function imageDraft(
+  initial: MediaEdit,
+  options: { alt: string; shared: boolean; locale: string; legacy?: ImageExamination | null },
+): ImageDraft {
+  const examination =
+    (initial.examination === undefined ? options.legacy : initial.examination) ?? null;
+  return {
+    shared: options.shared,
+    alt: options.alt,
+    caption: initial.caption,
+    width: initial.width,
+    align: initial.align,
+    fit: initial.fit,
+    positionOverride: initial.positionOverride,
+    x: initial.x,
+    y: initial.y,
+    show: initial.show,
+    segment: initial.segment,
+    delay: initial.delay,
+    persistence: initial.persistence,
+    effect: ["none", "fade-in", "fade-out"].includes(initial.effect) ? initial.effect : "none",
+    examination: examination && examinationDraft(examination, options.locale),
+  };
+}
+
+/**
+ * The edit Apply stores for an Image or Video, from the typed form state (it replaces the
+ * hidden JSON inputs and FormData reading, with the same result).
+ */
+export function imageInput(
+  initial: MediaEdit,
+  form: {
+    asset: string;
+    layout: MediaEdit["layout"];
+    motion: MediaEdit["motion"];
+    illustration: MediaEdit["illustration"];
+    draft: ImageDraft;
+  },
+): MediaEdit {
+  const image = initial.kind === "Image";
+  const layered = Boolean(form.illustration?.layers.length);
+  return {
+    ...initial,
+    ...form.draft,
+    asset: form.asset,
+    layout: form.layout,
+    fit: image ? initial.fit : form.draft.fit,
+    // Only an image that isn't a cinematic can be examined.
+    examination: image && form.layout !== "fullscreen" ? form.draft.examination : null,
+    // A single image has a simple effect and stays still; layers have the camera instead.
+    effect: !image ? initial.effect : layered ? "none" : form.draft.effect,
+    motion: !image
+      ? initial.motion
+      : layered
+        ? form.motion
+        : CinematicSchema.parse({ preset: "none" }),
+    illustration: image ? (form.illustration ?? illustrationDefaults()) : initial.illustration,
   };
 }

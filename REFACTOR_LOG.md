@@ -1745,6 +1745,8 @@ camera, outside this pass).
 | `f9e61c1` | 2. design note (docs)                                        | —     |
 | `4509e26` | 2a. REVIEW #3: pasting a cut `// @media` line restores it    | 94.4  |
 | `6156c51` | 2b. reference renders (test only)                            | 94.4  |
+| `f2309f1` | 2c-1. tilt and flip (contract, reader)                       | 94.4  |
+| `2f18ec2` | 2b. references for the four single images (test only)        | 94.4  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -2064,3 +2066,33 @@ identical). `--update-snapshots` still rewrites them. Nothing compared was dropp
 Tests: unit (old composition parses unchanged; tilt and flip accepted; 76°, −80° and a
 non-boolean flip refused); e2e "a tilted or mirrored picture is drawn in 3D; the others keep
 their transform" (a 3D matrix, mirrored x axis, background unchanged).
+
+### 2c-2. One typed draft instead of hidden JSON inputs (REVIEW §4)
+
+Image and Video no longer send their form through the DOM. The dialog keeps a typed
+`ImageDraft` (alt, caption, width, alignment, fit, position override, timing, hide-after,
+entrance effect, examination, same-in-all-languages) beside the picture, layout, camera and
+composition it already held, and Apply builds the edit with `imageInput(initial, form)`. The
+hidden `illustration`, `motion`, `effect`, `layout` and `examination` inputs are gone, and so is
+`as unknown as MediaEdit` for these two kinds. Animation and the audio kinds keep their form
+fields (as planned). No visual change.
+
+`imageInput` reproduces exactly what the `FormData` reading gave, including its rules: a single
+image stays still (camera "none") and keeps its fade; layers keep the camera and no fade; a
+cinematic can't be examined; a video keeps its stored composition, camera and effect. Proof:
+the ten references (six layered, plus the four single images captured on `f2309f1`, one with
+"examine" and two on the right page) are saved identically after Apply.
+
+**One fix on the way:** the description (alt) field was filled once, when the dialog opened.
+Choosing another main picture kept the old picture's description, and Apply then wrote it onto
+the new picture. The description now follows the chosen picture (you can still edit it).
+
+**Changed assertion:** `media-workspace.spec.ts` "keeps the illustration visible while choosing
+duplicate layer instances…" read the rotation from the hidden `illustration` input (now gone);
+it reads the same value (1°, on the selected last layer) from the layer as the preview draws it
+(`--layer-rotation: 1deg`).
+
+Tests: unit "the Image and Video draft (typed form state)" (starting values, examination
+defaults and French label, single vs layered, cinematic without examination, video keeps its
+stored values); e2e: the ten references, image-composition, media-workspace, editor (27/28; the
+28th is the known failure).

@@ -7,8 +7,8 @@ import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { applyMediaEdit } from "./media-authoring.ts";
-import { mediaDefaults, mediaContext } from "./media-form.ts";
-import type { MediaEdit } from "./media-edit.ts";
+import { imageDraft, imageInput, mediaDefaults, mediaContext } from "./media-form.ts";
+import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { ImageFields, AnimationFields, AudioFields, TimingFields } from "./MediaFields.tsx";
 import { ImageComposition } from "./ImageComposition.tsx";
 
@@ -34,18 +34,16 @@ interface FormProps {
   previewTarget: HTMLElement | null;
   selectedId?: string;
 }
+/** Image and Video edit a typed draft; the other kinds still read their form fields. */
+const drafted = (kind: string) => kind === "Image" || kind === "Video";
 const mediaFields = {
-  Image: ImageFields,
-  Video: ImageFields,
   Animation: AnimationFields,
   "Sound Effect": AudioFields,
   "Background Music": AudioFields,
 };
 export function MediaDialog(props: MediaDialogProps) {
   const { kind, project, locale, passageId, selectedId, onApply, onClose } = props;
-  const [form, setForm] = useState(() =>
-    initialForm(kind, passageId, selectedId, project.languages[locale]!),
-  );
+  const [form, setForm] = useState(() => initialForm(kind, passageId, selectedId, project, locale));
   const [previewTarget, setPreviewTarget] = useState<HTMLDivElement | null>(null);
   const patch = (patch: Partial<MediaForm>) => setForm((before) => ({ ...before, ...patch }));
   const id = selectedId ?? form.newId;
@@ -60,7 +58,7 @@ export function MediaDialog(props: MediaDialogProps) {
     event.preventDefault();
     try {
       const data = new FormData(event.currentTarget);
-      const input = readMediaForm(initial, data);
+      const input = drafted(kind) ? imageInput(initial, form) : readMediaForm(initial, data);
       const next = commitMedia(
         project,
         locale,
@@ -100,6 +98,9 @@ export function MediaDialog(props: MediaDialogProps) {
 }
 function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: FormProps) {
   const scenes = Object.keys(form.language.configuration.scenes ?? {});
+  // A new picture brings its own description (the field used to keep the previous one's).
+  const setAsset = (asset: string) =>
+    patch({ asset, draft: { ...form.draft, alt: altText(form.language, asset) } });
   return (
     <>
       <label className="media-scene-select">
@@ -120,7 +121,7 @@ function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: 
         language={form.language}
         setLanguage={(language) => patch({ language })}
         asset={form.asset}
-        setAsset={(asset) => patch({ asset })}
+        setAsset={setAsset}
         library={project.mediaLibrary}
       />
       <ImageComposition
@@ -129,7 +130,7 @@ function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: 
         image={form.asset}
         value={form.illustration}
         onChange={(illustration) => patch({ illustration, motion: { ...form.motion, layers: [] } })}
-        onImage={(asset) => patch({ asset })}
+        onImage={setAsset}
         language={form.language}
         library={project.mediaLibrary}
         motion={form.motion}
@@ -139,31 +140,40 @@ function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: 
     </>
   );
 }
-function MediaConfiguration({ kind, project, locale, form, initial, context, patch }: FormProps) {
+function MediaConfiguration({ kind, locale, form, initial, context, patch }: FormProps) {
   const Fields = mediaFields[kind as keyof typeof mediaFields];
   const content = { input: initial, segments: context.segmentIds };
+  const onDraft = (change: Partial<ImageDraft>) => patch({ draft: { ...form.draft, ...change } });
   return (
     <>
       <details className="media-placement-options" open>
         <summary>Story placement, timing &amp; size</summary>
-        <Fields
-          {...content}
-          layout={form.layout}
-          onLayout={(layout) => patch({ layout })}
-          alt={context.alt}
-          blocks={context.blocks}
-          target={form.target}
-          onTarget={(target) => patch({ target })}
-          legacyExamination={form.language.configuration.examination}
-          locale={locale}
-        />
+        {drafted(kind) ? (
+          <ImageFields
+            kind={kind}
+            draft={form.draft}
+            onDraft={onDraft}
+            segments={context.segmentIds}
+            layout={form.layout}
+            onLayout={(layout) => patch({ layout })}
+            locale={locale}
+          />
+        ) : (
+          <Fields
+            {...content}
+            blocks={context.blocks}
+            target={form.target}
+            onTarget={(target) => patch({ target })}
+          />
+        )}
       </details>
       <CinematicFields
         kind={kind}
         motion={form.motion}
         image={context.assetUrl}
         layerCount={form.illustration?.layers.length ?? 0}
-        simpleEffect={initial.effect}
+        effect={form.draft.effect}
+        onEffect={(effect) => onDraft({ effect })}
         onChange={(motion) => patch({ motion })}
       />
       {!["Image", "Video"].includes(kind) && form.target !== "transition" && (
@@ -176,7 +186,12 @@ function MediaConfiguration({ kind, project, locale, form, initial, context, pat
         className="check media-shared-setting"
         title="Uncheck to override this language only. Change the default in Settings."
       >
-        <input name="shared" type="checkbox" defaultChecked={project.shareConfiguration ?? false} />
+        <input
+          name="shared"
+          type="checkbox"
+          checked={form.draft.shared}
+          onChange={(event) => onDraft({ shared: event.target.checked })}
+        />
         Apply shared configuration to all languages
       </label>
     </>
@@ -260,12 +275,17 @@ function MediaSource({ kind, language, setLanguage, asset, setAsset, library }: 
   );
 }
 
+const altText = (language: StoryProject["languages"][string], asset: string) =>
+  language.configuration.assets?.find((entry) => entry.id === asset)?.alt ?? "";
+
 function initialForm(
   kind: string,
   sceneId: string,
   selectedId: string | undefined,
-  language: StoryProject["languages"][string],
+  project: StoryProject,
+  locale: string,
 ) {
+  const language = project.languages[locale]!;
   const defaults = mediaDefaults(
     kind,
     sceneId,
@@ -276,6 +296,12 @@ function initialForm(
     language,
     sceneId,
     asset: defaults.asset,
+    draft: imageDraft(defaults, {
+      alt: altText(language, defaults.asset),
+      shared: project.shareConfiguration ?? false,
+      locale,
+      legacy: language.configuration.examination,
+    }),
     error: "",
     target: defaults.target,
     layout: defaults.layout,

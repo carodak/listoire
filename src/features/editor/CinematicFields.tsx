@@ -1,14 +1,15 @@
-import { CinematicSchema, illustrationPresets, atmospheres } from "../../contracts/cinematic.ts";
+import { illustrationPresets, atmospheres } from "../../contracts/cinematic.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
 import { Field, SelectField } from "./Fields.tsx";
-const stillMotion = JSON.stringify(CinematicSchema.parse({ preset: "none" }));
 interface CinematicFieldsProps {
   onChange: (motion: Cinematic) => void;
   kind?: string;
   motion: Cinematic;
   image?: string;
   layerCount?: number;
-  simpleEffect?: string;
+  /** A single image's entrance (none, fade in, fade out). */
+  effect: string;
+  onEffect: (effect: "none" | "fade-in" | "fade-out") => void;
 }
 
 export function CinematicFields({
@@ -16,7 +17,8 @@ export function CinematicFields({
   kind = "Image",
   image,
   layerCount = 0,
-  simpleEffect = "none",
+  effect,
+  onEffect,
   onChange: setMotion,
 }: CinematicFieldsProps) {
   if (kind !== "Image") return null;
@@ -24,18 +26,15 @@ export function CinematicFields({
     return (
       <fieldset className="cinematic-presets" aria-label="Single image effects">
         <legend>Image appearance</legend>
-        <input type="hidden" name="motion" value={stillMotion} />
         <p className="editor-hint">
           A single illustration stays still: no parallax or cinematic camera. Choose a subtle
           entrance effect below. Add separate image layers to unlock camera presets.
         </p>
         <SelectField
           label="Simple effect"
-          name="effect"
-          defaultValue={
-            ["none", "fade-in", "fade-out"].includes(simpleEffect) ? simpleEffect : "none"
-          }
-          options={["none", "fade-in", "fade-out"]}
+          value={effect as "none" | "fade-in" | "fade-out"}
+          onChange={onEffect}
+          options={["none", "fade-in", "fade-out"] as const}
           labels={{ none: "None", "fade-in": "Fade in", "fade-out": "Fade out" }}
         />
       </fieldset>
@@ -44,8 +43,6 @@ export function CinematicFields({
   return (
     <fieldset className="cinematic-presets">
       <legend>Cinematic preset</legend>
-      <input type="hidden" name="motion" value={JSON.stringify(motion)} />
-      <input type="hidden" name="effect" value="none" />
       <p className="editor-hint">
         Use None for a still illustration. Separated image layers share a perspective camera:
         foreground 1×, middleground 0.5×, background 0.15×.

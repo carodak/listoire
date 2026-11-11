@@ -38,3 +38,22 @@ export interface MediaEdit {
   fade: number;
   stop: boolean;
 }
+/** The Image and Video form's own fields; the picture, layout and composition live beside them. */
+export type ImageDraft = Pick<
+  MediaEdit,
+  | "shared"
+  | "alt"
+  | "caption"
+  | "width"
+  | "align"
+  | "fit"
+  | "positionOverride"
+  | "x"
+  | "y"
+  | "show"
+  | "segment"
+  | "delay"
+  | "persistence"
+  | "effect"
+  | "examination"
+>;

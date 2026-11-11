@@ -32,8 +32,14 @@ test("keeps the illustration visible while choosing duplicate layer instances in
   );
   await expect(planes).toHaveCount(2);
   await dialog.getByLabel("Rotation (degrees)", { exact: true }).press("ArrowRight");
-  const data = JSON.parse(await dialog.locator('input[name="illustration"]').inputValue());
-  expect(data.layers.at(-1).rotation).toBe(1);
+  // Pass 9: the hidden JSON input is gone (typed form state); the same value is read from the
+  // selected (last) layer as the preview draws it.
+  expect(
+    await planes
+      .last()
+      .locator("img")
+      .evaluate((image) => image.style.getPropertyValue("--layer-rotation")),
+  ).toBe("1deg");
   await dialog
     .getByRole("button", { name: "high arrival hold pullback", exact: true })
     .scrollIntoViewIfNeeded();
