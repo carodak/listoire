@@ -1,0 +1,142 @@
+{
+  "en": {
+    "title": "An apple and a river",
+    "progress": 0.475,
+    "events": [
+      {
+        "id": "air-test.air",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "air-test.p2"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.cdf05a1d947cb7c86048",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.4,
+          "fadeMs": 80
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "air-test.p1"
+      },
+      {
+        "kind": "media",
+        "id": "air-test.illustration",
+        "image": "sketch.single-lopsided-apple-001",
+        "layout": "inline",
+        "widthPercent": 44,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "air-test.p2"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "Une pomme et une rivière",
+    "progress": 0.475,
+    "events": [
+      {
+        "id": "air-test.air",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "air-test.p2"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.cdf05a1d947cb7c86048",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.4,
+          "fadeMs": 80
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "air-test.p1"
+      },
+      {
+        "kind": "media",
+        "id": "air-test.illustration",
+        "image": "sketch.single-lopsided-apple-001",
+        "layout": "inline",
+        "widthPercent": 44,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "air-test.p2"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

@@ -132,13 +132,38 @@ for (const [scene, id] of images)
     await loaded(viewport);
     await matchesReference(`${scene}-layers.json`, await layers(viewport));
     // 3. Apply without a change: nothing stored changes.
-    await dialog.getByRole("button", { name: /^Apply/ }).click();
-    await expect(dialog).toHaveCount(0);
-    const project = await backup(page);
-    const stored = Object.fromEntries(
-      Object.entries(
-        project.languages as Record<string, { configuration: { scenes: Record<string, unknown> } }>,
-      ).map(([locale, language]) => [locale, language.configuration.scenes[scene]]),
-    );
-    await matchesReference(`${scene}-stored.json`, stored);
+    await appliedUnchanged(page, scene);
+  });
+
+/** Opens the image, presses Apply without a change, and compares what is stored. */
+async function appliedUnchanged(page: Page, scene: string) {
+  const dialog = page.getByRole("dialog", { name: /^Edit image$/i });
+  await dialog.getByRole("button", { name: /^Apply/ }).click();
+  await expect(dialog).toHaveCount(0);
+  const project = await backup(page);
+  const stored = Object.fromEntries(
+    Object.entries(
+      project.languages as Record<string, { configuration: { scenes: Record<string, unknown> } }>,
+    ).map(([locale, language]) => [locale, language.configuration.scenes[scene]]),
+  );
+  await matchesReference(`${scene}-stored.json`, stored);
+}
+
+/** Orée's single images: one examinable, two on the right page. Saved the same (no pixels). */
+const single = [
+  ["messagere", "messagere.illustration"],
+  ["chambre", "chambre.illustration"],
+  ["relais", "relais.illustration"],
+  ["air-test", "air-test.illustration"],
+] as const;
+for (const [scene, id] of single)
+  test(`${scene}: the single image saves the same`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/editor");
+    await expect(page.locator(".preview-slot .prose")).toBeVisible({ timeout: 30_000 });
+    await caretTo(page, `// @media ${scene}/${id}`);
+    await page.getByRole("tab", { name: "Media", exact: true }).click();
+    await page.getByRole("button", { name: "Edit Selected Media", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: /^Edit image$/i })).toBeVisible();
+    await appliedUnchanged(page, scene);
   });
