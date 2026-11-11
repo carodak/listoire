@@ -179,20 +179,22 @@ function ImportOverlay({ context: c }: { context: Context }) {
         Import an Ink script into {c.locale}, or restore a complete project backup. You can undo the
         import.
       </p>
-      <button onClick={c.onChooseFile}>Choose Ink or project file</button>
-      <button onClick={() => window.location.reload()}>Reload saved project</button>
-      <button
-        disabled={!c.state.illustrationPack}
-        onClick={() => {
-          c.state.update(
-            applyIllustrationPack(c.project, c.state.illustrationPack!),
-            "Applied new illustration pack",
-          );
-          c.onClose();
-        }}
-      >
-        Apply new illustration pack
-      </button>
+      <div className="dialog-actions">
+        <button onClick={c.onChooseFile}>Choose Ink or project file</button>
+        <button onClick={() => window.location.reload()}>Reload saved project</button>
+        <button
+          disabled={!c.state.illustrationPack}
+          onClick={() => {
+            c.state.update(
+              applyIllustrationPack(c.project, c.state.illustrationPack!),
+              "Applied new illustration pack",
+            );
+            c.onClose();
+          }}
+        >
+          Apply new illustration pack
+        </button>
+      </div>
       <p className="editor-hint">
         Updates matching example illustrations and page color. Keeps your text, audio and uploaded
         images. Undo restores the previous version.
@@ -207,22 +209,24 @@ function ExportOverlay({ context: c }: { context: Context }) {
         A complete backup includes every language, recordings and media references. Licensed library
         assets remain in the application media directory.
       </p>
-      <button
-        onClick={() =>
-          download(`${c.project.storyId}-${c.locale}.ink`, c.project.languages[c.locale]!.script)
-        }
-      >
-        Export Ink
-      </button>
-      <button
-        onClick={() =>
-          void exportProjectArchive(c.project)
-            .then((text) => download(`${c.project.storyId}-project.json`, text))
-            .catch((error) => c.state.setIssues([message(error)]))
-        }
-      >
-        Complete project backup
-      </button>
+      <div className="dialog-actions">
+        <button
+          onClick={() =>
+            download(`${c.project.storyId}-${c.locale}.ink`, c.project.languages[c.locale]!.script)
+          }
+        >
+          Export Ink
+        </button>
+        <button
+          onClick={() =>
+            void exportProjectArchive(c.project)
+              .then((text) => download(`${c.project.storyId}-project.json`, text))
+              .catch((error) => c.state.setIssues([message(error)]))
+          }
+        >
+          Complete project backup
+        </button>
+      </div>
     </EditorDialog>
   );
 }

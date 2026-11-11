@@ -2168,3 +2168,67 @@ drop: moves the selected picture, and a picture to another depth" (pointer drag 
 arrow key, dragging a row onto Front), "Duplicate adds the same picture again, shifted, and both
 are applied" (with tilt and flip, checked in the preview and in the exported backup). The ten
 references still match.
+
+### 4. Visual polish of the other Story Editor tabs — problems found ("before")
+
+Screenshots of every ribbon tab and every dialog its commands open, plus the header's Settings,
+Load / Import and Export: `review-screenshots/pass9-before/tabs/` (spec
+`review-screenshots/pass9-tabs.spec.ts`, `SHOTS=pass9-before`; the Game tab is taken after
+switching the story to a game mode). The Image dialog is part 2.
+
+**Ribbon (Story, Logic, Media, Game, Review)**
+
+1. Icons are not on one line: a two-line label ("Tunnel Return", "Nested Choice", "Background
+   Music", "Edit Selected Media", "Scene Properties", "Game Condition") pushes its icon up,
+   because each button centres its content vertically.
+2. Uneven widths (from 64 to 95 px depending on the label), so the gaps between commands vary.
+3. Icons of different visual sizes (24 px glyphs: "↶" and "⋮" look small, "■" and "✦" large).
+4. "Additional Commands" is a different kind of control (smaller text, a chevron icon, no group
+   label) next to the groups.
+5. Group labels at 10 px, lighter than the Text toolbar's labels; the separators don't match the
+   Text toolbar's separators.
+
+**Dialogs**
+
+6. Browser-default fieldsets (2 px grey groove, legend on the line) in Video ("Upload video"),
+   TTS (voice, "Generation defaults"), Settings ("Page color"), Game (every section and
+   definition), next to the flat 1 px fieldsets of the new Image dialog.
+7. Secondary buttons drawn as plain text, which don't read as buttons: Game ("+ Action",
+   "Insert game condition", "Apply and insert action choice", "Remove action definition",
+   "+ Ability / spell"…), Load / Import (three actions), Export, History ("Restore version").
+   Others ("Browse media library") have a border: two looks for the same kind of button.
+8. Game's section switcher (Items, Abilities, Encounters, Actions, Rules) looks like plain text:
+   the selected section isn't visible.
+9. Checkboxes in two layouts: label above and the box centred below (Settings "Apply shared
+   configuration to all languages", Game "Offensive ability" — `Field type="checkbox"`), or box
+   then label (`CheckboxField`, REVIEW §5 #13).
+10. Number fields stretched across the whole dialog for 1–5 digits (Volume, Fade, Duration,
+    Intensity, Delay, the TTS generation defaults…).
+11. Uneven vertical rhythm: 12 px around every label, hints glued to the field above (Settings
+    under Game Mode) or far from it; folded sections ("Story placement, timing & size", "Add a
+    voice from an example") in small unstyled summaries.
+12. TTS: "Remove this voice" floats beside the audio player instead of lining up with it.
+13. Control heights differ: dialog inputs ≈ 37 px, the Text toolbar's controls 34 px, ribbon
+    buttons vary.
+
+#### 4-1. Shared dialog styles (all dialogs)
+
+One spacing scale (`--space-1…5`: 4, 8, 12, 16, 24 px) and one control height
+(`--control-height: 34px`, the Text toolbar's) on `.story-editor` and `.editor-dialog`, used
+by every dialog through shared rules in `editor.css`:
+
+- inputs and selects 34 px high; number fields at most 11 rem wide (problems 10, 13);
+- every dialog button has the same 1 px border; the primary one stays filled; the header's ×
+  stays borderless (7);
+- fieldsets: 1 px line, 6 px corners, 12 px padding, bold legend — the Image dialog's look (6);
+- a checkbox always before its label, whichever field component drew it (9);
+- folds (`summary`) bold with a pointer; paragraphs 8 px apart; labels 4 px from their field
+  and 12 px apart (11);
+- section switchers (`nav` in a dialog, i.e. Game's sections) look like tabs with the current
+  one underlined (8);
+- a shared `.dialog-actions` row for buttons that sat bare side by side (Game's action rows,
+  Load / Import, Export, the TTS voice row): wrapped, markup only (7, 12).
+
+Removed as redundant: the Image dialog's own border overrides and `.editor-dialog .check input`.
+No behaviour change, no control removed. E2E: game-authoring, editor, media-workspace,
+narration, editor-tabs 24/24. After: `review-screenshots/pass9-after/part4-1-dialogs/`.

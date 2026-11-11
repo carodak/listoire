@@ -26,6 +26,25 @@
 .editor-dialog button:hover {
   background: #e0e7df;
 }
+/* One spacing scale and one control height for the editor and its dialogs (Pass 9). */
+.story-editor,
+.editor-dialog {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --control-height: 34px;
+  --control-border: #aab8aa;
+}
+/* Every dialog button reads as a button; the primary one is filled. */
+.editor-dialog button {
+  min-height: var(--control-height);
+  border-color: var(--control-border);
+}
+.editor-dialog > header button {
+  border-color: transparent;
+}
 .story-editor button:disabled {
   opacity: 0.4;
   cursor: default;
@@ -341,20 +360,84 @@
 .editor-dialog label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin: 12px 0;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
   font-weight: 550;
 }
 .editor-dialog input,
 .editor-dialog textarea,
 .editor-dialog select {
   font: inherit;
-  padding: 8px;
+  padding: 6px var(--space-2);
   border: 1px solid #cad5c7;
-  border-radius: 4px;
+  border-radius: 5px;
   color: #20382f;
   background: #fff;
   width: 100%;
+}
+.editor-dialog
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]), select) {
+  min-height: var(--control-height);
+}
+/* A number of a few digits doesn't need the whole width. */
+.editor-dialog input[type="number"] {
+  max-width: 11rem;
+}
+/* A checkbox sits before its label, whichever field component drew it. */
+:where(.editor-dialog) label:has(> input[type="checkbox"]) {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: normal;
+}
+:where(.editor-dialog) fieldset {
+  min-width: 0;
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--editor-line);
+  border-radius: 6px;
+}
+:where(.editor-dialog) legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+:where(.editor-dialog) summary {
+  padding-block: var(--space-1);
+  cursor: pointer;
+  font-weight: 600;
+}
+:where(.editor-dialog) p {
+  margin: var(--space-2) 0;
+}
+/* A row of actions (Game, Load / Import, Export…): spaced like the footer. */
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.editor-dialog input[type="checkbox"] {
+  flex: none;
+  width: auto;
+}
+/* Section switchers (Game): tabs, with the current one marked. */
+.editor-dialog nav {
+  display: flex;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+  border-bottom: 1px solid var(--editor-line);
+}
+.editor-dialog nav button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+.editor-dialog nav button[aria-pressed="true"] {
+  border-bottom-color: #284e3d;
+  color: #284e3d;
+  font-weight: 650;
 }
 .editor-dialog textarea {
   min-height: 80px;
@@ -363,16 +446,15 @@
 .editor-dialog .check {
   flex-direction: row;
   align-items: center;
+  gap: var(--space-2);
   font-weight: normal;
-}
-.editor-dialog .check input {
-  width: auto;
 }
 .editor-dialog footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
 }
 .editor-hint {
   color: #68796b;

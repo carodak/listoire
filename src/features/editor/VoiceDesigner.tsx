@@ -48,7 +48,7 @@ export function VoiceDesigner({ language, locale, onChange }: VoiceDesignerProps
         onAdd={(profile) => choose(profile, [...profiles, profile])}
       />
       {voice.reference && (
-        <>
+        <div className="dialog-actions">
           <audio controls preload="metadata" src={voice.reference.data} />
           <button
             disabled={busy}
@@ -62,7 +62,7 @@ export function VoiceDesigner({ language, locale, onChange }: VoiceDesignerProps
           >
             Remove this voice
           </button>
-        </>
+        </div>
       )}
       <GenerationDefaults
         model={voice.model}
