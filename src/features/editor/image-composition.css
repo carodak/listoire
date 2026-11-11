@@ -105,6 +105,17 @@
 .image-layer > .image-picture {
   flex: 1;
 }
+.editor-dialog .image-remove {
+  flex: none;
+  padding: 0 var(--space-1);
+}
+.image-removed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--editor-muted, #6d7872);
+}
 .editor-dialog .image-choose {
   flex: none;
   font-size: 12px;

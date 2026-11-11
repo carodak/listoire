@@ -18,6 +18,8 @@ interface StageProps {
   /** The selected picture (-1: the main one), which the handles frame. */
   selected: number;
   onLayerChange: (change: Partial<Placement>) => void;
+  /** Delete (or Backspace) in the preview removes the selected picture. */
+  onRemove: () => void;
 }
 const clamp = (value: number) => Math.max(-75, Math.min(75, value));
 const steps: Record<string, [number, number]> = {
@@ -154,7 +156,7 @@ function ResizeHandles({
 }
 
 /** The live preview: drag (or the arrow keys) moves the selected picture. */
-export function ImageStage({ layer, selected, onLayerChange, ...preview }: StageProps) {
+export function ImageStage({ layer, selected, onLayerChange, onRemove, ...preview }: StageProps) {
   const { t } = useTranslation();
   const [margins, showMargins] = useState(false);
   const { stage, overflow, box } = useStageGeometry(selected);
@@ -165,7 +167,7 @@ export function ImageStage({ layer, selected, onLayerChange, ...preview }: Stage
       data-overflow={overflow}
       aria-label={t("editor.image.preview")}
     >
-      <ImageDragStage layer={layer} onChange={onLayerChange}>
+      <ImageDragStage layer={layer} onChange={onLayerChange} onRemove={onRemove}>
         <CompositionPreview {...preview} margins={margins} />
       </ImageDragStage>
       {box && (
@@ -191,10 +193,12 @@ export function ImageStage({ layer, selected, onLayerChange, ...preview }: Stage
 function ImageDragStage({
   layer,
   onChange,
+  onRemove,
   children,
 }: {
   layer: Placement;
   onChange: (change: Partial<Placement>) => void;
+  onRemove: () => void;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -208,8 +212,14 @@ function ImageDragStage({
     });
   };
   const nudge = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      onRemove();
+      return;
+    }
     const step = steps[event.key];
-    if (!step || event.target !== event.currentTarget) return;
+    if (!step) return;
     event.preventDefault();
     onChange({ x: clamp(layer.x + step[0]), y: clamp(layer.y + step[1]) });
   };

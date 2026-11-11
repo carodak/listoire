@@ -2520,3 +2520,23 @@ drawn. Tooltip "Drag a corner to resize (the Size slider is more precise)" in en
 Test: e2e "corner handles resize the selected image in the preview; the slider stays in step"
 (four handles; bottom-right outward → bigger, slider equal; top-left inward → smaller; x
 unchanged). References: 10/10.
+
+### 10-5. Removing an image: a × on each layer, Delete in the preview, and Undo
+
+- Each layer row has a visible × (the shared `CloseButton`), tooltip "Remove this image", named
+  "Remove <image>" for screen readers. With the preview focused, **Delete** (or Backspace)
+  removes the selected image. The selected image's "Remove" button is gone (one way to do it,
+  as for choosing).
+- **Undo:** after a removal, "Image removed: <name>. [Undo]" appears under the layers; Undo (or
+  Ctrl+Z in the dialog, outside text fields) puts the image back where it was, selected.
+  Decision: the undo is forgotten as soon as anything else changes, so it can never wipe a later
+  edit; Cancel still discards everything, as before. Removing the main image makes the next
+  layer the main one (Pass 9); removing the last one returns to the empty image.
+- Strings: `removeHint`, `removed`, `undo` (en + fr); `remove` removed.
+
+**Changed selector:** `image-composition.spec.ts` "upgrades legacy image layers…" removed the
+selected fern with `/^Remove /`; with a × on every layer that matches two buttons, so it names
+"Remove Fern fronds".
+
+Test: e2e "removes an image with its × or Delete in the preview, and Undo brings it back" (×
+with its tooltip, the status line and Undo; Delete then Ctrl+Z; Undo gone after another change).

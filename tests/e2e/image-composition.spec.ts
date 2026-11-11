@@ -184,7 +184,7 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await dialog.locator('button[data-asset$="fern-fronds-001"]').first().click();
   await expect(dialog.locator(".multiplane-plane")).toHaveCount(2);
   // The fern, just added, is the selected picture.
-  await dialog.getByRole("button", { name: /^Remove / }).click();
+  await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
   await dialog.getByText("More options", { exact: true }).click();
   await dialog.getByLabel("Entrance", { exact: true }).selectOption("none");
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("left");

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { MediaAsset } from "../../contracts/presentation.ts";
 import { VisualPreview } from "./MediaLibrary.tsx";
+import { CloseButton } from "../../shared/CloseButton.tsx";
 import type { Picture } from "./image-pictures.ts";
 
 type Role = Picture["role"];
@@ -19,6 +20,7 @@ export function PicturesPanel({
   onChoose,
   onAddLayer,
   onMove,
+  onRemove,
 }: {
   pictures: Picture[];
   assets: MediaAsset[];
@@ -29,6 +31,7 @@ export function PicturesPanel({
   onChoose: (index: number) => void;
   onAddLayer: () => void;
   onMove: (index: number, role: Role) => void;
+  onRemove: (index: number) => void;
 }) {
   const { t } = useTranslation();
   const layered = pictures.length > 1;
@@ -59,6 +62,14 @@ export function PicturesPanel({
         >
           {t("editor.image.choose")}
         </button>
+        {name && (
+          <CloseButton
+            className="image-remove"
+            label={t("editor.image.removeNamed", { name })}
+            title={t("editor.image.removeHint")}
+            onClick={() => onRemove(picture.index)}
+          />
+        )}
       </div>
     );
   };

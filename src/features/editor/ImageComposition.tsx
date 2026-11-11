@@ -61,15 +61,24 @@ export function ImageEditor(props: ImageEditorProps) {
   const [picking, setPicking] = useState<Picking | null>(null);
   // A single image's frame follows the image's shape until the author picks a frame.
   const [frameChosen, setFrameChosen] = useState(false);
+  // The last removal, until something else changes: Undo puts the image back.
+  const [removed, setRemoved] = useState<{
+    before: Composition;
+    index: number;
+    name: string;
+  } | null>(null);
   const value = form.illustration ?? illustrationDefaults();
   const assets = form.language.configuration.assets ?? [];
   const title = (id: string) => pictureTitle(id, assets, library);
   const pictures = picturesOf({ image: form.asset, value });
   const picture = pictures.find((item) => item.index === selected) ?? pictures[0]!;
   // A new composition drops the legacy camera layers, as the old dialog did.
-  const setValue = (illustration: Illustration) =>
+  const setValue = (illustration: Illustration) => {
+    setRemoved(null);
     patch({ illustration, motion: { ...form.motion, layers: [] } });
+  };
   const apply = (next: Composition & { index?: number }) => {
+    setRemoved(null);
     const shape = shapeOf(assets.find((asset) => asset.id === next.image));
     if (!next.value.layers.length && !frameChosen && shape && next.image !== form.asset)
       next = { ...next, value: { ...next.value, aspect: shape } };
@@ -77,6 +86,16 @@ export function ImageEditor(props: ImageEditorProps) {
       onAsset(next.image, { illustration: next.value, motion: { ...form.motion, layers: [] } });
     else setValue(next.value);
     select(next.index ?? -1);
+  };
+  const remove = (index: number) => {
+    const before = { image: form.asset, value };
+    const name = title(pictures.find((item) => item.index === index)!.image);
+    apply(removePicture(before, index));
+    setRemoved({ before, index, name });
+  };
+  const undo = () => {
+    if (!removed) return;
+    apply({ ...removed.before, index: removed.index });
   };
   // A new image takes the depth its catalogue entry suggests (scenery at the back…).
   const depth = (id: string, fallback: Role) =>
@@ -94,7 +113,16 @@ export function ImageEditor(props: ImageEditorProps) {
       ? t("editor.image.picker.layer")
       : t("editor.image.picker.change");
   return (
-    <div className="image-editor">
+    <div
+      className="image-editor"
+      onKeyDown={(event) => {
+        // Ctrl+Z undoes a removal (text fields keep their own undo).
+        const field = (event.target as HTMLElement).closest("input, textarea, select");
+        if (!removed || field || !(event.ctrlKey || event.metaKey) || event.key !== "z") return;
+        event.preventDefault();
+        undo();
+      }}
+    >
       <div className="image-editor-side">
         {picking ? (
           <ImagePicker
@@ -120,7 +148,16 @@ export function ImageEditor(props: ImageEditorProps) {
               onChoose={(index) => setPicking({ change: index })}
               onAddLayer={() => setPicking({ layer: true })}
               onMove={(index, role) => setValue(patchPicture(value, index, { role }))}
+              onRemove={remove}
             />
+            {removed && (
+              <p role="status" className="image-removed">
+                {t("editor.image.removed", { name: removed.name })}{" "}
+                <button type="button" onClick={undo}>
+                  {t("editor.image.undo")}
+                </button>
+              </p>
+            )}
             {form.asset && (
               <LayerTransform
                 layer={picture}
@@ -130,7 +167,6 @@ export function ImageEditor(props: ImageEditorProps) {
                 onDuplicate={() =>
                   apply(duplicatePicture({ image: form.asset, value }, picture.index))
                 }
-                onRemove={() => apply(removePicture({ image: form.asset, value }, picture.index))}
               />
             )}
           </>
@@ -147,6 +183,7 @@ export function ImageEditor(props: ImageEditorProps) {
             layout={form.layout}
             layer={picture}
             selected={picture.index}
+            onRemove={() => remove(picture.index)}
             onLayerChange={(change) => setValue(patchPicture(value, picture.index, change))}
           />
         ) : (

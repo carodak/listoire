@@ -21,7 +21,6 @@ export function LayerTransform({
   name,
   onChange,
   onDuplicate,
-  onRemove,
 }: {
   layer: Placement;
   /** Depth only means something once there are several layers. */
@@ -29,7 +28,6 @@ export function LayerTransform({
   name: string;
   onChange: (change: Partial<Placement>) => void;
   onDuplicate: () => void;
-  onRemove: () => void;
 }) {
   const { t } = useTranslation();
   const slider = (field: Slider, label: string) => {
@@ -75,13 +73,6 @@ export function LayerTransform({
       <div className="image-selected-actions">
         <button type="button" onClick={onDuplicate}>
           {t("editor.image.duplicate")}
-        </button>
-        <button
-          type="button"
-          aria-label={t("editor.image.removeNamed", { name })}
-          onClick={onRemove}
-        >
-          {t("editor.image.remove")}
         </button>
         <button
           type="button"

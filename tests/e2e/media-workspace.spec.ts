@@ -399,3 +399,38 @@ test("corner handles resize the selected image in the preview; the slider stays 
   await expect.poll(scale).toBeLessThan(bigger);
   expect(await layerStyle(person, "--layer-x")).toBe(x);
 });
+
+test("removes an image with its × or Delete in the preview, and Undo brings it back", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  const planes = dialog.locator(".multiplane-plane");
+  await expect(planes).toHaveCount(3);
+  // A visible × on each layer, with its tooltip.
+  const remove = dialog.getByRole("button", { name: "Remove Fern fronds", exact: true });
+  await expect(remove).toHaveAttribute("title", "Remove this image");
+  await remove.click();
+  await expect(planes).toHaveCount(2);
+  await expect(plane(dialog, fern)).toHaveCount(0);
+  const status = dialog.getByRole("status").filter({ hasText: "Image removed" });
+  await expect(status).toHaveText(/Image removed: Fern fronds\./);
+  await status.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(plane(dialog, fern)).toHaveCount(1);
+  await expect(status).toHaveCount(0);
+  // Delete with the image selected in the preview; Ctrl+Z puts it back.
+  await dialog
+    .getByRole("group", { name: "Middle", exact: true })
+    .locator(".image-picture")
+    .click();
+  const stage = dialog.locator(".illustration-drag-stage");
+  await stage.focus();
+  await stage.press("Delete");
+  await expect(plane(dialog, character)).toHaveCount(0);
+  await stage.press("Control+z");
+  await expect(plane(dialog, character)).toHaveCount(1);
+  // After another change, Undo is gone (it would undo that change too).
+  await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
+  await dialog.getByLabel("Size", { exact: true }).press("ArrowRight");
+  await expect(status).toHaveCount(0);
+});
