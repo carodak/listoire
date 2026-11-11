@@ -758,6 +758,11 @@ test("settings order: Look on the page (with On the page), Camera, When to displ
   // The camera folds too, with its settings folded inside; its summary shows the preset.
   const camera = sections.nth(1);
   await openSection(dialog, "Camera");
+  // The presets keep their name for screen readers, without repeating the title on screen.
+  await expect(camera.getByRole("group", { name: "Camera", exact: true })).toBeVisible();
+  expect(
+    await camera.locator(".preset-cards > legend").evaluate((legend) => legend.clientWidth),
+  ).toBeLessThanOrEqual(1);
   await camera.getByRole("button", { name: "Gentle depth", exact: true }).click();
   await expect(camera.locator("> summary")).toHaveText("Camera · Gentle depth");
   await expect(camera.locator(".image-section > summary")).toHaveText("Camera settings");

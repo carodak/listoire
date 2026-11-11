@@ -460,6 +460,21 @@
 .editor-dialog .preset-cards button[aria-pressed="true"] {
   outline: 2px solid #315c4a;
 }
+/* Cards right under a section's title (the camera's) repeat it: no frame, the heading for
+   screen readers only. */
+.image-section > summary + .preset-cards {
+  padding: 0;
+  border: none;
+}
+.image-section > summary + .preset-cards > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .preset-thumb {
   display: block;
   height: 40px;
