@@ -239,7 +239,22 @@ export function ImageEditor(props: ImageEditorProps) {
         )}
         <MediaLayout layout={form.layout} onLayout={(layout) => patch({ layout })} />
         {value.layers.length > 0 && (
-          <CameraSelect motion={form.motion} onChange={(motion) => patch({ motion })} />
+          <>
+            <CameraSelect motion={form.motion} onChange={(motion) => patch({ motion })} />
+            <Section
+              title={t("editor.image.groups.cameraDetails")}
+              set={[
+                (form.motion.durationMs !== undefined ||
+                  form.motion.speed !== "normal" ||
+                  form.motion.intensity !== "subtle" ||
+                  form.motion.direction !== "auto" ||
+                  form.motion.atmosphere !== "none") &&
+                  "changed",
+              ]}
+            >
+              <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
+            </Section>
+          </>
         )}
         <ImageSettings
           {...props}
@@ -384,11 +399,6 @@ function ImageSettings({
         <PageCompositionFields value={value} onChange={setValue} layout={layout} />
         <ImagePlacement {...draftProps} />
       </Section>
-      {layered && (
-        <Section title={t("editor.image.groups.cameraDetails")}>
-          <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
-        </Section>
-      )}
     </>
   );
 }

@@ -688,3 +688,33 @@ test("Interactivity: image examination has its own section", async ({ page }) =>
   await dialog.getByRole("button", { name: "Cinematic", exact: true }).click();
   await expect(summary).toHaveCount(0);
 });
+
+test("Camera settings fold right under the camera choice", async ({ page }) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await pick(dialog, "Choose an image", misty);
+  // A single image has no camera, so no camera settings.
+  const settings = dialog.locator(".image-section").filter({
+    has: page.locator("summary", { hasText: /^Camera settings/ }),
+  });
+  await expect(settings).toHaveCount(0);
+  await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click();
+  await pick(dialog, "Add a layer", character);
+  await expect(settings).toHaveCount(1);
+  await expect(settings).not.toHaveAttribute("open");
+  // Right after the camera choice.
+  const next = await dialog
+    .getByLabel("Camera", { exact: true })
+    .evaluate(
+      (select) =>
+        select.closest("label, fieldset")!.nextElementSibling ===
+        select.closest(".image-editor-main")!.querySelector(".image-section"),
+    );
+  expect(next).toBe(true);
+  await openSection(dialog, "Camera settings");
+  const duration = dialog.getByLabel("Movement duration (seconds)", { exact: true });
+  await expect(duration).toBeVisible();
+  await duration.fill("7");
+  await openSection(dialog, "Camera settings");
+  await expect(settings.locator("summary")).toContainText("set: changed");
+});

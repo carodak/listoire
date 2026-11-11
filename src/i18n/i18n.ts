@@ -335,6 +335,7 @@ const en = {
       moreSet: "set: {{items}}",
       set: {
         description: "description",
+        changed: "changed",
         caption: "caption",
         examine: "examine",
         timing: "when it appears",
@@ -347,7 +348,7 @@ const en = {
         interactivity: "Interactivity",
         when: "When it appears",
         look: "Look on the page",
-        cameraDetails: "Camera details",
+        cameraDetails: "Camera settings",
         starters: "Ready-made scenes",
       },
       startersHint: "Replaces the pictures with an editable scene.",
@@ -737,6 +738,7 @@ const fr: typeof en = {
       moreSet: "réglé : {{items}}",
       set: {
         description: "description",
+        changed: "modifiés",
         caption: "légende",
         examine: "examen",
         timing: "apparition",

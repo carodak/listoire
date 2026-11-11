@@ -116,7 +116,7 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await dialog.getByRole("button", { name: "Safe frame", exact: true }).click();
   await expect(dialog.locator(".image-safe-margin")).toBeVisible();
   // Pass 11: no "More options"; each settings category is its own folded section.
-  for (const section of [/^Look on the page/, /^Camera details/, /^Description & caption/])
+  for (const section of [/^Look on the page/, /^Camera settings/, /^Description & caption/])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("right");
   await dialog.getByLabel("Camera", { exact: true }).selectOption("gentle-depth");
