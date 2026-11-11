@@ -12,7 +12,6 @@ export interface PresentationState {
   voice: "off" | "playing" | "paused" | "ended" | "unavailable";
   /** A reached paragraph is still being generated (live narration). */
   preparing: boolean;
-  progress: Record<string, number>;
   synchronized: boolean;
   revealAll: boolean;
   skipMedia: boolean;
@@ -41,7 +40,6 @@ export class PlaybackContext {
     blocking: false,
     voice: "off",
     preparing: false,
-    progress: {},
     synchronized: false,
     revealAll: false,
     skipMedia: false,
@@ -64,6 +62,7 @@ export class PlaybackContext {
     this.revealedSegments.clear();
     this.queuedSegments.clear();
     this.reachedSegments.clear();
+    this.publishProgress({});
     this.publish({
       departed: false,
       exiting: false,
@@ -72,7 +71,6 @@ export class PlaybackContext {
       blocking: false,
       voice: "off",
       preparing: false,
-      progress: {},
       synchronized: false,
       previousImage:
         !restored &&
@@ -99,7 +97,25 @@ export class PlaybackContext {
     this.state = { ...this.state, ...change };
     this.listeners.forEach((listener) => listener());
   };
+  /**
+   * Characters spoken so far, per segment. It changes many times a second while a voice
+   * plays, so it has its own listeners: only the text that follows the voice redraws with it.
+   */
+  progress: Record<string, number> = {};
+  private readonly progressListeners = new Set<() => void>();
+  getProgress = () => this.progress;
+  subscribeProgress = (listener: () => void) => {
+    this.progressListeners.add(listener);
+    return () => {
+      this.progressListeners.delete(listener);
+    };
+  };
+  publishProgress = (progress: Record<string, number>) => {
+    this.progress = progress;
+    this.progressListeners.forEach((listener) => listener());
+  };
   dispose() {
+    this.progressListeners.clear();
     this.listeners.clear();
   }
 }

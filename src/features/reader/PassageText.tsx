@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { PresentationSession } from "../presentation/presentation-session.ts";
 import type { Frame } from "../../contracts/story.ts";
@@ -33,8 +34,10 @@ interface PassageTextProps {
 export function PassageText(props: PassageTextProps) {
   const { frame, media, bundle, presentation, disabled, onChoose } = props;
   const notice = bundle.scenes?.[frame.passageId]?.notice;
+  const progress = useSyncExternalStore(presentation.subscribeProgress, presentation.getProgress);
   const reveal = useTextReveal(frame, props.instant || media.revealAll, {
     ...media,
+    progress,
     paused: media.paused || media.blocking || media.exiting,
   });
   const blocks = presentationBlocks(bundle, frame);

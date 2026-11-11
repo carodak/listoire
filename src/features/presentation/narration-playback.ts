@@ -84,9 +84,9 @@ export class NarrationPlayback {
     const generation = this.context.generation;
     const request = ++this.voiceRequest;
     const current = () => generation === this.context.generation && request === this.voiceRequest;
+    this.context.publishProgress({});
     this.context.publish({
       voice: this.context.state.paused ? "paused" : "playing",
-      progress: {},
       synchronized: false,
     });
     void this.narration
@@ -117,16 +117,14 @@ export class NarrationPlayback {
         (progress) => {
           if (!current()) return;
           this.activateSegment(progress.segmentId);
-          this.context.publish({
-            progress: {
-              ...this.context.state.progress,
-              [progress.segmentId]: Math.max(
-                this.context.state.progress[progress.segmentId] ?? 0,
-                progress.characters,
-              ),
-            },
-            synchronized: this.context.state.synchronized || !progress.done,
-          });
+          const spoken = this.context.progress[progress.segmentId] ?? 0;
+          if (progress.characters > spoken)
+            this.context.publishProgress({
+              ...this.context.progress,
+              [progress.segmentId]: progress.characters,
+            });
+          if (!this.context.state.synchronized && !progress.done)
+            this.context.publish({ synchronized: true });
         },
       )
       .then((result) => {
