@@ -175,7 +175,7 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
-  await dialog.getByRole("button", { name: "Choose a picture", exact: true }).click();
+  await dialog.getByRole("button", { name: "Choose image", exact: true }).click();
   await page.getByLabel("Search pictures", { exact: true }).fill("curly-haired-woman-standing-001");
   await dialog.locator('button[data-asset="sketch.curly-haired-woman-standing-001"]').click();
   await expect(dialog.getByLabel("More camera presets", { exact: true })).toHaveCount(0);

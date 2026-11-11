@@ -20,7 +20,6 @@ export function LayerTransform({
   layered,
   name,
   onChange,
-  onPick,
   onDuplicate,
   onRemove,
 }: {
@@ -29,7 +28,6 @@ export function LayerTransform({
   layered: boolean;
   name: string;
   onChange: (change: Partial<Placement>) => void;
-  onPick: () => void;
   onDuplicate: () => void;
   onRemove: () => void;
 }) {
@@ -75,9 +73,6 @@ export function LayerTransform({
         )}
       </div>
       <div className="image-selected-actions">
-        <button type="button" onClick={onPick}>
-          {t("editor.image.change")}
-        </button>
         <button type="button" onClick={onDuplicate}>
           {t("editor.image.duplicate")}
         </button>

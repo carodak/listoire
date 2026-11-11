@@ -276,7 +276,6 @@ const en = {
       selected: "Selected picture",
       size: "Size",
       turn: "Turn (°)",
-      change: "Change…",
       duplicate: "Duplicate",
       remove: "Remove",
       removeNamed: "Remove {{name}}",
@@ -372,9 +371,8 @@ const en = {
         close: "Close the picture list",
       },
       empty: {
-        title: "Start with a picture",
-        choose: "Choose a picture",
-        starters: "or start from a ready-made scene:",
+        title: "Start with an image",
+        hint: "Choose it on the left with “Choose image”, or start from a ready-made scene:",
       },
       starters: {
         Landscape: "Landscape",
@@ -670,7 +668,6 @@ const fr: typeof en = {
       selected: "Image sélectionnée",
       size: "Taille",
       turn: "Rotation (°)",
-      change: "Changer…",
       duplicate: "Dupliquer",
       remove: "Retirer",
       removeNamed: "Retirer {{name}}",
@@ -769,8 +766,7 @@ const fr: typeof en = {
       },
       empty: {
         title: "Commencez par une image",
-        choose: "Choisir une image",
-        starters: "ou partez d’une scène toute prête :",
+        hint: "Choisissez-la à gauche avec « Choisir l’image », ou partez d’une scène toute prête :",
       },
       starters: {
         Landscape: "Paysage",

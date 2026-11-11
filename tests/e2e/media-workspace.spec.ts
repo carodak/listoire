@@ -173,13 +173,18 @@ test("a new image is one image: choose it, and it is stored as a single image", 
     await expect(dialog.getByRole("button", { name: scene, exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await expect(dialog.getByRole("alert")).toHaveText("Select a licensed image.");
-  // The image's own button chooses it.
+  // One way to choose: the image's own button (nothing on the preview's side).
+  await expect(dialog.getByRole("button", { name: /^Choose/ })).toHaveCount(1);
+  await expect(dialog.getByRole("region", { name: "Start with an image" })).toContainText(
+    "Choose it on the left",
+  );
   await image.getByRole("button", { name: "Choose image", exact: true }).click();
   await pick(dialog, "Choose image", misty);
   await expect(image).toContainText("Misty conifer plain");
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel("Depth", { exact: true })).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeEnabled();
+  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(1);
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   // Stored like every single image: the image, no layers.
@@ -214,6 +219,11 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
     ).toHaveCount(1);
   }
   await expect(dialog.getByRole("region", { name: "Layers, front to back" })).toBeVisible();
+  // Each layer has its own "Choose image", and it is the only way to choose one.
+  await expect(dialog.getByRole("button", { name: /^(Choose|Change)/ })).toHaveCount(3);
+  await dialog.getByRole("button", { name: "Choose image for Fern fronds" }).click();
+  await pick(dialog, "Choose image", character);
+  await expect(plane(dialog, character)).toHaveCount(2);
   const roles = await dialog
     .locator(".multiplane-plane")
     .evaluateAll((planes) => planes.map((item) => (item as HTMLElement).dataset.role).sort());

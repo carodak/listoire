@@ -121,7 +121,6 @@ export function ImageEditor(props: ImageEditorProps) {
                 layered={value.layers.length > 0}
                 name={title(picture.image)}
                 onChange={(change) => setValue(patchPicture(value, picture.index, change))}
-                onPick={() => setPicking({ change: picture.index })}
                 onDuplicate={() =>
                   apply(duplicatePicture({ image: form.asset, value }, picture.index))
                 }
@@ -146,10 +145,7 @@ export function ImageEditor(props: ImageEditorProps) {
         ) : (
           <section className="image-empty" aria-label={t("editor.image.empty.title")}>
             <h3>{t("editor.image.empty.title")}</h3>
-            <button type="button" className="primary" onClick={() => setPicking({ change: -1 })}>
-              {t("editor.image.empty.choose")}
-            </button>
-            <p>{t("editor.image.empty.starters")}</p>
+            <p>{t("editor.image.empty.hint")}</p>
             <IllustrationStarters
               assets={assets}
               onApply={(image, next) => apply({ image, value: next })}

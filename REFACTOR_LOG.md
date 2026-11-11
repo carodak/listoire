@@ -2454,3 +2454,17 @@ checks (the health score and the coverage run include them, and that test fails)
   front" → "+ Add layer", picker "Add a picture: Front" → "Add a layer"). The new-image tests now
   start from the "chemin" page (they used the editor's default scene "intro", which Orée doesn't
   have and which the other writer's scene sync removes).
+
+### 10-2. One way to choose an image: the layer's own "Choose image"
+
+Removed: the preview's "Choose a picture" button (empty state) and the selected image's
+"Change…" button. Each image row's "Choose image" is the only way to choose or change an image,
+for the first image as for every other layer. The empty preview now says "Choose it on the left
+with “Choose image”, or start from a ready-made scene:" and keeps the five starters (decision 2).
+Strings removed: `empty.choose`, `empty.starters`, `change`.
+
+Tests: e2e checks that a single image has exactly one "Choose…" button, a three-layer scene
+three, and that a layer's own button changes that layer's image. Changed selectors only:
+`editor.spec.ts` (two tests) and `image-composition.spec.ts` ("Choose a picture" → "Choose
+image"). In `editor.spec.ts` I staged only those two lines (the file also holds the other
+writer's uncommitted test).
