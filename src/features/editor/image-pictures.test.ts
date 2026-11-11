@@ -4,6 +4,7 @@ import {
   addPicture,
   changePicture,
   duplicatePicture,
+  movePicture,
   patchPicture,
   picturesOf,
   removePicture,
@@ -78,4 +79,32 @@ it("a new or changed image is shown whole; the frame can follow its shape", () =
   expect(shapeOf(asset(1200, 2000))).toBe("portrait");
   expect(shapeOf(asset(2048, 2022))).toBe("square");
   expect(shapeOf(undefined)).toBeUndefined();
+});
+
+it("moves a layer in front of or behind another, or to the front of a depth", () => {
+  let scene = addPicture(empty, "field", "background");
+  for (const [image, role] of [
+    ["girl", "midground"],
+    ["boy", "midground"],
+    ["fern", "foreground"],
+  ] as const)
+    scene = addPicture(scene, image, role);
+  const names = (value: typeof scene.value) => value.layers.map((layer) => layer.image);
+  // The girl in front of the boy (both middle): after him in drawing order.
+  const front = movePicture(scene.value, 0, "midground", { index: 1, behind: false });
+  expect(names(front.value)).toEqual(["boy", "girl", "fern"]);
+  expect(front).toMatchObject({ index: 1, order: [1, 0, 2] });
+  // The fern behind the girl, into the middle depth.
+  const behind = movePicture(scene.value, 2, "midground", { index: 0, behind: true });
+  expect(names(behind.value)).toEqual(["fern", "girl", "boy"]);
+  expect(behind.value.layers[0]!.role).toBe("midground");
+  // No target: the front of that depth; nothing goes behind the main picture.
+  expect(names(movePicture(scene.value, 0, "foreground").value)).toEqual(["boy", "fern", "girl"]);
+  const main = movePicture(scene.value, 1, "background", { index: -1, behind: true });
+  expect(names(main.value)).toEqual(["boy", "girl", "fern"]);
+  expect(main.value.layers[0]!.role).toBe("background");
+  // The main picture only changes depth.
+  const base = movePicture(scene.value, -1, "foreground", { index: 2, behind: false });
+  expect(base.value.base.role).toBe("foreground");
+  expect(names(base.value)).toEqual(["girl", "boy", "fern"]);
 });

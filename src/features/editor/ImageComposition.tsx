@@ -20,6 +20,7 @@ import {
   addPicture,
   changePicture,
   duplicatePicture,
+  movePicture,
   patchPicture,
   picturesOf,
   removePicture,
@@ -60,6 +61,8 @@ export function ImageEditor(props: ImageEditorProps) {
   const [selected, select] = useState(-1);
   const [picking, setPicking] = useState<Picking | null>(null);
   const [starters, showStarters] = useState(false);
+  // Pictures hidden in the preview only (never stored).
+  const [hidden, setHidden] = useState<number[]>([]);
   // A single image's frame follows the image's shape until the author picks a frame.
   const [frameChosen, setFrameChosen] = useState(false);
   // The last removal, until something else changes: Undo puts the image back.
@@ -67,6 +70,7 @@ export function ImageEditor(props: ImageEditorProps) {
     before: Composition;
     index: number;
     name: string;
+    hidden: number[];
   } | null>(null);
   const value = form.illustration ?? illustrationDefaults();
   const assets = form.language.configuration.assets ?? [];
@@ -92,11 +96,14 @@ export function ImageEditor(props: ImageEditorProps) {
     const before = { image: form.asset, value };
     const name = title(pictures.find((item) => item.index === index)!.image);
     apply(removePicture(before, index));
-    setRemoved({ before, index, name });
+    setRemoved({ before, index, name, hidden });
+    // The pictures after it move up one place (the next one becomes the main one).
+    setHidden(hidden.filter((at) => at !== index).map((at) => (at > index ? at - 1 : at)));
   };
   const undo = () => {
     if (!removed) return;
     apply({ ...removed.before, index: removed.index });
+    setHidden(removed.hidden);
   };
   // A new image takes the depth its catalogue entry suggests (scenery at the back…).
   const depth = (id: string, fallback: Role) =>
@@ -145,10 +152,21 @@ export function ImageEditor(props: ImageEditorProps) {
               pictures={pictures}
               assets={assets}
               selected={picture.index}
+              hidden={hidden}
               title={title}
               onSelect={select}
+              onToggle={(index) =>
+                setHidden(
+                  hidden.includes(index) ? hidden.filter((at) => at !== index) : [...hidden, index],
+                )
+              }
               onAddLayer={() => setPicking({ layer: true })}
-              onMove={(index, role) => setValue(patchPicture(value, index, { role }))}
+              onMove={(index, role, target) => {
+                const moved = movePicture(value, index, role, target);
+                setValue(moved.value);
+                select(moved.index);
+                setHidden(hidden.map((at) => (at < 0 ? at : moved.order.indexOf(at))));
+              }}
               onRemove={remove}
             />
             {removed && (
@@ -185,6 +203,7 @@ export function ImageEditor(props: ImageEditorProps) {
             layout={form.layout}
             layer={picture}
             selected={picture.index}
+            hidden={hidden}
             onRemove={() => remove(picture.index)}
             onLayerChange={(change) => setValue(patchPicture(value, picture.index, change))}
           />

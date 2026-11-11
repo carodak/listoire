@@ -90,3 +90,32 @@ export function duplicatePicture(composition: Composition, index: number) {
     index: value.layers.length,
   };
 }
+
+/** Where a dragged picture lands: in front of or behind another one. */
+export interface Drop {
+  index: number;
+  behind: boolean;
+}
+
+/**
+ * Moves a picture to a depth, in front of or behind another picture (no target: the front of
+ * that depth). A depth's pictures are drawn in order, the main one first, so the main picture
+ * only changes depth and stays at the back of it: nothing goes behind it. Returns the value,
+ * the moved picture's index and `order`, the old layer index at each new position.
+ */
+export function movePicture(value: Illustration, index: number, role: Role, target?: Drop) {
+  const order = value.layers.map((_, at) => at);
+  if (index < 0 || target?.index === index)
+    return { value: patchPicture(value, index, { role }), index, order };
+  const rest = order.filter((at) => at !== index);
+  const position = !target
+    ? rest.length
+    : target.index < 0
+      ? 0
+      : rest.indexOf(target.index) + Number(!target.behind);
+  rest.splice(position, 0, index);
+  const layers = rest.map((at) =>
+    at === index ? { ...value.layers[at]!, role } : value.layers[at]!,
+  );
+  return { value: { ...value, layers }, index: position, order: rest };
+}

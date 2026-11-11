@@ -8,7 +8,9 @@ export type ToolbarGlyphName =
   | "play"
   | "settings"
   | "skip"
-  | "reveal";
+  | "reveal"
+  | "eye"
+  | "eyeOff";
 const common = {
   width: 21,
   height: 21,
@@ -57,6 +59,18 @@ const paths = {
     <>
       <path d="m4 6 8 6-8 6z" />
       <path d="m13 6 8 6-8 6z" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+      <path d="m4 4 16 16" />
     </>
   ),
 };

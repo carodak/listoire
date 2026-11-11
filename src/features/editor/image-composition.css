@@ -62,11 +62,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-.image-depth-pictures {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
 .editor-dialog .image-picture {
   display: flex;
   align-items: center;
@@ -90,12 +85,20 @@
   margin: 0;
   background: #efe5d5;
 }
-.image-picture span {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.image-layer-name {
+  display: grid;
+  min-width: 0;
 }
+.image-layer-name,
+.image-layer-name small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.image-layer-name small {
+  color: var(--editor-muted, #6d7872);
+}
+/* One row per layer: eye, thumbnail and name, ×. A line shows where a dragged row lands. */
 .image-layer {
   display: flex;
   align-items: stretch;
@@ -104,6 +107,25 @@
 }
 .image-layer > .image-picture {
   flex: 1;
+}
+.image-layer[data-drop="front"] {
+  box-shadow: 0 -3px #427257;
+}
+.image-layer[data-drop="behind"] {
+  box-shadow: 0 3px #427257;
+}
+.image-layer[data-hidden="true"] .image-picture > :not(.image-layer-name) {
+  opacity: 0.35;
+}
+.editor-dialog .image-eye {
+  flex: none;
+  padding: 0 var(--space-1);
+  border-color: transparent;
+  background: none;
+  color: #315c4a;
+}
+.editor-dialog .image-eye[aria-pressed="false"] {
+  color: var(--editor-muted, #6d7872);
 }
 .editor-dialog .image-remove {
   flex: none;

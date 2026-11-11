@@ -543,3 +543,62 @@ test("the picker shows In this story and Library as tabs, each filtered by depth
   await asset(misty).click();
   await expect(plane(dialog, misty)).toHaveCount(1);
 });
+
+test("the layers panel: one row per layer, front to back, with an eye, depth, drag and keys", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await readyMade(dialog, "Character in forest");
+  const panel = dialog.getByRole("region", { name: "Layers, front to back", exact: true });
+  const rows = panel.locator(".image-layer");
+  const names = () =>
+    rows
+      .locator(".image-layer-name")
+      .evaluateAll((items) => items.map((item) => item.firstChild!.textContent));
+  const woman = "Curly-haired woman standing";
+  await expect.poll(names).toEqual(["Fern fronds", woman, "Misty conifer plain"]);
+  // A row: an eye, a thumbnail, the name and depth, and a ×.
+  const fernRow = rows.filter({ has: page.getByRole("button", { name: "Select Fern fronds" }) });
+  const eye = fernRow.getByRole("button", { name: "Show Fern fronds in the preview" });
+  await expect(eye).toHaveAttribute("aria-pressed", "true");
+  await expect(fernRow.locator("img")).toHaveCount(1);
+  await expect(fernRow.locator(".image-layer-name small")).toHaveText("Foreground");
+  await expect(fernRow.getByRole("button", { name: "Remove Fern fronds" })).toBeVisible();
+  // The eye hides it in this preview only.
+  await eye.click();
+  await expect(eye).toHaveAttribute("aria-pressed", "false");
+  await expect(plane(dialog, fern)).toHaveCSS("visibility", "hidden");
+  // Click a row to select it.
+  const girl = panel.getByRole("button", { name: `Select ${woman}` });
+  await girl.click();
+  await expect(girl).toHaveAttribute("aria-pressed", "true");
+  // Drop it on the fern's upper half: in front of the fern, in the foreground.
+  await girl.dragTo(panel.getByRole("button", { name: "Select Fern fronds" }), {
+    targetPosition: { x: 20, y: 2 },
+  });
+  await expect.poll(names).toEqual([woman, "Fern fronds", "Misty conifer plain"]);
+  await expect(plane(dialog, character)).toHaveAttribute("data-role", "foreground");
+  const drawn = () =>
+    dialog
+      .locator(".multiplane-plane")
+      .evaluateAll((planes) => planes.map((item) => (item as HTMLElement).dataset.image));
+  expect((await drawn()).indexOf(character)).toBeGreaterThan((await drawn()).indexOf(fern));
+  // The eye follows its layer.
+  await expect(plane(dialog, fern)).toHaveCSS("visibility", "hidden");
+  // Alt+↓: behind the fern; again: into the background, in front of the main picture.
+  await girl.press("Alt+ArrowDown");
+  await expect.poll(names).toEqual(["Fern fronds", woman, "Misty conifer plain"]);
+  await expect(girl).toBeFocused();
+  await girl.press("Alt+ArrowDown");
+  await expect(plane(dialog, character)).toHaveAttribute("data-role", "background");
+  const girlRow = rows.filter({ has: page.getByRole("button", { name: `Select ${woman}` }) });
+  await expect(girlRow.locator(".image-layer-name small")).toHaveText("Background");
+  // Delete on a row removes it; Undo brings it back, still hidden here.
+  await panel.getByRole("button", { name: "Select Fern fronds" }).press("Delete");
+  await expect(plane(dialog, fern)).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(plane(dialog, fern)).toHaveCSS("visibility", "hidden");
+  // The eye shows it again.
+  await eye.click();
+  await expect(plane(dialog, fern)).toHaveCSS("visibility", "visible");
+});

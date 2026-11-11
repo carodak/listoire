@@ -17,6 +17,8 @@ interface StageProps {
   layer: Placement;
   /** The selected picture (-1: the main one), which the handles frame. */
   selected: number;
+  /** Pictures hidden in this preview only (the layers panel's eyes). */
+  hidden: number[];
   onLayerChange: (change: Partial<Placement>) => void;
   /** Delete (or Backspace) in the preview removes the selected picture. */
   onRemove: () => void;
@@ -67,6 +69,7 @@ function useStageGeometry(selected: number) {
       const overflow =
         !!bounds &&
         [...view!.querySelectorAll<HTMLImageElement>(".multiplane-plane img")].some((image) => {
+          if (getComputedStyle(image).visibility === "hidden") return false;
           const box = drawnBox(image);
           return (
             box.left < bounds.left - 1 ||
@@ -156,7 +159,14 @@ function ResizeHandles({
 }
 
 /** The live preview: drag (or the arrow keys) moves the selected picture. */
-export function ImageStage({ layer, selected, onLayerChange, onRemove, ...preview }: StageProps) {
+export function ImageStage({
+  layer,
+  selected,
+  hidden,
+  onLayerChange,
+  onRemove,
+  ...preview
+}: StageProps) {
   const { t } = useTranslation();
   const [margins, showMargins] = useState(false);
   const { stage, overflow, box } = useStageGeometry(selected);
@@ -170,7 +180,17 @@ export function ImageStage({ layer, selected, onLayerChange, onRemove, ...previe
       <ImageDragStage layer={layer} onChange={onLayerChange} onRemove={onRemove}>
         <CompositionPreview {...preview} margins={margins} />
       </ImageDragStage>
-      {box && (
+      {hidden.length > 0 && (
+        <style>
+          {hidden
+            .map(
+              (index) =>
+                `.image-stage .multiplane-plane[data-layer="${index + 1}"]${index < 0 ? ", .image-stage .isolated-illustration" : ""}{visibility:hidden}`,
+            )
+            .join("")}
+        </style>
+      )}
+      {box && !hidden.includes(selected) && (
         <ResizeHandles
           box={box}
           scale={layer.scale}
