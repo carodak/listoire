@@ -6,6 +6,8 @@ import { createIndexedDbStore } from "../../persistence/indexeddb-store.ts";
 import { SaveManager } from "../../persistence/save-manager.ts";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { StoryDirector } from "./director.ts";
+import { SAVED_PAGES } from "../../contracts/story.ts";
+import { validateCheckpoint } from "../../contracts/save-validation.ts";
 
 const store = createIndexedDbStore();
 const saves = new SaveManager(store);
@@ -262,4 +264,74 @@ it("can present a fresh start settled, as a reopened page, and later pages as us
   await director.choose("listen", director.getSnapshot().occurrenceId!);
   expect(presentation.start.mock.calls.at(-1)?.[2]).toBe(false);
   expect(director.getSnapshot().restored).toBe(false);
+});
+
+it("keeps the previous pages in the save, so Back works after a reload", async () => {
+  const first = player();
+  await first.load();
+  const opening = first.getSnapshot().frame;
+  await first.choose("listen", first.getSnapshot().occurrenceId!);
+  expect((await saves.read(bundle))!.history).toHaveLength(1);
+  first.dispose();
+  const reloaded = player();
+  await reloaded.load();
+  expect(reloaded.getSnapshot().canGoBack).toBe(true);
+  await reloaded.back();
+  expect(reloaded.getSnapshot()).toMatchObject({ frame: opening, canGoBack: false });
+  const saved = (await saves.read(bundle))!;
+  expect(saved.frame).toEqual(opening);
+  expect(saved.history).toEqual([]);
+});
+
+it("keeps at most 20 previous pages, dropping the oldest", async () => {
+  const director = player();
+  await director.load();
+  const start = (await saves.read(bundle))!;
+  const pages = Array.from({ length: SAVED_PAGES }, (_, index) => ({
+    inkStateJson: start.inkStateJson,
+    frame: { ...start.frame, passageId: `page-${index}` },
+  }));
+  await saves.commit(bundle, { ...start, revision: start.revision + 1, history: pages }, start);
+  director.dispose();
+  const reloaded = player();
+  await reloaded.load();
+  await reloaded.choose("listen", reloaded.getSnapshot().occurrenceId!);
+  const history = (await saves.read(bundle))!.history!;
+  expect(history).toHaveLength(SAVED_PAGES);
+  expect(history[0]!.frame.passageId).toBe("page-1");
+  expect(history.at(-1)!.frame.passageId).toBe("threshold");
+});
+
+it("a save without history loads without Back; a failed write keeps the pages as they were", async () => {
+  const director = player();
+  await director.load();
+  const start = (await saves.read(bundle))!;
+  const { history: _, ...old } = start;
+  await saves.commit(bundle, { ...old, revision: start.revision + 1 }, start);
+  director.dispose();
+  const reloaded = player();
+  await reloaded.load();
+  expect(reloaded.getSnapshot().canGoBack).toBe(false);
+  const commit = vi.spyOn(saves, "commit").mockRejectedValueOnce(new Error("QuotaExceededError"));
+  await reloaded.choose("listen", reloaded.getSnapshot().occurrenceId!);
+  expect(reloaded.getSnapshot()).toMatchObject({ failure: "storage", canGoBack: false });
+  commit.mockRestore();
+  await reloaded.choose("listen", reloaded.getSnapshot().occurrenceId!);
+  expect((await saves.read(bundle))!.history).toHaveLength(1);
+});
+
+it("drops saved pages that can't be restored exactly, never the save", async () => {
+  const director = player();
+  await director.load();
+  await director.choose("listen", director.getSnapshot().occurrenceId!);
+  const save = (await saves.read(bundle))!;
+  expect(validateCheckpoint(bundle, save).history).toHaveLength(1);
+  // An earlier compatible Ink version still loads its page, but not its previous pages.
+  const update = { ...bundle, inkDigest: "next", compatibleInkDigests: [bundle.inkDigest] };
+  expect(validateCheckpoint(update, structuredClone(save))).toMatchObject({ frame: save.frame });
+  expect(validateCheckpoint(update, structuredClone(save)).history).toBeUndefined();
+  // A damaged list is dropped; the page itself is kept.
+  const damaged = { ...structuredClone(save), history: [{ frame: "broken" }] };
+  expect(validateCheckpoint(bundle, damaged).history).toBeUndefined();
+  expect(validateCheckpoint(bundle, damaged).frame).toEqual(save.frame);
 });

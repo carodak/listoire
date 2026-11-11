@@ -1738,6 +1738,9 @@ camera, outside this pass).
 | --------- | ------------------------------------------------------------ | ----- |
 | `0af6c46` | Start (Pass 8 end)                                           | 95    |
 | `0d504a2` | 1a. a caret inside a formatting tag formats the tagged words | 94.8  |
+| `f511a9c` | 1b. a formatting shortcut that can't apply says why          | 94.6  |
+| `7a83fde` | 1c. any text colour, named swatches, contrast warning        | 94.5  |
+| `b1671c6` | 1d. point sizes, typed or from a list                        | 94.5  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -1842,3 +1845,46 @@ unchanged); e2e "point sizes from the list or typed…" (24 pt = 2× the text be
 switching the preview to Large text; typed 13 → "13 pt" listed; 60 refused; Huge; keyboard
 safety) and "on a phone, a 48 pt word shrinks to fit the column" (reader at 360 px: under 3× the
 text size, inside the paragraph, on one line).
+
+The unit-size penalty went from 2.8 to 3.1 over part 1 (long e2e tests and the new toolbar
+controls); duplication and dead code stayed at 0. Note: the 1b coverage run first failed on
+`project.test.ts` "preserves en: song=false…" (an Ink line over 50 ms under coverage, REVIEW #8,
+timing only); the rerun passed.
+
+**Part 1 screenshots** (`review-screenshots/pass9-after/`, spec `review-screenshots/pass9-text.spec.ts`):
+`text-color-menu.png` (swatches + "Any color"), `text-low-contrast.png` (warning on Orée's light
+page with a pale colour), `text-point-size.png` (28 pt word in the preview, size list and field),
+`text-shortcut-message.png` (Ctrl+B on a knot line). "Before" is Pass 8's
+`review-screenshots/editor-after/text-ribbon*.png` (same code as `0af6c46`).
+
+### 3. Reader: Back after reloading
+
+**Checked:** yes, the previous pages lived only in the director's memory (`previousPages`, up to
+100). After a reload the save restored the page but Back was disabled. A new e2e reproduces it on
+the old code (Back disabled after reload), then passes.
+
+**Fix (additive save format):** the save gets an optional `history`: the last **20** previous
+pages, oldest first, each with what restores it exactly (Ink state, frame, character and game
+state at that page). The director restores it on load and writes it with every checkpoint (choice,
+end of a check or event, Back, restart clears it). Measured: a save with 4 previous pages of Orée
+is 19 KB (about 4 KB per page), so 20 pages stay around 100 KB.
+
+- **Old saves** have no `history`: they load as before, simply without Back (`schemaVersion`
+  stays 1). ⚠ The other direction: a save written by this build, opened by an _older_ build,
+  is refused there (its strict schema doesn't know `history`); the save is kept and offered for
+  download, like any incompatible save. This only matters if you go back to an older build after
+  playing on this one.
+- **Safety:** a damaged list, a page whose game state no longer validates, or a save written by an
+  earlier compatible Ink version (`compatibleInkDigests`) drops the history, never the save.
+- **One bound (my choice):** 20 in memory too (it was 100 per session, unsaved). One list, so
+  Back behaves the same before and after a reload.
+- **Failed writes:** if a checkpoint can't be written, the in-memory pages roll back with the Ink
+  state (they used to be added only after a successful write; now they are part of the save).
+- `DATA_CONTRACTS.md` updated.
+
+Tests: unit "keeps the previous pages in the save, so Back works after a reload", "keeps at most
+20 previous pages, dropping the oldest", "a save without history loads without Back; a failed
+write keeps the pages as they were", "drops saved pages that can't be restored exactly, never
+the save"; e2e `reader.spec.ts` "Back still works after a reload, through the saved previous
+pages" (two choices, reload, Back twice, then Back disabled). Reader e2e suites (reader,
+reader-request, page-frame, reader-data): 41/41.

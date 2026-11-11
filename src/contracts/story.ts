@@ -159,6 +159,18 @@ export const StoryManifestSchema = z
   );
 export type StoryManifest = z.infer<typeof StoryManifestSchema>;
 
+/** What restores a page: Ink state, the page shown, and the player at that moment. */
+const page = {
+  inkStateJson: z.string().min(1).max(500_000),
+  frame: FrameSchema,
+  character: CharacterSchema.optional(),
+  game: GameStateSchema.optional(),
+};
+/** How many previous pages a save keeps for Back after a reload. */
+export const SAVED_PAGES = 20;
+export const SavedPageSchema = z.object(page).strict();
+export type SavedPage = z.infer<typeof SavedPageSchema>;
+
 export const SaveSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -171,10 +183,10 @@ export const SaveSchema = z
     runId: z.uuid(),
     revision: z.number().int().positive(),
     updatedAt: z.iso.datetime(),
-    inkStateJson: z.string().min(1).max(500_000),
-    frame: FrameSchema,
-    character: CharacterSchema.optional(),
-    game: GameStateSchema.optional(),
+    ...page,
+    // Previous pages, oldest first (optional: older saves have none). A broken list is dropped,
+    // never the save.
+    history: z.array(SavedPageSchema).max(SAVED_PAGES).optional().catch(undefined),
   })
   .strict()
   .refine((save) =>
