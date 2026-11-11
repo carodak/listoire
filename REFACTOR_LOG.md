@@ -1741,6 +1741,9 @@ camera, outside this pass).
 | `f511a9c` | 1b. a formatting shortcut that can't apply says why          | 94.6  |
 | `7a83fde` | 1c. any text colour, named swatches, contrast warning        | 94.5  |
 | `b1671c6` | 1d. point sizes, typed or from a list                        | 94.5  |
+| `9b58e0b` | 3. Back after a reload (history in the save)                 | 94.5  |
+| `f9e61c1` | 2. design note (docs)                                        | —     |
+| `4509e26` | 2a. REVIEW #3: pasting a cut `// @media` line restores it    | 94.4  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -2009,3 +2012,37 @@ Tests: unit `authoring.test.ts` "cutting and pasting a // @media line (REVIEW #3
 e2e `media-workspace.spec.ts` "cutting a // @media line and pasting it back…" (real Ctrl+X /
 Ctrl+V in the script: the image leaves and returns in the live preview with the same number of
 layers, and the Image dialog opens it as "Edit Image"). The e2e fails on the old code.
+
+### 2b. Reference renders of Orée's layered images (test only)
+
+`tests/e2e/image-references.spec.ts`, captured on the code before the dialog changes
+(`4509e26`). For each of the six layered images (matin-ville, livraison, chemin, passage,
+cours-air, bibliotheque), in Chromium:
+
+1. **Reader preview, pixels:** the image as the editor's reader preview draws it
+   (`toHaveScreenshot`, `maxDiffPixelRatio: 0.01` so font antialiasing can't make it flaky).
+   Compared on Windows only, where they were captured (CI runs on Linux, whose rendering
+   differs); not for "passage", the cinematic, which is only on screen while its movement plays.
+2. **Dialog preview, layer by layer** (JSON, every platform): role, image, drawing order,
+   position, scale, rotation, and each layer's box as a fraction of the frame — independent of
+   the preview's size, so a new dialog layout doesn't change it, but a moved or resized layer
+   does.
+3. **Saved the same** (JSON, every platform): open the image, press Apply without changing
+   anything, export the complete backup: that page's stored configuration, in both languages.
+   Found while capturing: today's Apply already writes three explicit defaults on these images
+   (`show: { kind: "page", delayMs: 0 }`, `photograph: false`, `caption: ""`). Harmless (the
+   reader reads the same), and now part of the reference, so the new dialog must write exactly
+   that.
+
+Files: `tests/e2e/image-references.spec.ts-snapshots/` — 5 PNG (80–145 KB each, the size the
+image has in the preview) and 12 small JSON files. Stable over three runs.
+
+**How to update them on purpose** (after a change that is meant to change these images):
+
+```
+npx playwright test -c playwright.local.config.ts image-references --project=chromium --update-snapshots
+```
+
+on Windows (it rewrites the PNGs and the JSON); look at the PNG and JSON diffs before
+committing them. On another platform the PNGs are skipped, so `--update-snapshots` there only
+rewrites the JSON files.

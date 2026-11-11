@@ -1,0 +1,188 @@
+{
+  "en": {
+    "title": "Twelve strokes at noon",
+    "progress": 0.05,
+    "events": [
+      {
+        "id": "livraison.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "livraison.illustration"
+        },
+        "blocking": false,
+        "blockId": "livraison.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "sideways-drift",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "livraison.p1"
+      },
+      {
+        "kind": "text",
+        "segmentId": "livraison.p2"
+      },
+      {
+        "kind": "media",
+        "id": "livraison.illustration",
+        "image": "sketch.distant-city-skyline-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "sideways-drift",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.bare-branch-upper-left-001",
+              "role": "foreground",
+              "x": -18,
+              "y": -8,
+              "scale": 1.15
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "livraison.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "Les douze coups de midi",
+    "progress": 0.05,
+    "events": [
+      {
+        "id": "livraison.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "livraison.illustration"
+        },
+        "blocking": false,
+        "blockId": "livraison.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "sideways-drift",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "livraison.p1"
+      },
+      {
+        "kind": "text",
+        "segmentId": "livraison.p2"
+      },
+      {
+        "kind": "media",
+        "id": "livraison.illustration",
+        "image": "sketch.distant-city-skyline-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "sideways-drift",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.bare-branch-upper-left-001",
+              "role": "foreground",
+              "x": -18,
+              "y": -8,
+              "scale": 1.15
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "livraison.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}
