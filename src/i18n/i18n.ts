@@ -269,9 +269,9 @@ const en = {
       addLayerHint:
         "Adds an image in front or behind: the image becomes a layered scene, with a camera.",
       depth: {
-        foreground: "Front",
-        midground: "Middle",
-        background: "Back",
+        foreground: "Foreground",
+        midground: "Middleground",
+        background: "Background",
       },
       selected: "Selected picture",
       size: "Size",
@@ -307,7 +307,7 @@ const en = {
       },
       camera: "Camera",
       cameraHint:
-        "Pictures at different depths move at different speeds (front 1×, middle 0.5×, back 0.15×).",
+        "Pictures at different depths move at different speeds (foreground 1×, middleground 0.5×, background 0.15×).",
       presets: {
         none: "None (still)",
         "gentle-depth": "Gentle depth",
@@ -371,6 +371,8 @@ const en = {
         search: "Search pictures",
         inStory: "In this story",
         library: "Library",
+        depth: "Filter by depth",
+        all: "All",
         none: "No picture matches this search.",
         close: "Close the picture list",
       },
@@ -665,9 +667,9 @@ const fr: typeof en = {
       addLayerHint:
         "Ajoute une image devant ou derrière : l’image devient une scène en calques, avec une caméra.",
       depth: {
-        foreground: "Avant",
-        midground: "Milieu",
-        background: "Fond",
+        foreground: "Premier plan",
+        midground: "Plan intermédiaire",
+        background: "Arrière-plan",
       },
       selected: "Image sélectionnée",
       size: "Taille",
@@ -703,7 +705,7 @@ const fr: typeof en = {
       },
       camera: "Caméra",
       cameraHint:
-        "Les images à différentes profondeurs bougent à différentes vitesses (avant 1×, milieu 0,5×, fond 0,15×).",
+        "Les images à différentes profondeurs bougent à différentes vitesses (premier plan 1×, plan intermédiaire 0,5×, arrière-plan 0,15×).",
       presets: {
         none: "Aucune (fixe)",
         "gentle-depth": "Profondeur douce",
@@ -770,6 +772,8 @@ const fr: typeof en = {
         search: "Chercher une image",
         inStory: "Dans cette histoire",
         library: "Bibliothèque",
+        depth: "Filtrer par profondeur",
+        all: "Toutes",
         none: "Aucune image ne correspond à cette recherche.",
         close: "Fermer la liste d’images",
       },

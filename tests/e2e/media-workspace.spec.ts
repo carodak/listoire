@@ -170,7 +170,7 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   await expect(image).toContainText("No image yet");
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeDisabled();
   // No depths, no camera, no selected-image settings until there is an image.
-  await expect(dialog.getByRole("group", { name: "Back", exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("group", { name: "Background", exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
   await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
   await expect(dialog.locator(".image-more")).not.toHaveAttribute("open");
@@ -216,8 +216,8 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
   await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
   await pick(dialog, "Choose an image", misty);
   for (const [image, depth] of [
-    [character, "Middle"],
-    [fern, "Front"],
+    [character, "Middleground"],
+    [fern, "Foreground"],
   ] as const) {
     await dialog.getByRole("button", { name: "+ Add layer", exact: true }).click(); // 1
     await pick(dialog, "Add a layer", image); // 2 (typing the search is not a click)
@@ -240,12 +240,12 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
   // With several layers, the camera list and the depth appear; a layer can change depth.
   await expect(dialog.getByLabel("Camera", { exact: true })).toBeVisible();
   await dialog
-    .getByRole("group", { name: "Middle", exact: true })
+    .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
     .click();
   await dialog.getByLabel("Depth", { exact: true }).selectOption("foreground");
   await expect(
-    dialog.getByRole("group", { name: "Front", exact: true }).locator(".image-picture"),
+    dialog.getByRole("group", { name: "Foreground", exact: true }).locator(".image-picture"),
   ).toHaveCount(2);
 });
 
@@ -254,7 +254,7 @@ test("drag and drop: moves the selected picture, and a picture to another depth"
 }) => {
   const dialog = await openNewImage(page);
   await readyMade(dialog, "Character in forest");
-  const middle = dialog.getByRole("group", { name: "Middle", exact: true });
+  const middle = dialog.getByRole("group", { name: "Middleground", exact: true });
   await middle.locator(".image-picture").click();
   const person = plane(dialog, character);
   expect(await layerStyle(person, "--layer-x")).toBe("23%");
@@ -275,10 +275,10 @@ test("drag and drop: moves the selected picture, and a picture to another depth"
   // Drop the character's row on the front: it moves there.
   await middle
     .locator(".image-picture")
-    .dragTo(dialog.getByRole("group", { name: "Front", exact: true }));
+    .dragTo(dialog.getByRole("group", { name: "Foreground", exact: true }));
   await expect(person).toHaveAttribute("data-role", "foreground");
   await expect(
-    dialog.getByRole("group", { name: "Front", exact: true }).locator(".image-picture"),
+    dialog.getByRole("group", { name: "Foreground", exact: true }).locator(".image-picture"),
   ).toHaveCount(2);
   await expect(middle.locator(".image-picture")).toHaveCount(0);
 });
@@ -287,7 +287,7 @@ test("Duplicate adds the same picture again, shifted, and both are applied", asy
   const dialog = await openNewImage(page);
   await readyMade(dialog, "Character in forest");
   await dialog
-    .getByRole("group", { name: "Middle", exact: true })
+    .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
     .click();
   await dialog.getByRole("button", { name: "Duplicate", exact: true }).click();
@@ -379,7 +379,7 @@ test("corner handles resize the selected image in the preview; the slider stays 
   const dialog = await openNewImage(page);
   await readyMade(dialog, "Character in forest");
   await dialog
-    .getByRole("group", { name: "Middle", exact: true })
+    .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
     .click();
   const handles = dialog.locator(".image-handle");
@@ -428,7 +428,7 @@ test("removes an image with its × or Delete in the preview, and Undo brings it 
   await expect(status).toHaveCount(0);
   // Delete with the image selected in the preview; Ctrl+Z puts it back.
   await dialog
-    .getByRole("group", { name: "Middle", exact: true })
+    .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
     .click();
   const stage = dialog.locator(".illustration-drag-stage");
@@ -490,4 +490,56 @@ test("ready-made scenes are a closed toggle in the start area, and only there", 
   await dialog.getByText("More options", { exact: true }).click();
   await expect(dialog.getByText("Ready-made scenes")).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "Landscape", exact: true })).toHaveCount(0);
+});
+
+test("the picker shows In this story and Library as tabs, each filtered by depth", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
+  const picker = dialog.getByRole("region", { name: "Choose an image", exact: true });
+  const tabs = picker.getByRole("tab");
+  await expect(tabs).toHaveText(["In this story", "Library"]);
+  // Both tabs are in view from the start, above the pictures (no scrolling to find the library).
+  await expect(tabs.last()).toBeInViewport();
+  const inStory = picker.getByRole("tab", { name: "In this story", exact: true });
+  const library = picker.getByRole("tab", { name: "Library", exact: true });
+  await expect(inStory).toHaveAttribute("aria-selected", "true");
+  const panel = picker.getByRole("tabpanel");
+  const filters = panel.getByRole("group", { name: "Filter by depth", exact: true });
+  await expect(filters.getByRole("button")).toHaveText([
+    "All",
+    "Foreground",
+    "Middleground",
+    "Background",
+  ]);
+  await expect(filters.getByRole("button", { name: "All", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const asset = (id: string) => panel.locator(`button[data-asset="${id}"]`);
+  // In this story: the fern the story already uses, not the library's misty plain.
+  await expect(asset(fern)).toBeVisible();
+  await expect(asset(misty)).toHaveCount(0);
+  await filters.getByRole("button", { name: "Background", exact: true }).click();
+  await expect(asset(fern)).toHaveCount(0);
+  await filters.getByRole("button", { name: "Foreground", exact: true }).click();
+  await expect(asset(fern)).toBeVisible();
+  // Library: pictures the story doesn't use yet, with the same filters.
+  await library.click();
+  await expect(library).toHaveAttribute("aria-selected", "true");
+  await expect(asset(misty)).toHaveCount(0);
+  await filters.getByRole("button", { name: "Background", exact: true }).click();
+  await expect(asset(misty)).toBeVisible();
+  await expect(asset(fern)).toHaveCount(0);
+  await filters.getByRole("button", { name: "All", exact: true }).click();
+  // The arrow keys move between the tabs.
+  await library.press("ArrowLeft");
+  await expect(inStory).toBeFocused();
+  await expect(inStory).toHaveAttribute("aria-selected", "true");
+  // A search with no match here but some in the other tab shows that tab.
+  await picker.getByLabel("Search pictures", { exact: true }).fill(misty);
+  await expect(library).toHaveAttribute("aria-selected", "true");
+  await asset(misty).click();
+  await expect(plane(dialog, misty)).toHaveCount(1);
 });

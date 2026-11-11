@@ -53,13 +53,13 @@
 }
 .image-depth {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  gap: 8px;
+  gap: 6px;
   padding-top: 8px;
   border-top: 1px solid var(--editor-line, #dce2dc);
 }
 .image-depth-name {
-  padding-top: 8px;
+  color: var(--editor-muted, #6d7872);
+  font-size: 12px;
   font-weight: 600;
 }
 .image-depth-pictures {
@@ -198,9 +198,42 @@
   align-items: center;
   justify-content: space-between;
 }
-.image-picker h4 {
-  margin: 4px 0;
+/* Two tabs, then the depth filters, both in view above the pictures. */
+.image-picker-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--editor-line, #dce2dc);
+}
+.editor-dialog .image-picker-tabs button {
+  flex: 1;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: none;
+  font-weight: 600;
+}
+.editor-dialog .image-picker-tabs [aria-selected="true"] {
+  border-color: var(--editor-line, #dce2dc);
+  border-bottom-color: white;
+  background: white;
+  color: #315c4a;
+}
+.image-picker [role="tabpanel"] {
+  display: grid;
+  gap: 8px;
+}
+.image-picker-depths {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.editor-dialog .image-picker-depths button {
+  padding: 2px 8px;
+  border-radius: 999px;
   font-size: 12px;
+}
+.editor-dialog .image-picker-depths [aria-pressed="true"] {
+  border-color: #427257;
+  background: #e4ebdf;
 }
 .image-picker-grid {
   display: grid;
