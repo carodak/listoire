@@ -1,6 +1,7 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrationClip } from "../../contracts/media.ts";
-import { textDigest } from "../../contracts/digest.ts";
+import { sha256, textDigest } from "../../contracts/digest.ts";
+import { encodeDataUrl } from "../../contracts/story-archive.ts";
 import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 
 export async function cacheNarration(
@@ -73,15 +74,9 @@ export function attachNarration(
 }
 export async function narrationBytes(bytes: ArrayBuffer) {
   if (bytes.byteLength > 5_000_000) throw new Error("Narration clips must be smaller than 5 MB.");
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  const audioDigest = Array.from(new Uint8Array(digest), (b) =>
-    b.toString(16).padStart(2, "0"),
-  ).join("");
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Could not read narration audio."));
-    reader.readAsDataURL(new Blob([bytes], { type: "audio/mpeg" }));
-  });
-  return { audioDigest, dataUrl };
+  const dataUrl = await encodeDataUrl(
+    new Blob([bytes], { type: "audio/mpeg" }),
+    "Could not read narration audio.",
+  );
+  return { audioDigest: await sha256(bytes), dataUrl };
 }

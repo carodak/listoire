@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { message } from "../../contracts/error-message.ts";
+import { encodeDataUrl } from "../../contracts/story-archive.ts";
 import type { VoiceProfile } from "../../contracts/speech.ts";
 import { VoiceProfileSchema } from "../../contracts/speech.ts";
 import { audioDuration } from "./narration-authoring.ts";
@@ -124,18 +125,10 @@ async function readExample(file: File, draft: Draft, model: VoiceProfile["model"
   } finally {
     URL.revokeObjectURL(url);
   }
-  const data = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      resolve(
-        String(reader.result).replace(
-          /^data:[^;]+;/,
-          `data:audio/${/\.wav$/i.test(file.name) ? "wav" : "mpeg"};`,
-        ),
-      );
-    reader.onerror = () => reject(new Error("Could not read the voice recording."));
-    reader.readAsDataURL(file);
-  });
+  const data = (await encodeDataUrl(file, "Could not read the voice recording.")).replace(
+    /^data:[^;]+;/,
+    `data:audio/${/\.wav$/i.test(file.name) ? "wav" : "mpeg"};`,
+  );
   return VoiceProfileSchema.parse({
     id: `voice.${crypto.randomUUID()}`,
     label: draft.name,
