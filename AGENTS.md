@@ -1,60 +1,93 @@
 # Listoire project instructions
 
-## Current scope
-
-Phases 2 and 3 are authorized together: complete bilingual house story, source-library
-assets, character panel, precise photograph magnifier, reusable audio/narration/effects
-engines and declarative direction. Preserve the approved landing and wide reader.
-Initial character: 6/6 HP, STR/DEX/WIL each 3d6, retained in the checkpoint; two Rank 1
-abilities, unused in narrative checks. No RPG combat/check executor, editor, AI planner
-or Capacitor implementation. Future mobile compatibility remains required.
-Do not reuse/extract embedded HTML illustrations. All house imagery must come from
-the downloaded assets/images library. The HTML remains a story/layout reference.
-The latest authorized scope includes ordered narrative blocks/full-screen cinematics
-and actual local Chatterbox narration: Nano EN / Multilingual V3 FR, on-demand preview,
-caching and optimized published clips. Use informational Investigation/Intuition at
-Rank 1. Generated clips remain previews until human listening review.
+## Scope
+Listoire is a bilingual (en/fr) interactive book: a reader (Ink stories,
+RPG rules and combat, narration, cinematic presentation) and a story
+editor (text, media composition, narration, game configuration).
+Not in scope: AI planner, Capacitor build. Mobile compatibility is
+still required.
 
 ## Architecture
+- React UI must not own Ink progression or RPG calculations. Ink stays
+  behind NarrativeEngine; StoryDirector owns progression and
+  cancellation. RulesEngine stays pure (no React, Ink, media or
+  persistence).
+- Gameplay mutations and dice rolls never originate in presentation
+  callbacks or Ink lookahead/external functions. Saves hold coherent
+  Ink/domain/RNG snapshots.
+- The RPG DOCX is authoritative, with one approved erratum: keep the
+  enemy formula, its example is 15 HP (about 74.1% victory).
+- Features live in src/features/*; shared contracts, storage, i18n and
+  app composition stay outside features. Same validated contracts for
+  manual stories and the editor.
+- assets/ source libraries stay local and unchanged; publish only
+  referenced, licensed, optimized files. Never expose catalogs as a
+  redistribution service. Record provider-verified and user-attested
+  rights separately.
+- Generated narration clips remain previews until a human listens.
+- Update the affected doc in docs/ when a contract or boundary changes.
 
-- React/TypeScript UI must not own Ink progression or RPG calculations.
-- Group cohesive functionality in `src/features/landing`, `reader` and
-  `story-runtime`; preserve the finer Fallow zones inside story-runtime.
-  Keep shared contracts, storage, localization and app composition outside features.
-- Keep Ink behind NarrativeEngine; StoryDirector owns progression and cancellation.
-- Keep RulesEngine pure and independent of React, Ink, media and persistence.
-- The supplied RPG DOCX is authoritative with one user-approved numerical erratum:
-  retain the enemy formula and correct its example to 15 HP (about 74.1% victory).
-  Other mechanics remain unchanged; settle remaining gaps before implementation.
-- The HTML is a functional/conceptual prototype. Later visual/audio production must
-  achieve a premium cinematic digital book, substantially exceeding its polish.
-- Gameplay mutations and dice rolls must not originate in presentation callbacks
-  or Ink lookahead/external functions. Save coherent Ink/domain/RNG snapshots.
-- Use the same validated contracts for manual stories, future authoring and AI.
-- Separate UI/story localization, story saves/settings and TTS generation/playback.
-- Favor one static modular application; do not build future editor/AI infrastructure.
-- Source libraries in `assets/` remain local and unchanged; only explicitly referenced,
-  licensed optimized story files may be published. Never expose catalogs as an asset
-  redistribution service. Record provider-verified and user-attested rights separately.
+## Git
+- Never commit to main, never push. One commit per item.
+- Never commit logs, reviews, notes, .patch or .disabled files.
+- Delete dead code instead of archiving it; git history keeps it.
 
-## Engineering and verification
+## Environment (Windows)
+- Run Vite, Vitest and Playwright from PowerShell, never Git Bash
+  (lowercase drive letter breaks them).
+- Dev server: port 4175 only, via the untracked
+  playwright.local.config.ts (4173 and 4180 are off-limits). Start it
+  once, warm it (editor page and a page with dice), keep it running,
+  stop it when done.
 
-- Read `.agents/skills/ponytail/SKILL.md` for coding tasks. Prefer the smallest
-  complete change, existing solutions and focused modules; preserve accessibility,
-  validation and data integrity. Document meaningful limits and revisit conditions.
-- Read `.agents/skills/fallow/SKILL.md` for analysis; use `fallow-setup` for tooling
-  changes. Installed skill instructions do not establish executable/hook availability.
-- After JS/TS exists, establish a code-health baseline. Run applicable Fallow
-  architecture/dead-code/duplication/changed-code checks after significant changes
-  and before milestones. Review evidence; trace before deletion; dry-run autofixes.
-- Fallow reports use JSON/quiet and separate stderr; preserve exit and gate status.
-  Do not enable telemetry. Report missing tools or unverified enforcement honestly.
-- Typecheck, lint and test implemented behavior. Use deterministic domain tests,
-  real Ink fixtures, lifecycle/save integration tests and focused browser flows.
-- Review milestone changes for logic, interruption, data loss, security and scope
-  using installed Ponytail review guidance. Fallow complements this review.
-- Update affected design documents when contracts/boundaries change. Preserve
-  existing user work and installed skill configuration. Report checks and limits.
+## Code
+- Read .agents/skills/ponytail/SKILL.md before coding and follow its
+  ladder: delete > reuse > platform/stdlib > installed dependency >
+  small change > minimal new code. Reuse src/shared/ components.
+- All new UI text through i18n (en + fr).
+- No new ignorePatterns, config exclusions or suppression comments.
+- No artificial splits or one-liner cramming.
+- Before adding CSS, reuse an existing rule if one fits.
+- Only format the files you change.
+
+## Tests
+- Never weaken an assertion or drop coverage of a behavior. Moved code
+  keeps its tests. Log any changed or removed assertion with the
+  reason and where the behavior is still covered.
+- Extend the existing test file for a module; create a new file only
+  when none exists.
+- Logic (computations, validation, rules) → unit test. E2E only for
+  full user journeys, never for what a unit test already covers.
+- No assertions on CSS values, pixel positions or DOM structure;
+  assert user-visible behavior.
+
+## Checks
+After each commit (~1-2 min):
+- typecheck + lint
+- all unit tests: npx vitest --run
+- the e2e spec(s) you touched, chromium only
+- fallow audit runs automatically before each commit (hook); fix what
+  it reports.
+
+Once at the end of a session:
+- full e2e on chromium
+- E2E_PORT=4175 npm run test:coverage, then
+  npx fallow health --score --hotspots --coverage coverage/coverage-final.json
+  (score >= 92)
+- if something fails, git bisect over your commits and fix it in a
+  new commit.
+
+## Working alone
+I usually don't check in: don't stop for my OK. Take the most
+reasonable choice, log it in REFACTOR_LOG.md and keep going. Only stop
+before something that can't be undone (deleting user data, an
+incompatible save or project format change): prepare it, write the
+options in the log, and move on.
+
+## REFACTOR_LOG.md
+Read the summary at the top first. Update it in place; keep at most
+the last 3 passes in detail and move older ones to
+docs/refactor-history.md.
 
 ---
 
