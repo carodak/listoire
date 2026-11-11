@@ -1,5 +1,144 @@
 # Refactor log
 
+## ☀ Summary — Pass 9 (read this first)
+
+Branch `features/editor-ux`, 18 commits on top of `0af6c46`, the last one being this summary
+(nothing pushed, nothing on `main`). **All four parts are done**, in the order asked (1, 3, 2, 4). Details per item in
+"Pass 9" at the end of this file.
+
+|                                         | Start (`0af6c46`)  | Now (`fc0b219`)                                      |
+| --------------------------------------- | ------------------ | ---------------------------------------------------- |
+| Health (`--score --hotspots`), floor 92 | 94.8 (shown as 95) | **93.5** (unit-size penalty 2.8 → 4.1; nothing else) |
+| Production TS LOC (src + tools)         | 22,142             | 23,278 (+1,136)                                      |
+| Unit tests                              | 438                | **459**                                              |
+| E2E, chromium                           | (1 known failure)  | **132/133** (the 1 failure predates this pass)       |
+| `fallow security --gate new`            | pass               | pass after every commit                              |
+| `fallow dupes` / dead code              | 0 / 0              | 0 / 0                                                |
+
+### What was done
+
+**Part 1 — Text toolbar**
+
+- **1a** `0d504a2`: after Undo, a caret (or a selection end) inside `<typo …>` markup formats
+  the whole tagged words; the toolbar shows their settings.
+- **1b** `f511a9c`: a shortcut that can't apply shows the toolbar's short message (in the status
+  bar when the Text tab is hidden); every formatting message is translated (en + fr).
+- **1c** `7a83fde`: Color is an "A" button with the named colours as swatches plus the browser's
+  colour picker; a warning when an own colour has less than 4.5:1 contrast with the story's page.
+  Stored as `color="336699"` (no `#`: it would start an Ink tag).
+- **1d** `b1671c6`: point sizes 8–48 (`size="14pt"`) from a list or typed; 12 pt = the reader's
+  text size, so they follow the reader's Text size; capped by the paragraph's width on phones.
+
+**Part 3 — Back after reloading** `9b58e0b`: confirmed (history only in memory). The save now
+keeps the last 20 previous pages (optional `history`); old saves load without it.
+
+**Part 2 — Media → Image**
+
+- Design note rewritten first (`f9e61c1`): from what authors do, what's visible, folded,
+  removed and why.
+- **2a** `4509e26` REVIEW #3: cutting a `// @media` line and pasting it back restores its image,
+  cues (in order) and scene image.
+- **2b** `6156c51`, `2f18ec2`: committed references (see "how to update" below).
+- **2c** `f2309f1` tilt (−75°…75°, both axes) and flip; `3db8444` one typed draft instead of the
+  hidden JSON inputs; `f6cdff0` the new dialog: pictures by depth, front to back, each with
+  "+ Add" (2 clicks), a picker beside the preview, Duplicate, Remove, drag in the preview, drag
+  a row to another depth, arrow keys, an empty state with the starter scenes, a named camera list,
+  "More options" folded.
+
+**Part 4 — the other tabs**: problems listed first (13 items); `62a4d95` shared dialog styles
+(one spacing scale, 34 px controls, flat fieldsets, bordered secondary buttons, checkboxes
+before labels, short number fields, tab-like section switchers, a shared action row);
+`cdc20be` ribbon commands of equal width with icons on one line; `ffbd96f`, `fc0b219` two
+fixes found in the "after" screenshots and the references (checkbox rows, ribbon height).
+
+### ⚠ Needs you
+
+- **Saves (part 3):** the save gained an optional `history`. Old saves load in this build. But a
+  save written by this build is refused by an _older_ build (its strict schema doesn't know the
+  key; the save is kept and offered for download, like any incompatible save). Only matters if
+  you go back to an older build after playing on this one. The user rule was "additive (old
+  saves load)", which holds.
+- **A failing e2e test that predates this pass:** `image-composition.spec.ts` "uses real
+  perspective depth, pauses camera motion…" fails every time (0 camera animations instead of
+  3), also on `0af6c46` with my changes reverted. Not investigated (reader camera).
+- **Reference screenshots are Windows-only** (pixels differ on Linux, where CI runs): on other
+  platforms the PNG check is skipped and the JSON checks (layers, stored data) still run.
+
+### Decisions I made myself
+
+- 1b: when the Text tab is hidden, a failing shortcut's message goes to the status bar; a
+  message is tied to the selection's position (before: to its format).
+- 1c: contrast warning only for an own colour (named colours adapt to the page), threshold
+  4.5:1 (WCAG AA), against the story's page colour (light or dark); colour stored without `#`.
+- 1d: 12 pt = reader text size; cap = 13 % of the paragraph's width; only paragraphs containing
+  a point size become size containers (existing stories' layout untouched); a typed size is
+  applied on Enter or when leaving the field.
+- 3: one bound of 20 pages, in memory and in the save (it was 100, in memory only); history
+  dropped (never the save) when damaged or from an earlier compatible Ink version.
+- 2a: the cut buffer lasts until the editor is reloaded; a line pasted into another passage
+  keeps naming its scene, so the image stays in its scene; no status message (autosave
+  overwrites it at once).
+- 2b: references = reader-preview pixels + per-layer geometry in the dialog + what Apply stores,
+  for the six layered images, and "what Apply stores" for the four single ones; JSON compared by
+  value.
+- 2c: picker in the side column (the preview stays visible); depth by dragging a row or a Depth
+  select (instead of a row menu); "Change…" keeps place and size; removing the main picture
+  promotes the next; Duplicate shifts by 6 %; "Hide after" in seconds; the description now
+  follows a newly chosen picture (bug: it used to keep the previous picture's text and write it
+  onto the new one); uploading image files not added (it would be a format change).
+- 4: CSS-first, plus a `.dialog-actions` wrapper for bare button rows; the ribbon keeps its old
+  155 px height on every tab.
+- Tooling: when a test run fails, `npm run test:coverage` doesn't merge; I ran its merge step
+  myself, after dropping browser entries saved without their source (a capture race on the
+  lazy `Noise.jsx` effect, twice). Unit tests run from PowerShell (Git Bash makes Vitest load
+  twice).
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- Part 1: `pass9-after/text-color-menu.png`, `text-low-contrast.png`, `text-point-size.png`,
+  `text-shortcut-message.png` (before: Pass 8's `editor-after/text-ribbon*.png`).
+- Part 2: before `image-before/chemin-1…5.png` (Pass 8); after `pass9-after/image-new-empty.png`,
+  `image-chemin*.png`, `image-built.png`, recording `image-two-clicks.webm`.
+- Part 4: before `pass9-before/tabs/` (every tab's ribbon and every dialog) and
+  `pass9-before/tabs-tour.webm`; after `pass9-after/tabs/` and `pass9-after/tabs-tour.webm`, plus
+  one folder per commit (`pass9-after/part4-1-dialogs/`, `part4-2-ribbon/`,
+  `part4-3-checkboxes/`, `part4-4-ribbon-height/`).
+- Specs to re-run them (server on 4175): `pass9-text`, `pass9-image`, `pass9-tabs`,
+  `pass9-tabs-video` with `-c review-screenshots/shots.config.ts --project=desktop`
+  (`SHOTS=pass9-before` for a "before" folder).
+
+### How to try it
+
+`npm run dev`, open `/editor`:
+
+- **1a:** Text tab, select a word, pick Shout then Italic, press Undo, press Underline without
+  reselecting: the whole word is underlined.
+- **1b:** put the caret on a `===` knot line and press Ctrl+B: "Select story words, not an Ink
+  instruction or tag." (on the Story tab, the same text in the status bar).
+- **1c:** select a word, click the "A" colour button: a swatch, or "Any color" for the picker; a
+  pale colour on Orée's light page shows the contrast warning.
+- **1d:** pick "24 pt" in the Size list or type 13 in the "pt" field and press Enter; in the
+  preview's reading preferences, change Text size: the word scales with it.
+- **3:** in the reader, make two choices, reload, enter the story: Back works twice.
+- **2a:** select a `// @media …` line, Ctrl+X, then Ctrl+V: the image returns with its settings.
+- **2:** Media → Image: the empty state; "+ Add" on Back, Middle, Front (one click on a picture
+  each); drag the selected picture; drag its row onto another depth; Duplicate; "Tilt, flip and
+  exact position"; More options. Open an existing image (caret on its `// @media` line, Edit
+  Selected Media): it looks and saves as before.
+- **4:** click through the ribbon tabs and open their dialogs.
+- **References (2b), to update them on purpose:**
+  `npx playwright test -c playwright.local.config.ts image-references --project=chromium --update-snapshots`
+  on Windows, then review the PNG and JSON diffs before committing.
+
+### Skipped / limits
+
+- Uploading your own image files in the Image dialog (stored-media contract change).
+- Editor labels that already existed (field names moved into "More options", the ribbon, most
+  dialogs) stay English, like the rest of the editor; all new text is en + fr.
+- A broken (half-typed) `<typo>` tag still shows the contract's English parser message.
+- Number fields in a few dialogs (Game bonuses, TTS defaults) stay one per line, at the shared
+  width; a grid would need per-dialog layouts.
+
 ## ☀ Summary — Pass 7 (read this first)
 
 Branch `features/reader-combat-editor`, 13 commits on top of `ddeb027` (nothing pushed, nothing
@@ -1723,6 +1862,10 @@ After each commit: `E2E_PORT=4175 npm run test:coverage`, `fallow health --score
 `fallow dupes`. Unit tests are run from PowerShell: from Git Bash, Vitest loads itself twice
 (`/c/Users/…` vs `C:/Users/…`) and fails with "failed to find the current suite".
 
+The score fell from 94.8 to 93.5 only through the unit-size penalty (2.8 → 4.1): longer
+functions, mostly the new Image dialog's two components (`ImageEditor`, `MoreOptions`) and long
+e2e tests. Coupling 2.4 and every other penalty unchanged; no hotspot.
+
 Scores are now given with one decimal (95 at the start was 94.8 rounded; same penalties: unit
 size 2.8, coupling 2.4). `fallow security`: PASS after every commit unless noted. `fallow dupes`:
 0 clone groups unless noted.
@@ -1748,6 +1891,11 @@ camera, outside this pass).
 | `f2309f1` | 2c-1. tilt and flip (contract, reader)                       | 94.4  |
 | `2f18ec2` | 2b. references for the four single images (test only)        | 94.4  |
 | `3db8444` | 2c-2. typed draft instead of hidden JSON inputs              | 94.3  |
+| `f6cdff0` | 2c-3. the new Image dialog                                   | 93.5  |
+| `62a4d95` | 4-1. shared dialog styles                                    | 93.5  |
+| `cdc20be` | 4-2. ribbon commands                                         | 93.5  |
+| `ffbd96f` | 4-3. fix: checkbox rows at the left                          | 93.5  |
+| `fc0b219` | 4-4. fix: one ribbon height on every tab                     | 93.5  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -2258,3 +2406,13 @@ switching tabs, and the editor's preview pane (below it) was 5 px shorter, which
 images in the preview by a pixel (4 reference screenshots failed). The commands' top padding
 is now 4 px: every tab's ribbon is 155 px, as before part 4, and the references pass unchanged.
 After: `review-screenshots/pass9-after/part4-4-ribbon-height/` (all `*-ribbon.png` 155 px high).
+
+### Final checks
+
+- Full Chromium e2e on `fc0b219`: **132/133**; the one failure is the pre-existing
+  "uses real perspective depth…" (see above).
+- Coverage run on `fc0b219`: `game-authoring` "inserts upstream Ink snippets…" failed once (Ace
+  only renders visible lines; it passed 3/3 alone, in every earlier run and in the full run):
+  a timing flake under coverage, nothing changed.
+- `fallow security --gate new --changed-since main`: pass after every commit. `fallow dupes`: 0.
+  `fallow dead-code`: 0 (after removing three exports in `f6cdff0`).
