@@ -2242,3 +2242,10 @@ as the glyphs themselves allow). "Additional Commands" uses the same layout and 
 with the commands (4). Group labels 11 px, spacing from the shared scale (5). The Text tab is
 unchanged (it already had the toolbar look). E2E editor-tabs, editor, game-authoring: green.
 After: `review-screenshots/pass9-after/part4-2-ribbon/*-ribbon.png`.
+
+#### 4-3. Fix: checkboxes drawn by `CheckboxField` stay at the left
+
+Found in the 4-1 "after" screenshots: the shared checkbox rule (for checkboxes drawn by `Field`,
+label first) also pushed `CheckboxField` rows (box first: Loop, Stop channel, Apply shared
+configuration…) to the right edge. `.check` rows now start at the left. After:
+`review-screenshots/pass9-after/part4-3-checkboxes/media-03-sound-effect.png`.
