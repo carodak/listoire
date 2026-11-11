@@ -36,7 +36,8 @@ export function TextareaField({
   return (
     <label>
       {label}
-      <textarea {...props} />
+      {/* Named explicitly: the label's text would otherwise include the textarea's initial text. */}
+      <textarea aria-label={label} {...props} />
     </label>
   );
 }
