@@ -119,7 +119,11 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   for (const section of [/^Look on the page/, /^Camera settings/, /^Description & caption/])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("right");
-  await dialog.getByLabel("Camera", { exact: true }).selectOption("gentle-depth");
+  // Pass 11: the presets are cards (with a moving preview), not a list.
+  await dialog
+    .getByRole("group", { name: "Camera", exact: true })
+    .getByRole("button", { name: "Gentle depth", exact: true })
+    .click();
   await dialog.getByLabel("Movement duration (seconds)", { exact: true }).fill("6.5");
   await dialog.getByLabel("Caption (shown under the image)").fill("Layered forest test");
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
@@ -190,7 +194,10 @@ test("upgrades legacy image layers, wraps a transparent character and changes pa
   await dialog.getByRole("button", { name: "Remove Fern fronds", exact: true }).click();
   for (const section of [/^When it appears/, /^Look on the page/])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
-  await dialog.getByLabel("Entrance", { exact: true }).selectOption("none");
+  await dialog
+    .getByRole("group", { name: "Entrance", exact: true })
+    .getByRole("button", { name: "None", exact: true })
+    .click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("left");
   await dialog.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
@@ -325,4 +332,58 @@ test("a tilted or mirrored picture is drawn in 3D; the others keep their transfo
   // Mirrored: the picture's x axis points left.
   expect(Number((await transform("foreground")).slice(9).split(",")[0])).toBeLessThan(0);
   expect(await transform("background")).toMatch(/^(none|matrix\()/);
+});
+
+test("camera and entrance presets preview their movement on hover or focus, still under reduced motion", async ({
+  page,
+}) => {
+  await page.goto("/editor");
+  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "Image", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
+  await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
+  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  const camera = dialog.getByRole("group", { name: "Camera", exact: true });
+  const cards = camera.getByRole("button");
+  await expect(cards).toHaveCount(16);
+  // Each card shows the current image (its main picture).
+  const main = "sketch.misty-conifer-plain-001";
+  const thumbnails = camera.locator(".preset-thumb img");
+  await expect(thumbnails).toHaveCount(16);
+  expect(await thumbnails.first().getAttribute("src")).toContain(main);
+  const card = camera.getByRole("button", { name: "Sideways drift", exact: true });
+  const moving = () => card.locator("img").evaluate((image) => image.getAnimations().length);
+  // Hover plays the movement; leaving stops it.
+  await card.hover();
+  await expect.poll(moving).toBe(1);
+  await dialog.getByRole("heading", { name: "Layers, front to back" }).hover();
+  await expect.poll(moving).toBe(0);
+  // Keyboard focus plays it too; choosing the card selects the preset.
+  await card.focus();
+  await expect.poll(moving).toBe(1);
+  await card.press("Enter");
+  await expect(card).toHaveAttribute("aria-pressed", "true");
+  await card.blur();
+  await expect.poll(moving).toBe(0);
+  // Under reduced motion the thumbnails stay still.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await card.hover();
+  await card.focus();
+  expect(await moving()).toBe(0);
+  // A single image's entrances are cards with the same preview.
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  for (const name of ["Remove Fern fronds", "Remove Curly-haired woman standing"])
+    await dialog.getByRole("button", { name, exact: true }).click();
+  await dialog
+    .locator(".image-section > summary")
+    .filter({ hasText: /^When it appears/ })
+    .click();
+  const entrance = dialog.getByRole("group", { name: "Entrance", exact: true });
+  await expect(entrance.getByRole("button")).toHaveText(["None", "Fade in", "Fade out"]);
+  const fade = entrance.getByRole("button", { name: "Fade in", exact: true });
+  await fade.hover();
+  await expect
+    .poll(() => fade.locator("img").evaluate((image) => image.getAnimations().length))
+    .toBe(1);
 });

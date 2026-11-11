@@ -39,7 +39,7 @@ test("keeps the illustration visible while choosing duplicate layer instances in
       .locator("img")
       .evaluate((image) => image.style.getPropertyValue("--layer-rotation")),
   ).toBe("1deg");
-  await dialog.getByLabel("Camera", { exact: true }).scrollIntoViewIfNeeded();
+  await dialog.getByRole("group", { name: "Camera", exact: true }).scrollIntoViewIfNeeded();
   await expect(dialog.getByRole("region", { name: "Preview", exact: true })).toBeInViewport();
   await expect(dialog.locator(".multiplane-viewport")).toBeInViewport();
   await dialog.screenshot({ path: `.fallow/media-workspace-${test.info().project.name}.png` });
@@ -179,7 +179,7 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   // No depths, no camera, no selected-image settings until there is an image.
   await expect(dialog.getByRole("group", { name: "Background", exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
-  await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toHaveCount(0);
   // Pass 11: the settings are folded sections, all closed (no "More options").
   await expect(dialog.locator(".image-section")).not.toHaveCount(0);
   await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
@@ -195,7 +195,7 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   await start.getByRole("button", { name: "Choose an image", exact: true }).click();
   await pick(dialog, "Choose an image", misty);
   await expect(image).toContainText("Misty conifer plain");
-  await expect(dialog.getByLabel("Camera", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toHaveCount(0);
   await expect(dialog.getByLabel("Depth", { exact: true })).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeEnabled();
   // Pass 11: no "Choose" once there is an image; the selected image's "Replace image" changes it.
@@ -247,7 +247,7 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
     .evaluateAll((planes) => planes.map((item) => (item as HTMLElement).dataset.role).sort());
   expect(roles).toEqual(["background", "foreground", "midground"]);
   // With several layers, the camera list and the depth appear; a layer can change depth.
-  await expect(dialog.getByLabel("Camera", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toBeVisible();
   await dialog
     .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
@@ -704,7 +704,7 @@ test("Camera settings fold right under the camera choice", async ({ page }) => {
   await expect(settings).not.toHaveAttribute("open");
   // Right after the camera choice.
   const next = await dialog
-    .getByLabel("Camera", { exact: true })
+    .getByRole("group", { name: "Camera", exact: true })
     .evaluate(
       (select) =>
         select.closest("label, fieldset")!.nextElementSibling ===

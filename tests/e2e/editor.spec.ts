@@ -161,7 +161,11 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Y (%)", { exact: true }).fill("0");
   await expect(page.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "cinematic push in", exact: true })).toHaveCount(0);
-  await page.getByRole("combobox", { name: "Entrance", exact: true }).selectOption("fade-in");
+  // Pass 11: the entrances are cards (with a moving preview), not a list.
+  await page
+    .getByRole("group", { name: "Entrance", exact: true })
+    .getByRole("button", { name: "Fade in", exact: true })
+    .click();
   await page.getByLabel("Media examinable", { exact: true }).check();
   await page
     .getByLabel("Image details (one per line)", { exact: true })

@@ -13,7 +13,7 @@ import { PicturesPanel } from "./PicturesPanel.tsx";
 import { LayerTransform } from "./LayerTransform.tsx";
 import { IllustrationStarters } from "./IllustrationStarters.tsx";
 import { PageCompositionFields } from "./IllustrationPreview.tsx";
-import { CameraSelect, CinematicOptions } from "./CinematicFields.tsx";
+import { CameraSelect, CinematicOptions, PresetCards } from "./CinematicFields.tsx";
 import { ExaminationFields } from "./ExaminationFields.tsx";
 import { ImagePlacement, ImageTiming } from "./MediaFields.tsx";
 import { Field, SelectField } from "./Fields.tsx";
@@ -240,7 +240,11 @@ export function ImageEditor(props: ImageEditorProps) {
         <MediaLayout layout={form.layout} onLayout={(layout) => patch({ layout })} />
         {value.layers.length > 0 && (
           <>
-            <CameraSelect motion={form.motion} onChange={(motion) => patch({ motion })} />
+            <CameraSelect
+              motion={form.motion}
+              asset={assets.find((asset) => asset.id === form.asset)}
+              onChange={(motion) => patch({ motion })}
+            />
             <Section
               title={t("editor.image.groups.cameraDetails")}
               set={[
@@ -268,6 +272,14 @@ export function ImageEditor(props: ImageEditorProps) {
     </div>
   );
 }
+
+type Entrance = "none" | "fade-in" | "fade-out";
+/** The reader's fades, for the Entrance cards' previews. */
+const entrances: Record<Entrance, Keyframe[]> = {
+  none: [],
+  "fade-in": [{ opacity: 0 }, { opacity: 1 }],
+  "fade-out": [{ opacity: 1 }, { opacity: 0 }],
+};
 
 /** A settings category, folded until opened; its summary says what is set inside. */
 function Section({
@@ -379,15 +391,14 @@ function ImageSettings({
           />
         )}
         {!layered && (
-          <SelectField
+          <PresetCards
             label={t("editor.image.entrance")}
-            value={draft.effect as "none" | "fade-in" | "fade-out"}
+            value={draft.effect as Entrance}
             options={["none", "fade-in", "fade-out"] as const}
-            labels={{
-              none: t("editor.image.entrances.none"),
-              "fade-in": t("editor.image.entrances.fade-in"),
-              "fade-out": t("editor.image.entrances.fade-out"),
-            }}
+            labels={(effect) => t(`editor.image.entrances.${effect}`)}
+            asset={form.language.configuration.assets?.find((asset) => asset.id === form.asset)}
+            frames={(effect) => entrances[effect]}
+            duration={() => 1500}
             onChange={(effect) => onDraft({ effect })}
           />
         )}
