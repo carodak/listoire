@@ -2232,3 +2232,13 @@ by every dialog through shared rules in `editor.css`:
 Removed as redundant: the Image dialog's own border overrides and `.editor-dialog .check input`.
 No behaviour change, no control removed. E2E: game-authoring, editor, media-workspace,
 narration, editor-tabs 24/24. After: `review-screenshots/pass9-after/part4-1-dialogs/`.
+
+#### 4-2. Ribbon commands (Story, Logic, Media, Game, Review)
+
+One shared rule for every ribbon command: the same width (80 px), the icon in a fixed 32 px box
+on the first row, the label under it in a two-line box. Icons now sit on one line whatever the
+label's length (problems 1, 2); all glyphs are drawn at the same size in the same box (3, as far
+as the glyphs themselves allow). "Additional Commands" uses the same layout and sits level
+with the commands (4). Group labels 11 px, spacing from the shared scale (5). The Text tab is
+unchanged (it already had the toolbar look). E2E editor-tabs, editor, game-authoring: green.
+After: `review-screenshots/pass9-after/part4-2-ribbon/*-ribbon.png`.
