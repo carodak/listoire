@@ -13,7 +13,7 @@ Published path: `public/audio/keyboard-typing.mp3`.
 
 Eight selected dependencies are used: four images and four sound/music excerpts.
 No embedded prototype image is reused. Original paths, local license evidence,
-source/output hashes and excerpts are in [the curated catalog](assets/catalog/curated.json).
+source/output hashes and excerpts are in [the curated catalog](../assets/catalog/curated.json).
 
 | Resource                                   | Creator / source                                         | Use                                                                                         |
 | ------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -50,8 +50,8 @@ Resemble AI [Chatterbox Nano](https://huggingface.co/ResembleAI/chatterbox-nano)
 [Chatterbox Multilingual V3](https://huggingface.co/ResembleAI/chatterbox), MIT model cards;
 source copyright 2025 Resemble AI. The provider's embedded default conditioning is used,
 with no external voice reference. Provider watermarking is retained.
-See [model revisions](assets/catalog/narration-models.json) and
-[output provenance](assets/catalog/narration-output.json).
+See [model revisions](../assets/catalog/narration-models.json) and
+[output provenance](../assets/catalog/narration-output.json).
 The 72 included clips are previews pending human listening.
 The code notice is included in `public/licenses/chatterbox-MIT.txt`.
 
@@ -59,8 +59,8 @@ The code notice is included in `public/licenses/chatterbox-MIT.txt`.
 
 Fourteen official React Bits JSX/CSS components are vendored at revision
 `4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4`, with hashes in
-[provenance.json](src/features/presentation/react-bits/vendor/provenance.json).
-The [license](src/features/presentation/react-bits/vendor/LICENSE.md) is MIT plus
+[provenance.json](../src/features/presentation/react-bits/vendor/provenance.json).
+The [license](../src/features/presentation/react-bits/vendor/LICENSE.md) is MIT plus
 Commons Clause, not plain MIT. Reassess toolkit/editor-platform redistribution against
 those terms. Components are locally bundled as deferred chunks.
 The notice is included in `public/licenses/react-bits.txt`.

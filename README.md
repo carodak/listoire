@@ -161,7 +161,7 @@ loaded only when requested. The sole added runtime dependency is `ogl`. Run
 metadata (network access is needed when its ignored verification cache is absent).
 No overlay textures, external AI, vector database or asset backend are required.
 
-Read [contributions.md](contributions.md) for permissions and restrictions. These
+Read [contributions.md](docs/contributions.md) for permissions and restrictions. These
 local libraries are not a redistribution resource for third-party authors. All published images now come from the downloaded Heritage library; the original
 HTML is used only as a story/layout/interaction reference.
 
@@ -174,8 +174,7 @@ are off by default; playback rejection never blocks choices. The approved landin
 keeps its own optional startup recording and no extra controls.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md), [MODULES.md](MODULES.md),
-[DATA_CONTRACTS.md](DATA_CONTRACTS.md), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
-and [the combined report](docs/phases2-3-report.md). Combat, visual editor, AI planner
+[DATA_CONTRACTS.md](DATA_CONTRACTS.md) and [the combined report](docs/phases2-3-report.md). Combat, visual editor, AI planner
 and Capacitor remain deferred. Initial profile: 6/6 HP, saved 3d6 STR/DEX/WIL, two
 Rank 1 abilities without narrative checks. Previous house saves remain exportable
 but need an explicit restart after this Ink/profile change.
