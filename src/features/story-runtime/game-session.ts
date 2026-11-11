@@ -57,20 +57,33 @@ export function resolveGameAction(
   if (!action || (action.kind === "combat" && bundle.mode !== "with-combat"))
     throw new ReaderFailure("content");
   const update = copyPlayer(before);
-  if (deferRoll && ["stat-check", "ability-check"].includes(action.kind)) {
-    const origin = checkOrigin(before);
-    performAction(update.character, update.game, definition, action, choiceId);
-    update.game.pendingCheck = { actionId: id, choiceId, rolled: true, origin };
-  } else performAction(update.character, update.game, definition, action, choiceId);
+  ruled(() => performAction(update.character, update.game, definition, action, choiceId));
+  if (deferRoll && ["stat-check", "ability-check"].includes(action.kind))
+    update.game.pendingCheck = {
+      actionId: id,
+      choiceId,
+      rolled: true,
+      origin: checkOrigin(before),
+    };
   return update;
+}
+/** A rule that refuses (unknown ability, item that cannot be equipped…) is the story's data, not storage. */
+function ruled<T>(apply: () => T): T {
+  try {
+    return apply();
+  } catch {
+    throw new ReaderFailure("content");
+  }
 }
 export function resolveGameTurn(bundle: StoryBundle, before: SaveData, move: PlayerMove) {
   const update = copyPlayer(before);
   const definition = GameDefinitionSchema.parse(bundle.game ?? {});
   let choice: string | undefined;
-  if (move.kind === "equip" || move.kind === "unequip")
-    equip(update.character, update.game, definition, move.id, move.kind === "unequip");
-  else choice = combatTurn(update.character, update.game, definition, move);
+  ruled(() => {
+    if (move.kind === "equip" || move.kind === "unequip")
+      equip(update.character, update.game, definition, move.id, move.kind === "unequip");
+    else choice = combatTurn(update.character, update.game, definition, move);
+  });
   return { ...update, choice };
 }
 export function gameFacts(update: Update) {

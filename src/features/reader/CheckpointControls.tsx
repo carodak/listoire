@@ -53,7 +53,7 @@ export function CheckpointControls({
           <button
             disabled={busy}
             onClick={() => {
-              void backup().catch(() => onFailure("storage"));
+              void backup().catch(() => onFailure("backup"));
             }}
           >
             {t("backup")}

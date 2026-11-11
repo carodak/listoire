@@ -274,3 +274,13 @@ it.each([false, true])(
     }
   },
 );
+it("reports a rule the story data breaks as a content error, not a failed save (REVIEW #7)", async () => {
+  const { create } = await fixture();
+  const director = create();
+  await director.load();
+  const before = director.getSnapshot();
+  // The letter is not owned and cannot be equipped: the rules refuse.
+  await director.gameTurn({ kind: "equip", id: "letter" }, before.occurrenceId!);
+  expect(director.getSnapshot().failure).toBe("content");
+  expect(director.getSnapshot().game).toEqual(before.game);
+});

@@ -165,6 +165,7 @@ const en = {
       "Another tab changed your saved progress. Reload your saved place to continue.",
     storage:
       "Your place could not be saved. Your previous checkpoint is safe. Please retry before continuing.",
+    backup: "The copy of your saved progress could not be downloaded. Nothing was changed.",
   },
   editor: {
     text: {
@@ -563,6 +564,7 @@ const fr: typeof en = {
       "Un autre onglet a modifié votre progression. Rechargez votre sauvegarde pour continuer.",
     storage:
       "L’enregistrement a échoué. Votre dernier point de sauvegarde est intact. Réessayez avant de continuer.",
+    backup: "La copie de votre sauvegarde n’a pas pu être téléchargée. Rien n’a été modifié.",
   },
   editor: {
     text: {
