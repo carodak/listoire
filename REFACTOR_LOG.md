@@ -2249,3 +2249,12 @@ Found in the 4-1 "after" screenshots: the shared checkbox rule (for checkboxes d
 label first) also pushed `CheckboxField` rows (box first: Loop, Stop channel, Apply shared
 configuration…) to the right edge. `.check` rows now start at the left. After:
 `review-screenshots/pass9-after/part4-3-checkboxes/media-03-sound-effect.png`.
+
+#### 4-4. Fix: the ribbon keeps one height on every tab
+
+Caught by the Orée references (2b) in the full e2e run: after 4-2, the Story, Logic, Media,
+Game and Review ribbons were 160 px high and the Text ribbon 155 px, so the ribbon jumped when
+switching tabs, and the editor's preview pane (below it) was 5 px shorter, which moved Orée's
+images in the preview by a pixel (4 reference screenshots failed). The commands' top padding
+is now 4 px: every tab's ribbon is 155 px, as before part 4, and the references pass unchanged.
+After: `review-screenshots/pass9-after/part4-4-ribbon-height/` (all `*-ribbon.png` 155 px high).
