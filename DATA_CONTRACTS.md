@@ -608,12 +608,14 @@ allow a hex `backgroundColor`; it stays separate from story checkpoint state.
 
 ### Layered paper illustrations
 
-An image media block may declare `illustration`: a base image placement, up to five
-additional image layers, landscape/portrait/square aspect, none/soft/paper blending
-and none/left/right text wrapping. Every placement has a background/midground/foreground
-role, finite bounded X/Y offsets and scale. Bundle validation rejects unknown or
-non-image layer references, duplicate images (including the base), mixed legacy
-`motion.layers` and illustration layers, and wrapping outside Inline layout.
+An image media block may declare `illustration`: a base image placement, up to eleven
+additional image layers (the same picture may appear more than once), landscape/portrait/square
+aspect, none/soft/paper blending and none/left/right text wrapping. Every placement has a
+background/midground/foreground role, finite bounded X/Y offsets and scale, and optionally a
+rotation, a tilt (`tiltX` forward/back, `tiltY` left/right, −75° to 75°) and `flip` (mirror);
+pictures without tilt or flip draw exactly as before. Bundle validation rejects unknown or
+non-image layer references, mixed legacy `motion.layers` and illustration layers, and wrapping
+outside Inline layout.
 The existing block image, five layouts, examination, visibility, persistence and
 bounded cinematic event contracts remain authoritative. Shared-language edits copy
 layer asset dependencies as well as the base image. Backups retain the composition.

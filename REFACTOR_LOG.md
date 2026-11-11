@@ -1744,6 +1744,7 @@ camera, outside this pass).
 | `9b58e0b` | 3. Back after a reload (history in the save)                 | 94.5  |
 | `f9e61c1` | 2. design note (docs)                                        | —     |
 | `4509e26` | 2a. REVIEW #3: pasting a cut `// @media` line restores it    | 94.4  |
+| `6156c51` | 2b. reference renders (test only)                            | 94.4  |
 
 ### 1a. A caret inside a formatting tag formats the tagged words
 
@@ -2046,3 +2047,20 @@ npx playwright test -c playwright.local.config.ts image-references --project=chr
 on Windows (it rewrites the PNGs and the JSON); look at the PNG and JSON diffs before
 committing them. On another platform the PNGs are skipped, so `--update-snapshots` there only
 rewrites the JSON files.
+
+### 2c-1. Tilt and flip (contract and reader)
+
+Decision 1: optional `tiltX` (forward/back) and `tiltY` (turn left/right), −75° to 75°, and a
+separate `flip` (mirror), on any picture of a composition. Additive: stored compositions have
+none and parse unchanged. The reader adds the 3D part only to a tilted or mirrored picture
+(`perspective(1200px) rotateX() rotateY()` and `scaleX(-1)`, through a CSS variable that is
+unset, so empty, for the others); untouched pictures keep exactly their transform, and a single
+untouched picture still takes the flat path. The six references still match.
+
+Also in this commit: the 2b JSON references are now compared **by value** (the code formatter
+had re-laid out the committed JSON files, so a text comparison failed although the data was
+identical). `--update-snapshots` still rewrites them. Nothing compared was dropped.
+
+Tests: unit (old composition parses unchanged; tilt and flip accepted; 76°, −80° and a
+non-boolean flip refused); e2e "a tilted or mirrored picture is drawn in 3D; the others keep
+their transform" (a 3D matrix, mirrored x axis, background unchanged).

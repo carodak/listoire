@@ -1,6 +1,6 @@
 import { expect, test } from "./test.ts";
 import type { Locator, Page } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
 /**
  * Reference renders of Orée's six layered images, captured before the Image dialog was
@@ -81,6 +81,19 @@ const layers = (viewport: Locator) =>
       }),
     };
   });
+/**
+ * Compares with a JSON reference by value (the formatter may lay the file out its own way);
+ * `--update-snapshots` rewrites it.
+ */
+async function matchesReference(name: string, value: unknown) {
+  const info = test.info();
+  info.snapshotSuffix = "";
+  const file = info.snapshotPath(name);
+  if (info.config.updateSnapshots === "all" || info.config.updateSnapshots === "changed")
+    await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
+  else expect(value).toEqual(JSON.parse(await readFile(file, "utf8")));
+}
+
 async function backup(page: Page) {
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download");
@@ -94,7 +107,7 @@ async function backup(page: Page) {
 }
 
 for (const [scene, id] of images)
-  test(`${scene}: the layered image looks and saves the same`, async ({ page }, info) => {
+  test(`${scene}: the layered image looks and saves the same`, async ({ page }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -117,8 +130,7 @@ for (const [scene, id] of images)
     const viewport = dialog.locator(".multiplane-viewport");
     await expect(viewport).toBeVisible();
     await loaded(viewport);
-    info.snapshotSuffix = "";
-    expect(JSON.stringify(await layers(viewport), null, 1)).toMatchSnapshot(`${scene}-layers.json`);
+    await matchesReference(`${scene}-layers.json`, await layers(viewport));
     // 3. Apply without a change: nothing stored changes.
     await dialog.getByRole("button", { name: /^Apply/ }).click();
     await expect(dialog).toHaveCount(0);
@@ -128,5 +140,5 @@ for (const [scene, id] of images)
         project.languages as Record<string, { configuration: { scenes: Record<string, unknown> } }>,
       ).map(([locale, language]) => [locale, language.configuration.scenes[scene]]),
     );
-    expect(JSON.stringify(stored, null, 1)).toMatchSnapshot(`${scene}-stored.json`);
+    await matchesReference(`${scene}-stored.json`, stored);
   });

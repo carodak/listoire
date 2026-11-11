@@ -295,3 +295,29 @@ test("keeps wide paper illustrations clear of the preceding text", async ({ page
   expect(gap).toBeGreaterThanOrEqual(0);
   await expect(figure.locator(".multiplane-plane")).toHaveCount(3);
 });
+
+test("a tilted or mirrored picture is drawn in 3D; the others keep their transform", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/stories/house/en.json", async (route) => {
+    const response = await route.fetch();
+    const bundle = await response.json();
+    const block = bundle.scenes["matin-ville"].blocks.find(
+      (item: { id?: string }) => item.id === "matin-ville.illustration",
+    );
+    Object.assign(block.illustration.layers[0], { tiltX: 20, tiltY: -30, flip: true });
+    await route.fulfill({ response, json: bundle });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+  const figure = page.locator('[data-block="matin-ville.illustration"]').first();
+  const transform = (role: string) =>
+    figure
+      .locator(`.multiplane-plane[data-role="${role}"] img`)
+      .evaluate((image) => getComputedStyle(image).transform);
+  await expect.poll(() => transform("foreground")).toMatch(/^matrix3d\(/);
+  // Mirrored: the picture's x axis points left.
+  expect(Number((await transform("foreground")).slice(9).split(",")[0])).toBeLessThan(0);
+  expect(await transform("background")).toMatch(/^(none|matrix\()/);
+});

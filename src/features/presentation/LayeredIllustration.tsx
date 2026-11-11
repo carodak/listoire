@@ -32,8 +32,15 @@ function isFlat({ base, layers }: Illustration) {
     base.x === 0 &&
     base.y === 0 &&
     base.scale === 1 &&
-    !base.rotation
+    !base.rotation &&
+    !layerTilt(base)
   );
+}
+
+/** A tilted or mirrored picture's extra transform; none for the others, drawn as before. */
+function layerTilt({ tiltX, tiltY, flip }: Illustration["base"]) {
+  if (!tiltX && !tiltY && !flip) return undefined;
+  return `perspective(1200px) rotateX(${tiltX ?? 0}deg) rotateY(${tiltY ?? 0}deg)${flip ? " scaleX(-1)" : ""}`;
 }
 
 export function LayeredIllustration({
@@ -142,6 +149,7 @@ function ImagePlane({ asset, autoCrop, solitary, layer, resolveAsset }: ImagePla
             "--layer-y": `${layer.y}%`,
             "--layer-scale": layer.scale,
             "--layer-rotation": `${layer.rotation ?? 0}deg`,
+            "--layer-tilt": layerTilt(layer),
           } as CSSProperties
         }
       />
