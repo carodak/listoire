@@ -1,6 +1,96 @@
 # Refactor log
 
-## ☀ Summary — Pass 10 (read this first)
+## ☀ Summary — Pass 11 (read this first)
+
+Branch `features/editor-ux`, 17 commits on top of your WIP commit `43dfdd3`, the last one being this summary (nothing pushed,
+nothing on `main`). **All nine Media → Image items are done, each in its own commit with an e2e
+test; your four follow-ups too; and your "sync story.json after deleting Ink scenes" e2e passes**
+(one small fix, its assertions untouched). Details in "Pass 11" at the end of this file.
+
+|                                       | Pass 10 end | Now                                                  |
+| ------------------------------------- | ----------- | ---------------------------------------------------- |
+| Health `--coverage` (floor 92)        | 93.5        | **93.3** (unit-size penalty 4.1 → 4.3; nothing else) |
+| Unit tests                            | 464         | **465** (+ `movePicture`)                            |
+| E2E, chromium (full)                  | 136/137     | **147/147** (your sync test passes)                  |
+| `fallow security` / dupes / dead code | 0 / 0 / 0   | 0 / 0 / 0 (one Pass 10 dead export removed)          |
+
+### What was done
+
+- **11-1** `a128c6b`: **"Choose an image"** is in the "Start with an image" area, only while
+  there is no image; then more images come from **"+ Add layer"**. The selected image has
+  **"Replace image"** (keeps its place and size).
+- **11-2** `f68f9e1`: **"Ready-made scenes"** is a toggle in the start area, closed by default;
+  the copy at the bottom is gone.
+- **11-3** `cfce2dc`: the picker has two tabs, **In this story / Library**, visible at once,
+  each with **All / Foreground / Middleground / Background**.
+- **11-4** `52e8e10`: a **layers panel** like an image editor's: one row per layer, front to
+  back, with an **eye** (this preview only), thumbnail, name, depth and ×; click to select, drag
+  (or Alt+↑/↓) to reorder or change depth, Delete to remove.
+- **11-5…11-8** `c642195` `c7ba7bb` `0c87f9a` `d657f2a`: no "More options": every category is
+  its own folded section; **"Description & caption"** with plain labels; **"Interactivity"**
+  for image examination; **Camera settings** folded under the camera.
+- **11-9** `013e0ff`: camera and entrance presets are **cards with a thumbnail of the image**
+  that plays the movement on hover / focus (still under reduced motion).
+- **Your follow-ups** `0cb899c` `894293d` `4899581`: "On the page" inside **Look on the page**;
+  **Camera** folded with its settings inside; order **Look on the page → Camera → When to
+  display the media → Interactivity → Description & caption**.
+- **Your story.json sync** `c4c01b5`: the sync worked; the test couldn't find the "Properties
+  JSON" field because a textarea's initial text became part of its label. Text areas are now
+  named by their label.
+- Also: `e3726d9` picker cards no longer squash in a long list; `a4d6ec5` a Pass 10 export
+  nobody used.
+
+### ⚠ Needs you
+
+- **Check plan changed mid-pass (yours):** fast checks per commit, coverage once at the end.
+  Logged under "Pass 11 → How checks run".
+- **Start the dev server from PowerShell** (as you said): from Git Bash the drive letter is
+  lowercase and both Vitest (every suite fails) and Vite (dynamic imports fail) break.
+- `site_changes.patch` shows as **deleted** in the working tree; not me, left as is.
+- One full e2e run (of three) had 2 reference-image failures (`image-references.spec.ts`,
+  cours-air and bibliotheque); that spec then passed 10/10 twice alone and the next full run was
+  147/147 on the same commit, so I treat it as a flake under load. Worth watching.
+
+### Decisions I made myself (Pass 11)
+
+- Changing a picture after the first: **"Replace image"** on the selected image (the per-layer
+  "Choose" buttons went, per item 1).
+- Depths read **Foreground / Middleground / Background** everywhere (French: Premier plan / Plan
+  intermédiaire / Arrière-plan), like the picker's filters.
+- A search with no match in the open tab but matches in the other **switches tab**.
+- The **main picture stays at the back of its depth** (it is drawn first and owns the
+  description); dragging it only changes its depth.
+- Hidden layers (eye) are **not stored** and are forgotten when the dialog closes.
+- The Entrance cards stay in "When to display the media"; **Interactivity** goes before
+  Description & caption (your last message); "Quand afficher le **média**" with the accent.
+- Section summaries show the current choice ("Look on the page · Wide", "Camera · Gentle
+  depth") and what is set inside.
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- **Before** (Pass 10): `pass10-after/image-new.png`, `image-choose.png`, `image-single.png`,
+  `image-three-layers-handles.png`, `image-flow.webm`.
+- **After** (Pass 11): `pass11-after/image-new.png` (start area), `image-new-scenes.png`
+  (scenes open), `image-picker-in-story.png`, `image-picker-library-background.png` (tabs and
+  filters), `image-single.png`, `image-layers-eye.png` (layers panel, fern hidden),
+  `image-sections-closed.png`, `image-look-on-the-page.png`, `image-camera.png` (camera and its
+  settings), `image-interactivity-description.png`, `image-preset-hover-a.png` / `-b.png` (a
+  card mid-movement), `image-sections-fr.png` (French), and the recording `video/*.webm` (drag a
+  layer, Alt+↓, eye, hover three camera cards). Spec: `review-screenshots/pass11-image.spec.ts`.
+
+### How to try it
+
+`npm run dev` (from PowerShell), open `/editor`, Media → Image:
+
+- **Start:** "Choose an image" in the middle; "Ready-made scenes ▸" opens the five scenes.
+- **Picker:** "In this story" / "Library" tabs, then All / Foreground / Middleground / Background.
+- **Layers:** apply "Character in forest"; click an eye; drag the woman's row onto the fern's
+  top half; focus a row and press Alt+↓; Delete on a row, then Undo.
+- **Settings:** each section opens on its own; Camera → hover a card (it moves; with reduced
+  motion on, it doesn't); Camera settings inside it.
+- **French:** choose Français on the home page, then open the editor.
+
+## ☀ Summary — Pass 10 (previous session)
 
 Branch `features/editor-ux`, 7 commits on top of Pass 9 (`b3484bb`), the last one being this
 summary (nothing pushed, nothing on `main`). **Your five Image-dialog fixes are done, each in its
@@ -2696,3 +2786,147 @@ spec files), then your "sync story.json after deleting Ink scenes" work (committ
   dupes 0). The coverage runner stops before its merge when any e2e fails (your WIP test does),
   so the merge was run by hand; the second time it hit a captured entry without source code,
   left for the final run.
+
+### 11-1. "Choose an image" lives in the start area — `a128c6b`
+
+- While the composition has no image, the preview's "Start with an image" area holds **"Choose
+  an image"** (the only "Choose" button). The left panel then just says "No image yet", with
+  "+ Add layer" disabled. Once there is an image, the start area is gone and more images come
+  from **"+ Add layer"** ("+ Ajouter un calque").
+- **Decision:** the per-layer "Choose image" buttons are gone (item 1: "Choose" only while
+  empty). To change a layer's picture without losing its place and size, the selected image has
+  **"Replace image"** next to Duplicate / Reset (same `changePicture` as before).
+- Picker titles: "Choose an image" (first), "Add a layer", "Replace image".
+- **Changed assertions** (`media-workspace.spec.ts`): an empty composition has 0 layer rows
+  (was 1, the empty row with its button); the start area's hint check now clicks its "Choose an
+  image" button; "no Choose/Change once there is an image" is 0 (was 1 / 3: one per layer) and
+  "Replace" is 1; "Choose image for Fern fronds / Curly-haired…" became select the row, then
+  "Replace image". Selector only: "Choose image" → "Choose an image" (`editor.spec.ts` ×2,
+  `image-composition.spec.ts`).
+- Test: "the start area holds Choose an image while there is none; then + Add layer adds more".
+
+### 11-2. Ready-made scenes: a toggle in the start area — `f68f9e1`
+
+"Ready-made scenes ▸" (closed by default, `aria-expanded`) under the start button shows the five
+scenes; the second copy at the bottom of More options is removed. The arrow is an `aria-hidden`
+span (a CSS `::after` arrow became part of the button's name). Selector change: tests that apply
+"Character in forest" open the toggle first (`readyMade()` helper). Test: "ready-made scenes are
+a closed toggle in the start area, and only there".
+
+### 11-3. Picker: two tabs, four depth filters — `cfce2dc`
+
+- **"In this story" / "Library"** are tabs (`tablist`, arrow keys via the shared
+  `arrowKeyTabs`), under the search field and above the pictures, so the library no longer needs
+  scrolling. It opens on "In this story" when the story uses pictures, else on "Library".
+- Each tab has **All / Foreground / Middleground / Background** ("Filter by depth"), using the
+  library's existing depth match (`matchesLibraryAsset`): a picture without depth information
+  shows under every depth, as in the Library panel.
+- **Decision:** a search that matches nothing in the open tab but something in the other opens
+  that tab (otherwise a search could look empty while the library has the picture).
+- **Decision:** the depths are named **Foreground / Middleground / Background** everywhere (were
+  Front / Middle / Back), in French **Premier plan / Plan intermédiaire / Arrière-plan**, so the
+  filters and the layers read the same. Selector change: group names in `media-workspace.spec.ts`.
+- Test: "the picker shows In this story and Library as tabs, each filtered by depth".
+
+### 11-4. A layers panel like an image editor's — `52e8e10`
+
+- One row per layer, **front to back**, under Foreground / Middleground / Background: an **eye**,
+  the **thumbnail**, the **name** and its **depth**, and the **×**. Click selects; **Delete** on
+  a row removes it (Delete in the preview still works; Undo as before).
+- **Eye:** hides the layer in the dialog's preview only, through a small style rule on its
+  plane: nothing is stored, the reader never sees it. Hidden layers follow their layer when
+  rows move or one is removed, and come back with Undo.
+- **Drag** a row onto another row's upper / lower half to put it in front of / behind it (a line
+  shows where); onto a depth's free space: the front of that depth. **Alt+↑ / Alt+↓** do the
+  same from the keyboard (focus stays on the row).
+- **Decision (data):** the main picture (the one the description belongs to) is drawn first, so
+  it stays at the back of its depth; dragging it only changes its depth, and nothing goes behind
+  it. Making another picture the main one would rewrite the description.
+- Model: `movePicture` (unit test). Test: "the layers panel: one row per layer, front to back,
+  with an eye, depth, drag and keys".
+
+### 11-5 to 11-8. Settings as folded sections — `c642195`, `c7ba7bb`, `0c87f9a`, `d657f2a`
+
+- **11-5:** no "More options": each category is its own closed `<details>`, whose summary says
+  what is set inside ("· set: caption"). Changed assertion: `.image-more` not open → no
+  `.image-section` open. Selector change: tests open the section they need.
+- **11-6:** **"Description & caption"** ("Description et légende"): "Description (not shown,
+  read aloud by screen readers)" (the alt text, moved in from the top of the dialog) and "Caption
+  (shown under the image)". Selector change: "Caption", "Alt text" → the new labels.
+- **11-7:** **"Interactivity"** ("Interactivité") holds image examination (gameplay on an
+  image). Like before, a cinematic image has none, so no section.
+- **11-8:** **"Camera settings"** folds right under the camera choice.
+- Tests: "no More options…", "Description & caption: each label says where its text goes"
+  (description = the picture's alt in the reader, caption shown), "Interactivity: …", "the
+  camera is a folded section…".
+
+### 11-9. Camera and entrance presets preview their movement — `013e0ff`
+
+The camera presets and a single image's entrances (None / Fade in / Fade out) are **cards** with
+a thumbnail of the current image. **Hover or focus** plays the preset's movement (the reader's
+own `cinematicFrames`, at the chosen speed and intensity; the fades for entrances); leaving
+stops it; under **reduced motion** it stays still. Cards are compact (two rows of eight) so the
+preview stays in view. Selector change: "Camera" / "Entrance" selects → their groups' buttons.
+Test: "camera and entrance presets preview their movement on hover or focus, still under reduced
+motion".
+
+### Your follow-ups during the pass — `0cb899c`, `894293d`, `4899581`
+
+- **"On the page"** is inside **"Look on the page"** ("Aspect sur la page"); the **Camera** is a
+  folded section with **Camera settings** folded inside. Order: Look on the page → Camera → **When
+  to display the media** ("Quand afficher le média") → **Interactivity** → Description & caption.
+  The layout and the camera preset show next to their section's title ("Camera · Gentle depth").
+- Inside the Camera section, the presets' own "Camera" heading is kept for screen readers only
+  (it repeated the title).
+- **Decision:** "Quand afficher le média" with the accent (your message had "media").
+- Changed assertion (mine, this pass): the section count in "no More options…" is 6 (Camera and
+  its nested settings are both sections). Selector changes: camera checks look for the Camera
+  section's summary (the presets sit inside a closed section, so "no camera" is asserted on the
+  section, not on hidden buttons). Test: "settings order: …".
+
+### Also fixed
+
+- `e3726d9`: in a long picker list (the Library), every row shrank to fit the grid's height and
+  the names disappeared; rows keep their size and the grid scrolls (the new assertion fails
+  without the fix).
+- `a4d6ec5`: `drawnBox` (Pass 10) was exported with no consumer (`fallow dead-code`: 1).
+
+### Your "sync story.json after deleting Ink scenes" — `c4c01b5`
+
+Your sync (`43dfdd3`) already worked: the test stalled on its first step because
+`getByLabel("Properties JSON")` found nothing. React writes a textarea's initial value as its
+text, so the wrapping label's text was "Properties JSON" + the whole JSON. Fix: `TextareaField`
+names its textarea with `aria-label={label}` (screen readers already got the right name; now
+every tool does). The test's assertions are untouched and it passes, with undo / redo, save,
+reload and export. Checked: `update()` never short-circuited on `next === latest` before your
+change either (`withMediaReferences` always returned a new object), so nothing regressed there.
+
+### Not done / limits
+
+- The examination fields and the camera's fine settings (duration, speed…) keep their old
+  English-only labels (not new text, so left as they were).
+- A layer hidden with the eye is forgotten when the dialog closes (by design: preview only).
+- `site_changes.patch` shows as deleted in the working tree; not by me, left untouched.
+
+### Pass 11 checks
+
+| Commit                | Item                                     | Health (no coverage) |
+| --------------------- | ---------------------------------------- | -------------------- |
+| `a128c6b`             | 11-1 start area                          | 93.5                 |
+| `f68f9e1`             | 11-2 ready-made toggle                   | 93.5                 |
+| `cfce2dc`             | 11-3 picker tabs                         | 93.5                 |
+| `52e8e10`             | 11-4 layers panel                        | 93.4                 |
+| `c642195`             | 11-5 folded sections                     | 93.4                 |
+| `c7ba7bb`             | 11-6 Description & caption               | 93.4                 |
+| `0c87f9a`             | 11-7 Interactivity                       | 93.4                 |
+| `d657f2a`             | 11-8 camera settings                     | 93.4                 |
+| `013e0ff`             | 11-9 preset previews                     | 93.3                 |
+| `c4c01b5`             | story.json sync test                     | 93.3                 |
+| `0cb899c`             | order, Look on the page, Camera folded   | 93.3                 |
+| `894293d`             | When to display the media; Interactivity | 93.3                 |
+| `a4d6ec5` … `e3726d9` | dead export, camera heading, picker rows | 93.3                 |
+
+After every commit: typecheck, lint, unit tests, the touched e2e specs, `fallow security` (0
+items) and `fallow dupes` (none) passed (the only e2e failure until `c4c01b5` was your WIP
+test). At the end: full chromium e2e, the coverage run and `fallow health --coverage` (summary
+at the top); `fallow architecture` 0 issues, `fallow dead-code` 0 after `a4d6ec5`.
