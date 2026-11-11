@@ -1,80 +1,113 @@
-import { CinematicSchema, illustrationPresets, atmospheres } from "../../contracts/cinematic.ts";
+import type { SyntheticEvent } from "react";
+import { illustrationPresets, atmospheres } from "../../contracts/cinematic.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
+import { useTranslation } from "react-i18next";
+import { cinematicDuration, cinematicFrames } from "../presentation/cinematic-presets.ts";
+import { useReducedMotion } from "../../shared/use-reduced-motion.ts";
 import { Field, SelectField } from "./Fields.tsx";
-const stillMotion = JSON.stringify(CinematicSchema.parse({ preset: "none" }));
-interface CinematicFieldsProps {
-  onChange: (motion: Cinematic) => void;
-  kind?: string;
-  motion: Cinematic;
-  image?: string;
-  layerCount?: number;
-  simpleEffect?: string;
-}
+import { VisualPreview } from "./MediaLibrary.tsx";
 
-export function CinematicFields({
-  motion,
-  kind = "Image",
-  image,
-  layerCount = 0,
-  simpleEffect = "none",
-  onChange: setMotion,
-}: CinematicFieldsProps) {
-  if (kind !== "Image") return null;
-  if (!layerCount) {
-    return (
-      <fieldset className="cinematic-presets" aria-label="Single image effects">
-        <legend>Image appearance</legend>
-        <input type="hidden" name="motion" value={stillMotion} />
-        <p className="editor-hint">
-          A single illustration stays still: no parallax or cinematic camera. Choose a subtle
-          entrance effect below. Add separate image layers to unlock camera presets.
-        </p>
-        <SelectField
-          label="Simple effect"
-          name="effect"
-          defaultValue={
-            ["none", "fade-in", "fade-out"].includes(simpleEffect) ? simpleEffect : "none"
-          }
-          options={["none", "fade-in", "fade-out"]}
-          labels={{ none: "None", "fade-in": "Fade in", "fade-out": "Fade out" }}
-        />
-      </fieldset>
-    );
-  }
+/**
+ * Presets as cards showing the current image, which plays the preset's movement while its card
+ * is hovered or focused; it stays still under reduced motion.
+ */
+export function PresetCards<T extends string>({
+  label,
+  help,
+  options,
+  labels,
+  value,
+  asset,
+  frames,
+  duration,
+  onChange,
+}: {
+  label: string;
+  help?: string;
+  options: readonly T[];
+  labels: (option: T) => string;
+  value: T;
+  asset?: MediaAsset;
+  frames: (option: T) => Keyframe[];
+  duration: (option: T) => number;
+  onChange: (option: T) => void;
+}) {
+  const reduced = useReducedMotion();
+  const play = (event: SyntheticEvent<HTMLElement>, option: T) => {
+    const image = event.currentTarget.querySelector("img");
+    if (reduced || !image || image.getAnimations().length) return;
+    image.animate(frames(option), {
+      duration: duration(option),
+      iterations: Infinity,
+      easing: "ease-in-out",
+    });
+  };
+  const stop = (event: SyntheticEvent<HTMLElement>) =>
+    event.currentTarget
+      .querySelector("img")
+      ?.getAnimations()
+      .forEach((animation) => animation.cancel());
   return (
-    <fieldset className="cinematic-presets">
-      <legend>Cinematic preset</legend>
-      <input type="hidden" name="motion" value={JSON.stringify(motion)} />
-      <input type="hidden" name="effect" value="none" />
-      <p className="editor-hint">
-        Use None for a still illustration. Separated image layers share a perspective camera:
-        foreground 1×, middleground 0.5×, background 0.15×.
-      </p>
-      <div className="preset-grid">
-        {illustrationPresets.map((preset) => (
+    <fieldset className="preset-cards" title={help}>
+      <legend>{label}</legend>
+      <div className="preset-cards-grid">
+        {options.map((option) => (
           <button
             type="button"
-            aria-pressed={motion.preset === preset}
-            key={preset}
-            title={`Apply ${preset.replaceAll("-", " ")}; preview the movement below.`}
-            onClick={() => {
-              setMotion({ ...motion, preset });
-            }}
+            key={option}
+            aria-pressed={value === option}
+            data-preset={option}
+            onClick={() => onChange(option)}
+            onPointerEnter={(event) => play(event, option)}
+            onPointerLeave={stop}
+            onFocus={(event) => play(event, option)}
+            onBlur={stop}
           >
-            <span aria-hidden="true">{image ? <img src={image} alt="" /> : "▧"}</span>
-            {preset.replaceAll("-", " ")}
+            <span className="preset-thumb" aria-hidden="true">
+              {asset && <VisualPreview asset={asset} />}
+            </span>
+            {labels(option)}
           </button>
         ))}
       </div>
-      <CinematicOptions motion={motion} onChange={setMotion} />
     </fieldset>
   );
 }
 
-function CinematicOptions({
+/** The camera presets (two pictures or more: they move at different speeds). */
+export function CameraSelect({
+  motion,
+  asset,
+  onChange,
+}: {
+  motion: Cinematic;
+  asset?: MediaAsset;
+  onChange: (motion: Cinematic) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <PresetCards
+      label={t("editor.image.camera")}
+      help={t("editor.image.cameraHint")}
+      value={motion.preset}
+      options={illustrationPresets}
+      labels={(preset) => t(`editor.image.presets.${preset}`)}
+      asset={asset}
+      frames={(preset) => cinematicFrames({ ...motion, preset })}
+      duration={(preset) => cinematicDuration(motion.speed, { ...motion, preset })}
+      onChange={(preset) => onChange({ ...motion, preset })}
+    />
+  );
+}
+
+export function CinematicOptions({
   motion,
   onChange: setMotion,
-}: Pick<CinematicFieldsProps, "motion" | "onChange">) {
+}: {
+  motion: Cinematic;
+  onChange: (motion: Cinematic) => void;
+}) {
   return (
     <div className="preset-options">
       <Field

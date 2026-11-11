@@ -25,6 +25,43 @@ async function appendInk(page: Page, text: string) {
   await page.keyboard.insertText(text);
 }
 
+test("synchronizes story.json after deleting Ink scenes and retains it after reload", async ({
+  page,
+}) => {
+  await openEditor(page);
+  const script = "-> start\n=== start ===\nA new beginning. # segment:start.one\n-> END";
+  await page.locator(".ace_text-input").focus();
+  await page.keyboard.press("Control+Home");
+  await page.keyboard.press("Control+A");
+  await page.keyboard.insertText(script);
+  const properties = async () => {
+    await page.getByRole("button", { name: "⚙ story.json", exact: true }).click();
+    const value = JSON.parse(
+      await page.getByLabel("Properties JSON", { exact: true }).inputValue(),
+    );
+    await page.keyboard.press("Escape");
+    return value;
+  };
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  expect((await properties()).scenes.intro).toBeDefined();
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(
+    page.getByText("Draft saved · fix issues to update the reader", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Ink script editor")).toBeVisible();
+  expect((await properties()).scenes).toEqual({});
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Complete project backup", exact: true }).click();
+  const backup = JSON.parse(await readFile((await (await download).path())!, "utf8"));
+  expect(backup.languages.en.configuration.scenes).toEqual({});
+  expect(backup.languages.en.script).not.toContain("@media intro/");
+});
+
 test("opens media from its selected Ink reference and reports lines without a reference", async ({
   page,
 }) => {
@@ -106,18 +143,29 @@ test("inserts images at their source position and preserves video uploads in com
   await page.getByLabel("Close search", { exact: true }).click();
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
-  await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("house.night");
-  await page.getByRole("button", { name: "Use this media", exact: true }).click();
-  await page.getByLabel("Caption", { exact: true }).fill("After the girl");
+  await page.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
+  await page.locator('.image-picker button[data-asset="house.night"]').click();
+  // Pass 11: no "More options"; each settings category is its own folded section.
+  for (const section of [
+    /^Description & caption/,
+    /^When to display the media/,
+    /^Look on the page/,
+    /^Interactivity/,
+  ])
+    await page.locator(".image-section > summary").filter({ hasText: section }).click();
+  await page.getByLabel("Caption (shown under the image)").fill("After the girl");
   await page.getByRole("button", { name: "Wide", exact: true }).click();
-  await page.getByText(/Size and positioning/).click();
   await page.getByLabel("Override default position", { exact: true }).check();
   await page.getByLabel("X (%)", { exact: true }).fill("5");
   await page.getByLabel("Y (%)", { exact: true }).fill("0");
   await expect(page.getByLabel("More camera presets", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "cinematic push in", exact: true })).toHaveCount(0);
-  await page.getByRole("combobox", { name: "Simple effect", exact: true }).selectOption("fade-in");
+  // Pass 11: the entrances are cards (with a moving preview), not a list.
+  await page
+    .getByRole("group", { name: "Entrance", exact: true })
+    .getByRole("button", { name: "Fade in", exact: true })
+    .click();
   await page.getByLabel("Media examinable", { exact: true }).check();
   await page
     .getByLabel("Image details (one per line)", { exact: true })
@@ -428,10 +476,17 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByRole("tab", { name: "Media", exact: true }).click();
   await page.getByRole("button", { name: "Image", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Add Image" })).toBeVisible();
-  await page.getByRole("button", { name: /Browse media library/ }).click();
-  await page.getByLabel("Search media", { exact: true }).fill("house.night");
-  await page.getByRole("button", { name: "Use this media", exact: true }).click();
-  await page.getByLabel("Alt text").fill("A girl standing beside a house");
+  await page.getByRole("button", { name: "Choose an image", exact: true }).click();
+  await page.getByLabel("Search pictures", { exact: true }).fill("house.night");
+  await page.locator('.image-picker button[data-asset="house.night"]').click();
+  // Pass 11: the description is in its own section, with a plain label.
+  await page
+    .locator(".image-section > summary")
+    .filter({ hasText: /^Description/ })
+    .click();
+  await page
+    .getByLabel("Description (not shown, read aloud by screen readers)")
+    .fill("A girl standing beside a house");
   await page.getByRole("button", { name: "Apply Image", exact: true }).click();
   await page.getByRole("tab", { name: "Scene Media", exact: true }).click();
   await expect(page.locator(".editor-outline")).toContainText("intro.image-");

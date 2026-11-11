@@ -1,0 +1,188 @@
+{
+  "en": {
+    "title": "The morning errands",
+    "progress": 0,
+    "events": [
+      {
+        "id": "matin-ville.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "matin-ville.illustration"
+        },
+        "blocking": false,
+        "blockId": "matin-ville.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "gentle-depth",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p1"
+      },
+      {
+        "kind": "media",
+        "id": "matin-ville.illustration",
+        "image": "sketch.quiet-canal-towpath-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "gentle-depth",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.street-lamp-and-rail-frame-001",
+              "role": "foreground",
+              "x": 0,
+              "y": 10,
+              "scale": 1.12
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "Les courses du matin",
+    "progress": 0,
+    "events": [
+      {
+        "id": "matin-ville.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "matin-ville.illustration"
+        },
+        "blocking": false,
+        "blockId": "matin-ville.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "gentle-depth",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p1"
+      },
+      {
+        "kind": "media",
+        "id": "matin-ville.illustration",
+        "image": "sketch.quiet-canal-towpath-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "gentle-depth",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.street-lamp-and-rail-frame-001",
+              "role": "foreground",
+              "x": 0,
+              "y": 10,
+              "scale": 1.12
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "matin-ville.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

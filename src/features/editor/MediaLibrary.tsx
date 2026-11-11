@@ -1,5 +1,4 @@
 import { useAssetSource } from "../presentation/use-asset-source.ts";
-import { CloseButton } from "../../shared/CloseButton.tsx";
 import { useEffect, useRef, useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog } from "./EditorDialog.tsx";
@@ -25,18 +24,9 @@ interface MediaLibraryProps {
   onChoose: (id: string) => void;
   onClose: () => void;
   role?: "foreground" | "midground" | "background";
-  embedded?: boolean;
 }
 
-export function MediaLibrary({
-  language,
-  library,
-  kind,
-  onChoose,
-  onClose,
-  role,
-  embedded = false,
-}: MediaLibraryProps) {
+function MediaLibrary({ language, library, kind, onChoose, onClose, role }: MediaLibraryProps) {
   const [search, setSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState<"" | "foreground" | "midground" | "background">(
     role ?? "",
@@ -82,35 +72,12 @@ export function MediaLibrary({
     </div>
   );
   return (
-    <LibraryFrame embedded={embedded} onClose={onClose}>
-      {content}
-    </LibraryFrame>
-  );
-}
-function LibraryFrame({
-  embedded,
-  onClose,
-  children,
-}: {
-  embedded: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return embedded ? (
-    <section className="embedded-media-library" aria-label="Media library">
-      <header>
-        <strong>Media library</strong>
-        <CloseButton label="Close gallery" onClick={onClose} />
-      </header>
-      {children}
-    </section>
-  ) : (
     <EditorDialog title="Media library" onClose={onClose}>
-      {children}
+      {content}
     </EditorDialog>
   );
 }
-function matchesLibraryAsset(
+export function matchesLibraryAsset(
   asset: MediaAsset,
   meta: Entry | undefined,
   kind: MediaLibraryProps["kind"],
@@ -223,17 +190,9 @@ interface MediaPickerProps {
   kind: string;
   asset: string;
   onAsset: (id: string) => void;
-  embedded?: boolean;
 }
 
-export function MediaPicker({
-  language,
-  library,
-  kind,
-  asset,
-  onAsset,
-  embedded = false,
-}: MediaPickerProps) {
+export function MediaPicker({ language, library, kind, asset, onAsset }: MediaPickerProps) {
   const [open, setOpen] = useState(false);
   const selected = language.configuration.assets?.find((entry) => entry.id === asset);
   return (
@@ -247,15 +206,12 @@ export function MediaPicker({
         ▧ Browse media library
       </button>
       <p>{selected ? selected.alt || selected.id : "No media selected"}</p>
-      {!embedded && selected && ["image", "video"].includes(selected.type) && (
-        <VisualPreview asset={selected} />
-      )}
+      {selected && ["image", "video"].includes(selected.type) && <VisualPreview asset={selected} />}
       {open && (
         <MediaLibrary
           language={language}
           library={library}
           kind={mediaTypes[kind] ?? "audio"}
-          embedded={embedded}
           onChoose={onAsset}
           onClose={() => setOpen(false)}
         />

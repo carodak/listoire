@@ -105,15 +105,17 @@ function GameActions({ game, onChange, initialKind = "stat-check", onInsert }: G
         <code>game_success</code>; <code>game_roll</code>, <code>game_hp</code> and{" "}
         <code>game_xp</code> are available in Ink.
       </p>
-      <button onClick={() => onInsert(GAME_CONDITION)}>Insert game condition</button>
-      <button
-        onClick={() => {
-          onChange({ ...game, actions: [...actions, newAction(initialKind)] });
-          select(actions.length);
-        }}
-      >
-        + Action
-      </button>
+      <div className="dialog-actions">
+        <button onClick={() => onInsert(GAME_CONDITION)}>Insert game condition</button>
+        <button
+          onClick={() => {
+            onChange({ ...game, actions: [...actions, newAction(initialKind)] });
+            select(actions.length);
+          }}
+        >
+          + Action
+        </button>
+      </div>
       <label>
         Action
         <select value={selected} onChange={(event) => select(Number(event.target.value))}>
@@ -127,17 +129,19 @@ function GameActions({ game, onChange, initialKind = "stat-check", onInsert }: G
       {action && (
         <>
           <GameActionFields action={action} game={game} onChange={update} />
-          <button onClick={() => onInsert(actionChoiceScript(action))}>
-            Apply and insert action choice
-          </button>
-          <button
-            onClick={() => {
-              onChange({ ...game, actions: actions.filter((_, index) => index !== selected) });
-              select(0);
-            }}
-          >
-            Remove action definition
-          </button>
+          <div className="dialog-actions">
+            <button onClick={() => onInsert(actionChoiceScript(action))}>
+              Apply and insert action choice
+            </button>
+            <button
+              onClick={() => {
+                onChange({ ...game, actions: actions.filter((_, index) => index !== selected) });
+                select(0);
+              }}
+            >
+              Remove action definition
+            </button>
+          </div>
         </>
       )}
     </section>

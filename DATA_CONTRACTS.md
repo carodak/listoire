@@ -29,7 +29,22 @@ Status: the implemented subset is defined by executable schemas in `src/contract
 
 ## Implemented Phase 1 subset
 
-The executable contracts live in [src/contracts/story.ts](src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields.
+The executable contracts live in [src/contracts/story.ts](src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields. Since Pass 9 it may also hold `history`: up to 20 previous pages (oldest first), each with its Ink state, frame, and character/game state at that page, so Back still works after a reload. It is optional (older saves load without it, simply without Back), and it is dropped, never the save, when it is damaged, when a page's game state no longer validates, or when the save was written by an earlier compatible Ink version (`compatibleInkDigests`), whose pages can't be restored exactly.
+
+Implemented inline formatting (`src/contracts/typography.ts`): narrative words carry
+`<typo …>` markup, parsed from an allowlist into `typography` spans on segments and choices
+(never HTML). Settings: `style` (presets), `size`, `font`, `color`, `direction`, `spacing`,
+`shape`, and `bold`, `italic`, `underline`, `strike` (`on`/`off`; `off` cancels what a preset
+sets). Presets declare their bold/italic (Shout, Impact bold; Whisper italic). All keys are
+optional, so markup written before a key existed parses unchanged. `color` is a named colour
+(the reader mixes it with the page's text colour) or any colour as six lowercase hex digits
+without `#` (`color="336699"`, drawn exactly; `#` would start an Ink tag). `size` is a named
+size or a whole point size from 8 to 48 (`size="14pt"`): 12 pt is the reader's text size, so
+point sizes follow the reader's Text size setting; the reader caps them by the paragraph's width. The illustrative `Inline`
+type below (`emphasis: em | strong`) was never implemented; the typography spans replace it.
+Paragraph alignment is an Ink line tag, `# align:center|right|justify` (`left`, the default, is
+never stored), read into the segment's optional `align`. Translations may align differently:
+the cross-language structure check ignores `align:` tags. Any other value is a content error.
 
 Each choice uses the run ID/revision as its occurrence identity; the director rejects stale commands and concurrent writes. IndexedDB's atomic read/compare/update replaces the proposed generic single-writer lease, with less browser-specific infrastructure. Restore verifies the saved choices against Ink without calling Continue. Exact-build/language compatibility is enforced, and settings use a separate key. Whole-paragraph instant display means no partial-reveal cursor is needed yet.
 
@@ -593,12 +608,17 @@ allow a hex `backgroundColor`; it stays separate from story checkpoint state.
 
 ### Layered paper illustrations
 
-An image media block may declare `illustration`: a base image placement, up to five
-additional image layers, landscape/portrait/square aspect, none/soft/paper blending
-and none/left/right text wrapping. Every placement has a background/midground/foreground
-role, finite bounded X/Y offsets and scale. Bundle validation rejects unknown or
-non-image layer references, duplicate images (including the base), mixed legacy
-`motion.layers` and illustration layers, and wrapping outside Inline layout.
+An image media block may declare `illustration`: a base image placement, up to eleven
+additional image layers (the same picture may appear more than once), landscape/portrait/square
+aspect, none/soft/paper blending and none/left/right text wrapping. Every placement has a
+background/midground/foreground role, finite bounded X/Y offsets and scale, and optionally a
+rotation, a tilt (`tiltX` forward/back, `tiltY` left/right, −75° to 75°) and `flip` (mirror);
+pictures without tilt or flip draw exactly as before. An optional `fit` (`contain`: the whole
+image; `cover`: fill the frame) overrides the depth's default (the back fills the frame, the
+others are whole); the editor sets `contain` on every image it adds or changes, and pictures
+without `fit` draw as before. Bundle validation rejects unknown or
+non-image layer references, mixed legacy `motion.layers` and illustration layers, and wrapping
+outside Inline layout.
 The existing block image, five layouts, examination, visibility, persistence and
 bounded cinematic event contracts remain authoritative. Shared-language edits copy
 layer asset dependencies as well as the base image. Backups retain the composition.

@@ -216,14 +216,16 @@ test("completes the French magic chapter with two combats and visible saved dice
   await expect(page.locator(".reader-copy h1")).toHaveText("Laisser une lumière");
 });
 
-for (const { title, seed, move, line } of [
+for (const { title, seed, move, line, french = false } of [
   { title: "Defeated", seed: 3, move: "Basic attack", line: "damage received." }, // seed 3 loses
   { title: "Escaped", seed: 1, move: "Flee", line: "You escape!" },
+  { title: "Défaite", seed: 3, move: "Attaque simple", line: "dégâts subis.", french: true },
+  { title: "Fuite réussie", seed: 1, move: "Fuir", line: "Vous vous échappez !", french: true },
 ]) {
   test(`announces "${title}" in the combat window, then continues on its own`, async ({ page }) => {
     test.setTimeout(90000);
     await fixDice(page, seed);
-    await enter(page);
+    await enter(page, french);
     const combat = page.locator(".reader-combat-modal");
     for (let step = 0; step < 42 && !(await combat.count()); step++) {
       await dismissNotice(page);
@@ -249,7 +251,9 @@ for (const { title, seed, move, line } of [
     const ending = page.locator(".combat-ending");
     await expect(ending.locator(".combat-ending-title")).toHaveText(title);
     await expect(ending.locator(".combat-log li").last()).toContainText(line);
-    await expect(ending.getByRole("button", { name: "Continue reading" })).toHaveCount(0);
+    await expect(
+      ending.getByRole("button", { name: french ? "Continuer la lecture" : "Continue reading" }),
+    ).toHaveCount(0);
     await expect(ending).toHaveCount(0, { timeout: 15000 });
     await expect(page.locator(".reader-modal")).toHaveCount(0);
   });

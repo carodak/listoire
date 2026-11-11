@@ -54,6 +54,7 @@ export function ReaderToolbar({
       <div className="reader-toolbar-end">
         <ReadingControls
           {...{ preferences, presentation, bundle }}
+          preview={player.preview}
           onChange={onPreferencesChange}
           navigation={<PageNavigation director={director} state={state} preview={player.preview} />}
           open={preferencesOpen}

@@ -1,5 +1,5 @@
 import { SaveSchema, ReaderFailure } from "./story.ts";
-import type { StoryBundle } from "./story.ts";
+import type { SavedPage, StoryBundle } from "./story.ts";
 import { validateGameState } from "./game-validation.ts";
 
 export function validateCheckpoint(bundle: StoryBundle, raw: unknown) {
@@ -18,12 +18,23 @@ export function validateCheckpoint(bundle: StoryBundle, raw: unknown) {
   ) {
     throw new ReaderFailure("save-incompatible");
   }
-  if (save.game && save.character && bundle.game) {
-    try {
-      validateGameState(save.game, save.character, bundle.game, save.frame);
-    } catch {
-      throw new ReaderFailure("save-invalid");
-    }
-  }
+  if (!validPage(bundle, save)) throw new ReaderFailure("save-invalid");
+  // Back restores these pages exactly: only with this very Ink, and only valid ones. Without
+  // them the save still loads, simply without Back.
+  if (
+    save.history &&
+    (save.inkDigest !== bundle.inkDigest || !save.history.every((page) => validPage(bundle, page)))
+  )
+    delete save.history;
   return save;
+}
+
+function validPage(bundle: StoryBundle, page: SavedPage) {
+  if (!page.game || !page.character || !bundle.game) return true;
+  try {
+    validateGameState(page.game, page.character, bundle.game, page.frame);
+    return true;
+  } catch {
+    return false;
+  }
 }

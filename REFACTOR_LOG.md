@@ -1,5 +1,322 @@
 # Refactor log
 
+## ☀ Summary — Pass 11 (read this first)
+
+Branch `features/editor-ux`, 17 commits on top of your WIP commit `43dfdd3`, the last one being this summary (nothing pushed,
+nothing on `main`). **All nine Media → Image items are done, each in its own commit with an e2e
+test; your four follow-ups too; and your "sync story.json after deleting Ink scenes" e2e passes**
+(one small fix, its assertions untouched). Details in "Pass 11" at the end of this file.
+
+|                                       | Pass 10 end | Now                                                  |
+| ------------------------------------- | ----------- | ---------------------------------------------------- |
+| Health `--coverage` (floor 92)        | 93.5        | **93.3** (unit-size penalty 4.1 → 4.3; nothing else) |
+| Unit tests                            | 464         | **465** (+ `movePicture`)                            |
+| E2E, chromium (full)                  | 136/137     | **147/147** (your sync test passes)                  |
+| `fallow security` / dupes / dead code | 0 / 0 / 0   | 0 / 0 / 0 (one Pass 10 dead export removed)          |
+
+### What was done
+
+- **11-1** `a128c6b`: **"Choose an image"** is in the "Start with an image" area, only while
+  there is no image; then more images come from **"+ Add layer"**. The selected image has
+  **"Replace image"** (keeps its place and size).
+- **11-2** `f68f9e1`: **"Ready-made scenes"** is a toggle in the start area, closed by default;
+  the copy at the bottom is gone.
+- **11-3** `cfce2dc`: the picker has two tabs, **In this story / Library**, visible at once,
+  each with **All / Foreground / Middleground / Background**.
+- **11-4** `52e8e10`: a **layers panel** like an image editor's: one row per layer, front to
+  back, with an **eye** (this preview only), thumbnail, name, depth and ×; click to select, drag
+  (or Alt+↑/↓) to reorder or change depth, Delete to remove.
+- **11-5…11-8** `c642195` `c7ba7bb` `0c87f9a` `d657f2a`: no "More options": every category is
+  its own folded section; **"Description & caption"** with plain labels; **"Interactivity"**
+  for image examination; **Camera settings** folded under the camera.
+- **11-9** `013e0ff`: camera and entrance presets are **cards with a thumbnail of the image**
+  that plays the movement on hover / focus (still under reduced motion).
+- **Your follow-ups** `0cb899c` `894293d` `4899581`: "On the page" inside **Look on the page**;
+  **Camera** folded with its settings inside; order **Look on the page → Camera → When to
+  display the media → Interactivity → Description & caption**.
+- **Your story.json sync** `c4c01b5`: the sync worked; the test couldn't find the "Properties
+  JSON" field because a textarea's initial text became part of its label. Text areas are now
+  named by their label.
+- Also: `e3726d9` picker cards no longer squash in a long list; `a4d6ec5` a Pass 10 export
+  nobody used.
+
+### ⚠ Needs you
+
+- **Check plan changed mid-pass (yours):** fast checks per commit, coverage once at the end.
+  Logged under "Pass 11 → How checks run".
+- **Start the dev server from PowerShell** (as you said): from Git Bash the drive letter is
+  lowercase and both Vitest (every suite fails) and Vite (dynamic imports fail) break.
+- `site_changes.patch` shows as **deleted** in the working tree; not me, left as is.
+- One full e2e run (of three) had 2 reference-image failures (`image-references.spec.ts`,
+  cours-air and bibliotheque); that spec then passed 10/10 twice alone and the next full run was
+  147/147 on the same commit, so I treat it as a flake under load. Worth watching.
+
+### Decisions I made myself (Pass 11)
+
+- Changing a picture after the first: **"Replace image"** on the selected image (the per-layer
+  "Choose" buttons went, per item 1).
+- Depths read **Foreground / Middleground / Background** everywhere (French: Premier plan / Plan
+  intermédiaire / Arrière-plan), like the picker's filters.
+- A search with no match in the open tab but matches in the other **switches tab**.
+- The **main picture stays at the back of its depth** (it is drawn first and owns the
+  description); dragging it only changes its depth.
+- Hidden layers (eye) are **not stored** and are forgotten when the dialog closes.
+- The Entrance cards stay in "When to display the media"; **Interactivity** goes before
+  Description & caption (your last message); "Quand afficher le **média**" with the accent.
+- Section summaries show the current choice ("Look on the page · Wide", "Camera · Gentle
+  depth") and what is set inside.
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- **Before** (Pass 10): `pass10-after/image-new.png`, `image-choose.png`, `image-single.png`,
+  `image-three-layers-handles.png`, `image-flow.webm`.
+- **After** (Pass 11): `pass11-after/image-new.png` (start area), `image-new-scenes.png`
+  (scenes open), `image-picker-in-story.png`, `image-picker-library-background.png` (tabs and
+  filters), `image-single.png`, `image-layers-eye.png` (layers panel, fern hidden),
+  `image-sections-closed.png`, `image-look-on-the-page.png`, `image-camera.png` (camera and its
+  settings), `image-interactivity-description.png`, `image-preset-hover-a.png` / `-b.png` (a
+  card mid-movement), `image-sections-fr.png` (French), and the recording `video/*.webm` (drag a
+  layer, Alt+↓, eye, hover three camera cards). Spec: `review-screenshots/pass11-image.spec.ts`.
+
+### How to try it
+
+`npm run dev` (from PowerShell), open `/editor`, Media → Image:
+
+- **Start:** "Choose an image" in the middle; "Ready-made scenes ▸" opens the five scenes.
+- **Picker:** "In this story" / "Library" tabs, then All / Foreground / Middleground / Background.
+- **Layers:** apply "Character in forest"; click an eye; drag the woman's row onto the fern's
+  top half; focus a row and press Alt+↓; Delete on a row, then Undo.
+- **Settings:** each section opens on its own; Camera → hover a card (it moves; with reduced
+  motion on, it doesn't); Camera settings inside it.
+- **French:** choose Français on the home page, then open the editor.
+
+## ☀ Summary — Pass 10 (previous session)
+
+Branch `features/editor-ux`, 7 commits on top of Pass 9 (`b3484bb`), the last one being this
+summary (nothing pushed, nothing on `main`). **Your five Image-dialog fixes are done, each in its
+own commit with an e2e test, and the camera e2e failure is found and fixed.** Text toolbar 1c/1d,
+Back after reloading and the other tabs' polish were already done in Pass 9 (summary below).
+
+|                                         | Pass 9 end (`b3484bb`) | Now                                                                                             |
+| --------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| Health (`--score --hotspots`), floor 92 | 93.5                   | **93.5** after every commit                                                                     |
+| Unit tests                              | 459                    | **464** (+ the other writer's new ones, below)                                                  |
+| E2E, chromium (full run)                | 132/133                | **136/137**: the camera test passes again; the 1 failure is the other writer's uncommitted test |
+| `fallow security` / dupes / dead code   | pass / 0 / 0           | pass / 0 / 0                                                                                    |
+
+### What was done
+
+- **10-1** `84360d7`: an image starts as **one image** (one row, its own "Choose image"); **"+ Add
+  layer"** (2 clicks) makes a layered scene, and only then do depths and the camera appear. A
+  single image is stored as before (main image, no layers).
+- **10-2** `699ce5b`: one way to choose an image: the layer's own **"Choose image"** (the
+  preview's button and "Change…" are gone).
+- **10-3** `41e75d8`: added or changed images show **whole** (additive `fit: "contain"`); a single
+  image's **frame follows its shape** (portrait / landscape / square) until you pick a Frame;
+  while editing, whatever goes **outside the frame shows faded** around it (the reader still
+  crops there). Stored compositions draw as before (references 10/10).
+- **10-4** `1cc913a`: **corner handles** on the selected image resize it from its centre, in
+  the Size slider's steps; moving it by dragging is unchanged.
+- **10-5** `c13952a`: a visible **×** on each layer ("Remove this image"), **Delete** in the
+  preview, and **Undo** (or Ctrl+Z) after a removal.
+- **10-6** `6cc1049`: the camera e2e. No code commit broke it: the test's image stopped being
+  published when the media folder was rebuilt (Nov 9, 23:48). It revealed a reader bug, now
+  fixed: **one image that fails to load kept the whole page's camera still**.
+
+### ⚠ Needs you
+
+- **Someone else is editing this checkout.** Uncommitted changes appeared during this pass that
+  aren't mine: `src/features/editor/scene-script.ts` (+ test, new), `compiler.ts`,
+  `use-editor-project.ts`, `tests/e2e/editor.spec.ts` (a new test, "synchronizes story.json after
+  deleting Ink scenes…", which **fails**), `docs/story-editor/implementation.md`. The other
+  Claude session on this machine (`listoire-4a`) says they aren't its own either. I didn't stage
+  or commit any of it (in `editor.spec.ts` I staged only my own two lines). They are still
+  uncommitted in your working tree. One slip: early in this pass I ran the formatter
+  over all of `src` once, which may have reformatted those files (formatting only).
+- From Pass 9, still true: a save written by this build is refused by an _older_ build (the
+  optional `history`); old saves load fine.
+- Some catalogue images aren't published locally (only 18 in `public/stories/house/media/`), so
+  they appear broken in the editor's picker (e.g. "Misty conifer plain").
+
+### Decisions I made myself (Pass 10)
+
+- A new layer goes to the depth its catalogue entry suggests (scenery back, characters middle,
+  framing plants front), in front when the catalogue says nothing; the first image goes to the
+  back by default, as before.
+- "Frame chosen by the author" = changed in this dialog session; a single image's frame then
+  stays when its picture changes. Starter scenes keep their stored look (no `fit`).
+- The faded outside lives in a ring that takes the column gaps, so the frame keeps its size
+  (otherwise the 3D projection moved Orée's references by one rounding step). While something
+  is outside the frame, the dialog lifts the paper-edge mask (it would hide the outside).
+- Corner handles snap to 0.05 like the slider; the undo of a removal is forgotten as soon as
+  anything else changes (it can never wipe a later edit).
+- Camera: a failed image counts as settled; an image whose source is still resolving is still
+  waited for. The test is unchanged.
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- **Image dialog, before** (Pass 9): `pass9-after/image-new-empty.png`, `image-chemin*.png`,
+  `image-built.png`, `image-two-clicks.webm`. **After** (Pass 10): `pass10-after/image-new.png`
+  (one image), `image-choose.png` (its picker), `image-single.png`, `image-single-oversized.png`
+  (faded outside), `image-three-layers-handles.png`, `image-removed-undo.png`, recording
+  `image-flow.webm` (choose, + Add layer, resize by a corner, drag, Delete, Undo). Spec:
+  `review-screenshots/pass10-image.spec.ts`.
+- Other tabs, text toolbar: unchanged since Pass 9 (see its list below).
+
+### How to try it
+
+`npm run dev`, open `/editor`, Media → Image:
+
+- **One image:** the left column shows "Image — No image yet — Choose image": choose one;
+  "+ Add layer" adds another (then Front / Middle / Back appear, and the Camera list).
+- **Choose:** every layer has its own "Choose image" (the only way).
+- **Size:** a portrait character gets a portrait frame; raise Size: the parts outside the frame
+  show faded around it; open More options → Frame to pick one yourself.
+- **Handles:** drag a corner of the selected image; drag inside it to move it.
+- **Remove:** the × on a layer row, or click the preview and press Delete; then Undo (or
+  Ctrl+Z).
+- **Camera fix:** a layered image whose file is missing still moves (the e2e "uses real
+  perspective depth…" checks it).
+
+## ☀ Summary — Pass 9 (previous session)
+
+Branch `features/editor-ux`, 18 commits on top of `0af6c46`, the last one being this summary
+(nothing pushed, nothing on `main`). **All four parts are done**, in the order asked (1, 3, 2, 4). Details per item in
+"Pass 9" at the end of this file.
+
+|                                         | Start (`0af6c46`)  | Now (`fc0b219`)                                      |
+| --------------------------------------- | ------------------ | ---------------------------------------------------- |
+| Health (`--score --hotspots`), floor 92 | 94.8 (shown as 95) | **93.5** (unit-size penalty 2.8 → 4.1; nothing else) |
+| Production TS LOC (src + tools)         | 22,142             | 23,278 (+1,136)                                      |
+| Unit tests                              | 438                | **459**                                              |
+| E2E, chromium                           | (1 known failure)  | **132/133** (the 1 failure predates this pass)       |
+| `fallow security --gate new`            | pass               | pass after every commit                              |
+| `fallow dupes` / dead code              | 0 / 0              | 0 / 0                                                |
+
+### What was done
+
+**Part 1 — Text toolbar**
+
+- **1a** `0d504a2`: after Undo, a caret (or a selection end) inside `<typo …>` markup formats
+  the whole tagged words; the toolbar shows their settings.
+- **1b** `f511a9c`: a shortcut that can't apply shows the toolbar's short message (in the status
+  bar when the Text tab is hidden); every formatting message is translated (en + fr).
+- **1c** `7a83fde`: Color is an "A" button with the named colours as swatches plus the browser's
+  colour picker; a warning when an own colour has less than 4.5:1 contrast with the story's page.
+  Stored as `color="336699"` (no `#`: it would start an Ink tag).
+- **1d** `b1671c6`: point sizes 8–48 (`size="14pt"`) from a list or typed; 12 pt = the reader's
+  text size, so they follow the reader's Text size; capped by the paragraph's width on phones.
+
+**Part 3 — Back after reloading** `9b58e0b`: confirmed (history only in memory). The save now
+keeps the last 20 previous pages (optional `history`); old saves load without it.
+
+**Part 2 — Media → Image**
+
+- Design note rewritten first (`f9e61c1`): from what authors do, what's visible, folded,
+  removed and why.
+- **2a** `4509e26` REVIEW #3: cutting a `// @media` line and pasting it back restores its image,
+  cues (in order) and scene image.
+- **2b** `6156c51`, `2f18ec2`: committed references (see "how to update" below).
+- **2c** `f2309f1` tilt (−75°…75°, both axes) and flip; `3db8444` one typed draft instead of the
+  hidden JSON inputs; `f6cdff0` the new dialog: pictures by depth, front to back, each with
+  "+ Add" (2 clicks), a picker beside the preview, Duplicate, Remove, drag in the preview, drag
+  a row to another depth, arrow keys, an empty state with the starter scenes, a named camera list,
+  "More options" folded.
+
+**Part 4 — the other tabs**: problems listed first (13 items); `62a4d95` shared dialog styles
+(one spacing scale, 34 px controls, flat fieldsets, bordered secondary buttons, checkboxes
+before labels, short number fields, tab-like section switchers, a shared action row);
+`cdc20be` ribbon commands of equal width with icons on one line; `ffbd96f`, `fc0b219` two
+fixes found in the "after" screenshots and the references (checkbox rows, ribbon height).
+
+### ⚠ Needs you
+
+- **Saves (part 3):** the save gained an optional `history`. Old saves load in this build. But a
+  save written by this build is refused by an _older_ build (its strict schema doesn't know the
+  key; the save is kept and offered for download, like any incompatible save). Only matters if
+  you go back to an older build after playing on this one. The user rule was "additive (old
+  saves load)", which holds.
+- **A failing e2e test that predates this pass:** `image-composition.spec.ts` "uses real
+  perspective depth, pauses camera motion…" fails every time (0 camera animations instead of
+  3), also on `0af6c46` with my changes reverted. Not investigated (reader camera).
+- **Reference screenshots are Windows-only** (pixels differ on Linux, where CI runs): on other
+  platforms the PNG check is skipped and the JSON checks (layers, stored data) still run.
+
+### Decisions I made myself
+
+- 1b: when the Text tab is hidden, a failing shortcut's message goes to the status bar; a
+  message is tied to the selection's position (before: to its format).
+- 1c: contrast warning only for an own colour (named colours adapt to the page), threshold
+  4.5:1 (WCAG AA), against the story's page colour (light or dark); colour stored without `#`.
+- 1d: 12 pt = reader text size; cap = 13 % of the paragraph's width; only paragraphs containing
+  a point size become size containers (existing stories' layout untouched); a typed size is
+  applied on Enter or when leaving the field.
+- 3: one bound of 20 pages, in memory and in the save (it was 100, in memory only); history
+  dropped (never the save) when damaged or from an earlier compatible Ink version.
+- 2a: the cut buffer lasts until the editor is reloaded; a line pasted into another passage
+  keeps naming its scene, so the image stays in its scene; no status message (autosave
+  overwrites it at once).
+- 2b: references = reader-preview pixels + per-layer geometry in the dialog + what Apply stores,
+  for the six layered images, and "what Apply stores" for the four single ones; JSON compared by
+  value.
+- 2c: picker in the side column (the preview stays visible); depth by dragging a row or a Depth
+  select (instead of a row menu); "Change…" keeps place and size; removing the main picture
+  promotes the next; Duplicate shifts by 6 %; "Hide after" in seconds; the description now
+  follows a newly chosen picture (bug: it used to keep the previous picture's text and write it
+  onto the new one); uploading image files not added (it would be a format change).
+- 4: CSS-first, plus a `.dialog-actions` wrapper for bare button rows; the ribbon keeps its old
+  155 px height on every tab.
+- Tooling: when a test run fails, `npm run test:coverage` doesn't merge; I ran its merge step
+  myself, after dropping browser entries saved without their source (a capture race on the
+  lazy `Noise.jsx` effect, twice). Unit tests run from PowerShell (Git Bash makes Vitest load
+  twice).
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- Part 1: `pass9-after/text-color-menu.png`, `text-low-contrast.png`, `text-point-size.png`,
+  `text-shortcut-message.png` (before: Pass 8's `editor-after/text-ribbon*.png`).
+- Part 2: before `image-before/chemin-1…5.png` (Pass 8); after `pass9-after/image-new-empty.png`,
+  `image-chemin*.png`, `image-built.png`, recording `image-two-clicks.webm`.
+- Part 4: before `pass9-before/tabs/` (every tab's ribbon and every dialog) and
+  `pass9-before/tabs-tour.webm`; after `pass9-after/tabs/` and `pass9-after/tabs-tour.webm`, plus
+  one folder per commit (`pass9-after/part4-1-dialogs/`, `part4-2-ribbon/`,
+  `part4-3-checkboxes/`, `part4-4-ribbon-height/`).
+- Specs to re-run them (server on 4175): `pass9-text`, `pass9-image`, `pass9-tabs`,
+  `pass9-tabs-video` with `-c review-screenshots/shots.config.ts --project=desktop`
+  (`SHOTS=pass9-before` for a "before" folder).
+
+### How to try it
+
+`npm run dev`, open `/editor`:
+
+- **1a:** Text tab, select a word, pick Shout then Italic, press Undo, press Underline without
+  reselecting: the whole word is underlined.
+- **1b:** put the caret on a `===` knot line and press Ctrl+B: "Select story words, not an Ink
+  instruction or tag." (on the Story tab, the same text in the status bar).
+- **1c:** select a word, click the "A" colour button: a swatch, or "Any color" for the picker; a
+  pale colour on Orée's light page shows the contrast warning.
+- **1d:** pick "24 pt" in the Size list or type 13 in the "pt" field and press Enter; in the
+  preview's reading preferences, change Text size: the word scales with it.
+- **3:** in the reader, make two choices, reload, enter the story: Back works twice.
+- **2a:** select a `// @media …` line, Ctrl+X, then Ctrl+V: the image returns with its settings.
+- **2:** Media → Image: the empty state; "+ Add" on Back, Middle, Front (one click on a picture
+  each); drag the selected picture; drag its row onto another depth; Duplicate; "Tilt, flip and
+  exact position"; More options. Open an existing image (caret on its `// @media` line, Edit
+  Selected Media): it looks and saves as before.
+- **4:** click through the ribbon tabs and open their dialogs.
+- **References (2b), to update them on purpose:**
+  `npx playwright test -c playwright.local.config.ts image-references --project=chromium --update-snapshots`
+  on Windows, then review the PNG and JSON diffs before committing.
+
+### Skipped / limits
+
+- Uploading your own image files in the Image dialog (stored-media contract change).
+- Editor labels that already existed (field names moved into "More options", the ribbon, most
+  dialogs) stay English, like the rest of the editor; all new text is en + fr.
+- A broken (half-typed) `<typo>` tag still shows the contract's English parser message.
+- Number fields in a few dialogs (Game bonuses, TTS defaults) stay one per line, at the shared
+  width; a grid would need per-dialog layouts.
+
 ## ☀ Summary — Pass 7 (read this first)
 
 Branch `features/reader-combat-editor`, 13 commits on top of `ddeb027` (nothing pushed, nothing
@@ -1330,3 +1647,1286 @@ two new paragraphs (en/fr) have no published clip: they narrate live in dev unti
 Screenshots + recordings: `p7-before|p7-after/frame-{top,scrolled,pagedown}-{desktop,mobile}.png`,
 `frame-{desktop,mobile}.webm` (desktop 1440×700: before, the side art scrolls away; after, it
 stays; mobile is unchanged by design).
+
+## Pass 8 — Story Editor: Text toolbar and Media → Image (branch `features/editor-ux`)
+
+Own dev server on 4175 (`playwright.local.config.ts`); 4173/4180 not used. The health score's
+coverage is captured with the same steps as `npm run test:coverage`, except that its e2e step runs
+through `playwright.local.config.ts` (the script itself is hard-wired to 4173). Warm both `/` and
+`/editor` before a run, and a page with dice: a cold server fails with Vite's "Outdated Optimize
+Dep" (504) when it discovers a dependency mid-run (`/editor`, then the lazy dice model), which
+made 19, then 13 e2e tests fail on the first attempts. After one restart with all dependencies
+discovered, the run was 52/53; the one failure ("edits both languages…") passed twice on its own
+(flaky under coverage).
+
+Baseline 95 (Pass 7 ended at 92.2): the report now shows 0 churn hotspots, so the hotspot penalty
+that held Pass 6–7 down is gone. Nothing in the code changed between the two measurements.
+
+| Commit    | Item                                                                  | Score |
+| --------- | --------------------------------------------------------------------- | ----- |
+| `5036779` | Baseline                                                              | 95    |
+| `ee3e97f` | 0. e2e: French « Défaite » and « Fuite réussie » endings (test only)  | 95    |
+| `d7b61b1` | `E2E_PORT` for e2e and `npm run test:coverage` (default 4173)         | 95    |
+| `4d65f7d` | 1. bold / italic / underline / strike settings                        | 95    |
+| `b09ec23` | fix: the combat outcome holds its full 2 s (found by the new e2e)     | 95    |
+| `06465f9` | 1. per-paragraph alignment (`# align:`) in the reader                 | 95    |
+| `225ffa5` | 1. new Text toolbar, immediate, keeps other settings                  | 95    |
+| `e077a8e` | 1. shortcuts Ctrl+B/I/U, Ctrl+Shift+X, Ctrl+\, Ctrl+F/H               | 95    |
+| `1932886` | 1. live preview: settled refresh, instant text, scroll and caret kept | 95    |
+| `b85d3c6` | 1. fix: "(from Shout)" only for values the style sets                 | 95    |
+
+`fallow security --gate new --changed-since main`: PASS, 0 items, after every commit.
+`fallow dupes`: no duplication after every commit. Dead code: 0 (one unused type between
+`06465f9` and `225ffa5`, used by the toolbar).
+
+### 0. French combat endings — `ee3e97f`
+
+The endings table in `reader-request.spec.ts` now has four cases: "Defeated", "Escaped",
+« Défaite » (seed 3, Attaque simple, last line "… dégâts subis.") and « Fuite réussie » (seed 1,
+Fuir, last line « Vous vous échappez ! »). Each checks the title between the portraits, the last
+log line, that there is no « Continuer la lecture » button, and that the window closes on its
+own. 4/4 green.
+
+### 1. Text toolbar — design note (waiting for your OK)
+
+Screenshots: `review-screenshots/editor-before/text-tab.png`, `text-ribbon.png`,
+`text-style-menu.png` (Orée, "nour" selected).
+
+**Current problems**
+
+1. Two steps: you pick settings, then press "Apply to selection". The controls don't show what
+   the selected words already have, and applying **replaces the whole format**: setting "wide
+   spacing" on a word that is already Shout removes Shout unless you pick Shout again by hand.
+2. Every select says "From style", which doesn't tell you the value you get (Mystery gives serif,
+   violet, wide).
+3. "Style: Default" is a `<details>` summary: it looks like a button, not a picker.
+4. The sample on the right ("A whisper… then BOOM!", or the last selection) repeats what the
+   large preview already shows.
+5. Direction, Spacing and Shape (rarely used) take as much room as Size, Font and Colour. The
+   labels are 11 px and English-only.
+6. No bold, italic, underline, strikethrough, clear formatting, nor Ctrl+B/I/U.
+7. The large preview only updates when you click ▷ Preview, and it replays the story's
+   typewriter reveal.
+
+**What the story format and the reader support today**
+
+| Feature                                            | Stored as                                                                       | Reader renders it | Needed                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------- |
+| Style preset (8)                                   | `<typo style="…">`                                                              | yes               | —                                                                          |
+| Size, font, colour, direction, spacing, shape      | `<typo size="…" …>`                                                             | yes               | —                                                                          |
+| Clear formatting                                   | no `<typo>`                                                                     | yes               | nothing: applying "no settings" already removes the tag                    |
+| Bold                                               | — (only Shout/Impact get weight 900, through their CSS class)                   | **no**            | new key                                                                    |
+| Italic                                             | — (only Whisper, through its CSS class)                                         | **no**            | new key                                                                    |
+| Underline, strikethrough                           | —                                                                               | **no**            | new keys                                                                   |
+| `em` / `strong`                                    | only an illustrative type in `DATA_CONTRACTS.md:93`; **never implemented**      | no                | covered by the keys above                                                  |
+| Alignment                                          | nothing paragraph-level exists; `<typo>` is inline only                         | **no**            | ⚠ decision 2                                                               |
+| Highlight, links, lists, headings, super/subscript | —                                                                               | no                | not proposed (not book typography, or no meaning in the reader)            |
+| Undo / redo                                        | header buttons; Ctrl/Cmd+Z, Ctrl+Y, Ctrl+Shift+Z                                | —                 | keep                                                                       |
+| Find / replace                                     | header field; Ace's box on Ctrl+F / Ctrl+H, **only while the script has focus** | —                 | Ctrl+F / Ctrl+H anywhere in the editor (outside dialogs) open the same box |
+
+**Contract extension (additive, ⚠ decision 1).** Four optional keys in `TypographySchema`:
+`bold`, `italic`, `underline`, `strike`, each `"on" | "off"`. `"off"` exists so a manual change
+can turn off what a preset sets (Whisper without italic). The presets declare them (Shout and
+Impact `bold: on`, Whisper `italic: on`), and the CSS moves from
+`.type-style-shout { font-weight: 900 }` to `.type-bold-on` (same 900), so existing stories render
+exactly as before. Stored projects have none of these keys and load unchanged. Tests: parse and
+serialise round trip, old markup keeps its computed weight and italic, `off` overriding a preset.
+
+**Selection model**
+
+- The toolbar follows the Ace selection: inside styled words it shows that span's settings.
+- Each control **applies at once** and changes **only its own setting**; the other settings stay.
+  On a selection that covers several styled pieces, each piece keeps its own other settings
+  (`formatTextSelection` merges per piece instead of replacing).
+- A value equal to what the preset gives is not stored (it is not an override). So each dropdown
+  simply lists real values; the preset's value reads "Serif (from Mystery)", and choosing it
+  removes the override. No "From style" entry.
+- Picking a preset gives exactly that preset (it clears manual changes on the selection);
+  changes made afterwards sit on top (⚠ decision 4).
+- With only a caret, a command first selects the word under the caret (as in Word), so Ctrl+B in
+  a word bolds it. Typing doesn't continue a style (the tags live in the script).
+- Selections across paragraphs or inside Ink tags are still refused, with the message in the
+  toolbar's status line, as today. Each change is one undo step (existing history).
+
+**Proposed layout** (Text tab):
+
+```
+[ Mystery ▾ ] │ [ Serif (from Mystery) ▾ ] [ Normal ▾ ] [ Violet (from Mystery) ▾ ] │ B I U S │ T̸ │ ⋯ ▾
+Mystery sets: serif · violet · wide spacing.   Your changes: bold.
+                                                            ⋯ = More: Direction, Spacing, Shape
+```
+
+- Style picker: a button with the preset name and a chevron, so it looks like a picker. Its menu
+  keeps each preset drawn in its own style, plus one line saying what it sets, generated from the
+  presets table (e.g. Shout: "huge · sans · crimson · bold").
+- Font, size, colour: compact selects with an accessible name and a tooltip. A changed control
+  carries a small dot, and its tooltip says "Changed (Mystery: Serif)".
+- B I U S: icon buttons (the usual letters) with `aria-pressed` and tooltips that give the shortcut
+  ("Bold (Ctrl+B)"). Clear formatting (T̸, Ctrl+\). "More" opens a small popover with Direction,
+  Spacing and Shape, and shows a dot when one of them is changed.
+- The status line under the toolbar says what the preset sets and what you changed, or shows the
+  error. This makes preset vs. manual change obvious.
+- **Removed:** "Apply to selection"; the small sample; the hint "Select words…, preview a style,
+  then apply" (replaced by the status line). All new text goes through i18n (en + fr).
+
+**Shortcuts** (focus anywhere in the editor, not in a dialog): Ctrl/Cmd+B, I, U;
+Ctrl+Shift+X strikethrough; Ctrl+\ clear formatting; Ctrl+F find and Ctrl+H replace, also from
+outside the script. Existing Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z / Ctrl+S are kept. Ctrl+U replaces
+Ace's undocumented "to upper case".
+
+**Preview**
+
+- Auto-refresh: 600 ms after the last script change, the same worker compile as ▷ Preview runs and
+  shows the passage under the cursor. If that passage is already shown, its scroll position is
+  kept. The reader never takes focus in preview mode (already true), so the caret and selection
+  stay in Ace. A late compile is dropped when a newer one has started. A compile error keeps the
+  last good preview and shows the error in the status bar (the Issues dialog no longer pops up
+  while you type; ▷ Preview and Compile still open it).
+- Text in the editor preview is always instant (`reveal: "instant"` is forced, whatever the
+  story's default or the preference), and the "Text display" preference is hidden in the
+  preview. The reader keeps its animations. The page-turn word dissolve after a choice stays: it
+  is the page transition, triggered by your click, never by a refresh.
+- ⚠ decision 3: a refresh restarts the page, so its entrance (camera moves, sounds, narration)
+  would replay every time you pause typing. I propose that an auto-refresh shows the page in its
+  final state, the way a reopened saved page is shown (no entrance, no narration auto-start).
+  ▷ Preview and choices keep the full playback.
+
+**Tests**: unit tests for per-piece merging, the new keys and the effective-value labels.
+`typography.spec.ts` "formats selected words…" is adapted to the new interaction with the same
+assertions (Shout + diagonal + wide in the preview, undo/redo, save, reload). **Changed
+assertion:** its hover check on the removed sample (`.text-style-preview`) moves to the preset
+menu item. Added: Ctrl+B, clear formatting, auto-refresh without clicking Preview, instant text
+with a progressive story, caret kept.
+
+**⚠ Decisions for you**
+
+1. Add `bold`, `italic`, `underline`, `strike` (`on`/`off`) to `<typo>`? **Recommended: yes.**
+2. Alignment: the reader has nothing paragraph-level. (a) Leave it out; or (b) add a
+   per-paragraph Ink tag `# align:center|right` that the reader applies to that paragraph
+   (contract on frame segments plus reader CSS; narration unaffected). **Recommended: (a)**, unless
+   you need centred lines (letters, signs, poems); then (b).
+3. Auto-refresh shows the page in its final state, without replaying its entrance?
+   **Recommended: yes.**
+4. Choosing a preset clears the manual changes on the selection? **Recommended: yes.**
+
+Planned commits once approved: (1) contract and reader keys, with tests; (2) per-piece formatting
+and the new toolbar; (3) shortcuts; (4) live instant preview.
+
+**Your decisions:** 1 yes (plus fix "one setting keeps the others", with a test); 2 yes, as a
+per-paragraph option left / center / right / justify, rendered in the reader, en + fr labels;
+3 yes; 4 yes (undo brings the manual changes back, with a test). Changed hover assertion: OK if it
+covers the same behaviour.
+
+### 1. Text toolbar — result
+
+Screenshots: `review-screenshots/editor-before/` vs `editor-after/` (`text-tab`, `text-ribbon`,
+`text-style-menu`; after only: `text-ribbon-styled`, `text-ribbon-more`,
+`text-styled-live-preview`). Recording: `editor-after/live-preview.webm` (typing, then Shout and
+Ctrl+I, with the preview following).
+
+- **`4d65f7d` bold / italic / underline / strike.** `<typo bold="on" …>`; `off` cancels a preset
+  (Whisper without italic). Shout and Impact declare `bold: on`, Whisper `italic: on`; their CSS
+  keeps the same computed values. **Proven on the old code:** the same e2e with only old markup
+  (Shout/Impact weight 900, Whisper italic) passes before and after.
+- **`06465f9` alignment.** `# align:center|right|justify` per paragraph → `segment.align` →
+  `<p data-align>`. Left is the default and is never written, so existing text is unchanged.
+  Centred and right-aligned paragraphs drop the drop cap. Found on the way and handled:
+  - a progressive reveal renders only the revealed letters, so a centred line would re-centre on
+    each letter: aligned paragraphs now lay out the rest invisibly;
+  - the compiler compares Ink tags across languages, so aligning only the English paragraph would
+    have blocked publishing ("narrative structure differs"). `align:` tags (and trailing spaces in
+    tags) are now ignored by that check. The toolbar also aligns the same paragraph (same
+    `# segment:` ID) in the other translations.
+- **`225ffa5` toolbar.** As in the note. **The bug** (applying one setting replaced the whole
+  format) is fixed by a per-piece patch (`patchTextSelection`): wide spacing on a Shout word keeps
+  Shout; on a mixed selection each piece keeps its own settings. `formatTextSelection` (exact
+  format) stays for presets and Clear, and its tests are unchanged. A value equal to the preset's
+  own is not stored. Each change is its own undo step: formatting changes get their own history
+  label (same-label changes within 750 ms are merged, which is meant for typing).
+  **Changed assertions in "formats selected words…":** (1) hover: the sample is gone, so the test
+  checks that the hovered preset is drawn in its own style and that the script is unchanged, as
+  before; (2) one Undo became three (preset, direction, spacing are three steps now); the
+  assertions after them are the same. Also adapted: `editor-actions.test` "formatText explains…"
+  now calls `applyPreset` with the same assertions.
+- **`e077a8e` shortcuts.** Ctrl/Cmd+B, I, U, Ctrl+Shift+X, Ctrl+\ (from the script or the toolbar;
+  other fields keep their keys; Ctrl+X stays Cut); Ctrl+F, Ctrl+H from anywhere outside a dialog
+  (before: only while the script had focus). Undo/redo/save already had theirs.
+- **`1932886` live preview.** 600 ms after the last change, the passage at the cursor, presented
+  like a reopened page (the director's `load(settled)`: no entrance, sound or narration). The
+  reader stays mounted (its key no longer includes the knot), so open panels stay open, and the
+  text frame's scroll is restored once the new page has laid out. Instant text is forced in the
+  editor preview only, and its "Text display" choice is hidden. ▷ Preview keeps the full playback;
+  a refresh never replaces a version ▷ Preview already shows (found by the e2e: a refresh pending
+  from an edit replaced the full playback you had just started), and a late compile never replaces
+  a newer one. A compile error keeps the last good preview and shows "1 issue(s)" in the status
+  bar; it clears when the script compiles again.
+- **`b85d3c6`** "(from Mystery)" appeared on values Mystery doesn't set (e.g. "Horizontal").
+
+**Bug found by the new French e2e — `b09ec23`.** The combat outcome was meant to stay 2 s, but for
+one render between "dice settled" and the enemy's beat the fight looked finished. So the 2 s hold
+started early and the title hid during the beat: on a slow machine it showed for almost nothing
+(the « Défaite » e2e timed out twice under coverage). The log is now busy from that first render;
+a static-render unit test fails on the old code.
+
+**Tests added:** unit 423 → 438 (per-piece patch, preset values, format at a column, alignment
+lines and translations, the new keys, static render of the reserved text, combat log busy, settled
+director load, shortcut routing, live refresh rules); e2e +7 (bold/italic/… rendering, alignment
+in the reader, keep-the-others + preset clears + undo, French labels + alignment, keyboard
+shortcuts, live preview, compile error while typing).
+
+**Limits:**
+
+- After Undo, the caret returns to its old column, which may now fall inside a longer `<typo>` tag;
+  formatting then says "select words outside the tag attributes" until you select the words again.
+- A shortcut that can't apply (caret on a knot line) does nothing and shows no message; the
+  toolbar buttons show it.
+- Alignment applies to the active language and to paragraphs with the same `# segment:` ID; a
+  translation without segment IDs keeps its own alignment.
+
+**How to try:** `npm run dev`, open `/editor`, Text tab. Select a few words in a paragraph: pick
+Mystery, then Bold and Large (they apply at once); the line under the toolbar says what Mystery
+sets and what you changed. Choose Shout: your changes go; Ctrl+Z brings them back. Click Center
+with the caret in a paragraph. Press Ctrl+B with the caret in a word. Type in the script: the
+preview follows after a short pause, without moving or replaying.
+
+### 2. Media → Image — design note (waiting for your OK)
+
+Screenshots: `review-screenshots/image-before/chemin-1…5.png` (Orée's 3-layer "chemin", one
+screen per scroll step), `matin-ville-1…4.png` (2 layers), `passage-1…4.png` (cinematic).
+
+**Current problems.** One long column, about five screens high, with the preview beside it.
+Twenty-odd controls are shown at the same level, and several duplicate each other:
+
+- The mode select ("Single Image / Layered Composition / Auto Compose (future)") decides whether
+  layers can be added. Switching back to Single silently deletes every layer. Auto Compose is a
+  disabled placeholder.
+- The base image's full description is printed under "Browse media library", repeating the alt
+  text.
+- Two different "positions": the selected layer's sliders, and "Size and positioning → Override
+  default position X/Y", which moves the whole figure on the page.
+- "Smart blend with text" sets four fields at once (auto-crop, blend, frame, wrap) that also have
+  their own controls.
+- The camera grid shows 16 identical thumbnails (the same image 16 times). Speed and duration both
+  set the length. Helper paragraphs repeat what the preview shows.
+- Adding a layer: "+ foreground" opens the library inside the dialog (below the fold), then search,
+  then "Use this media". Several scrolls, 3 clicks.
+- Form state goes through hidden JSON inputs and `FormData` (REVIEW §4). A boolean whose input
+  isn't rendered becomes `false` on Apply.
+- **REVIEW #3 is not fixed.** Deleting or cutting a `// @media` line deletes that image's whole
+  configuration and its cues; pasting the line back leaves a dead comment.
+
+**Step 1 — REVIEW #3 (before anything else), with tests.** An editor-session "cut buffer": when a
+reference line disappears, its block, cues and scene image are kept aside (keyed `scene/id`). When
+the same line comes back (paste, or typing it again), they are restored exactly. A deletion that
+is never pasted back stays a deletion: publishing is unchanged, and Undo/History still recover
+it. The status bar says "Image removed — paste the line back or press Ctrl+Z to restore it". No
+contract change. Limit: the buffer lasts until reload. Unit tests: cut → paste at the same place
+and in another passage (same block, cues, scene image; position follows the line); delete without
+paste; two images cut together.
+
+**Step 2 — proof that stored compositions render the same (test only, before changing the image
+editor).** A Playwright test opens each of Orée's six layered images (chemin, cours-air,
+bibliotheque, matin-ville, livraison, passage). It compares, against committed `toHaveScreenshot`
+baselines (chromium, reduced motion, fixed size):
+
+- the image in the editor's reader preview;
+- the image in the dialog's live preview;
+- a geometry fingerprint per layer (box, computed transform, image), saved as JSON next to them.
+
+The baselines are captured on today's code and the test must pass unchanged after every step. Like
+the rest of the e2e suite, it needs the local image library (REVIEW #1).
+
+**Step 3 — the new dialog.**
+
+```
+┌ Edit Image ── [ Inline | Wide | Right page | Background | Cinematic ] ────────── × ┐
+│ LAYERS (front to back)                       │ live preview — drag moves the     │
+│  ▣ Foreground   Thin grass fringe      ⧉  ×  │ selected layer                    │
+│  ▣ Middle       Arched stone doorway   ⧉  ×  │                                   │
+│  ▣ Background   Open field (base)            │                                   │
+│  Add: [+ Background] [+ Middle] [+ Foreground] │ ▷ Replay   ⊡ Safe margins       │
+│                                              │                                   │
+│ SELECTED · Middle · Arched stone doorway   [Change image]                        │
+│  Depth [Back|Middle|Front]  Scale ──●──  Rotate ──●──  ↺ Reset                   │
+│  ▸ Tilt & flip                (new: tilt forward/back, turn left/right, flip)    │
+│ ON THE PAGE   Frame [Landscape▾]  Blend [Paper edges▾]  Wrap [Full width▾]       │
+│ CAMERA        [Low diagonal pullback ▾]   ▸ Fine-tune (speed, intensity, …)      │
+│ TEXT          Alt text [………]   Caption [………]                                     │
+│ APPEARS       [When the page appears ▾]   Hide after [0] s (0 = stays)           │
+│ ▸ Examination (magnify, details, reverse side)            — closed unless used   │
+│ ▸ Advanced (width and offset on the page, smart auto-crop, start from a preset)  │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ ☑ Same in all languages                                     Cancel   [Apply]     │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Layers are always there.** A single image is just the base with no other layer; adding one
+  turns on the camera presets (the existing rule). The list is drawn front to back like in image
+  editors. The stored order (base first) and the drawing order are unchanged.
+- **Fast adding:** "+ Background / + Middle / + Foreground" opens a picker over the preview. It
+  lists "In this story" first (reuse), then the library, with search; one click adds the image at
+  that depth and selects it, so 2 clicks in all. **⧉ Duplicate** reuses a layer's image in one
+  click (e.g. a second tree), keeping its depth and offset slightly shifted. The ×-remove and the
+  per-instance editing stay.
+- **Rotation on the other axes** (additive contract, ⚠ decision 1): optional `tiltX` (forward/back)
+  and `tiltY` (turn left/right), −75…75°, plus **Flip** (mirror). Mirror is a rotation around the
+  vertical axis, so flip and turn could share one field (`tiltY` up to 180°), or flip could be a
+  separate `flip: true`. Stored compositions have none of these and render as before; the reader
+  adds the 3D rotation only to tilted layers, so untouched layers keep exactly today's transform
+  (step 2 checks it). The preview's drag keeps moving x/y; tilt has sliders and arrow keys.
+- **Groups and progressive disclosure:** what you set on most images is visible (layers, selected
+  layer, page frame/blend/wrap, camera preset, alt text, caption, when it appears). Fine-tuning is
+  folded: tilt & flip, camera speed/intensity/direction/atmosphere/exact duration, examination
+  (folded unless already enabled, then its summary shows), and advanced.
+- **Typed state (REVIEW §4):** one `MediaEdit` draft in a reducer is the form state for Image and
+  Video (they share these fields). The hidden JSON inputs and `FormData` reading go from
+  `ImageComposition`, `CinematicFields`, `ExaminationFields`, `MediaLayout` and `ImageFields`.
+  Animation and the audio kinds, not rewritten, keep their `FormData` fields, read over the same
+  draft.
+- **Labels** are new UI text, so they go through i18n (en + fr) like the Text toolbar.
+
+**Removed or hidden controls, and why**
+
+| Control                                                             | Now                                          | Why                                                                                                                              |
+| ------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Illustration mode select (Single / Layered / Auto Compose (future)) | removed                                      | Implied by the number of layers; switching to Single silently deleted the layers; Auto Compose is a dead placeholder (REVIEW §4) |
+| Base image description under the picker                             | removed                                      | Repeats the alt text, which is still editable below                                                                              |
+| "Smart blend with text" button                                      | removed                                      | Sets four fields that keep their own controls and defaults (paper blend, frame by depth); confusing as a one-shot                |
+| Smart auto-crop checkbox                                            | Advanced                                     | Rarely changed; stored value kept                                                                                                |
+| Quick starters (5 hard-coded catalogue presets)                     | Advanced → "Start from a preset"             | Replace the whole composition; story-specific data in the UI (REVIEW §4); kept, not deleted                                      |
+| Camera thumbnail grid (16 identical images)                         | a select with the preset names               | The thumbnails were all the same; the preview shows the movement (Replay)                                                        |
+| Speed, intensity, direction, atmosphere, exact duration             | "Fine-tune" under the camera select          | Defaults come from the preset; "exact duration" overrides speed (said in its hint)                                               |
+| "Size and positioning": width %, override X/Y, alignment            | Advanced → "Width and offset on the page"    | Rarely used; its X/Y was easy to confuse with the layer position                                                                 |
+| "Hide automatically", persistence in ms                             | one "Hide after … s" field next to "Appears" | Seconds instead of ms (stored in ms as before)                                                                                   |
+| "Show crop / safe margins" checkbox                                 | a toggle button on the preview               | Belongs to the preview                                                                                                           |
+| Helper paragraphs (single-image and camera hints)                   | tooltips                                     | The preview already shows the result                                                                                             |
+| "Apply shared configuration to all languages"                       | "Same in all languages", in the footer       | Same setting, shorter, next to Apply                                                                                             |
+
+Nothing stored is removed: every field still loads, keeps its value and is editable (most in
+Advanced). Defaults are unchanged: inline, paper blend, frame by depth, camera None, shown when
+the page appears.
+
+**Tests:** the step 1 unit tests; the step 2 render baselines; unit tests for the tilt fields
+(old data parses unchanged); e2e: add a foreground layer in 2 clicks, duplicate, tilt and flip in
+the reader, a folded section's values survive Apply (the `FormData` boolean bug).
+`image-composition.spec.ts` uses the removed mode select, the "Character in forest" starter and
+the "gentle depth" grid button. **Its assertions stay the same** (number of planes, blend, wrap,
+backup round trip), reached through the new controls: changed selectors only.
+
+**⚠ Decisions for you**
+
+1. Tilt and flip: (a) `tiltX`, `tiltY` (−75…75°) and a separate `flip` (mirror); or (b) `tiltX`
+   and `tiltY` up to 180°, where Flip sets 180. **Recommended: (a)** (a mirrored image that you
+   then tilt reads naturally).
+2. Quick starters: keep them under Advanced (recommended), or remove them (they only work with
+   these catalogue IDs).
+3. The camera: a select with names (recommended), or a smaller text-only grid.
+4. Step 2 baselines: commit the `toHaveScreenshot` PNGs (about 12 small images) to the repo
+   (recommended; it's how the proof stays checkable), or keep them local and untracked.
+
+Planned commits once approved: (1) REVIEW #3 fix with tests; (2) render baselines (test only, on
+today's code); (3) tilt/flip contract and reader, with tests; (4) typed draft state (no visual
+change); (5) the new dialog layout and layer panel; (6) fast add and duplicate.
+
+## Pass 9 — Text toolbar follow-ups, Back after reload, Media → Image, editor polish (branch `features/editor-ux`)
+
+Unattended. Order asked: part 1 (Text toolbar), part 3 (Back after reload), part 2 (Media →
+Image), part 4 (other tabs). One commit per item. Own dev server on 4175
+(`playwright.local.config.ts`), warmed with `review-screenshots/warm.spec.ts` (untracked: opens
+`/`, `/editor`, and loads the lazy dice model and React Bits effects) before every e2e run.
+
+After each commit: `E2E_PORT=4175 npm run test:coverage`, `fallow health --score --hotspots
+--coverage coverage/coverage-final.json`, `fallow security --gate new --changed-since main`,
+`fallow dupes`. Unit tests are run from PowerShell: from Git Bash, Vitest loads itself twice
+(`/c/Users/…` vs `C:/Users/…`) and fails with "failed to find the current suite".
+
+The score fell from 94.8 to 93.5 only through the unit-size penalty (2.8 → 4.1): longer
+functions, mostly the new Image dialog's two components (`ImageEditor`, `MoreOptions`) and long
+e2e tests. Coupling 2.4 and every other penalty unchanged; no hotspot.
+
+Scores are now given with one decimal (95 at the start was 94.8 rounded; same penalties: unit
+size 2.8, coupling 2.4). `fallow security`: PASS after every commit unless noted. `fallow dupes`:
+0 clone groups unless noted.
+
+**Found, not caused by this pass:** `image-composition.spec.ts` "uses real perspective depth,
+pauses camera motion…" fails every time (the camera has 0 animations instead of 3), also on
+`0af6c46` with my changes reverted. `npm run test:coverage` stops before merging coverage when an
+e2e test fails, so after each run I run its merge step (`node tools/merge-test-coverage.ts`) on
+the collected unit + browser coverage before `fallow health`. Not investigated further (reader
+camera, outside this pass).
+
+| Commit    | Item                                                         | Score |
+| --------- | ------------------------------------------------------------ | ----- |
+| `0af6c46` | Start (Pass 8 end)                                           | 95    |
+| `0d504a2` | 1a. a caret inside a formatting tag formats the tagged words | 94.8  |
+| `f511a9c` | 1b. a formatting shortcut that can't apply says why          | 94.6  |
+| `7a83fde` | 1c. any text colour, named swatches, contrast warning        | 94.5  |
+| `b1671c6` | 1d. point sizes, typed or from a list                        | 94.5  |
+| `9b58e0b` | 3. Back after a reload (history in the save)                 | 94.5  |
+| `f9e61c1` | 2. design note (docs)                                        | —     |
+| `4509e26` | 2a. REVIEW #3: pasting a cut `// @media` line restores it    | 94.4  |
+| `6156c51` | 2b. reference renders (test only)                            | 94.4  |
+| `f2309f1` | 2c-1. tilt and flip (contract, reader)                       | 94.4  |
+| `2f18ec2` | 2b. references for the four single images (test only)        | 94.4  |
+| `3db8444` | 2c-2. typed draft instead of hidden JSON inputs              | 94.3  |
+| `f6cdff0` | 2c-3. the new Image dialog                                   | 93.5  |
+| `62a4d95` | 4-1. shared dialog styles                                    | 93.5  |
+| `cdc20be` | 4-2. ribbon commands                                         | 93.5  |
+| `ffbd96f` | 4-3. fix: checkbox rows at the left                          | 93.5  |
+| `fc0b219` | 4-4. fix: one ribbon height on every tab                     | 93.5  |
+
+### 1a. A caret inside a formatting tag formats the tagged words
+
+After Undo the caret keeps its column, which can fall inside a longer `<typo …>` tag. Formatting
+used to answer "Select words outside the typography tag attributes". Now a selection end (or the
+caret) inside a tag's markup stands for all the words that tag formats: inside the opening tag
+or the closing tag, the whole tagged words are taken; a selection from inside a tag to plain text
+after it takes the tagged words and the plain ones. The toolbar shows those words' settings at
+such a caret (so Bold toggles off on bold words, instead of doing nothing).
+
+**Changed assertions** (both encoded the refusal that this item removes):
+
+- `typography.test.ts` "splits overlapping styles…": `formatTextSelection(line, 4, 10, {})` (both
+  ends inside `<typo style="shout">`) expected a throw `/attributes/`; it now expects the tagged
+  words "red blue" to be cleared, the rest unchanged.
+- `typography.test.ts` "reads the settings at a column…": `formatAt(line, 5)` (inside the opening
+  tag) expected `{}`; it now expects that tag's settings.
+
+Tests: unit "a selection end inside tag markup…" (opening tag, closing tag, both, tag to plain
+text, two touching tags, plain caret still refused); e2e "after Undo leaves the caret inside a
+tag…" (Undo, then the Underline button without reselecting; then Ctrl+I with the caret inside
+the closing tag).
+
+### 1b. A shortcut that can't apply says why
+
+Ctrl+B / I / U / Shift+X / \ used to do nothing when they couldn't apply (caret on a knot line, a
+choice, an empty line). They now show the same short message as the toolbar buttons:
+
+- in the Text toolbar's status line when the Text tab is open;
+- in the status bar (bottom left) when another ribbon tab is open or the ribbon is minimized,
+  since the toolbar isn't on screen then (my choice).
+
+The message disappears when the selection moves, as before for the buttons. It used to be tied
+to the _format_ of the selection, so moving between two plain words kept it; it's now tied to the
+selection's position. All formatting messages are i18n keys (`editor.text.errors.*`, en + fr):
+before, only "no paragraph" was translated and the others showed in English in French. The
+status lives in `EditorActions` (`report`, `textStatus`), and the selection listener became a set
+so both the toolbar and the status bar can listen.
+
+Limit: a line whose `<typo>` markup is itself broken (half-typed tag) still shows the contract's
+English parser message (it is also a compile error, shown in English in the Issues dialog).
+
+**Changed assertions** (same message chosen, now as its i18n key instead of the English
+sentence): `editor-actions.test.ts` "applyPreset explains why…" (two `toBe`), `typography.test.ts`
+"replaces and removes…" (`/Select words/` → `noSelection`, `/Ink/` → `notWords`; `/Ink/` matched
+"…excluding Ink tags and expressions", which is `notWords`).
+
+Tests: unit "reports a formatting message to every listener until it is cleared"; e2e "a shortcut
+that can't format says why…" (toolbar, hidden on moving, status bar on the Story tab, French).
+
+### 1c. Color: any colour, named swatches, contrast warning
+
+- **Format (additive):** `<typo color="…">` keeps its five names and `inherit`, and also takes
+  any colour as six lowercase hex digits **without `#`** (`color="336699"`). Found while testing:
+  in Ink, `#` anywhere on a line starts a tag, so `color="#336699"` would have cut the line in
+  two. Old stories have only names: they parse and render exactly as before (same classes).
+  `DATA_CONTRACTS.md` updated.
+- **Reader:** a named colour stays a class (mixed 65 % with the page's text colour, so it adapts
+  to light and dark pages); an author's own colour is drawn exactly, as an inline style, with the
+  class `type-color-custom`.
+- **Toolbar:** the Color select became an "A" button with the current colour under it. It opens
+  six swatches (Text color + the five names, "(from Shout)" in the tooltip when the style sets
+  it) and the browser's own colour picker ("Any color"). A pick applies when the picker closes
+  (not at every step of a drag), and closes the popover.
+- **Contrast warning (my choices):** shown under the toolbar's summary line when the words'
+  colour is an author's own colour with a WCAG contrast below **4.5:1** (AA for body text) against
+  the story's page colour (`defaults.backgroundColor`, or the default dark page). Named colours
+  get no warning: they adapt to the page. The reader can still pick another paper colour; the
+  check is against the story's own page, light or dark. `contrastRatio` and `paperColor` are now
+  exported from `reader-theme.ts` (the luminance code `readerTheme` already had), so the
+  reader and the warning use the same page colour.
+
+Tests: unit (hex parse + rejects `#…`, upper case, short or 7-digit values; patch to custom, back
+to named, back to plain; custom colour rendered inline; contrast ratios and page colour); e2e
+"any color from the picker…" (dark page: dark grey → warning and rendered rgb(34, 34, 34); Ocean
+swatch → no warning; light page: dark grey → no warning, pale yellow → warning).
+
+### 1d. Size: point sizes, typed or from a list
+
+- **Format (additive):** `<typo size="…">` keeps small / normal / large / huge and also takes a
+  whole point size from 8 to 48 (`size="14pt"`; `7pt`, `49pt`, `14.5pt`, `014pt`, `14px` are
+  refused by the contract). `DATA_CONTRACTS.md` updated.
+- **Reader (my choices):** 12 pt = the reader's text size (`1em`), so 24 pt is twice the text,
+  whatever Text size the reader picked (small/medium/large) — sizes scale with it. The size is
+  capped at 13 % of the paragraph's width (`min(… em, 13cqi)`), so on a phone a 48 pt word
+  shrinks to fit the column instead of being cut; a word too long even then still wraps (the
+  existing `overflow-wrap: anywhere`). Only paragraphs that contain a point size become size
+  containers (`p:has(.type-size-points)`), so the layout of existing stories is untouched (a
+  container on the whole `.prose` would have resized its photographs, which use `cqw`).
+  For comparison, the named sizes are about 10 pt (small), 17 pt (large), 22 pt (huge).
+- **Toolbar:** the Size select keeps the four named sizes first, then a "Point sizes" group
+  (8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, plus the current size if it was
+  typed). Next to it, a small "Point size" field takes any whole size, applied on Enter or when
+  the field is left; out of range, the toolbar says "Type a whole point size from 8 to 48."
+- **Bug found and fixed before committing:** pressing Enter in that field applied the size, the
+  script took focus, and the same Enter keystroke then reached the script and replaced the words
+  with a line break. The field now consumes its Enter. The e2e checks that Enter on Bold and
+  Space on Italic don't reach the script either.
+
+Tests: unit (parse, refuse, `pointSize`, patch, rendered class + `--type-points`, named sizes
+unchanged); e2e "point sizes from the list or typed…" (24 pt = 2× the text before and after
+switching the preview to Large text; typed 13 → "13 pt" listed; 60 refused; Huge; keyboard
+safety) and "on a phone, a 48 pt word shrinks to fit the column" (reader at 360 px: under 3× the
+text size, inside the paragraph, on one line).
+
+The unit-size penalty went from 2.8 to 3.1 over part 1 (long e2e tests and the new toolbar
+controls); duplication and dead code stayed at 0. Note: the 1b coverage run first failed on
+`project.test.ts` "preserves en: song=false…" (an Ink line over 50 ms under coverage, REVIEW #8,
+timing only); the rerun passed.
+
+**Part 1 screenshots** (`review-screenshots/pass9-after/`, spec `review-screenshots/pass9-text.spec.ts`):
+`text-color-menu.png` (swatches + "Any color"), `text-low-contrast.png` (warning on Orée's light
+page with a pale colour), `text-point-size.png` (28 pt word in the preview, size list and field),
+`text-shortcut-message.png` (Ctrl+B on a knot line). "Before" is Pass 8's
+`review-screenshots/editor-after/text-ribbon*.png` (same code as `0af6c46`).
+
+### 3. Reader: Back after reloading
+
+**Checked:** yes, the previous pages lived only in the director's memory (`previousPages`, up to
+100). After a reload the save restored the page but Back was disabled. A new e2e reproduces it on
+the old code (Back disabled after reload), then passes.
+
+**Fix (additive save format):** the save gets an optional `history`: the last **20** previous
+pages, oldest first, each with what restores it exactly (Ink state, frame, character and game
+state at that page). The director restores it on load and writes it with every checkpoint (choice,
+end of a check or event, Back, restart clears it). Measured: a save with 4 previous pages of Orée
+is 19 KB (about 4 KB per page), so 20 pages stay around 100 KB.
+
+- **Old saves** have no `history`: they load as before, simply without Back (`schemaVersion`
+  stays 1). ⚠ The other direction: a save written by this build, opened by an _older_ build,
+  is refused there (its strict schema doesn't know `history`); the save is kept and offered for
+  download, like any incompatible save. This only matters if you go back to an older build after
+  playing on this one.
+- **Safety:** a damaged list, a page whose game state no longer validates, or a save written by an
+  earlier compatible Ink version (`compatibleInkDigests`) drops the history, never the save.
+- **One bound (my choice):** 20 in memory too (it was 100 per session, unsaved). One list, so
+  Back behaves the same before and after a reload.
+- **Failed writes:** if a checkpoint can't be written, the in-memory pages roll back with the Ink
+  state (they used to be added only after a successful write; now they are part of the save).
+- `DATA_CONTRACTS.md` updated.
+
+Tests: unit "keeps the previous pages in the save, so Back works after a reload", "keeps at most
+20 previous pages, dropping the oldest", "a save without history loads without Back; a failed
+write keeps the pages as they were", "drops saved pages that can't be restored exactly, never
+the save"; e2e `reader.spec.ts` "Back still works after a reload, through the saved previous
+pages" (two choices, reload, Back twice, then Back disabled). Reader e2e suites (reader,
+reader-request, page-frame, reader-data): 41/41.
+
+### 2. Media → Image — revised design note (replaces Pass 8's)
+
+Your feedback: (1) too many things on screen; (2) in a layered composition it isn't clear where
+to start; (3) it isn't clear how to add new images. Pass 8's note mostly regrouped the existing
+controls. This one starts from what an author does, most often first:
+
+1. **Put one picture on the page** and say what it shows (alt text). Most images.
+2. **Change** that picture, or **where it sits** on the page (inline, wide, right page,
+   background, cinematic).
+3. **Build a layered scene**: a background, a character in front, maybe a framing foreground;
+   move and size the character; pick a camera movement.
+4. Rarely: when it appears, hiding it after a while, letting the reader examine it, frame /
+   blend / wrap, width and offset, auto-crop, tilt and flip, camera fine-tuning, starter scenes.
+
+**Visible by default** (everything for 1–3, nothing else):
+
+```
+┌ Add image ─────────────────────────────────────────────────────────── × ┐
+│ PICTURES, front to back           │ ┌────────────── preview ───────────┐ │
+│  Front    + Add                   │ │ drag the selected picture        │ │
+│  Middle   ▣ Curly-haired woman    │ │ to move it; arrow keys too       │ │
+│           + Add                   │ │                                  │ │
+│  Back     ▣ Misty conifer plain   │ └──────────────────────────────────┘ │
+│           + Add                   │   ▷ Replay    ⊡ Safe frame           │
+│ SELECTED  Curly-haired woman                                            │
+│  Size ──●──   Turn ──●──   Change…  Duplicate  Remove  Reset            │
+│  ▸ Tilt, flip and exact position                                        │
+│ ON THE PAGE  [Inline | Wide | Right page | Background | Cinematic]      │
+│ CAMERA       [Slow push in ▾]           (only with two pictures or more) │
+│ DESCRIPTION  [what the picture shows, for screen readers]               │
+│ ▸ More options · caption, examine, when it appears, look on the page    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ☑ Same in all languages                                Cancel   [Apply] │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Where to start (problem 2):** the pictures panel always shows the three depths, front to
+  back, as image editors do. With no picture yet, the preview says "Start with a picture" with
+  one button, and offers the five starter scenes; the Back row says "Start here". A single image
+  is simply one picture: no mode to choose.
+- **Adding pictures (problem 3):** every depth has its own "+ Add". It opens a picker over the
+  preview: a search field, then "In this story" (pictures the story already uses) and "Library"
+  (pictures made for that depth first). **One click on a picture adds it there and selects it:
+  2 clicks in all.** "Change…" uses the same picker. **Duplicate** adds the same picture again,
+  slightly shifted (a second tree). **Drag and drop:** drag the selected picture in the preview
+  to move it (as today), and drag a picture's row onto another depth to move it there.
+  Uploading your own image files is not added: the stored-media contract only accepts uploaded
+  videos, WebP and 3D models, so it would be a format change.
+- **Less on screen (problem 1):** the default view has one panel, one preview, the selected
+  picture's two sliders and four buttons, one placement row, one camera list, one text field.
+
+**Under "More options"** (closed; its summary lists what is set, e.g. "caption · examine"):
+
+| Group             | Controls                                                                                           | Why here                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Text              | Caption; Examine (magnify, details, reverse side)                                                  | Optional; examine is for a few photographs          |
+| When it appears   | Scene (when adding), Show (page / text line / delay), Hide after … s, Entrance (fade, one picture) | The defaults (with the page, stays) fit most images |
+| Look on the page  | Frame, Blend, Text wrapping (inline), Width %, Offset X/Y, Alignment, Smart auto-crop              | The defaults (paper blend, frame by depth) fit most |
+| Camera details    | Speed, intensity, direction, atmosphere, exact duration (two pictures or more)                     | The named camera already sets them                  |
+| Ready-made scenes | The five starter scenes (also offered in the empty state)                                          | Decision 2: kept, under Advanced                    |
+
+**Under the selected picture, "Tilt, flip and exact position"** (closed): tilt forward/back and
+turn left/right (−75° to 75°, decision 1), Flip (mirror), and exact X/Y sliders (the keyboard
+alternative to dragging).
+
+**Removed, and why**
+
+| Control                                                                                                | Why                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| "Illustration" mode select (Single / Layered / Auto Compose (future))                                  | The number of pictures says it; switching to Single silently deleted every layer; Auto Compose was a dead placeholder                  |
+| "Browse media library", with the image's description under it                                          | Replaced by "+ Add" / "Change…"; the description repeated the alt text                                                                 |
+| The big embedded library for images (category, theme, usage and depth filters; "Use this media" cards) | Search plus "In this story" / "Library" is enough to pick a picture: one click instead of three. Audio and video keep the full library |
+| "Smart blend with text"                                                                                | A one-shot that set four fields which keep their own controls                                                                          |
+| Camera thumbnail grid (the same image 16 times)                                                        | A named list (decision 3); the preview shows the movement (Replay)                                                                     |
+| "Show crop / safe margins" checkbox                                                                    | A "Safe frame" toggle on the preview                                                                                                   |
+| Helper paragraphs ("A single illustration stays still…", the camera hint)                              | A tooltip, or shown by the preview                                                                                                     |
+| "Layer depth" select of the selected image                                                             | The rows are the depths: drag a row, or use the row's depth menu (keyboard)                                                            |
+| "Apply shared configuration to all languages"                                                          | "Same in all languages", in the footer next to Apply (same setting)                                                                    |
+
+Nothing stored is removed: every field still loads, keeps its value and stays editable. Defaults
+are unchanged (inline, paper blend, frame by depth, camera None, with the page).
+
+**Under the hood:** one typed `MediaEdit` draft (a reducer) replaces the hidden JSON inputs and
+the `FormData` reading for Image and Video (REVIEW §4); the other kinds keep their fields. New
+labels go through i18n (en + fr). Tilt and flip are additive (`tiltX`, `tiltY`, `flip` on a
+picture); a picture without them renders exactly as today.
+
+**Order:** (a) REVIEW #3; (b) reference screenshots of Orée's layered images on today's code
+(test only); (c) small commits that keep matching them: tilt/flip, typed draft, new layout,
+picker and empty state, duplicate / remove / drag. E2E: empty state, adding a picture to each
+depth in 2 clicks, drag and drop, Duplicate.
+
+### 2a. REVIEW #3: cutting and pasting a `// @media` line restores its settings
+
+Before: deleting or cutting a reference line deleted that image's block, its cues and the
+scene's image; pasting the line back left a dead comment (and the next edit removed it).
+
+Now `editMediaScript` keeps what a removed line took away in the editor session's cut buffer
+(`handles.keptMedia`, keyed `scene/id`): the block, each cue **with its place in the list**,
+and whether it was the scene's image. When the same line comes back (paste, or typing it
+again), they are restored exactly:
+
+- pasted at the same place: the scene is exactly as before (block position, cues, scene image);
+- pasted after other text of the same passage: the image now follows that text;
+- pasted into another passage: the line still names its own scene (`intro/…`), so the image
+  stays in its scene, at its old place (limit; moving an image to another passage is done by
+  re-adding it there);
+- a deletion that is never pasted back stays a deletion (publishing unchanged; Undo/History
+  still recover it); two lines cut together both come back.
+
+The buffer lasts until the editor is reloaded (then a pasted line is a dead comment, as before).
+No contract change. Cutting an image also drops the cue lines aimed at it (as before); when the
+image comes back, its cues come back and the editor re-adds their lines (`withMediaReferences`).
+No status message ("paste the line back…"): the status bar is overwritten by autosave within a
+second, so it would only flash.
+
+Tests: unit `authoring.test.ts` "cutting and pasting a // @media line (REVIEW #3)" (4 cases);
+e2e `media-workspace.spec.ts` "cutting a // @media line and pasting it back…" (real Ctrl+X /
+Ctrl+V in the script: the image leaves and returns in the live preview with the same number of
+layers, and the Image dialog opens it as "Edit Image"). The e2e fails on the old code.
+
+### 2b. Reference renders of Orée's layered images (test only)
+
+`tests/e2e/image-references.spec.ts`, captured on the code before the dialog changes
+(`4509e26`). For each of the six layered images (matin-ville, livraison, chemin, passage,
+cours-air, bibliotheque), in Chromium:
+
+1. **Reader preview, pixels:** the image as the editor's reader preview draws it
+   (`toHaveScreenshot`, `maxDiffPixelRatio: 0.01` so font antialiasing can't make it flaky).
+   Compared on Windows only, where they were captured (CI runs on Linux, whose rendering
+   differs); not for "passage", the cinematic, which is only on screen while its movement plays.
+2. **Dialog preview, layer by layer** (JSON, every platform): role, image, drawing order,
+   position, scale, rotation, and each layer's box as a fraction of the frame — independent of
+   the preview's size, so a new dialog layout doesn't change it, but a moved or resized layer
+   does.
+3. **Saved the same** (JSON, every platform): open the image, press Apply without changing
+   anything, export the complete backup: that page's stored configuration, in both languages.
+   Found while capturing: today's Apply already writes three explicit defaults on these images
+   (`show: { kind: "page", delayMs: 0 }`, `photograph: false`, `caption: ""`). Harmless (the
+   reader reads the same), and now part of the reference, so the new dialog must write exactly
+   that.
+
+Files: `tests/e2e/image-references.spec.ts-snapshots/` — 5 PNG (80–145 KB each, the size the
+image has in the preview) and 12 small JSON files. Stable over three runs.
+
+**How to update them on purpose** (after a change that is meant to change these images):
+
+```
+npx playwright test -c playwright.local.config.ts image-references --project=chromium --update-snapshots
+```
+
+on Windows (it rewrites the PNGs and the JSON); look at the PNG and JSON diffs before
+committing them. On another platform the PNGs are skipped, so `--update-snapshots` there only
+rewrites the JSON files.
+
+### 2c-1. Tilt and flip (contract and reader)
+
+Decision 1: optional `tiltX` (forward/back) and `tiltY` (turn left/right), −75° to 75°, and a
+separate `flip` (mirror), on any picture of a composition. Additive: stored compositions have
+none and parse unchanged. The reader adds the 3D part only to a tilted or mirrored picture
+(`perspective(1200px) rotateX() rotateY()` and `scaleX(-1)`, through a CSS variable that is
+unset, so empty, for the others); untouched pictures keep exactly their transform, and a single
+untouched picture still takes the flat path. The six references still match.
+
+Also in this commit: the 2b JSON references are now compared **by value** (the code formatter
+had re-laid out the committed JSON files, so a text comparison failed although the data was
+identical). `--update-snapshots` still rewrites them. Nothing compared was dropped.
+
+Tests: unit (old composition parses unchanged; tilt and flip accepted; 76°, −80° and a
+non-boolean flip refused); e2e "a tilted or mirrored picture is drawn in 3D; the others keep
+their transform" (a 3D matrix, mirrored x axis, background unchanged).
+
+### 2c-2. One typed draft instead of hidden JSON inputs (REVIEW §4)
+
+Image and Video no longer send their form through the DOM. The dialog keeps a typed
+`ImageDraft` (alt, caption, width, alignment, fit, position override, timing, hide-after,
+entrance effect, examination, same-in-all-languages) beside the picture, layout, camera and
+composition it already held, and Apply builds the edit with `imageInput(initial, form)`. The
+hidden `illustration`, `motion`, `effect`, `layout` and `examination` inputs are gone, and so is
+`as unknown as MediaEdit` for these two kinds. Animation and the audio kinds keep their form
+fields (as planned). No visual change.
+
+`imageInput` reproduces exactly what the `FormData` reading gave, including its rules: a single
+image stays still (camera "none") and keeps its fade; layers keep the camera and no fade; a
+cinematic can't be examined; a video keeps its stored composition, camera and effect. Proof:
+the ten references (six layered, plus the four single images captured on `f2309f1`, one with
+"examine" and two on the right page) are saved identically after Apply.
+
+**One fix on the way:** the description (alt) field was filled once, when the dialog opened.
+Choosing another main picture kept the old picture's description, and Apply then wrote it onto
+the new picture. The description now follows the chosen picture (you can still edit it).
+
+**Changed assertion:** `media-workspace.spec.ts` "keeps the illustration visible while choosing
+duplicate layer instances…" read the rotation from the hidden `illustration` input (now gone);
+it reads the same value (1°, on the selected last layer) from the layer as the preview draws it
+(`--layer-rotation: 1deg`).
+
+Tests: unit "the Image and Video draft (typed form state)" (starting values, examination
+defaults and French label, single vs layered, cinematic without examination, video keeps its
+stored values); e2e: the ten references, image-composition, media-workspace, editor (27/28; the
+28th is the known failure).
+
+### 2c-3. The new Image dialog
+
+Built as in the design note above. Screenshots and a recording:
+`review-screenshots/pass9-after/image-new-empty.png` (empty state), `image-chemin.png` (Orée's
+3-picture "chemin"), `image-chemin-selected.png`, `image-chemin-picker.png` (adding to the
+middle), `image-chemin-more.png` (More options open), `image-built.png` and
+`image-two-clicks.webm` (three pictures added in two clicks each, a drag, Duplicate, a camera).
+Before: `review-screenshots/image-before/chemin-1…5.png` (Pass 8, five screens high).
+
+What is where now:
+
+- **Left:** "Pictures, front to back" — Front / Middle / Back, each with its pictures and
+  "+ Add". While adding or changing a picture, the picker takes this column, so the preview
+  stays visible. Under it, the selected picture: Size, Turn, Depth, Change… / Duplicate /
+  Remove / Reset, and "Tilt, flip and exact position" (folded).
+- **Right:** the preview (drag or arrow keys move the selected picture; Replay movement; Safe
+  frame), On the page (5 placements), Camera (named list, only with 2+ pictures), Description
+  (alt text), More options (folded; its summary lists what is set).
+- **Footer:** Same in all languages · Cancel · Apply Image.
+
+**Decisions I made while building** (beyond the note):
+
+- The picker opens in the left column, not over the preview: you see the scene while choosing
+  what to add (it also keeps the dialog's size, which an existing test checks).
+- Depth can be changed by dragging a picture's row onto another depth, or with a "Depth" select
+  in the selected picture's block (the keyboard way; the note said "a row menu" — one select
+  for the selected picture is simpler and does the same).
+- "Change…" keeps the picture's place, size and depth; only the image changes. The very first
+  picture ("Choose a picture") takes the depth its catalogue entry suggests, as before.
+- Removing the main picture makes the next picture the main one (before, the main picture had
+  no ×). Removing the last one returns to the empty state.
+- Duplicate shifts the copy by 6 % right and down (kept inside the frame) and selects it.
+- "Hide after" is in seconds (stored in milliseconds, as before).
+- The preview's drag uses React pointer handlers instead of assigning `node.onpointermove`
+  (REVIEW §4, "imperative DOM").
+- "Smart auto-crop" now uses the shared `CheckboxField` (REVIEW §5 #13).
+- The embedded library (and its `embedded` mode in `MediaLibrary` / `MediaPicker`) is gone:
+  only the image dialog used it. Audio and video keep the full library dialog.
+- Found by `fallow dead-code`: `SavedPageSchema` (part 3) was exported but only used inside
+  `story.ts`; it isn't exported any more.
+
+New UI text is in `editor.image.*` (en + fr): titles, depths, buttons, picker, empty state,
+starters, placements and their tooltips, the 16 camera names, groups. Existing field labels moved
+into More options (Frame, Page blend, Text wrapping, Width, Override default position, the
+examination fields, camera details) keep their English labels, like the rest of the editor.
+
+**Changed selectors (same assertions)** — the controls they used are gone or renamed:
+
+| Test                                                                                         | Old step                                                                                                                 | New step                                                                                                                                              |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `media-workspace` "keeps the illustration visible while choosing duplicate layer instances…" | mode select → layered                                                                                                    | removed (no mode)                                                                                                                                     |
+| same                                                                                         | "+ foreground", region "Media library", depth filter = foreground, filter cleared                                        | "Add a picture in front", region "Add a picture: Front" (the picker is for the front; there is no depth filter)                                       |
+| same                                                                                         | "Search media", card "Use this media"                                                                                    | "Search pictures", the picture's button                                                                                                               |
+| same                                                                                         | "Rotation (degrees)"                                                                                                     | "Turn (°)"                                                                                                                                            |
+| same                                                                                         | camera grid button scrolled into view; complementary "Illustration preview" in view                                      | "Camera" select scrolled into view; region "Preview" in view                                                                                          |
+| `image-composition` "…layered…"                                                              | mode select; "+ foreground"; "Use this media"; "Image scale"; "Show crop / safe margins" checkbox; "gentle depth" button | removed; "Add a picture in front"; the picture's button; "Size"; "Safe frame" button; `Camera` = gentle-depth                                         |
+| same                                                                                         | "Text wrapping", "Movement duration", "Caption"                                                                          | the same, after opening "More options"                                                                                                                |
+| `image-composition` "upgrades legacy image layers…"                                          | "Browse media library", "Use this media", mode select, "+ foreground", "Remove foreground layer 1", "Simple effect"      | "Choose a picture", the picture's button, removed, "Add a picture in front", "Remove …" of the selected (just added) fern, "Entrance" in More options |
+| `editor.spec` "…(Wide image)…" and "…Scene Media…"                                           | "Browse media library", "Search media", "Use this media", opening "Size and positioning", "Simple effect"                | "Choose a picture", "Search pictures", the picture's button, "More options", "Entrance"                                                               |
+
+All their assertions are unchanged (planes, blend, wrap, stored layers and scale, duration,
+caption, examination, backup round trip, dialog size while picking, preview in view…).
+
+Tests added: unit `image-pictures.test.ts` (add, change, move, remove with promotion, duplicate
+with clamping); e2e in `media-workspace.spec.ts`: "a new image starts with one clear step and
+the ready-made scenes" (empty state), "adds a picture at each depth in two clicks", "drag and
+drop: moves the selected picture, and a picture to another depth" (pointer drag in the preview,
+arrow key, dragging a row onto Front), "Duplicate adds the same picture again, shifted, and both
+are applied" (with tilt and flip, checked in the preview and in the exported backup). The ten
+references still match.
+
+### 4. Visual polish of the other Story Editor tabs — problems found ("before")
+
+Screenshots of every ribbon tab and every dialog its commands open, plus the header's Settings,
+Load / Import and Export: `review-screenshots/pass9-before/tabs/` (spec
+`review-screenshots/pass9-tabs.spec.ts`, `SHOTS=pass9-before`; the Game tab is taken after
+switching the story to a game mode). The Image dialog is part 2.
+
+**Ribbon (Story, Logic, Media, Game, Review)**
+
+1. Icons are not on one line: a two-line label ("Tunnel Return", "Nested Choice", "Background
+   Music", "Edit Selected Media", "Scene Properties", "Game Condition") pushes its icon up,
+   because each button centres its content vertically.
+2. Uneven widths (from 64 to 95 px depending on the label), so the gaps between commands vary.
+3. Icons of different visual sizes (24 px glyphs: "↶" and "⋮" look small, "■" and "✦" large).
+4. "Additional Commands" is a different kind of control (smaller text, a chevron icon, no group
+   label) next to the groups.
+5. Group labels at 10 px, lighter than the Text toolbar's labels; the separators don't match the
+   Text toolbar's separators.
+
+**Dialogs**
+
+6. Browser-default fieldsets (2 px grey groove, legend on the line) in Video ("Upload video"),
+   TTS (voice, "Generation defaults"), Settings ("Page color"), Game (every section and
+   definition), next to the flat 1 px fieldsets of the new Image dialog.
+7. Secondary buttons drawn as plain text, which don't read as buttons: Game ("+ Action",
+   "Insert game condition", "Apply and insert action choice", "Remove action definition",
+   "+ Ability / spell"…), Load / Import (three actions), Export, History ("Restore version").
+   Others ("Browse media library") have a border: two looks for the same kind of button.
+8. Game's section switcher (Items, Abilities, Encounters, Actions, Rules) looks like plain text:
+   the selected section isn't visible.
+9. Checkboxes in two layouts: label above and the box centred below (Settings "Apply shared
+   configuration to all languages", Game "Offensive ability" — `Field type="checkbox"`), or box
+   then label (`CheckboxField`, REVIEW §5 #13).
+10. Number fields stretched across the whole dialog for 1–5 digits (Volume, Fade, Duration,
+    Intensity, Delay, the TTS generation defaults…).
+11. Uneven vertical rhythm: 12 px around every label, hints glued to the field above (Settings
+    under Game Mode) or far from it; folded sections ("Story placement, timing & size", "Add a
+    voice from an example") in small unstyled summaries.
+12. TTS: "Remove this voice" floats beside the audio player instead of lining up with it.
+13. Control heights differ: dialog inputs ≈ 37 px, the Text toolbar's controls 34 px, ribbon
+    buttons vary.
+
+#### 4-1. Shared dialog styles (all dialogs)
+
+One spacing scale (`--space-1…5`: 4, 8, 12, 16, 24 px) and one control height
+(`--control-height: 34px`, the Text toolbar's) on `.story-editor` and `.editor-dialog`, used
+by every dialog through shared rules in `editor.css`:
+
+- inputs and selects 34 px high; number fields at most 11 rem wide (problems 10, 13);
+- every dialog button has the same 1 px border; the primary one stays filled; the header's ×
+  stays borderless (7);
+- fieldsets: 1 px line, 6 px corners, 12 px padding, bold legend — the Image dialog's look (6);
+- a checkbox always before its label, whichever field component drew it (9);
+- folds (`summary`) bold with a pointer; paragraphs 8 px apart; labels 4 px from their field
+  and 12 px apart (11);
+- section switchers (`nav` in a dialog, i.e. Game's sections) look like tabs with the current
+  one underlined (8);
+- a shared `.dialog-actions` row for buttons that sat bare side by side (Game's action rows,
+  Load / Import, Export, the TTS voice row): wrapped, markup only (7, 12).
+
+Removed as redundant: the Image dialog's own border overrides and `.editor-dialog .check input`.
+No behaviour change, no control removed. E2E: game-authoring, editor, media-workspace,
+narration, editor-tabs 24/24. After: `review-screenshots/pass9-after/part4-1-dialogs/`.
+
+#### 4-2. Ribbon commands (Story, Logic, Media, Game, Review)
+
+One shared rule for every ribbon command: the same width (80 px), the icon in a fixed 32 px box
+on the first row, the label under it in a two-line box. Icons now sit on one line whatever the
+label's length (problems 1, 2); all glyphs are drawn at the same size in the same box (3, as far
+as the glyphs themselves allow). "Additional Commands" uses the same layout and sits level
+with the commands (4). Group labels 11 px, spacing from the shared scale (5). The Text tab is
+unchanged (it already had the toolbar look). E2E editor-tabs, editor, game-authoring: green.
+After: `review-screenshots/pass9-after/part4-2-ribbon/*-ribbon.png`.
+
+#### 4-3. Fix: checkboxes drawn by `CheckboxField` stay at the left
+
+Found in the 4-1 "after" screenshots: the shared checkbox rule (for checkboxes drawn by `Field`,
+label first) also pushed `CheckboxField` rows (box first: Loop, Stop channel, Apply shared
+configuration…) to the right edge. `.check` rows now start at the left. After:
+`review-screenshots/pass9-after/part4-3-checkboxes/media-03-sound-effect.png`.
+
+#### 4-4. Fix: the ribbon keeps one height on every tab
+
+Caught by the Orée references (2b) in the full e2e run: after 4-2, the Story, Logic, Media,
+Game and Review ribbons were 160 px high and the Text ribbon 155 px, so the ribbon jumped when
+switching tabs, and the editor's preview pane (below it) was 5 px shorter, which moved Orée's
+images in the preview by a pixel (4 reference screenshots failed). The commands' top padding
+is now 4 px: every tab's ribbon is 155 px, as before part 4, and the references pass unchanged.
+After: `review-screenshots/pass9-after/part4-4-ribbon-height/` (all `*-ribbon.png` 155 px high).
+
+### Final checks
+
+- Full Chromium e2e on `fc0b219`: **132/133**; the one failure is the pre-existing
+  "uses real perspective depth…" (see above).
+- Coverage run on `fc0b219`: `game-authoring` "inserts upstream Ink snippets…" failed once (Ace
+  only renders visible lines; it passed 3/3 alone, in every earlier run and in the full run):
+  a timing flake under coverage, nothing changed.
+- `fallow security --gate new --changed-since main`: pass after every commit. `fallow dupes`: 0.
+  `fallow dead-code`: 0 (after removing three exports in `f6cdff0`).
+
+## Pass 10 — Media → Image feedback, then what was left (branch `features/editor-ux`)
+
+Your feedback on the new dialog (keep moving images in the preview), in five commits, each with
+an e2e test; then the camera e2e failure (bisect and fix). Parts 1c, 1d, 3 and 4 were already
+done in Pass 9 (see above), so nothing else was left from the original prompt.
+
+**Another writer in the checkout.** While I worked, uncommitted changes appeared that are not
+mine: `src/features/editor/scene-script.ts` and its test (new), `compiler.ts`,
+`use-editor-project.ts`, `tests/e2e/editor.spec.ts` (a new test, "synchronizes story.json after
+deleting Ink scenes…", which fails here), `docs/story-editor/implementation.md`. The other
+Claude session on this machine (`listoire-4a`) says they aren't its own either. I didn't touch,
+stage or commit them: every Pass 10 commit stages only my own paths. They do affect this pass's
+checks (the health score and the coverage run include them, and that test fails).
+
+### 10-1. A single image first; "+ Add layer" makes a layered scene
+
+- The left column starts with **one row, "Image"**: an empty thumbnail, "No image yet" and the
+  image's own **"Choose image"** button. That's a single image: no depth, no camera, no depth
+  groups. Stored as today: the main image, `layers: []` (e2e checks the exported backup).
+- **"+ Add layer"** (enabled once there is an image) opens the picker; one click on an image adds
+  it as a layer: 2 clicks. From then on the panel is **"Layers, front to back"**, grouped Front /
+  Middle / Back, each row with its own "Choose image"; the Camera list and the Depth select
+  appear.
+- **Decision:** a new layer goes to the depth its catalogue entry suggests (scenery at the back,
+  characters in the middle, framing plants in front), in front when the catalogue says nothing;
+  the Depth select or dragging its row changes it. The first image too (back by default, as
+  before).
+- Removed: the three per-depth "+ Add" buttons and "Start here" (and their strings).
+- Tests: e2e "a new image is one image: choose it, and it is stored as a single image" and
+  "+ Add layer makes a layered scene in two clicks, at the depth each image suits" replace "a
+  new image starts with one clear step…" and "adds a picture at each depth in two clicks"
+  (Pass 9): the flows they tested are gone by your request; the new ones check the same things
+  (empty start, 2 clicks per image, depths, camera) plus the stored single image. Changed
+  selectors only in "keeps the illustration visible…" and "…layered…" ("Add a picture in
+  front" → "+ Add layer", picker "Add a picture: Front" → "Add a layer"). The new-image tests now
+  start from the "chemin" page (they used the editor's default scene "intro", which Orée doesn't
+  have and which the other writer's scene sync removes).
+
+### 10-2. One way to choose an image: the layer's own "Choose image"
+
+Removed: the preview's "Choose a picture" button (empty state) and the selected image's
+"Change…" button. Each image row's "Choose image" is the only way to choose or change an image,
+for the first image as for every other layer. The empty preview now says "Choose it on the left
+with “Choose image”, or start from a ready-made scene:" and keeps the five starters (decision 2).
+Strings removed: `empty.choose`, `empty.starters`, `change`.
+
+Tests: e2e checks that a single image has exactly one "Choose…" button, a three-layer scene
+three, and that a layer's own button changes that layer's image. Changed selectors only:
+`editor.spec.ts` (two tests) and `image-composition.spec.ts` ("Choose a picture" → "Choose
+image"). In `editor.spec.ts` I staged only those two lines (the file also holds the other
+writer's uncommitted test).
+
+### 10-3. Added images show whole; a single image's frame follows its shape; overflow shows
+
+- **Why sizes looked wrong:** an image at the back filled the frame (`object-fit: cover`), so a
+  picture whose shape differs from the 3:2 frame was cut; and a single untouched image was drawn
+  at full width and natural height in the dialog (no cap), so it looked enormous and cut.
+- **Format (additive):** optional `fit` on a picture (`contain` | `cover`), which overrides the
+  depth's default. The dialog sets `fit: "contain"` on every image it adds or changes (first
+  image, + Add layer, Choose image); Duplicate copies it. Stored compositions have no `fit` and
+  draw exactly as before (the references hold). `DATA_CONTRACTS.md` updated.
+- **Frame:** when a single image gets its picture, its frame becomes the picture's own shape
+  (portrait / landscape / square, from the asset's stored dimensions: ratio > 1.15, < 0.87,
+  else square), unless the author picked a Frame in this dialog (then it stays). Decision:
+  "picked" means changed during this dialog session; an existing image's stored frame is kept
+  until its picture changes.
+- **Never silently cropped:** around the frame, a ring (in the column gaps, so the frame keeps
+  its size) shows whatever goes outside the frame, faded; the reader still crops at the frame.
+  While something is outside, the dialog lifts the paper-edge mask (it would hide the outside);
+  the soft edge is back as soon as everything fits, and the reader preview beside the dialog
+  always has it. A single untouched image is capped at 56 % of the screen height in the dialog.
+- Starter scenes are kept as they are (no `fit`): they are ready-made compositions.
+
+**Changed assertions** (both mine, Pass 9, `image-pictures.test.ts`): the promoted main picture
+and the duplicate now include `fit: "contain"`, the behaviour this item asks for.
+
+Tests: unit (new and changed images carry `contain`; `shapeOf`); e2e "an added image shows
+whole, a single image's frame follows its shape, and overflow shows faded" (portrait frame for a
+portrait image; at 2× the image goes 1.5× past the frame, the frame doesn't clip in the dialog
+and has its veil, the reader preview still clips; a back layer added later is `contain`; a frame
+the author picked stays when the image changes). References: 10/10.
+
+Found: some catalogue images aren't published locally (only 18 `.webp` in
+`public/stories/house/media/`; e.g. `sketch.misty-conifer-plain-001` returns the app's HTML),
+so they show as broken in the editor. Not changed (local asset library).
+
+### 10-4. Corner handles on the selected image
+
+The selected image gets an outline and four corner handles in the preview, around the part
+where its picture is drawn (not its letterboxed box). Dragging a corner scales the image from
+its centre (away from the centre: bigger; towards it: smaller), in the Size slider's steps
+(0.05) so both always show the same value; it never moves the image. Dragging inside the image
+still moves it, the arrow keys too; the Size slider stays for precision. A single untouched
+image has handles too (the first drag gives it a frame).
+
+The preview measures, once per animation frame, where the selected image is drawn (the same
+loop decides whether to show the faded outside, 10-3). It finds the image through a new neutral
+attribute on the reader's planes, `data-layer` (0 = the main image), which changes nothing
+drawn. Tooltip "Drag a corner to resize (the Size slider is more precise)" in en + fr.
+
+Test: e2e "corner handles resize the selected image in the preview; the slider stays in step"
+(four handles; bottom-right outward → bigger, slider equal; top-left inward → smaller; x
+unchanged). References: 10/10.
+
+### 10-5. Removing an image: a × on each layer, Delete in the preview, and Undo
+
+- Each layer row has a visible × (the shared `CloseButton`), tooltip "Remove this image", named
+  "Remove <image>" for screen readers. With the preview focused, **Delete** (or Backspace)
+  removes the selected image. The selected image's "Remove" button is gone (one way to do it,
+  as for choosing).
+- **Undo:** after a removal, "Image removed: <name>. [Undo]" appears under the layers; Undo (or
+  Ctrl+Z in the dialog, outside text fields) puts the image back where it was, selected.
+  Decision: the undo is forgotten as soon as anything else changes, so it can never wipe a later
+  edit; Cancel still discards everything, as before. Removing the main image makes the next
+  layer the main one (Pass 9); removing the last one returns to the empty image.
+- Strings: `removeHint`, `removed`, `undo` (en + fr); `remove` removed.
+
+**Changed selector:** `image-composition.spec.ts` "upgrades legacy image layers…" removed the
+selected fern with `/^Remove /`; with a × on every layer that matches two buttons, so it names
+"Remove Fern fronds".
+
+Test: e2e "removes an image with its × or Delete in the preview, and Undo brings it back" (×
+with its tooltip, the status line and Undo; Delete then Ctrl+Z; Undo gone after another change).
+
+### 10-6. The camera e2e failure: found and fixed
+
+`image-composition.spec.ts` "uses real perspective depth, pauses camera motion…" failed every
+time since Pass 9 began (0 camera animations instead of 3).
+
+**Bisect:** reverting my code didn't change it (Pass 9 log), so I looked at what the test reads
+instead of commits. Its main image, `sketch.misty-conifer-plain-001`, is not published locally:
+`public/stories/house/media/` holds only the images the story uses (18), and was last rebuilt on
+Nov 9 at 23:48, during Pass 8, by `tools/build-editor-project.ts`, which removes images the story
+doesn't use. The story never used that image (`git log -S` finds it only in the commit that added
+the catalogue), so it disappeared at that rebuild, and the request returns the app's HTML. The
+test passed in Pass 8's earlier runs because the stale file was still there. No code commit is
+"the bad one".
+
+**The defect it reveals (reader):** before starting a camera movement, the reader waits until
+every image of the illustration has loaded with a non-zero width. An image that fails to load is
+"complete" with zero width forever, so **one missing file kept the whole page's camera still**,
+silently. Fix (`scene-playback.ts`): an image that failed (it has a source but no pixels) counts
+as settled, and the reader re-checks on `error` as well as `load`; an image whose source isn't
+set yet (still resolving) is still waited for. The test itself is unchanged and passes again
+(3/3).
+
+Tests: unit "starts an illustration's camera when one of its images fails to load, not before
+sources are set" (fails on the old code); e2e the camera test 3/3; reader suites 57/57.
+
+### Pass 10 checks
+
+| Commit    | Item                                                    | Score |
+| --------- | ------------------------------------------------------- | ----- |
+| `84360d7` | 10-1. one image first, + Add layer                      | 93.5  |
+| `699ce5b` | 10-2. one way to choose an image                        | 93.5  |
+| `41e75d8` | 10-3. whole images, frame follows shape, faded overflow | 93.5  |
+| `1cc913a` | 10-4. corner handles                                    | 93.5  |
+| `c13952a` | 10-5. × / Delete / Undo                                 | 93.5  |
+| `6cc1049` | 10-6. camera: a failed image no longer stops it         | 93.5  |
+
+`fallow security --gate new`: pass after every commit; `fallow dupes`: 0. The coverage runs
+include the other writer's uncommitted files (their new test fails each time). Two coverage runs
+were repeated: the REVIEW #8 Ink timing flake (`house.test.ts`) once, and the lazy `Noise.jsx`
+capture race (handled by dropping source-less browser entries before merging). Full Chromium
+e2e at the end: 136/137 (the failure is the other writer's test).
+
+## Pass 11 — Media → Image: start area, picker tabs, layers panel, sections, preset previews (branch `features/editor-ux`)
+
+Your nine Image-dialog items, one commit each with an e2e test (added to the existing image
+spec files), then your "sync story.json after deleting Ink scenes" work (committed by you as
+`43dfdd3` at the start of this pass).
+
+### How checks run this pass (your change of plan, mid-pass)
+
+- **Per commit** (fast but complete): typecheck + lint, all unit tests (`npx vitest --run`), the
+  e2e spec(s) the item touches (chromium), `npx fallow health --score` (no `--coverage`),
+  `npx fallow security --gate new --changed-since main`, `npx fallow dupes`. Anything failing is
+  fixed before the next item.
+- **Once, at the end:** full e2e on chromium, then `npm run test:coverage` and
+  `fallow health --coverage` (score ≥ 92), then the before/after screenshots. A failure there is
+  bisected over this pass's commits and fixed in a new commit.
+- **Dev server:** started once from **PowerShell** on 4175 and kept running, warmed before e2e.
+  Why: from Git Bash the drive letter is lowercase (`c:/Users/…`). Vitest then loads two copies
+  of itself (every suite fails with "Cannot read properties of undefined (reading 'config')"),
+  and the Vite dev server served modules under both casings: dynamic imports (`DiceModel.tsx`,
+  `RippleDistortion.jsx`) failed and 14 reader/react-bits e2e failed. From PowerShell: 464/464
+  unit tests, and those e2e pass.
+- Commits 1–2 also got the earlier full block (coverage + health `--coverage` 93.5, security 0,
+  dupes 0). The coverage runner stops before its merge when any e2e fails (your WIP test does),
+  so the merge was run by hand; the second time it hit a captured entry without source code,
+  left for the final run.
+
+### 11-1. "Choose an image" lives in the start area — `a128c6b`
+
+- While the composition has no image, the preview's "Start with an image" area holds **"Choose
+  an image"** (the only "Choose" button). The left panel then just says "No image yet", with
+  "+ Add layer" disabled. Once there is an image, the start area is gone and more images come
+  from **"+ Add layer"** ("+ Ajouter un calque").
+- **Decision:** the per-layer "Choose image" buttons are gone (item 1: "Choose" only while
+  empty). To change a layer's picture without losing its place and size, the selected image has
+  **"Replace image"** next to Duplicate / Reset (same `changePicture` as before).
+- Picker titles: "Choose an image" (first), "Add a layer", "Replace image".
+- **Changed assertions** (`media-workspace.spec.ts`): an empty composition has 0 layer rows
+  (was 1, the empty row with its button); the start area's hint check now clicks its "Choose an
+  image" button; "no Choose/Change once there is an image" is 0 (was 1 / 3: one per layer) and
+  "Replace" is 1; "Choose image for Fern fronds / Curly-haired…" became select the row, then
+  "Replace image". Selector only: "Choose image" → "Choose an image" (`editor.spec.ts` ×2,
+  `image-composition.spec.ts`).
+- Test: "the start area holds Choose an image while there is none; then + Add layer adds more".
+
+### 11-2. Ready-made scenes: a toggle in the start area — `f68f9e1`
+
+"Ready-made scenes ▸" (closed by default, `aria-expanded`) under the start button shows the five
+scenes; the second copy at the bottom of More options is removed. The arrow is an `aria-hidden`
+span (a CSS `::after` arrow became part of the button's name). Selector change: tests that apply
+"Character in forest" open the toggle first (`readyMade()` helper). Test: "ready-made scenes are
+a closed toggle in the start area, and only there".
+
+### 11-3. Picker: two tabs, four depth filters — `cfce2dc`
+
+- **"In this story" / "Library"** are tabs (`tablist`, arrow keys via the shared
+  `arrowKeyTabs`), under the search field and above the pictures, so the library no longer needs
+  scrolling. It opens on "In this story" when the story uses pictures, else on "Library".
+- Each tab has **All / Foreground / Middleground / Background** ("Filter by depth"), using the
+  library's existing depth match (`matchesLibraryAsset`): a picture without depth information
+  shows under every depth, as in the Library panel.
+- **Decision:** a search that matches nothing in the open tab but something in the other opens
+  that tab (otherwise a search could look empty while the library has the picture).
+- **Decision:** the depths are named **Foreground / Middleground / Background** everywhere (were
+  Front / Middle / Back), in French **Premier plan / Plan intermédiaire / Arrière-plan**, so the
+  filters and the layers read the same. Selector change: group names in `media-workspace.spec.ts`.
+- Test: "the picker shows In this story and Library as tabs, each filtered by depth".
+
+### 11-4. A layers panel like an image editor's — `52e8e10`
+
+- One row per layer, **front to back**, under Foreground / Middleground / Background: an **eye**,
+  the **thumbnail**, the **name** and its **depth**, and the **×**. Click selects; **Delete** on
+  a row removes it (Delete in the preview still works; Undo as before).
+- **Eye:** hides the layer in the dialog's preview only, through a small style rule on its
+  plane: nothing is stored, the reader never sees it. Hidden layers follow their layer when
+  rows move or one is removed, and come back with Undo.
+- **Drag** a row onto another row's upper / lower half to put it in front of / behind it (a line
+  shows where); onto a depth's free space: the front of that depth. **Alt+↑ / Alt+↓** do the
+  same from the keyboard (focus stays on the row).
+- **Decision (data):** the main picture (the one the description belongs to) is drawn first, so
+  it stays at the back of its depth; dragging it only changes its depth, and nothing goes behind
+  it. Making another picture the main one would rewrite the description.
+- Model: `movePicture` (unit test). Test: "the layers panel: one row per layer, front to back,
+  with an eye, depth, drag and keys".
+
+### 11-5 to 11-8. Settings as folded sections — `c642195`, `c7ba7bb`, `0c87f9a`, `d657f2a`
+
+- **11-5:** no "More options": each category is its own closed `<details>`, whose summary says
+  what is set inside ("· set: caption"). Changed assertion: `.image-more` not open → no
+  `.image-section` open. Selector change: tests open the section they need.
+- **11-6:** **"Description & caption"** ("Description et légende"): "Description (not shown,
+  read aloud by screen readers)" (the alt text, moved in from the top of the dialog) and "Caption
+  (shown under the image)". Selector change: "Caption", "Alt text" → the new labels.
+- **11-7:** **"Interactivity"** ("Interactivité") holds image examination (gameplay on an
+  image). Like before, a cinematic image has none, so no section.
+- **11-8:** **"Camera settings"** folds right under the camera choice.
+- Tests: "no More options…", "Description & caption: each label says where its text goes"
+  (description = the picture's alt in the reader, caption shown), "Interactivity: …", "the
+  camera is a folded section…".
+
+### 11-9. Camera and entrance presets preview their movement — `013e0ff`
+
+The camera presets and a single image's entrances (None / Fade in / Fade out) are **cards** with
+a thumbnail of the current image. **Hover or focus** plays the preset's movement (the reader's
+own `cinematicFrames`, at the chosen speed and intensity; the fades for entrances); leaving
+stops it; under **reduced motion** it stays still. Cards are compact (two rows of eight) so the
+preview stays in view. Selector change: "Camera" / "Entrance" selects → their groups' buttons.
+Test: "camera and entrance presets preview their movement on hover or focus, still under reduced
+motion".
+
+### Your follow-ups during the pass — `0cb899c`, `894293d`, `4899581`
+
+- **"On the page"** is inside **"Look on the page"** ("Aspect sur la page"); the **Camera** is a
+  folded section with **Camera settings** folded inside. Order: Look on the page → Camera → **When
+  to display the media** ("Quand afficher le média") → **Interactivity** → Description & caption.
+  The layout and the camera preset show next to their section's title ("Camera · Gentle depth").
+- Inside the Camera section, the presets' own "Camera" heading is kept for screen readers only
+  (it repeated the title).
+- **Decision:** "Quand afficher le média" with the accent (your message had "media").
+- Changed assertion (mine, this pass): the section count in "no More options…" is 6 (Camera and
+  its nested settings are both sections). Selector changes: camera checks look for the Camera
+  section's summary (the presets sit inside a closed section, so "no camera" is asserted on the
+  section, not on hidden buttons). Test: "settings order: …".
+
+### Also fixed
+
+- `e3726d9`: in a long picker list (the Library), every row shrank to fit the grid's height and
+  the names disappeared; rows keep their size and the grid scrolls (the new assertion fails
+  without the fix).
+- `a4d6ec5`: `drawnBox` (Pass 10) was exported with no consumer (`fallow dead-code`: 1).
+
+### Your "sync story.json after deleting Ink scenes" — `c4c01b5`
+
+Your sync (`43dfdd3`) already worked: the test stalled on its first step because
+`getByLabel("Properties JSON")` found nothing. React writes a textarea's initial value as its
+text, so the wrapping label's text was "Properties JSON" + the whole JSON. Fix: `TextareaField`
+names its textarea with `aria-label={label}` (screen readers already got the right name; now
+every tool does). The test's assertions are untouched and it passes, with undo / redo, save,
+reload and export. Checked: `update()` never short-circuited on `next === latest` before your
+change either (`withMediaReferences` always returned a new object), so nothing regressed there.
+
+### Not done / limits
+
+- The examination fields and the camera's fine settings (duration, speed…) keep their old
+  English-only labels (not new text, so left as they were).
+- A layer hidden with the eye is forgotten when the dialog closes (by design: preview only).
+- `site_changes.patch` shows as deleted in the working tree; not by me, left untouched.
+
+### Pass 11 checks
+
+| Commit                | Item                                     | Health (no coverage) |
+| --------------------- | ---------------------------------------- | -------------------- |
+| `a128c6b`             | 11-1 start area                          | 93.5                 |
+| `f68f9e1`             | 11-2 ready-made toggle                   | 93.5                 |
+| `cfce2dc`             | 11-3 picker tabs                         | 93.5                 |
+| `52e8e10`             | 11-4 layers panel                        | 93.4                 |
+| `c642195`             | 11-5 folded sections                     | 93.4                 |
+| `c7ba7bb`             | 11-6 Description & caption               | 93.4                 |
+| `0c87f9a`             | 11-7 Interactivity                       | 93.4                 |
+| `d657f2a`             | 11-8 camera settings                     | 93.4                 |
+| `013e0ff`             | 11-9 preset previews                     | 93.3                 |
+| `c4c01b5`             | story.json sync test                     | 93.3                 |
+| `0cb899c`             | order, Look on the page, Camera folded   | 93.3                 |
+| `894293d`             | When to display the media; Interactivity | 93.3                 |
+| `a4d6ec5` … `e3726d9` | dead export, camera heading, picker rows | 93.3                 |
+
+After every commit: typecheck, lint, unit tests, the touched e2e specs, `fallow security` (0
+items) and `fallow dupes` (none) passed (the only e2e failure until `c4c01b5` was your WIP
+test). At the end: full chromium e2e, the coverage run and `fallow health --coverage` (summary
+at the top); `fallow architecture` 0 issues, `fallow dead-code` 0 after `a4d6ec5`.

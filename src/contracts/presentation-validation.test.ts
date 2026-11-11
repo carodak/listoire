@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { BundleSchema } from "./story.ts";
 import { mediaIsVisible, SceneSchema } from "./presentation.ts";
+import { IllustrationSchema, illustrationDefaults } from "./illustration.ts";
 
 it("validates exit transitions when parsing a scene, before publication", () => {
   const event = {
@@ -99,4 +100,16 @@ it("rejects reordered text, unknown media/cues, premature choices and colors out
     change(bundle);
     expect(BundleSchema.safeParse(bundle).success).toBe(false);
   }
+});
+
+it("accepts tilt and flip on a picture, and old pictures parse unchanged", () => {
+  const old = illustrationDefaults("background", ["sketch.tree"]);
+  expect(IllustrationSchema.parse(old)).toEqual(old);
+  const tilted = {
+    ...old,
+    layers: [{ ...old.layers[0]!, tiltX: -75, tiltY: 30, flip: true }],
+  };
+  expect(IllustrationSchema.parse(tilted)).toEqual(tilted);
+  for (const tilt of [{ tiltX: 76 }, { tiltY: -80 }, { flip: "yes" }])
+    expect(() => IllustrationSchema.parse({ ...old, base: { ...old.base, ...tilt } })).toThrow();
 });

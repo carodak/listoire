@@ -1,15 +1,19 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// E2E_PORT lets e2e and `npm run test:coverage` use another dev server port.
+const port = process.env.E2E_PORT ?? "4173";
+if (!/^\d{2,5}$/.test(port)) throw new Error(`E2E_PORT must be a port number, got "${port}".`);
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   workers: process.env.CI ? 2 : 1,
   retries: process.env.CI ? 1 : 0,
   reporter: "list",
-  use: { baseURL: "http://127.0.0.1:4173", trace: "retain-on-failure" },
+  use: { baseURL: `http://127.0.0.1:${port}`, trace: "retain-on-failure" },
   webServer: {
-    command: "npm run dev -- --port 4173 --strictPort",
-    url: "http://127.0.0.1:4173",
+    command: `npm run dev -- --port ${port} --strictPort`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
   },
   projects: [

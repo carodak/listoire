@@ -10,13 +10,14 @@ import {
   playerDetails,
 } from "./game-session.ts";
 import type { GameState, PlayerMove } from "../../contracts/game.ts";
-import { ReaderFailure } from "../../contracts/story.ts";
+import { ReaderFailure, SAVED_PAGES } from "../../contracts/story.ts";
 import type { CharacterProfile } from "../../contracts/character.ts";
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
 import type {
   Frame,
   NarrativeEngine,
   SaveData,
+  SavedPage,
   StoryBundle,
   ReaderController,
   ReaderSnapshot,
@@ -32,6 +33,7 @@ export class StoryDirector implements ReaderController {
   private readonly saves: Saves;
   private readonly listeners = new Set<() => void>();
   private saved: SaveData | null = null;
+  /** Pages Back returns to, oldest first, without their own history; kept in each save. */
   private readonly previousPages: SaveData[] = [];
   /** The page as it was reached, before any fight, check or reward on it. */
   private pageStart: SaveData | null = null;
@@ -100,10 +102,13 @@ export class StoryDirector implements ReaderController {
     if (this.disposed) return;
     const inkBefore = this.engine.serialize();
     const frameBefore = this.snapshot.frame ?? undefined;
+    const pagesBefore = [...this.previousPages];
     try {
       await operation();
     } catch (error) {
       this.engine.restore(inkBefore, frameBefore);
+      this.previousPages.splice(0, Infinity, ...pagesBefore);
+      this.publish({ canGoBack: pagesBefore.length > 0 });
       if (this.snapshot.frame) this.present(this.snapshot.frame, this.snapshot.occurrenceId!, true);
       this.publish({ failure: error instanceof ReaderFailure ? error.code : "storage" });
     } finally {
@@ -111,16 +116,21 @@ export class StoryDirector implements ReaderController {
     }
   }
 
-  async load(): Promise<void> {
+  /** `settled`: a fresh start appears like a reopened page (final state, no entrance or voice). */
+  async load(settled = false): Promise<void> {
     await this.run(async () => {
       const save = await this.saves.read(this.bundle);
       if (this.disposed) return;
       if (save) {
         this.engine.restore(save.inkStateJson, save.frame);
+        // Saves written before the history existed load without it: Back starts empty.
+        const pages = (save.history ?? []).map((page) => fromSavedPage(save, page));
+        this.previousPages.splice(0, Infinity, ...pages);
         this.activate(save, true);
+        this.publish({ canGoBack: pages.length > 0 });
       } else {
         this.engine.restore(this.initialState);
-        await this.commitFrame(null);
+        await this.commitFrame(null, undefined, undefined, settled);
       }
     });
   }
@@ -129,6 +139,7 @@ export class StoryDirector implements ReaderController {
     expected: SaveData | null | undefined,
     update?: { character: CharacterProfile; game: GameState },
     retainedFrame?: Frame,
+    restored = false,
   ): Promise<void> {
     const { character, game } = update ?? startPlayer(this.bundle, expected, this.createCharacter);
     if (!expected && character && game && this.bundle.game)
@@ -149,10 +160,11 @@ export class StoryDirector implements ReaderController {
       frame,
       character,
       game,
+      history: this.previousPages.map(savedPage),
     };
     await this.saves.commit(this.bundle, save, expected);
     if (this.disposed) return;
-    this.activate(save, false, Boolean(retainedFrame));
+    this.activate(save, restored, Boolean(retainedFrame));
   }
 
   async choose(choiceId: string, occurrenceId: string): Promise<void> {
@@ -174,10 +186,9 @@ export class StoryDirector implements ReaderController {
           await this.commitFrame(before, update, before.frame);
           return;
         }
-        const start = reachedPage(this.pageStart, before);
+        this.rememberPage(reachedPage(this.pageStart, before));
         this.engine.choose(choiceId);
         await this.commitFrame(before);
-        this.rememberPage(start);
       },
       "forward",
       !actionId,
@@ -236,16 +247,16 @@ export class StoryDirector implements ReaderController {
       this.engine.setGameFacts(gameFacts(update));
       this.engine.choose(pending.choiceId);
       delete update.game.lastResult;
-      await this.commitFrame(before, update);
       this.rememberPage(start);
+      await this.commitFrame(before, update);
     });
   }
   async restart(): Promise<void> {
     await this.run(async () => {
       this.engine.restore(this.initialState);
       this.presentation?.reset?.();
-      await this.commitFrame(undefined);
       this.previousPages.length = 0;
+      await this.commitFrame(undefined);
       this.publish({ canGoBack: false });
     });
   }
@@ -274,16 +285,16 @@ export class StoryDirector implements ReaderController {
     await this.run(
       async () => {
         const before = this.saved!;
-        const previous = pending ? beforeCheck(before) : this.previousPages.at(-1)!;
+        const previous = pending ? beforeCheck(before) : this.previousPages.pop()!;
         const save = {
           ...previous,
           runId: before.runId,
           revision: before.revision + 1,
           updatedAt: new Date().toISOString(),
+          history: this.previousPages.map(savedPage),
         };
         this.engine.restore(previous.inkStateJson, previous.frame);
         await this.saves.commit(this.bundle, save, before);
-        if (!pending) this.previousPages.pop();
         this.activate(save, true);
         this.publish({ canGoBack: this.previousPages.length > 0 });
       },
@@ -292,8 +303,9 @@ export class StoryDirector implements ReaderController {
     );
   }
   private rememberPage(before: SaveData) {
-    this.previousPages.push(before);
-    if (this.previousPages.length > 100) this.previousPages.shift();
+    const { history: _, ...page } = before;
+    this.previousPages.push(page);
+    if (this.previousPages.length > SAVED_PAGES) this.previousPages.shift();
     this.publish({ canGoBack: true });
   }
   private currentSave(occurrenceId: string) {
@@ -322,4 +334,14 @@ export class StoryDirector implements ReaderController {
       /* Media cannot invalidate a committed checkpoint. */
     }
   }
+}
+
+/** The part of a save that restores its page. */
+function savedPage({ inkStateJson, frame, character, game }: SaveData): SavedPage {
+  return { inkStateJson, frame, ...(character && { character }), ...(game && { game }) };
+}
+/** A previous page as a save of the same run (Back gives it a new revision). */
+function fromSavedPage(save: SaveData, page: SavedPage): SaveData {
+  const { history: _, character: __, game: ___, ...run } = save;
+  return { ...run, ...page };
 }

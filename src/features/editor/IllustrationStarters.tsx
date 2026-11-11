@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
 import type { MediaAsset } from "../../contracts/presentation.ts";
@@ -35,8 +36,13 @@ interface IllustrationStartersProps {
 }
 
 export function IllustrationStarters({ assets, onApply }: IllustrationStartersProps) {
+  const { t } = useTranslation();
   return (
-    <div className="illustration-starters" aria-label="Quick illustrations">
+    <div
+      className="illustration-starters"
+      role="group"
+      aria-label={t("editor.image.groups.starters")}
+    >
       {presets.map(([label, background, subject, front]) => {
         const layers: Illustration["layers"] = [];
         if (subject)
@@ -52,10 +58,10 @@ export function IllustrationStarters({ assets, onApply }: IllustrationStartersPr
             type="button"
             key={label}
             disabled={!available}
-            title="Replace this arrangement with an editable preset using catalogue references."
+            title={t("editor.image.startersHint")}
             onClick={() => onApply(image, { ...illustrationDefaults(), layers })}
           >
-            {label}
+            {t(`editor.image.starters.${label}`)}
           </button>
         );
       })}

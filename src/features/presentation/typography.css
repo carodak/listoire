@@ -1,12 +1,31 @@
 .narrative-type {
   overflow-wrap: anywhere;
 }
-.type-style-shout,
-.type-style-impact {
+.type-bold-on {
+  font-weight: 700;
+}
+/* Shout and Impact keep their heavier weight. */
+.type-style-shout.type-bold-on,
+.type-style-impact.type-bold-on {
   font-weight: 900;
 }
-.type-style-whisper {
+.type-bold-off {
+  font-weight: normal;
+}
+.type-italic-on {
   font-style: italic;
+}
+.type-italic-off {
+  font-style: normal;
+}
+.type-underline-on {
+  text-decoration-line: underline;
+}
+.type-strike-on {
+  text-decoration-line: line-through;
+}
+.type-underline-on.type-strike-on {
+  text-decoration-line: underline line-through;
 }
 .type-size-normal {
   font-size: 1em;
@@ -19,6 +38,16 @@
 }
 .type-size-huge {
   font-size: 1.85em;
+}
+/* An author's point size: 12 pt is the reader's text size, so it follows the reader's Text size
+   setting. It is capped by the paragraph's width, so on a phone a big word still fits the column
+   (and a very long one still wraps, see .narrative-type). */
+.type-size-points {
+  font-size: min(calc(var(--type-points) * 1em / 12), 13cqi);
+  line-height: 1.15;
+}
+.prose p:has(.type-size-points) {
+  container-type: inline-size;
 }
 .type-font-serif {
   font-family: Georgia, serif;
@@ -75,6 +104,9 @@
   -webkit-text-stroke: 0.035em currentColor;
   -webkit-text-fill-color: var(--paper, #fff9ef);
   text-shadow: 0.04em 0.04em 0 var(--paper, #fff9ef);
+}
+.type-reserve {
+  visibility: hidden;
 }
 .type-letter {
   display: inline-block;

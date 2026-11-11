@@ -111,6 +111,13 @@ Scene and event IDs remain stable. All existing images and cues receive visible
 Story Outline (Knots and Stitches) and Scene Media tabs. Hovering a media entry highlights
 its reference; clicking reopens its properties. Deleting a reference removes its
 configuration and dependent image cues; project undo restores the complete change.
+Loading or editing Ink also removes scene properties and media references whose
+knots or passage tags no longer exist, before media annotation and autosave.
+Narration references to deleted text segments are removed at the same time.
+The `story.json` properties view and exported backup use this synchronized configuration.
+Settings for surviving scene IDs stay unchanged; cut scene settings remain in the
+editor session until their IDs return, and project undo restores the full previous draft.
+Renaming a scene creates a new ID; settings are not guessed from similar names.
 Native animations target Scene, Scene Transition, an image or a text segment; options
 are restricted by target. Scene Transition currently supports a departure fade-out.
 Sound/music commands use existing channels, volume, looping,

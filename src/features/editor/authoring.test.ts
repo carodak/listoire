@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { insertLocalized } from "./localized-insertion.ts";
 import { buildInkCommand } from "./ink-commands.ts";
@@ -12,7 +12,8 @@ import {
 } from "./media-script.ts";
 import { animationOptions } from "./animation-options.ts";
 import { applyMediaEdit } from "./media-authoring.ts";
-import { mediaDefaults } from "./media-form.ts";
+import { imageDraft, imageInput, mediaDefaults } from "./media-form.ts";
+import { illustrationDefaults } from "../../contracts/illustration.ts";
 import { addLanguage } from "./add-language.ts";
 import { compileLanguage, structure } from "./compiler.ts";
 import { verifyMediaAssets } from "./asset-validation.ts";
@@ -197,6 +198,54 @@ it("shares undo/redo/save shortcuts while keeping unapplied dialog edits local",
   expect(actions.save).toHaveBeenCalledOnce();
   editorShortcut({ ...event, target: { closest: () => ({}) } as unknown as EventTarget }, actions);
   expect(actions.undo).toHaveBeenCalledOnce();
+});
+
+it("formats from the script or toolbar, finds from anywhere, and leaves Ctrl+X as Cut", () => {
+  const actions = {
+    undo: vi.fn(),
+    redo: vi.fn(),
+    save: vi.fn(async () => {}),
+    find: vi.fn(),
+    format: vi.fn(),
+  };
+  const inScript = { closest: (selector: string) => (selector.includes("dialog") ? null : {}) };
+  const elsewhere = { closest: () => null };
+  const press = (key: string, target: object, extra: object = {}) => {
+    const event = {
+      key,
+      ctrlKey: true,
+      metaKey: false,
+      shiftKey: false,
+      target: target as unknown as EventTarget,
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+      ...extra,
+    };
+    editorShortcut(event, actions);
+    return event;
+  };
+  press("b", inScript);
+  press("I", inScript);
+  press("u", inScript);
+  press("X", inScript, { shiftKey: true });
+  press("\\", inScript);
+  expect(actions.format.mock.calls.map(([command]) => command)).toEqual([
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "clear",
+  ]);
+  expect(press("b", inScript).stopPropagation).toHaveBeenCalled(); // Ace's own keys don't run
+  const cut = press("x", inScript);
+  expect(cut.preventDefault).not.toHaveBeenCalled();
+  press("b", elsewhere, { metaKey: true, ctrlKey: false }); // e.g. the header search field
+  expect(actions.format).toHaveBeenCalledTimes(6);
+  press("f", elsewhere);
+  press("h", elsewhere);
+  expect(actions.find.mock.calls).toEqual([[false], [true]]);
+  press("b", { closest: () => ({}) }); // inside a dialog
+  expect(actions.format).toHaveBeenCalledTimes(6);
 });
 
 it("inserts one stable structural command into both languages without replacing translated prose", () => {
@@ -431,4 +480,150 @@ it("restores the target image when reopening a sound cue triggered by that image
     next.languages.en!.configuration.scenes!.intro,
   );
   expect(restored.target).toBe(input.target);
+});
+
+describe("cutting and pasting a // @media line (REVIEW #3)", () => {
+  const annotated = withMediaReferences(original).languages.en!;
+  const lines = annotated.script.split("\n");
+  const row = mediaReferenceLine(annotated.script, "intro", "intro.illustration");
+  const cut = lines.filter((_, index) => index !== row);
+  const without = (rows: string[]) => rows.join("\n");
+  const media = (language: typeof annotated, scene = "intro") =>
+    language.configuration.scenes![scene]!;
+  const blockAt = (language: typeof annotated) =>
+    media(language).blocks!.findIndex((b) => b.kind === "media" && b.id === "intro.illustration");
+
+  it("restores the image, its cues and its place when the line is pasted back", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    expect(blockAt(removed)).toBe(-1);
+    expect(media(removed).events!.some((e) => e.blockId === "intro.illustration")).toBe(false);
+    const pasted = [...cut];
+    pasted.splice(row, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    expect(media(restored)).toEqual(media(annotated));
+    expect(restored.script).toBe(annotated.script);
+    expect(kept.size).toBe(0);
+  });
+
+  it("puts the image after the text the pasted line now follows", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    const text = media(annotated).blocks!.filter((b) => b.kind === "text");
+    const last = text.at(-1)!;
+    const target = cut.findIndex(
+      (line) => last.kind === "text" && line.includes(`# segment:${last.segmentId}`),
+    );
+    const pasted = [...cut];
+    pasted.splice(target + 1, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    const blocks = media(restored).blocks!;
+    expect(blocks[blockAt(restored) - 1]).toEqual(last);
+    expect(media(restored).events).toEqual(expect.arrayContaining(media(annotated).events!));
+  });
+
+  it("keeps the image in its own scene when the line is pasted into another passage", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    const room = cut.findIndex((line) => line.startsWith("=== room"));
+    const pasted = [...cut];
+    pasted.splice(room + 1, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    expect(blockAt(restored)).toBe(blockAt(annotated));
+    expect(media(restored, "room")).toEqual(media(annotated, "room"));
+  });
+
+  it("a deleted line that never comes back stays deleted; two lines cut together both return", () => {
+    const kept = new Map();
+    const second = mediaReferenceLine(annotated.script, "room", "room.illustration");
+    const both = lines.filter((_, index) => index !== row && index !== second);
+    const removed = editMediaScript(annotated, without(both), kept);
+    expect(kept.size).toBe(2);
+    // (The cut also dropped the cue lines aimed at these images; editing on keeps them gone.)
+    expect(editMediaScript(removed, removed.script, kept)).toEqual(removed);
+    const restored = editMediaScript(removed, annotated.script, kept);
+    expect(media(restored)).toEqual(media(annotated));
+    expect(media(restored, "room")).toEqual(media(annotated, "room"));
+    // Without the session's buffer (a reload), a pasted line stays a dead comment, as before.
+    const reloaded = editMediaScript(removed, annotated.script);
+    expect(blockAt(reloaded)).toBe(-1);
+  });
+});
+
+describe("the Image and Video draft (typed form state)", () => {
+  const language = original.languages.en!;
+  const scene = language.configuration.scenes!.intro;
+  const form = (kind: string) => {
+    const initial = mediaDefaults(kind, "intro", "intro.illustration", scene);
+    const draft = imageDraft(initial, { alt: "A photograph", shared: true, locale: "en" });
+    return { initial, draft };
+  };
+
+  it("starts from the stored values and the picture's description", () => {
+    const { initial, draft } = form("Image");
+    expect(draft).toMatchObject({
+      alt: "A photograph",
+      shared: true,
+      caption: initial.caption,
+      show: initial.show,
+      examination: null,
+    });
+    const stored = {
+      title: "Photo",
+      descriptions: ["a"],
+      reverse: "",
+      image: "x",
+      actionId: "look",
+    };
+    expect(
+      imageDraft({ ...initial, examination: stored }, { alt: "", shared: false, locale: "fr" })
+        .examination,
+    ).toEqual({
+      ...stored,
+      buttonLabel: "Examiner la photographie",
+    });
+  });
+
+  it("stores what the form shows: a single image stays still, layers keep the camera", () => {
+    const { initial, draft } = form("Image");
+    const motion = CinematicSchema.parse({ preset: "gentle-depth" });
+    const base = {
+      asset: "photo",
+      layout: "inline" as const,
+      motion,
+      draft: { ...draft, effect: "fade-in" },
+    };
+    const single = imageInput(initial, { ...base, illustration: null });
+    expect(single).toMatchObject({
+      effect: "fade-in",
+      motion: { preset: "none" },
+      examination: null,
+    });
+    expect(single.illustration).toEqual(illustrationDefaults());
+    const layers = illustrationDefaults("background", ["tree"]);
+    const layered = imageInput(initial, { ...base, illustration: layers });
+    expect(layered).toMatchObject({ effect: "none", motion, illustration: layers });
+    // A cinematic can't be examined; a video keeps its stored composition and effect.
+    const exam = {
+      ...base.draft,
+      examination: { title: "T", descriptions: [], reverse: "", image: "" },
+    };
+    expect(
+      imageInput(initial, { ...base, layout: "fullscreen", illustration: null, draft: exam })
+        .examination,
+    ).toBeNull();
+    const video = form("Video");
+    expect(
+      imageInput(video.initial, {
+        ...base,
+        illustration: layers,
+        draft: { ...video.draft, fit: "cover" },
+      }),
+    ).toMatchObject({
+      effect: video.initial.effect,
+      motion: video.initial.motion,
+      illustration: video.initial.illustration,
+      fit: "cover",
+    });
+  });
 });

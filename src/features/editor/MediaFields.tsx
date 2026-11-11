@@ -1,6 +1,6 @@
 import { MediaLayout } from "./MediaLayout.tsx";
 import { useState } from "react";
-import type { MediaEdit } from "./media-edit.ts";
+import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { ExaminationFields } from "./ExaminationFields.tsx";
 import { animationOptions } from "./animation-options.ts";
 import { CheckboxField, Field, SelectField } from "./Fields.tsx";
@@ -27,39 +27,43 @@ function NumberField({ name, label, value, max, min = 0, step = 1 }: NumberField
   );
 }
 interface ImageFieldsProps {
-  input: MediaEdit;
+  kind: string;
+  draft: ImageDraft;
+  onDraft: (patch: Partial<ImageDraft>) => void;
   segments: string[];
-  alt: string;
-  legacyExamination?: MediaEdit["examination"];
   locale: string;
   layout: MediaEdit["layout"];
   onLayout: (layout: MediaEdit["layout"]) => void;
 }
 
-export function ImageFields({
-  input,
-  segments,
-  alt,
-  legacyExamination,
-  locale,
-  layout,
-  onLayout,
-}: ImageFieldsProps) {
+/** The Image and Video fields, all from the typed draft. */
+export function ImageFields(props: ImageFieldsProps) {
+  const { kind, draft, onDraft, locale, layout, onLayout } = props;
   return (
     <>
-      {input.kind !== "Image" && <MediaLayout layout={layout} onLayout={onLayout} />}
-      {["Image", "3D Scene"].includes(input.kind) && layout !== "fullscreen" && (
+      {kind !== "Image" && <MediaLayout layout={layout} onLayout={onLayout} />}
+      {kind === "Image" && layout !== "fullscreen" && (
         <ExaminationFields
-          initial={
-            (input.examination === undefined ? legacyExamination : input.examination) ?? null
-          }
+          value={draft.examination ?? null}
+          onChange={(examination) => onDraft({ examination })}
           locale={locale}
         />
       )}
-      <ImagePlacement input={input} />
-      <Field label="Alt text" name="alt" defaultValue={alt} />
-      <Field label="Caption" name="caption" defaultValue={input.caption} />
-      <ImageTiming input={input} segments={segments} />
+      <details>
+        <summary>Size and positioning (optional)</summary>
+        <ImagePlacement {...props} />
+      </details>
+      <Field
+        label="Alt text"
+        value={draft.alt}
+        onChange={(event) => onDraft({ alt: event.target.value })}
+      />
+      <Field
+        label="Caption"
+        value={draft.caption}
+        onChange={(event) => onDraft({ caption: event.target.value })}
+      />
+      <ImageTiming {...props} />
       {layout === "fullscreen" ? (
         <p>
           Cinematic images disappear with their effects when the cinematic ends. Persistence applies
@@ -68,15 +72,15 @@ export function ImageFields({
       ) : (
         <details>
           <summary>Hide automatically (optional)</summary>
-          <NumberField
-            name="persistence"
+          <DraftNumber
+            {...props}
+            field="persistence"
             label="Persistence in ms (0 = until next page)"
             max={180000}
-            value={input.persistence}
           />
         </details>
       )}
-      {input.kind === "Video" && (
+      {kind === "Video" && (
         <p>
           Fullscreen video uses its reported duration, up to three minutes. The reader can skip it.
         </p>
@@ -84,22 +88,46 @@ export function ImageFields({
     </>
   );
 }
-function PositionFields({ input }: { input: MediaEdit }) {
-  const [override, setOverride] = useState(input.positionOverride);
+type NumberKey = "width" | "x" | "y" | "delay" | "persistence";
+function DraftNumber({
+  draft,
+  onDraft,
+  field,
+  label,
+  min = 0,
+  max,
+}: Pick<ImageFieldsProps, "draft" | "onDraft"> & {
+  field: NumberKey;
+  label: string;
+  min?: number;
+  max: number;
+}) {
+  return (
+    <Field
+      label={label}
+      type="number"
+      min={min}
+      max={max}
+      value={draft[field]}
+      onChange={(event) => onDraft({ [field]: Number(event.target.value) })}
+    />
+  );
+}
+function PositionFields(props: DraftProps) {
+  const { draft, onDraft } = props;
   return (
     <fieldset>
       <legend>Position</legend>
       <CheckboxField
         label="Override default position"
-        name="positionOverride"
-        checked={override}
-        onChange={(event) => setOverride(event.target.checked)}
+        checked={draft.positionOverride}
+        onChange={(event) => onDraft({ positionOverride: event.target.checked })}
       />
       <p>Default: where this media command appears in the script.</p>
-      {override && (
+      {draft.positionOverride && (
         <>
-          <NumberField name="x" label="X (%)" min={-100} max={100} value={input.x} />
-          <NumberField name="y" label="Y (%)" min={-100} max={100} value={input.y} />
+          <DraftNumber {...props} field="x" label="X (%)" min={-100} max={100} />
+          <DraftNumber {...props} field="y" label="Y (%)" min={-100} max={100} />
         </>
       )}
     </fieldset>
@@ -207,40 +235,42 @@ export function TimingFields({ input, segments, trigger, blocks }: TimingFieldsP
   );
 }
 
-function ImagePlacement({ input }: { input: MediaEdit }) {
+type DraftProps = Pick<ImageFieldsProps, "kind" | "draft" | "onDraft" | "segments">;
+/** Width, offset and alignment on the page. */
+export function ImagePlacement(props: DraftProps) {
+  const { kind, draft, onDraft } = props;
   return (
-    <details>
-      <summary>Size and positioning (optional)</summary>{" "}
-      <NumberField name="width" label="Width (%)" min={10} max={100} value={input.width} />
-      <PositionFields input={input} />
+    <>
+      <DraftNumber {...props} field="width" label="Width (%)" min={10} max={100} />
+      <PositionFields {...props} />
       <SelectField
         label="Alignment"
-        name="align"
-        defaultValue={input.align}
-        options={["left", "center", "right"]}
+        value={draft.align}
+        options={["left", "center", "right"] as const}
+        onChange={(align) => onDraft({ align })}
       />
-      {input.kind !== "Image" && (
+      {kind !== "Image" && (
         <SelectField
           label="Fit / crop"
-          name="fit"
-          defaultValue={input.fit}
-          options={["contain", "cover"]}
+          value={draft.fit}
+          options={["contain", "cover"] as const}
           labels={{ contain: "Fit", cover: "Cover / crop" }}
+          onChange={(fit) => onDraft({ fit })}
         />
       )}
-    </details>
+    </>
   );
 }
 
-function ImageTiming({ input, segments }: { input: MediaEdit; segments: string[] }) {
-  const [show, setShow] = useState(input.show);
+/** When the picture appears: with the page, at a line of text, or after a delay. */
+export function ImageTiming(props: DraftProps) {
+  const { draft, onDraft, segments } = props;
   return (
     <>
       <SelectField
         label="Show"
-        name="show"
-        value={show}
-        onChange={setShow}
+        value={draft.show}
+        onChange={(show) => onDraft({ show })}
         options={["page", "segment", "delay"] as const}
         labels={{
           page: "When page appears",
@@ -248,17 +278,17 @@ function ImageTiming({ input, segments }: { input: MediaEdit; segments: string[]
           delay: "After a delay",
         }}
       />
-      {show === "segment" && (
+      {draft.show === "segment" && (
         <SelectField
           label="Text position"
-          name="segment"
-          defaultValue={input.segment}
+          value={draft.segment}
           options={["", ...segments]}
           labels={{ "": "Choose a segment" }}
+          onChange={(segment) => onDraft({ segment })}
         />
       )}
-      {show === "delay" && (
-        <NumberField name="delay" label="Delay (ms)" max={10000} value={input.delay} />
+      {draft.show === "delay" && (
+        <DraftNumber {...props} field="delay" label="Delay (ms)" max={10000} />
       )}
     </>
   );

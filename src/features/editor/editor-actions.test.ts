@@ -6,6 +6,7 @@ import { compileInWorker } from "./compile-client.ts";
 import { EditorActions } from "./editor-actions.ts";
 import type { EditorActionContext } from "./editor-actions.ts";
 import type { EditorView } from "./editor-view.ts";
+import type { StoryBundle } from "../../contracts/story.ts";
 
 vi.mock("./compile-client.ts", () => ({ compileInWorker: vi.fn() }));
 const compile = vi.mocked(compileInWorker);
@@ -30,7 +31,7 @@ function setup(editor: ReturnType<typeof fakeEditor> | null = fakeEditor()) {
   const project = structuredClone(houseProject);
   const language = { ...project.languages.en!, script };
   project.languages.en = language;
-  const patchView = vi.fn<(view: Partial<EditorView>) => void>();
+  const patchView = vi.fn<EditorActionContext["patchView"]>();
   const update = vi.fn();
   const setIssues = vi.fn();
   const context: EditorActionContext = {
@@ -127,14 +128,28 @@ describe("EditorActions compile actions", () => {
 });
 
 describe("EditorActions editor commands", () => {
-  it("formatText explains why it cannot format yet", () => {
-    expect(setup(null).actions.formatText({ style: "whisper" })).toBe(
-      "The script editor is still loading.",
-    );
+  it("applyPreset explains why it cannot format yet", () => {
+    // Pass 9, 1b: the messages are i18n keys now (the toolbar translates them).
+    expect(setup(null).actions.applyPreset("whisper")).toBe("editor.text.errors.loading");
     const multiline = fakeEditor(undefined, { start: 0, end: 1 });
-    expect(setup(multiline).actions.formatText({ style: "whisper" })).toBe(
-      "Select words within one paragraph.",
-    );
+    expect(setup(multiline).actions.applyPreset("whisper")).toBe("editor.text.errors.oneParagraph");
+  });
+
+  it("reports a formatting message to every listener until it is cleared", () => {
+    const { actions } = setup();
+    const toolbar = vi.fn(),
+      statusBar = vi.fn();
+    const stop = actions.watchSelection(toolbar);
+    actions.watchSelection(statusBar);
+    actions.report(actions.toggleText("bold"));
+    expect(actions.textStatus()).toBe("editor.text.errors.notNarrative");
+    expect(toolbar).toHaveBeenCalledTimes(1);
+    expect(statusBar).toHaveBeenCalledTimes(1);
+    stop();
+    actions.report(undefined);
+    expect(actions.textStatus()).toBe("");
+    expect(toolbar).toHaveBeenCalledTimes(1);
+    expect(statusBar).toHaveBeenCalledTimes(2);
   });
 
   it("changeScript ignores edits made by the editor itself", () => {
@@ -189,4 +204,55 @@ it("open() clears the selected media and opens the dialog in one view update", (
   const { actions, patchView } = setup();
   actions.open("Story Settings");
   expect(patchView.mock.calls).toEqual([[{ selectedMedia: undefined, dialog: "Story Settings" }]]);
+});
+
+describe("EditorActions.refresh (live preview)", () => {
+  const bundle = { locale: "en" } as unknown as StoryBundle;
+  const live = () => {
+    const parts = setup();
+    Object.assign(parts.context.state, { issues: [] });
+    parts.context.view.preview = open();
+    return parts;
+  };
+  const open = (key = "slot") => ({ bundle, knot: "", key });
+  const applied = (patchView: ReturnType<typeof setup>["patchView"], view: Partial<EditorView>) =>
+    patchView.mock.calls.map(([change]) =>
+      typeof change === "function" ? change(view as EditorView) : change,
+    );
+
+  it("shows the passage at the cursor, settled, in the same preview; never reopens a closed one", async () => {
+    const { actions, patchView } = live();
+    compile.mockResolvedValue({ en: bundle });
+    await actions.refresh();
+    expect(applied(patchView, { preview: open() })).toEqual([
+      { preview: { bundle, knot: "garden", key: "slot", settled: true } },
+    ]);
+    expect(applied(patchView, { preview: null })).toEqual([{}]);
+  });
+
+  it("skips a version Preview already shows and drops a compile that a newer one replaced", async () => {
+    const { actions, context, patchView } = live();
+    compile.mockResolvedValue({ en: bundle });
+    await actions.play();
+    patchView.mockClear();
+    await actions.refresh(); // same project as the Preview just played
+    expect(compile).toHaveBeenCalledOnce();
+    context.project = structuredClone(context.project);
+    let finish!: (value: Record<string, StoryBundle>) => void;
+    compile.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const late = actions.refresh();
+    context.project = structuredClone(context.project);
+    await actions.refresh();
+    finish({ en: bundle });
+    await late;
+    expect(patchView).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the last preview and reports a compile error without opening Issues", async () => {
+    const { actions, patchView, setIssues } = live();
+    compile.mockRejectedValue(new Error("Unknown divert"));
+    await actions.refresh();
+    expect(setIssues).toHaveBeenCalledWith(["Unknown divert"]);
+    expect(patchView).not.toHaveBeenCalled();
+  });
 });

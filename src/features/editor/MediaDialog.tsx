@@ -2,15 +2,15 @@ import { illustrationDefaults } from "../../contracts/illustration.ts";
 import { message } from "../../contracts/error-message.ts";
 import { MediaPicker } from "./MediaLibrary.tsx";
 import { VideoUpload } from "./VideoUpload.tsx";
-import { CinematicFields } from "./CinematicFields.tsx";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { applyMediaEdit } from "./media-authoring.ts";
-import { mediaDefaults, mediaContext } from "./media-form.ts";
-import type { MediaEdit } from "./media-edit.ts";
+import { imageDraft, imageInput, mediaDefaults, mediaContext } from "./media-form.ts";
+import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { ImageFields, AnimationFields, AudioFields, TimingFields } from "./MediaFields.tsx";
-import { ImageComposition } from "./ImageComposition.tsx";
+import { ImageEditor } from "./ImageComposition.tsx";
 
 interface MediaDialogProps {
   kind: string;
@@ -31,22 +31,19 @@ interface FormProps {
   initial: MediaEdit;
   context: ReturnType<typeof mediaContext>;
   patch: (patch: Partial<MediaForm>) => void;
-  previewTarget: HTMLElement | null;
   selectedId?: string;
 }
+/** Image and Video edit a typed draft; the other kinds still read their form fields. */
+const drafted = (kind: string) => kind === "Image" || kind === "Video";
 const mediaFields = {
-  Image: ImageFields,
-  Video: ImageFields,
   Animation: AnimationFields,
   "Sound Effect": AudioFields,
   "Background Music": AudioFields,
 };
 export function MediaDialog(props: MediaDialogProps) {
   const { kind, project, locale, passageId, selectedId, onApply, onClose } = props;
-  const [form, setForm] = useState(() =>
-    initialForm(kind, passageId, selectedId, project.languages[locale]!),
-  );
-  const [previewTarget, setPreviewTarget] = useState<HTMLDivElement | null>(null);
+  const { t } = useTranslation();
+  const [form, setForm] = useState(() => initialForm(kind, passageId, selectedId, project, locale));
   const patch = (patch: Partial<MediaForm>) => setForm((before) => ({ ...before, ...patch }));
   const id = selectedId ?? form.newId;
   const initial = mediaDefaults(
@@ -60,7 +57,7 @@ export function MediaDialog(props: MediaDialogProps) {
     event.preventDefault();
     try {
       const data = new FormData(event.currentTarget);
-      const input = readMediaForm(initial, data);
+      const input = drafted(kind) ? imageInput(initial, form) : readMediaForm(initial, data);
       const next = commitMedia(
         project,
         locale,
@@ -75,22 +72,60 @@ export function MediaDialog(props: MediaDialogProps) {
       patch({ error: message(error) });
     }
   }
-  const fields: FormProps = { ...props, form, initial, context, patch, previewTarget };
+  const fields: FormProps = { ...props, form, initial, context, patch };
+  if (kind === "Image") {
+    const scenes = Object.keys(form.language.configuration.scenes ?? {});
+    return (
+      <EditorDialog
+        title={t(selectedId ? "editor.image.edit" : "editor.image.add")}
+        onClose={onClose}
+      >
+        <form onSubmit={apply} className="image-dialog">
+          <ImageEditor
+            form={form}
+            patch={patch}
+            onAsset={(asset, change) =>
+              patch({
+                ...change,
+                asset,
+                draft: { ...form.draft, alt: altText(form.language, asset) },
+              })
+            }
+            library={project.mediaLibrary ?? []}
+            locale={locale}
+            segments={context.segmentIds}
+            scenes={selectedId ? undefined : [...new Set([...scenes, form.sceneId])]}
+          />
+          {form.error && <p role="alert">{form.error}</p>}
+          <EditorFormActions
+            onClose={onClose}
+            start={
+              <label className="check" title={t("editor.image.sameEverywhereHint")}>
+                <input
+                  type="checkbox"
+                  checked={form.draft.shared}
+                  onChange={(event) =>
+                    patch({ draft: { ...form.draft, shared: event.target.checked } })
+                  }
+                />
+                {t("editor.image.sameEverywhere")}
+              </label>
+            }
+          >
+            {t("editor.image.apply")}
+          </EditorFormActions>
+        </form>
+      </EditorDialog>
+    );
+  }
   return (
     <EditorDialog title={`${selectedId ? "Edit" : "Add"} ${kind}`} onClose={onClose}>
       <form onSubmit={apply} key={form.sceneId}>
-        <fieldset className="media-dialog-fields" data-image={kind === "Image"}>
+        <fieldset className="media-dialog-fields">
           <div className="media-settings-column">
             <MediaInputs {...fields} />
             <MediaConfiguration {...fields} />
           </div>
-          {kind === "Image" && (
-            <aside className="media-preview-column" aria-label="Illustration preview">
-              <h3>Live preview</h3>
-              {!form.asset && <p>Choose an image or a composition preset to preview it here.</p>}
-              <div ref={setPreviewTarget} />
-            </aside>
-          )}
         </fieldset>
         {form.error && <p role="alert">{form.error}</p>}
         <EditorFormActions onClose={onClose}>Apply {kind}</EditorFormActions>
@@ -98,8 +133,11 @@ export function MediaDialog(props: MediaDialogProps) {
     </EditorDialog>
   );
 }
-function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: FormProps) {
+function MediaInputs({ kind, project, form, patch, selectedId }: FormProps) {
   const scenes = Object.keys(form.language.configuration.scenes ?? {});
+  // A new picture brings its own description (the field used to keep the previous one's).
+  const setAsset = (asset: string) =>
+    patch({ asset, draft: { ...form.draft, alt: altText(form.language, asset) } });
   return (
     <>
       <label className="media-scene-select">
@@ -120,52 +158,39 @@ function MediaInputs({ kind, project, form, patch, previewTarget, selectedId }: 
         language={form.language}
         setLanguage={(language) => patch({ language })}
         asset={form.asset}
-        setAsset={(asset) => patch({ asset })}
+        setAsset={setAsset}
         library={project.mediaLibrary}
-      />
-      <ImageComposition
-        kind={kind}
-        previewTarget={previewTarget}
-        image={form.asset}
-        value={form.illustration}
-        onChange={(illustration) => patch({ illustration, motion: { ...form.motion, layers: [] } })}
-        onImage={(asset) => patch({ asset })}
-        language={form.language}
-        library={project.mediaLibrary}
-        motion={form.motion}
-        layout={form.layout}
-        onLayout={(layout) => patch({ layout })}
       />
     </>
   );
 }
-function MediaConfiguration({ kind, project, locale, form, initial, context, patch }: FormProps) {
+function MediaConfiguration({ kind, locale, form, initial, context, patch }: FormProps) {
   const Fields = mediaFields[kind as keyof typeof mediaFields];
   const content = { input: initial, segments: context.segmentIds };
+  const onDraft = (change: Partial<ImageDraft>) => patch({ draft: { ...form.draft, ...change } });
   return (
     <>
       <details className="media-placement-options" open>
         <summary>Story placement, timing &amp; size</summary>
-        <Fields
-          {...content}
-          layout={form.layout}
-          onLayout={(layout) => patch({ layout })}
-          alt={context.alt}
-          blocks={context.blocks}
-          target={form.target}
-          onTarget={(target) => patch({ target })}
-          legacyExamination={form.language.configuration.examination}
-          locale={locale}
-        />
+        {drafted(kind) ? (
+          <ImageFields
+            kind={kind}
+            draft={form.draft}
+            onDraft={onDraft}
+            segments={context.segmentIds}
+            layout={form.layout}
+            onLayout={(layout) => patch({ layout })}
+            locale={locale}
+          />
+        ) : (
+          <Fields
+            {...content}
+            blocks={context.blocks}
+            target={form.target}
+            onTarget={(target) => patch({ target })}
+          />
+        )}
       </details>
-      <CinematicFields
-        kind={kind}
-        motion={form.motion}
-        image={context.assetUrl}
-        layerCount={form.illustration?.layers.length ?? 0}
-        simpleEffect={initial.effect}
-        onChange={(motion) => patch({ motion })}
-      />
       {!["Image", "Video"].includes(kind) && form.target !== "transition" && (
         <TimingFields {...content} blocks={context.blocks} trigger={context.trigger} />
       )}
@@ -176,7 +201,12 @@ function MediaConfiguration({ kind, project, locale, form, initial, context, pat
         className="check media-shared-setting"
         title="Uncheck to override this language only. Change the default in Settings."
       >
-        <input name="shared" type="checkbox" defaultChecked={project.shareConfiguration ?? false} />
+        <input
+          name="shared"
+          type="checkbox"
+          checked={form.draft.shared}
+          onChange={(event) => onDraft({ shared: event.target.checked })}
+        />
         Apply shared configuration to all languages
       </label>
     </>
@@ -260,12 +290,17 @@ function MediaSource({ kind, language, setLanguage, asset, setAsset, library }: 
   );
 }
 
+const altText = (language: StoryProject["languages"][string], asset: string) =>
+  language.configuration.assets?.find((entry) => entry.id === asset)?.alt ?? "";
+
 function initialForm(
   kind: string,
   sceneId: string,
   selectedId: string | undefined,
-  language: StoryProject["languages"][string],
+  project: StoryProject,
+  locale: string,
 ) {
+  const language = project.languages[locale]!;
   const defaults = mediaDefaults(
     kind,
     sceneId,
@@ -276,6 +311,12 @@ function initialForm(
     language,
     sceneId,
     asset: defaults.asset,
+    draft: imageDraft(defaults, {
+      alt: altText(language, defaults.asset),
+      shared: project.shareConfiguration ?? false,
+      locale,
+      legacy: language.configuration.examination,
+    }),
     error: "",
     target: defaults.target,
     layout: defaults.layout,

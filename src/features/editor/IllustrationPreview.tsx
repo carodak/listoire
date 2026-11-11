@@ -1,5 +1,6 @@
-import { Field, SelectField } from "./Fields.tsx";
+import { CheckboxField, SelectField } from "./Fields.tsx";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Illustration } from "../../contracts/illustration.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
@@ -35,6 +36,7 @@ export function CompositionPreview({
   layout,
   margins,
 }: CompositionPreviewProps) {
+  const { t } = useTranslation();
   const [replay, setReplay] = useState(0);
   const camera = useCompositionCamera(image, value.layers.length, motion, replay);
   const atmosphere = motion.preset === "atmospheric-still" ? "fantasy" : motion.atmosphere;
@@ -62,7 +64,7 @@ export function CompositionPreview({
         <ShotAtmosphere atmosphere={atmosphere} />
       </div>
       <button type="button" onClick={() => setReplay(replay + 1)}>
-        Replay movement
+        {t("editor.image.replay")}
       </button>
       {margins && (
         <span className="image-safe-margin" aria-hidden="true">
@@ -82,28 +84,12 @@ interface PageCompositionFieldsProps {
 export function PageCompositionFields({ value, onChange, layout }: PageCompositionFieldsProps) {
   return (
     <div className="preset-options">
-      <Field
+      <CheckboxField
         label="Smart auto-crop"
-        type="checkbox"
         help="Detect transparent or pale-paper margins. Original files remain unchanged; position and scale stay editable."
         checked={value.autoCrop ?? false}
         onChange={(event) => onChange({ ...value, autoCrop: event.target.checked })}
       />
-      <button
-        type="button"
-        title="Match the reading paper, soften irregular edges and wrap text beside a single character. You can adjust every choice below."
-        onClick={() =>
-          onChange({
-            ...value,
-            autoCrop: true,
-            blend: "paper",
-            aspect: value.base.role === "midground" ? "portrait" : "landscape",
-            wrap: layout === "inline" && value.base.role !== "background" ? "right" : "none",
-          })
-        }
-      >
-        Smart blend with text
-      </button>
       <SelectField
         label="Frame"
         value={value.aspect}

@@ -1,0 +1,116 @@
+{
+  "en": {
+    "title": "The keeping of small lights",
+    "progress": 0.4,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "relais.p1"
+      },
+      {
+        "kind": "media",
+        "id": "relais.illustration",
+        "image": "sketch.middle-aged-female-medieval-beekeeper-holding-a-small-skep-001",
+        "layout": "right",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "relais.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "relais.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "L'Entretien des petites lumières",
+    "progress": 0.4,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "relais.p1"
+      },
+      {
+        "kind": "media",
+        "id": "relais.illustration",
+        "image": "sketch.middle-aged-female-medieval-beekeeper-holding-a-small-skep-001",
+        "layout": "right",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "relais.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "relais.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

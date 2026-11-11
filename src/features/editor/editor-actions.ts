@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import type { AceEditor, AceRange } from "./ace.ts";
+import type { AceEditor, AcePosition, AceRange } from "./ace.ts";
 import type { EditorView } from "./editor-view.ts";
 import type { useEditorProject } from "./use-editor-project.ts";
 import { message } from "../../contracts/error-message.ts";
@@ -9,51 +9,141 @@ import { compileInWorker } from "./compile-client.ts";
 import { insertLocalized } from "./localized-insertion.ts";
 import { outlineEntries } from "./ink-outline.ts";
 import { editMediaScript, mediaInsertionPosition, mediaReferenceLine } from "./media-script.ts";
+import type { KeptMedia } from "./media-script.ts";
 import { sceneMediaEntries } from "./scene-media.ts";
-import type { Typography } from "../../contracts/typography.ts";
-import { parseTypography } from "../../contracts/typography.ts";
-import { formatTextSelection } from "./text-formatting.ts";
+import type { ParagraphAlign, Typography } from "../../contracts/typography.ts";
+import { effectiveTypography } from "../../contracts/typography.ts";
+import {
+  alignLine,
+  alignTranslations,
+  formatAt,
+  formatTextSelection,
+  insideMarkup,
+  isParagraphLine,
+  lineAlignment,
+  patchTextSelection,
+} from "./text-formatting.ts";
+export type TextToggle = "bold" | "italic" | "underline" | "strike";
+export interface SelectionFormat {
+  format: Typography;
+  align: ParagraphAlign;
+}
+type Handles = {
+  editor: AceEditor | null;
+  selection: AceRange | null;
+  suppress: boolean;
+  /** Called when the selection or the formatting status changes (toolbar, status bar). */
+  listeners?: Set<() => void>;
+  /** The last formatting message and the selection it was made for. */
+  textStatus?: { message: string; at: string };
+  /** Counts preview compiles, so a late one never replaces a newer preview. */
+  compiles?: number;
+  /** The last live-preview compile error, cleared once the script compiles again. */
+  liveIssue?: string;
+  /** The project version the preview was compiled from: no refresh needed for it. */
+  previewed?: StoryProject;
+  /** Media whose `// @media` line was cut, until the line is pasted back (this session). */
+  keptMedia?: Map<string, KeptMedia>;
+};
 export interface EditorActionContext {
   project: StoryProject;
   language: StoryProject["languages"][string];
   activeLocale: string;
   selectedScene: string;
-  handles: RefObject<{ editor: AceEditor | null; selection: AceRange | null; suppress: boolean }>;
+  handles: RefObject<Handles>;
   state: ReturnType<typeof useEditorProject>;
   update: ReturnType<typeof useEditorProject>["update"];
   view: EditorView;
-  patchView: (view: Partial<EditorView>) => void;
+  patchView: (view: Partial<EditorView> | ((view: EditorView) => Partial<EditorView>)) => void;
 }
 export class EditorActions {
   private readonly context: EditorActionContext;
   constructor(context: EditorActionContext) {
     this.context = context;
   }
-  selectedText = () => {
-    try {
-      return parseTypography(this.context.handles.current.editor?.getSelectedText() ?? "").text;
-    } catch {
-      return "";
-    }
+  /** What the toolbar shows: the settings at the selection (or the caret) and its paragraph. */
+  selectionFormat = (): SelectionFormat => {
+    const editor = this.context.handles.current.editor;
+    if (!editor) return { format: {}, align: "left" };
+    const { start, end } = editor.getSelectionRange();
+    const line = editor.session.getLine(start.row);
+    const caret = start.row === end.row && start.column === end.column;
+    // At a caret, the letter before it (the word being edited, as in other editors).
+    const before = caret && !insideMarkup(line, start.column);
+    return {
+      format: formatAt(line, before ? Math.max(0, start.column - 1) : start.column),
+      align: lineAlignment(line),
+    };
   };
-  formatText = (format: Typography): string | undefined => {
+  watchSelection = (listener: () => void) => {
+    const listeners = (this.context.handles.current.listeners ??= new Set());
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  private notify() {
+    this.context.handles.current.listeners?.forEach((listener) => listener());
+  }
+  private selectionKey() {
+    const range = this.context.handles.current.editor?.getSelectionRange();
+    return range
+      ? `${range.start.row}:${range.start.column}-${range.end.row}:${range.end.column}`
+      : "";
+  }
+  /** Shows why a formatting command (button or shortcut) did nothing; undefined clears it. */
+  report = (error: string | undefined) => {
+    const { handles } = this.context;
+    handles.current.textStatus = error ? { message: error, at: this.selectionKey() } : undefined;
+    this.notify();
+  };
+  /** The last formatting message (an i18n key), while the selection it was made for stays. */
+  textStatus = () => {
+    const status = this.context.handles.current.textStatus;
+    return status?.at === this.selectionKey() ? status.message : "";
+  };
+  /** A preset gives exactly its look: manual changes on these words are cleared (undo restores). */
+  applyPreset = (style: NonNullable<Typography["style"]>) =>
+    this.rewrite("style", (line, start, end) => formatTextSelection(line, start, end, { style }));
+  patchText = (patch: Omit<Typography, "style">) =>
+    this.rewrite(Object.keys(patch).join(), (line, start, end) =>
+      patchTextSelection(line, start, end, patch),
+    );
+  clearText = () =>
+    this.rewrite("clear", (line, start, end) => formatTextSelection(line, start, end, {}));
+  toggleText = (key: TextToggle) =>
+    this.patchText({
+      [key]: effectiveTypography(this.selectionFormat().format)[key] === "on" ? "off" : "on",
+    });
+  /** Rewrites the selected words in place; a caret first selects the word under it. */
+  private rewrite(
+    change: string,
+    edit: (line: string, start: number, end: number) => ReturnType<typeof formatTextSelection>,
+  ): string | undefined {
     const { handles } = this.context;
     const editor = handles.current.editor;
-    if (!editor) return "The script editor is still loading.";
+    if (!editor) return "editor.text.errors.loading";
+    const { start: caret, end: last } = editor.getSelectionRange();
+    // A caret inside a tag's markup (after Undo) formats that tag's words as they are.
+    if (
+      caret.row === last.row &&
+      caret.column === last.column &&
+      !insideMarkup(editor.session.getLine(caret.row), caret.column)
+    )
+      editor.selection.selectWord();
     const range = editor.getSelectionRange();
-    if (range.start.row !== range.end.row) return "Select words within one paragraph.";
+    if (range.start.row !== range.end.row) return "editor.text.errors.oneParagraph";
     try {
-      const { start, end, replacement, selection } = formatTextSelection(
+      const { start, end, replacement, selection } = edit(
         editor.session.getLine(range.start.row),
         range.start.column,
         range.end.column,
-        format,
       );
       handles.current.selection = {
         start: { row: range.start.row, column: start },
         end: { row: range.end.row, column: end },
       };
-      this.insert(replacement, false);
+      this.insert(replacement, false, undefined, `Formatted text: ${change}`);
       editor.selection.setRange({
         start: { row: range.start.row, column: selection.start },
         end: { row: range.start.row, column: selection.end },
@@ -61,6 +151,30 @@ export class EditorActions {
     } catch (error) {
       return message(error);
     }
+  }
+  /** Aligns every paragraph the selection touches, here and in the other translations. */
+  alignText = (align: ParagraphAlign): string | undefined => {
+    const { handles, project, activeLocale } = this.context;
+    const editor = handles.current.editor;
+    if (!editor) return "editor.text.errors.loading";
+    const range = editor.getSelectionRange();
+    const last =
+      range.end.row > range.start.row && range.end.column === 0 ? range.end.row - 1 : range.end.row;
+    const lines: string[] = [];
+    for (let row = range.start.row; row <= last; row++) lines.push(editor.session.getLine(row));
+    if (!lines.some(isParagraphLine)) return "editor.text.errors.noParagraph";
+    const aligned = lines.map((line) => alignLine(line, align));
+    handles.current.selection = {
+      start: { row: range.start.row, column: 0 },
+      end: { row: last, column: lines.at(-1)!.length },
+    };
+    const translated = alignTranslations(project, activeLocale, lines, align);
+    this.insert(aligned.join("\n"), false, translated, "Aligned paragraphs");
+    const clip = (position: AcePosition) => ({
+      row: position.row,
+      column: Math.min(position.column, editor.session.getLine(position.row).length),
+    });
+    editor.selection.setRange({ start: clip(range.start), end: clip(range.end) });
   };
   changeScript = (script: string) => {
     const { handles, update, project, activeLocale, language } = this.context;
@@ -68,12 +182,25 @@ export class EditorActions {
     update(
       {
         ...project!,
-        languages: { ...project!.languages, [activeLocale]: editMediaScript(language, script) },
+        languages: {
+          ...project!.languages,
+          [activeLocale]: editMediaScript(
+            language,
+            script,
+            (handles.current.keptMedia ??= new Map()),
+          ),
+        },
       },
       `Edited ${activeLocale} Ink`,
     );
   };
-  insert = (text: string, structural = true, base = this.context.project) => {
+  insert = (
+    text: string,
+    structural = true,
+    base = this.context.project,
+    // Same-label changes within 750 ms share one undo step (typing); formatting has its own.
+    label = "Inserted Ink command",
+  ) => {
     const { handles, selectedScene, activeLocale, state, patchView, update } = this.context;
     const instance = handles.current.editor;
     if (!instance) return;
@@ -101,7 +228,7 @@ export class EditorActions {
     instance.insert(text);
     handles.current.suppress = false;
     next.languages[activeLocale]!.script = instance.getValue();
-    update(next, "Inserted Ink command");
+    update(next, label);
     handles.current.selection = null;
     instance.focus();
   };
@@ -157,16 +284,48 @@ export class EditorActions {
     }
   };
   play = async (knot = "", source = this.context.project) => {
-    const { patchView, activeLocale, state } = this.context;
+    const { patchView, activeLocale, state, handles } = this.context;
     patchView({ busy: true });
+    const compile = (handles.current.compiles = (handles.current.compiles ?? 0) + 1);
+    handles.current.previewed = source;
     try {
       const bundles = await compileInWorker(source, activeLocale);
+      if (handles.current.compiles !== compile) return;
       patchView({ preview: { bundle: bundles[activeLocale]!, knot, key: crypto.randomUUID() } });
     } catch (error) {
       state.setIssues([message(error)]);
       patchView({ dialog: "Issues" });
     } finally {
       patchView({ busy: false });
+    }
+  };
+  /** Live preview after an edit: the passage at the cursor, in its final state. */
+  refresh = async () => {
+    const { handles, patchView, activeLocale, state, project, language, view } = this.context;
+    // ▷ Preview may already show this version (it then keeps its full playback).
+    if (!view.preview || handles.current.previewed === project) return;
+    const compile = (handles.current.compiles = (handles.current.compiles ?? 0) + 1);
+    handles.current.previewed = project;
+    const row = handles.current.editor?.getCursorPosition().row ?? 0;
+    const knot =
+      outlineEntries(language.script)
+        .filter((entry) => entry.row <= row)
+        .at(-1)?.path ?? "";
+    try {
+      const bundle = (await compileInWorker(project, activeLocale))[activeLocale]!;
+      if (handles.current.compiles !== compile) return;
+      if (state.issues.length === 1 && state.issues[0] === handles.current.liveIssue)
+        state.setIssues([]);
+      // Never reopens a preview closed meanwhile; keeps its key, so it isn't rebuilt.
+      patchView((current) =>
+        current.preview
+          ? { preview: { bundle, knot, key: current.preview.key, settled: true } }
+          : {},
+      );
+    } catch (error) {
+      if (handles.current.compiles !== compile) return;
+      handles.current.liveIssue = message(error);
+      state.setIssues([handles.current.liveIssue]);
     }
   };
   applyLanguage = (next: EditorActionContext["language"], label: string) => {
@@ -221,6 +380,7 @@ export class EditorActions {
     const entry = outlineEntries(language.script)
       .filter((entry) => entry.row <= row)
       .at(-1);
+    this.notify();
     if (entry && (entry.path !== view.selectedPath || entry.knot !== selectedScene))
       patchView({ selectedPath: entry.path, selectedScene: entry.knot });
   };

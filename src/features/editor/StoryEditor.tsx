@@ -1,9 +1,9 @@
-import { useRef, useReducer, useEffect } from "react";
+import { useRef, useReducer, useEffect, useEffectEvent, useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
 import { uploadChosenFile } from "./Fields.tsx";
 import type { ReactNode } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import type { AceEditor, AceRange } from "./ace.ts";
 import type { EditorView } from "./editor-view.ts";
 import { EditorActions } from "./editor-actions.ts";
 import type { EditorActionContext } from "./editor-actions.ts";
@@ -21,8 +21,12 @@ interface StoryEditorProps {
     project: StoryProject,
     knot: string,
     onClose: () => void,
+    settled: boolean,
   ) => ReactNode;
 }
+type ViewChange = Partial<EditorView> | ((view: EditorView) => Partial<EditorView>);
+/** How long the script must stay unchanged before the preview follows it. */
+const LIVE_PREVIEW_MS = 600;
 
 const initialView: EditorView = {
   leftWidth: 215,
@@ -55,14 +59,17 @@ interface LoadedProps extends StoryEditorProps {
 }
 function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
   const [view, patchView] = useReducer(
-    (before: EditorView, change: Partial<EditorView>) => ({ ...before, ...change }),
+    (before: EditorView, change: ViewChange) => ({
+      ...before,
+      ...(typeof change === "function" ? change(before) : change),
+    }),
     initialView,
   );
-  const handles = useRef<{
-    editor: AceEditor | null;
-    selection: AceRange | null;
-    suppress: boolean;
-  }>({ editor: null, selection: null, suppress: false });
+  const handles = useRef<EditorActionContext["handles"]["current"]>({
+    editor: null,
+    selection: null,
+    suppress: false,
+  });
   const activeLocale = project.languages[view.locale] ? view.locale : project.defaultLocale;
   const language = project.languages[activeLocale]!;
   const context: EditorActionContext = {
@@ -84,11 +91,21 @@ function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
       void actions.play();
     }
   });
+  // Each change refreshes the open preview once typing pauses.
+  const refresh = useEffectEvent(() => void actions.refresh());
+  useEffect(() => {
+    const timer = setTimeout(refresh, LIVE_PREVIEW_MS);
+    return () => clearTimeout(timer);
+  }, [project]);
   useEditorTooltips(true);
   const preview = view.preview ? (
     <div className="preview-slot" key={view.preview.key}>
-      {renderPreview(view.preview.bundle, project, view.preview.knot, () =>
-        patchView({ preview: null }),
+      {renderPreview(
+        view.preview.bundle,
+        project,
+        view.preview.knot,
+        () => patchView({ preview: null }),
+        Boolean(view.preview.settled),
       )}
     </div>
   ) : null;
@@ -104,7 +121,19 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
     view = c.view;
   const tab = view.tab === "Game" && c.project.gameMode === "narrative" ? "Story" : view.tab;
   return (
-    <div className="story-editor" onKeyDownCapture={(event) => editorShortcut(event, c.state)}>
+    <div
+      className="story-editor"
+      onKeyDownCapture={(event) =>
+        editorShortcut(event, {
+          undo: c.state.undo,
+          redo: c.state.redo,
+          save: c.state.save,
+          find: (replace) => actions.open(replace ? "Replace" : "Find"),
+          format: (command) =>
+            actions.report(command === "clear" ? actions.clearText() : actions.toggleText(command)),
+        })
+      }
+    >
       <EditorHeader
         project={c.project}
         locale={c.activeLocale}
@@ -116,7 +145,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         onFind={actions.find}
       />
       <Ribbon
-        textTools={<TextToolbar selection={actions.selectedText} apply={actions.formatText} />}
+        textTools={<TextToolbar actions={actions} paper={c.language.defaults.backgroundColor} />}
         tab={tab}
         collapsed={view.collapsed}
         gameMode={c.project.gameMode}
@@ -131,7 +160,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         preview={preview}
         onChooseFile={() => file.current?.click()}
       />
-      <EditorStatus context={c} actions={actions} />
+      <EditorStatus context={c} actions={actions} textShown={tab === "Text" && !view.collapsed} />
       <input
         ref={file}
         type="file"
@@ -142,10 +171,17 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
     </div>
   );
 }
-function EditorStatus({ context: c, actions }: Pick<ShellProps, "context" | "actions">) {
+function EditorStatus({
+  context: c,
+  actions,
+  textShown,
+}: Pick<ShellProps, "context" | "actions"> & { textShown: boolean }) {
+  const { t } = useTranslation();
+  // A shortcut that can't format explains itself here when the Text toolbar is hidden.
+  const formatting = useSyncExternalStore(actions.watchSelection, actions.textStatus);
   return (
     <footer className="editor-status">
-      <span role="status">{c.state.status}</span>
+      <span role="status">{formatting && !textShown ? t(formatting) : c.state.status}</span>
       <button onClick={() => c.patchView({ dialog: "Issues" })}>
         {c.state.issues.length ? `${c.state.issues.length} issue(s)` : "No reported issues"}
       </button>

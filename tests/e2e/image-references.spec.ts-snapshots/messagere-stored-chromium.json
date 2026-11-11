@@ -1,0 +1,136 @@
+{
+  "en": {
+    "title": "The ninth delivery",
+    "progress": 0.1,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "messagere.p1"
+      },
+      {
+        "kind": "media",
+        "id": "messagere.illustration",
+        "image": "sketch.adult-female-medieval-courier-holding-a-folded-letter-001",
+        "layout": "right",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "examination": {
+          "image": "sketch.adult-female-medieval-courier-holding-a-folded-letter-001",
+          "title": "Nour",
+          "buttonLabel": "Examine Nour",
+          "descriptions": [
+            "Nour carries the admissions letter.",
+            "Her travelling coat is still covered in dust."
+          ],
+          "reverse": ""
+        },
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "messagere.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "messagere.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "La neuvième livraison",
+    "progress": 0.1,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "messagere.p1"
+      },
+      {
+        "kind": "media",
+        "id": "messagere.illustration",
+        "image": "sketch.adult-female-medieval-courier-holding-a-folded-letter-001",
+        "layout": "right",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "examination": {
+          "image": "sketch.adult-female-medieval-courier-holding-a-folded-letter-001",
+          "title": "Nour",
+          "buttonLabel": "Examine Nour",
+          "descriptions": [
+            "Nour carries the admissions letter.",
+            "Her travelling coat is still covered in dust."
+          ],
+          "reverse": ""
+        },
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "messagere.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "messagere.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

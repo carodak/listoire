@@ -1,63 +1,48 @@
 import { CheckboxField, Field, TextareaField } from "./Fields.tsx";
-import { useState } from "react";
 import type { ImageExamination } from "../../contracts/presentation.ts";
+import { examinationDraft } from "./media-form.ts";
 
 interface ExaminationFieldsProps {
-  initial: ImageExamination | null;
+  value: ImageExamination | null;
+  onChange: (value: ImageExamination | null) => void;
   locale: string;
 }
-const emptyExamination = { image: "", title: "Image", descriptions: [""], reverse: "" };
 
-export function ExaminationFields({ initial, locale }: ExaminationFieldsProps) {
-  const [enabled, setEnabled] = useState(Boolean(initial));
-  const label = initial?.actionId
-    ? locale.startsWith("fr")
-      ? "Examiner la photographie"
-      : "Examine the photograph"
-    : locale.startsWith("fr")
-      ? "Examiner l’image"
-      : "Examine the image";
-  const [draft, setDraft] = useState<ImageExamination>(() => ({
-    ...emptyExamination,
-    ...initial,
-    buttonLabel: initial?.buttonLabel ?? label,
-  }));
+export function ExaminationFields({ value, onChange, locale }: ExaminationFieldsProps) {
+  const set = (patch: Partial<ImageExamination>) => onChange({ ...value!, ...patch });
   return (
     <fieldset>
       <legend>Image examination</legend>
       <CheckboxField
         label="Media examinable"
-        checked={enabled}
-        onChange={(event) => setEnabled(event.target.checked)}
+        checked={Boolean(value)}
+        onChange={(event) => onChange(event.target.checked ? examinationDraft(null, locale) : null)}
       />
-      {enabled && (
+      {value && (
         <>
-          <input type="hidden" name="examination" value={JSON.stringify(draft)} />
           <Field
             label="Examine button label"
             maxLength={100}
-            value={draft.buttonLabel ?? label}
-            onChange={(event) => setDraft({ ...draft, buttonLabel: event.target.value })}
+            value={value.buttonLabel ?? ""}
+            onChange={(event) => set({ buttonLabel: event.target.value })}
           />
           <Field
             label="Examination title"
             required
             maxLength={100}
-            value={draft.title}
-            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+            value={value.title}
+            onChange={(event) => set({ title: event.target.value })}
           />
           <TextareaField
             label="Image details (one per line)"
-            value={draft.descriptions.join("\n")}
-            onChange={(event) =>
-              setDraft({ ...draft, descriptions: event.target.value.split("\n") })
-            }
+            value={value.descriptions.join("\n")}
+            onChange={(event) => set({ descriptions: event.target.value.split("\n") })}
           />
           <TextareaField
             label="Text on the reverse (optional)"
             maxLength={5000}
-            value={draft.reverse}
-            onChange={(event) => setDraft({ ...draft, reverse: event.target.value })}
+            value={value.reverse}
+            onChange={(event) => set({ reverse: event.target.value })}
           />
           <p>
             The reader can magnify the image, browse its details and turn it over when reverse text

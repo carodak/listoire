@@ -1,0 +1,202 @@
+{
+  "en": {
+    "title": "The Weight of Air",
+    "progress": 0.45,
+    "events": [
+      {
+        "id": "cours-air.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "cours-air.illustration"
+        },
+        "blocking": false,
+        "blockId": "cours-air.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "gentle-depth",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p1"
+      },
+      {
+        "kind": "media",
+        "id": "cours-air.illustration",
+        "image": "sketch.quiet-river-bend-with-far-cliffs-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "gentle-depth",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.older-male-medieval-ferryman-with-oar-001",
+              "role": "midground",
+              "x": 22,
+              "y": 4,
+              "scale": 0.85
+            },
+            {
+              "image": "sketch.fern-fronds-001",
+              "role": "foreground",
+              "x": -32,
+              "y": 13,
+              "scale": 1.1
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "Le Poids de l'air",
+    "progress": 0.45,
+    "events": [
+      {
+        "id": "cours-air.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "cours-air.illustration"
+        },
+        "blocking": false,
+        "blockId": "cours-air.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "gentle-depth",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p1"
+      },
+      {
+        "kind": "media",
+        "id": "cours-air.illustration",
+        "image": "sketch.quiet-river-bend-with-far-cliffs-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "gentle-depth",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.older-male-medieval-ferryman-with-oar-001",
+              "role": "midground",
+              "x": 22,
+              "y": 4,
+              "scale": 0.85
+            },
+            {
+              "image": "sketch.fern-fronds-001",
+              "role": "foreground",
+              "x": -32,
+              "y": 13,
+              "scale": 1.1
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "cours-air.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

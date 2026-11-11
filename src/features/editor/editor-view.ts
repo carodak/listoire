@@ -8,7 +8,8 @@ export interface EditorView {
   selectedScene: string;
   selectedPath: string;
   selectedMedia?: string;
-  preview: { bundle: StoryBundle; knot: string; key: string } | null;
+  /** `settled`: a live refresh, shown in its final state (no entrance, sound or voice). */
+  preview: { bundle: StoryBundle; knot: string; key: string; settled?: boolean } | null;
   busy: boolean;
   leftWidth: number;
   previewWidth: number;

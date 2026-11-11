@@ -107,6 +107,27 @@ test("chooses, reloads the resolved passage, downloads and explicitly restarts",
   expect(errors).toEqual([]);
 });
 
+test("Back still works after a reload, through the saved previous pages", async ({ page }) => {
+  await page.goto("/");
+  await enterStory(page);
+  await onPage(page, "matin-ville");
+  await chooseFirst(page);
+  await onPage(page, "etabli");
+  await chooseFirst(page);
+  const third = await page.locator(".reader-copy").getAttribute("data-passage");
+  expect(third).not.toBe("etabli");
+  await page.reload();
+  await enterStory(page);
+  await onPage(page, third!);
+  const back = page.getByRole("button", { name: "Previous page", exact: true });
+  await expect(back).toBeEnabled();
+  await back.click();
+  await onPage(page, "etabli");
+  await back.click();
+  await onPage(page, "matin-ville");
+  await expect(back).toBeDisabled();
+});
+
 test("unifies language selection while preserving each localized save", async ({ page }) => {
   await page.goto("/");
   await enterStory(page);

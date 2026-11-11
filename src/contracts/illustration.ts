@@ -7,6 +7,13 @@ const placement = {
   x: z.number().min(-75).max(75),
   y: z.number().min(-75).max(75),
   scale: z.number().min(0.2).max(3),
+  // Optional (additive): tilt forward/back and turn left/right, and a mirror image.
+  tiltX: z.number().min(-75).max(75).optional(),
+  tiltY: z.number().min(-75).max(75).optional(),
+  flip: z.boolean().optional(),
+  // Optional (additive): "contain" shows the whole image; absent, the depth decides as before
+  // (the back fills the frame, the others are whole).
+  fit: z.enum(["contain", "cover"]).optional(),
 };
 export const IllustrationSchema = z
   .object({

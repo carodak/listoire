@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { mp3DataUrl } from "./same-origin-fetch.ts";
-import { TypographySpanSchema, validTypographySpans } from "./typography.ts";
+import { paragraphAlignments, TypographySpanSchema, validTypographySpans } from "./typography.ts";
 import { GameDefinitionSchema, GameStateSchema } from "./game.ts";
 import type { GameDefinition, GameState, CombatOption, CheckOption, PlayerMove } from "./game.ts";
 import { validateSceneModels } from "./scene3d.ts";
@@ -24,7 +24,12 @@ export type Locale = z.infer<typeof LocaleSchema>;
 
 const typography = z.array(TypographySpanSchema).max(500).optional();
 const SegmentSchema = z
-  .object({ id, text: z.string().min(1).max(10_000), typography })
+  .object({
+    id,
+    text: z.string().min(1).max(10_000),
+    typography,
+    align: z.enum(paragraphAlignments).exclude(["left"]).optional(),
+  })
   .strict()
   .refine(validTypographySpans);
 const ChoiceSchema = z
@@ -154,6 +159,18 @@ export const StoryManifestSchema = z
   );
 export type StoryManifest = z.infer<typeof StoryManifestSchema>;
 
+/** What restores a page: Ink state, the page shown, and the player at that moment. */
+const page = {
+  inkStateJson: z.string().min(1).max(500_000),
+  frame: FrameSchema,
+  character: CharacterSchema.optional(),
+  game: GameStateSchema.optional(),
+};
+/** How many previous pages a save keeps for Back after a reload. */
+export const SAVED_PAGES = 20;
+const SavedPageSchema = z.object(page).strict();
+export type SavedPage = z.infer<typeof SavedPageSchema>;
+
 export const SaveSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -166,10 +183,10 @@ export const SaveSchema = z
     runId: z.uuid(),
     revision: z.number().int().positive(),
     updatedAt: z.iso.datetime(),
-    inkStateJson: z.string().min(1).max(500_000),
-    frame: FrameSchema,
-    character: CharacterSchema.optional(),
-    game: GameStateSchema.optional(),
+    ...page,
+    // Previous pages, oldest first (optional: older saves have none). A broken list is dropped,
+    // never the save.
+    history: z.array(SavedPageSchema).max(SAVED_PAGES).optional().catch(undefined),
   })
   .strict()
   .refine((save) =>
@@ -212,7 +229,7 @@ export interface ReaderSnapshot {
 }
 
 export interface ReaderController {
-  load(): Promise<void>;
+  load(settled?: boolean): Promise<void>;
   getSnapshot(): ReaderSnapshot;
   subscribe(listener: () => void): () => void;
   choose(choiceId: string, occurrenceId: string): Promise<void>;
