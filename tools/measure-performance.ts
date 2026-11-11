@@ -2,13 +2,14 @@
  * Repeatable performance measurement of the Reader and the Story Editor (Chromium).
  *
  *   node tools/measure-performance.ts [--base http://127.0.0.1:4175] [--runs 5] [--out file.json]
+ *                                     [--only reader,readerMotion,combat,editor]
  *
  * Needs a running dev server (see AGENTS.md) and, for the bundle section, a `dist/` from
  * `npm run build`. Every number is the median of `--runs` fresh browser contexts, in
  * milliseconds unless its name says otherwise. Timings start inside the page, at the click.
  */
 import { chromium } from "@playwright/test";
-import type { Browser, Page } from "@playwright/test";
+import type { Browser, CDPSession, Page } from "@playwright/test";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { withFixtureStory } from "../tests/e2e/fixture-story.ts";
@@ -98,19 +99,44 @@ const counters = (page: Page) =>
   page.evaluate(() => ({ commits: window.__probe.commits, long: window.__probe.long }));
 const settle = (page: Page, ms: number) => page.waitForTimeout(ms);
 
+const sessions = new WeakMap<Page, Promise<CDPSession>>();
+/** Chromium's own counters for this page (one protocol session per page, enabled once). */
+async function browserMetrics(page: Page) {
+  if (!sessions.has(page))
+    sessions.set(
+      page,
+      page
+        .context()
+        .newCDPSession(page)
+        .then(async (session) => {
+          await session.send("Performance.enable");
+          return session;
+        }),
+    );
+  const session = await sessions.get(page)!;
+  return {
+    session,
+    read: async () => {
+      const { metrics } = await session.send("Performance.getMetrics");
+      return (name: string) => metrics.find((metric) => metric.name === name)?.value ?? 0;
+    },
+  };
+}
 async function heap(page: Page) {
-  const session = await page.context().newCDPSession(page);
-  await session.send("Performance.enable");
+  const { session, read } = await browserMetrics(page);
   await session.send("HeapProfiler.collectGarbage");
   await session.send("HeapProfiler.collectGarbage");
-  const { metrics } = await session.send("Performance.getMetrics");
-  await session.detach();
-  const value = (name: string) => metrics.find((metric) => metric.name === name)?.value ?? 0;
+  const value = await read();
   return {
     heapMb: value("JSHeapUsedSize") / 1048576,
     nodes: value("Nodes"),
     listeners: value("JSEventListeners"),
   };
+}
+/** Main-thread time spent so far in scripts, style and layout, in milliseconds. */
+async function cpu(page: Page) {
+  const value = await (await browserMetrics(page)).read();
+  return (value("ScriptDuration") + value("RecalcStyleDuration") + value("LayoutDuration")) * 1000;
 }
 
 async function newPage(browser: Browser, reducedMotion: "reduce" | "no-preference") {
@@ -151,6 +177,7 @@ async function nextPage(page: Page) {
 async function reader(browser: Browser, motion: "reduce" | "no-preference"): Promise<Metrics> {
   const { context, page, requests } = await newPage(browser, motion);
   const metrics: Metrics = {};
+  await cpu(page);
   await page.goto(base + "/");
   await page.locator(".welcome-play:enabled").waitFor();
   metrics.welcomeReady = await page.evaluate(() => performance.now());
@@ -160,20 +187,25 @@ async function reader(browser: Browser, motion: "reduce" | "no-preference"): Pro
     `document.querySelector('.reader-copy h1') && ${idle}`,
   );
   if (motion === "no-preference") {
-    // Commits while the first page reveals its text and plays its entrance, then while idle.
+    // Commits and main-thread time while the first page reveals its text, then with all the
+    // text shown and only the narration playing.
     const start = await counters(page);
+    const cpuStart = await cpu(page);
     await settle(page, 3000);
     const revealed = await counters(page);
+    metrics.cpuMsPerSecondRevealing = ((await cpu(page)) - cpuStart) / 3;
     await page
       .getByRole("button", { name: "Show all text" })
       .click()
       .catch(() => {});
     await settle(page, 1500);
     const quiet = await counters(page);
+    const cpuQuiet = await cpu(page);
     await settle(page, 2000);
     const end = await counters(page);
+    metrics.cpuMsPerSecondNarrating = ((await cpu(page)) - cpuQuiet) / 2;
     metrics.commitsPerSecondRevealing = (revealed.commits - start.commits) / 3;
-    metrics.commitsPerSecondIdle = (end.commits - quiet.commits) / 2;
+    metrics.commitsPerSecondNarrating = (end.commits - quiet.commits) / 2;
   }
   const turns: number[] = [];
   let pages = 1;
@@ -440,6 +472,10 @@ function median(values: number[]) {
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
 }
+/** `--only reader,editor` measures just those sections. */
+const only = option("only", "").split(",").filter(Boolean);
+const section = (name: string, measure: () => Promise<Metrics>) =>
+  only.length && !only.includes(name) ? Promise.resolve({}) : repeat(name, measure);
 async function repeat(name: string, measure: () => Promise<Metrics>) {
   const samples: Metrics[] = [];
   for (let run = 0; run < runs; run++) samples.push(await measure());
@@ -454,10 +490,10 @@ const browser = await chromium.launch({ args: ["--enable-precise-memory-info"] }
 await reader(browser, "reduce");
 await editor(browser);
 const results: Metrics = {
-  ...(await repeat("reader", () => reader(browser, "reduce"))),
-  ...(await repeat("readerMotion", () => reader(browser, "no-preference"))),
-  ...(await repeat("combat", () => combat(browser))),
-  ...(await repeat("editor", () => editor(browser))),
+  ...(await section("reader", () => reader(browser, "reduce"))),
+  ...(await section("readerMotion", () => reader(browser, "no-preference"))),
+  ...(await section("combat", () => combat(browser))),
+  ...(await section("editor", () => editor(browser))),
   ...Object.fromEntries(
     Object.entries(await bundle()).map(([key, value]) => [
       `bundle.${key}`,
