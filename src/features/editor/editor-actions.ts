@@ -31,7 +31,10 @@ type Handles = {
   editor: AceEditor | null;
   selection: AceRange | null;
   suppress: boolean;
-  onSelection?: () => void;
+  /** Called when the selection or the formatting status changes (toolbar, status bar). */
+  listeners?: Set<() => void>;
+  /** The last formatting message and the selection it was made for. */
+  textStatus?: { message: string; at: string };
   /** Counts preview compiles, so a late one never replaces a newer preview. */
   compiles?: number;
   /** The last live-preview compile error, cleared once the script compiles again. */
@@ -70,11 +73,31 @@ export class EditorActions {
     };
   };
   watchSelection = (listener: () => void) => {
-    const { handles } = this.context;
-    handles.current.onSelection = listener;
+    const listeners = (this.context.handles.current.listeners ??= new Set());
+    listeners.add(listener);
     return () => {
-      if (handles.current.onSelection === listener) handles.current.onSelection = undefined;
+      listeners.delete(listener);
     };
+  };
+  private notify() {
+    this.context.handles.current.listeners?.forEach((listener) => listener());
+  }
+  private selectionKey() {
+    const range = this.context.handles.current.editor?.getSelectionRange();
+    return range
+      ? `${range.start.row}:${range.start.column}-${range.end.row}:${range.end.column}`
+      : "";
+  }
+  /** Shows why a formatting command (button or shortcut) did nothing; undefined clears it. */
+  report = (error: string | undefined) => {
+    const { handles } = this.context;
+    handles.current.textStatus = error ? { message: error, at: this.selectionKey() } : undefined;
+    this.notify();
+  };
+  /** The last formatting message (an i18n key), while the selection it was made for stays. */
+  textStatus = () => {
+    const status = this.context.handles.current.textStatus;
+    return status?.at === this.selectionKey() ? status.message : "";
   };
   /** A preset gives exactly its look: manual changes on these words are cleared (undo restores). */
   applyPreset = (style: NonNullable<Typography["style"]>) =>
@@ -96,7 +119,7 @@ export class EditorActions {
   ): string | undefined {
     const { handles } = this.context;
     const editor = handles.current.editor;
-    if (!editor) return "The script editor is still loading.";
+    if (!editor) return "editor.text.errors.loading";
     const { start: caret, end: last } = editor.getSelectionRange();
     // A caret inside a tag's markup (after Undo) formats that tag's words as they are.
     if (
@@ -106,7 +129,7 @@ export class EditorActions {
     )
       editor.selection.selectWord();
     const range = editor.getSelectionRange();
-    if (range.start.row !== range.end.row) return "Select words within one paragraph.";
+    if (range.start.row !== range.end.row) return "editor.text.errors.oneParagraph";
     try {
       const { start, end, replacement, selection } = edit(
         editor.session.getLine(range.start.row),
@@ -130,7 +153,7 @@ export class EditorActions {
   alignText = (align: ParagraphAlign): string | undefined => {
     const { handles, project, activeLocale } = this.context;
     const editor = handles.current.editor;
-    if (!editor) return "The script editor is still loading.";
+    if (!editor) return "editor.text.errors.loading";
     const range = editor.getSelectionRange();
     const last =
       range.end.row > range.start.row && range.end.column === 0 ? range.end.row - 1 : range.end.row;
@@ -347,7 +370,7 @@ export class EditorActions {
     const entry = outlineEntries(language.script)
       .filter((entry) => entry.row <= row)
       .at(-1);
-    this.context.handles.current.onSelection?.();
+    this.notify();
     if (entry && (entry.path !== view.selectedPath || entry.knot !== selectedScene))
       patchView({ selectedPath: entry.path, selectedScene: entry.knot });
   };

@@ -302,6 +302,40 @@ test("keyboard shortcuts format the word at the caret and open find and replace"
   await expect(page.locator(".ace_search .ace_replace_form")).toBeVisible();
 });
 
+test("a shortcut that can't format says why, in the toolbar or the status bar, in French too", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  const input = page.locator(".ace_text-input");
+  await input.press("Control+Home"); // "-> start": an Ink instruction
+  await input.press("Control+b");
+  const status = page.locator(".text-toolbar").getByRole("status");
+  await expect(status).toHaveText("Select story words, not an Ink instruction or tag.");
+  expect(await script(page)).not.toContain("<typo");
+  // Moving to other words hides the message, as with the toolbar's buttons.
+  await selectBoom(page);
+  await expect(status).toHaveCount(0);
+  // With the Text toolbar hidden, the status bar says it.
+  await page.getByRole("tab", { name: "Story", exact: true }).click();
+  await input.press("Control+Home");
+  await input.press("Control+i");
+  await expect(page.locator(".editor-status [role=status]")).toHaveText(
+    "Select story words, not an Ink instruction or tag.",
+  );
+  // In French.
+  await page.goto("/");
+  await page.getByRole("button", { name: "Language: English", exact: true }).click();
+  await page.getByRole("button", { name: "Français", exact: true }).click();
+  await openTypographyStory(page);
+  await selectBoom(page);
+  await page.locator(".ace_text-input").press("Control+Home");
+  await page.locator(".ace_text-input").press("Control+\\");
+  await expect(page.locator(".text-toolbar").getByRole("status")).toHaveText(
+    "Sélectionnez des mots du récit, pas une instruction ni une balise Ink.",
+  );
+});
+
 test("aligns the paragraph at the caret, shown in the reader, with French labels", async ({
   page,
 }) => {

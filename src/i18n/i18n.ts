@@ -194,7 +194,14 @@ const en = {
       plain: "Plain text",
       changes: "Your changes: {{settings}}.",
       noChanges: "No manual changes.",
-      errors: { noParagraph: "Place the cursor in a paragraph of story text." },
+      errors: {
+        noParagraph: "Place the cursor in a paragraph of story text.",
+        loading: "The script editor is still loading.",
+        oneParagraph: "Select words within one paragraph.",
+        noSelection: "Select words in the Ink script first.",
+        notNarrative: "Select story words, not an Ink instruction or tag.",
+        notWords: "Select story words on one line, without Ink tags or expressions.",
+      },
       values: {
         style: {
           default: "Default",
@@ -444,7 +451,14 @@ const fr: typeof en = {
       plain: "Texte simple",
       changes: "Vos changements : {{settings}}.",
       noChanges: "Aucun changement manuel.",
-      errors: { noParagraph: "Placez le curseur dans un paragraphe du récit." },
+      errors: {
+        noParagraph: "Placez le curseur dans un paragraphe du récit.",
+        loading: "L’éditeur de script se charge encore.",
+        oneParagraph: "Sélectionnez des mots d’un seul paragraphe.",
+        noSelection: "Sélectionnez d’abord des mots dans le script Ink.",
+        notNarrative: "Sélectionnez des mots du récit, pas une instruction ni une balise Ink.",
+        notWords: "Sélectionnez des mots du récit sur une ligne, sans balise ni expression Ink.",
+      },
       values: {
         style: {
           default: "Par défaut",

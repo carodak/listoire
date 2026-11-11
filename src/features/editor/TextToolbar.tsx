@@ -1,4 +1,4 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -18,6 +18,8 @@ type Actions = Pick<
   EditorActions,
   | "selectionFormat"
   | "watchSelection"
+  | "report"
+  | "textStatus"
   | "applyPreset"
   | "patchText"
   | "toggleText"
@@ -48,17 +50,12 @@ function settingsText(t: TFunction, format: Typography) {
 export function TextToolbar({ actions }: { actions: Actions }) {
   const { t } = useTranslation();
   const snapshot = useSyncExternalStore(actions.watchSelection, () =>
-    JSON.stringify(actions.selectionFormat()),
+    JSON.stringify({ ...actions.selectionFormat(), status: actions.textStatus() }),
   );
-  const { format, align } = JSON.parse(snapshot) as SelectionFormat;
+  const { format, align, status } = JSON.parse(snapshot) as SelectionFormat & { status: string };
   // A message belongs to the selection it was made for; moving the selection hides it.
-  const [status, setStatus] = useState({ message: "", at: "" });
-  const message = status.at === snapshot ? status.message : "";
-  const run = (error: string | undefined) =>
-    setStatus({
-      message: error ? t(error) : "",
-      at: JSON.stringify(actions.selectionFormat()),
-    });
+  const message = status ? t(status) : "";
+  const run = actions.report;
   const style = format.style ?? "default";
   const effective = effectiveTypography(format);
   const { style: _, ...changes } = format;

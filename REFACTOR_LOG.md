@@ -1710,3 +1710,80 @@ backup round trip), reached through the new controls: changed selectors only.
 Planned commits once approved: (1) REVIEW #3 fix with tests; (2) render baselines (test only, on
 today's code); (3) tilt/flip contract and reader, with tests; (4) typed draft state (no visual
 change); (5) the new dialog layout and layer panel; (6) fast add and duplicate.
+
+## Pass 9 — Text toolbar follow-ups, Back after reload, Media → Image, editor polish (branch `features/editor-ux`)
+
+Unattended. Order asked: part 1 (Text toolbar), part 3 (Back after reload), part 2 (Media →
+Image), part 4 (other tabs). One commit per item. Own dev server on 4175
+(`playwright.local.config.ts`), warmed with `review-screenshots/warm.spec.ts` (untracked: opens
+`/`, `/editor`, and loads the lazy dice model and React Bits effects) before every e2e run.
+
+After each commit: `E2E_PORT=4175 npm run test:coverage`, `fallow health --score --hotspots
+--coverage coverage/coverage-final.json`, `fallow security --gate new --changed-since main`,
+`fallow dupes`. Unit tests are run from PowerShell: from Git Bash, Vitest loads itself twice
+(`/c/Users/…` vs `C:/Users/…`) and fails with "failed to find the current suite".
+
+Scores are now given with one decimal (95 at the start was 94.8 rounded; same penalties: unit
+size 2.8, coupling 2.4). `fallow security`: PASS after every commit unless noted. `fallow dupes`:
+0 clone groups unless noted.
+
+**Found, not caused by this pass:** `image-composition.spec.ts` "uses real perspective depth,
+pauses camera motion…" fails every time (the camera has 0 animations instead of 3), also on
+`0af6c46` with my changes reverted. `npm run test:coverage` stops before merging coverage when an
+e2e test fails, so after each run I run its merge step (`node tools/merge-test-coverage.ts`) on
+the collected unit + browser coverage before `fallow health`. Not investigated further (reader
+camera, outside this pass).
+
+| Commit    | Item                                                         | Score |
+| --------- | ------------------------------------------------------------ | ----- |
+| `0af6c46` | Start (Pass 8 end)                                           | 95    |
+| `0d504a2` | 1a. a caret inside a formatting tag formats the tagged words | 94.8  |
+
+### 1a. A caret inside a formatting tag formats the tagged words
+
+After Undo the caret keeps its column, which can fall inside a longer `<typo …>` tag. Formatting
+used to answer "Select words outside the typography tag attributes". Now a selection end (or the
+caret) inside a tag's markup stands for all the words that tag formats: inside the opening tag
+or the closing tag, the whole tagged words are taken; a selection from inside a tag to plain text
+after it takes the tagged words and the plain ones. The toolbar shows those words' settings at
+such a caret (so Bold toggles off on bold words, instead of doing nothing).
+
+**Changed assertions** (both encoded the refusal that this item removes):
+
+- `typography.test.ts` "splits overlapping styles…": `formatTextSelection(line, 4, 10, {})` (both
+  ends inside `<typo style="shout">`) expected a throw `/attributes/`; it now expects the tagged
+  words "red blue" to be cleared, the rest unchanged.
+- `typography.test.ts` "reads the settings at a column…": `formatAt(line, 5)` (inside the opening
+  tag) expected `{}`; it now expects that tag's settings.
+
+Tests: unit "a selection end inside tag markup…" (opening tag, closing tag, both, tag to plain
+text, two touching tags, plain caret still refused); e2e "after Undo leaves the caret inside a
+tag…" (Undo, then the Underline button without reselecting; then Ctrl+I with the caret inside
+the closing tag).
+
+### 1b. A shortcut that can't apply says why
+
+Ctrl+B / I / U / Shift+X / \ used to do nothing when they couldn't apply (caret on a knot line, a
+choice, an empty line). They now show the same short message as the toolbar buttons:
+
+- in the Text toolbar's status line when the Text tab is open;
+- in the status bar (bottom left) when another ribbon tab is open or the ribbon is minimized,
+  since the toolbar isn't on screen then (my choice).
+
+The message disappears when the selection moves, as before for the buttons. It used to be tied
+to the _format_ of the selection, so moving between two plain words kept it; it's now tied to the
+selection's position. All formatting messages are i18n keys (`editor.text.errors.*`, en + fr):
+before, only "no paragraph" was translated and the others showed in English in French. The
+status lives in `EditorActions` (`report`, `textStatus`), and the selection listener became a set
+so both the toolbar and the status bar can listen.
+
+Limit: a line whose `<typo>` markup is itself broken (half-typed tag) still shows the contract's
+English parser message (it is also a compile error, shown in English in the Issues dialog).
+
+**Changed assertions** (same message chosen, now as its i18n key instead of the English
+sentence): `editor-actions.test.ts` "applyPreset explains why…" (two `toBe`), `typography.test.ts`
+"replaces and removes…" (`/Select words/` → `noSelection`, `/Ink/` → `notWords`; `/Ink/` matched
+"…excluding Ink tags and expressions", which is `notWords`).
+
+Tests: unit "reports a formatting message to every listener until it is cleared"; e2e "a shortcut
+that can't format says why…" (toolbar, hidden on moving, status bar on the Story tab, French).

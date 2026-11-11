@@ -129,11 +129,27 @@ describe("EditorActions compile actions", () => {
 
 describe("EditorActions editor commands", () => {
   it("applyPreset explains why it cannot format yet", () => {
-    expect(setup(null).actions.applyPreset("whisper")).toBe("The script editor is still loading.");
+    // Pass 9, 1b: the messages are i18n keys now (the toolbar translates them).
+    expect(setup(null).actions.applyPreset("whisper")).toBe("editor.text.errors.loading");
     const multiline = fakeEditor(undefined, { start: 0, end: 1 });
-    expect(setup(multiline).actions.applyPreset("whisper")).toBe(
-      "Select words within one paragraph.",
-    );
+    expect(setup(multiline).actions.applyPreset("whisper")).toBe("editor.text.errors.oneParagraph");
+  });
+
+  it("reports a formatting message to every listener until it is cleared", () => {
+    const { actions } = setup();
+    const toolbar = vi.fn(),
+      statusBar = vi.fn();
+    const stop = actions.watchSelection(toolbar);
+    actions.watchSelection(statusBar);
+    actions.report(actions.toggleText("bold"));
+    expect(actions.textStatus()).toBe("editor.text.errors.notNarrative");
+    expect(toolbar).toHaveBeenCalledTimes(1);
+    expect(statusBar).toHaveBeenCalledTimes(1);
+    stop();
+    actions.report(undefined);
+    expect(actions.textStatus()).toBe("");
+    expect(toolbar).toHaveBeenCalledTimes(1);
+    expect(statusBar).toHaveBeenCalledTimes(2);
   });
 
   it("changeScript ignores edits made by the editor itself", () => {

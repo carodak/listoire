@@ -36,9 +36,10 @@ function plainOffsets(line: string) {
   return { offset, tagged };
 }
 
+/** The plain-text range to format; errors are i18n keys, shown in the toolbar. */
 function narrativeSelection(line: string, start: number, end: number) {
   if (start === end && !insideMarkup(line, start))
-    throw new Error("Select words in the Ink script first.");
+    throw new Error("editor.text.errors.noSelection");
   if (
     start < 0 ||
     end > line.length ||
@@ -46,7 +47,7 @@ function narrativeSelection(line: string, start: number, end: number) {
     instruction.test(line) ||
     /#/.test(line.slice(0, start))
   )
-    throw new Error("Select narrative words, excluding Ink instructions and tags.");
+    throw new Error("editor.text.errors.notNarrative");
   const { offset, tagged } = plainOffsets(line);
   const { text, typography = [] } = parseTypography(line);
   // An end inside a tag's markup takes in all the words that tag formats.
@@ -54,7 +55,7 @@ function narrativeSelection(line: string, start: number, end: number) {
     to = tagged(end, typography)?.end ?? offset(end);
   const selected = text.slice(from, to);
   if (!selected.trim() || /[\r\n#{}[\]]/.test(selected))
-    throw new Error("Select narrative words within one line, excluding Ink tags and expressions.");
+    throw new Error("editor.text.errors.notWords");
   return { text, typography, from, to };
 }
 

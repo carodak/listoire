@@ -1,4 +1,5 @@
-import { useRef, useReducer, useEffect, useEffectEvent } from "react";
+import { useRef, useReducer, useEffect, useEffectEvent, useSyncExternalStore } from "react";
+import { useTranslation } from "react-i18next";
 import { uploadChosenFile } from "./Fields.tsx";
 import type { ReactNode } from "react";
 import type { StoryBundle } from "../../contracts/story.ts";
@@ -129,7 +130,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
           save: c.state.save,
           find: (replace) => actions.open(replace ? "Replace" : "Find"),
           format: (command) =>
-            command === "clear" ? actions.clearText() : actions.toggleText(command),
+            actions.report(command === "clear" ? actions.clearText() : actions.toggleText(command)),
         })
       }
     >
@@ -159,7 +160,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         preview={preview}
         onChooseFile={() => file.current?.click()}
       />
-      <EditorStatus context={c} actions={actions} />
+      <EditorStatus context={c} actions={actions} textShown={tab === "Text" && !view.collapsed} />
       <input
         ref={file}
         type="file"
@@ -170,10 +171,17 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
     </div>
   );
 }
-function EditorStatus({ context: c, actions }: Pick<ShellProps, "context" | "actions">) {
+function EditorStatus({
+  context: c,
+  actions,
+  textShown,
+}: Pick<ShellProps, "context" | "actions"> & { textShown: boolean }) {
+  const { t } = useTranslation();
+  // A shortcut that can't format explains itself here when the Text toolbar is hidden.
+  const formatting = useSyncExternalStore(actions.watchSelection, actions.textStatus);
   return (
     <footer className="editor-status">
-      <span role="status">{c.state.status}</span>
+      <span role="status">{formatting && !textShown ? t(formatting) : c.state.status}</span>
       <button onClick={() => c.patchView({ dialog: "Issues" })}>
         {c.state.issues.length ? `${c.state.issues.length} issue(s)` : "No reported issues"}
       </button>

@@ -57,8 +57,11 @@ it("replaces and removes an existing style without nesting or changing surroundi
       style: "default",
     }).replacement,
   ).toBe("A BOOM nearby.");
-  expect(() => formatTextSelection(line, 2, 2, {})).toThrow(/Select words/);
-  expect(() => formatTextSelection("# segment:id", 0, 12, {})).toThrow(/Ink/);
+  // Pass 9, 1b: i18n keys instead of the English sentences.
+  expect(() => formatTextSelection(line, 2, 2, {})).toThrow("editor.text.errors.noSelection");
+  expect(() => formatTextSelection("# segment:id", 0, 12, {})).toThrow(
+    "editor.text.errors.notWords",
+  );
 });
 
 it("splits overlapping styles while retaining unselected words and the exact selection", () => {
@@ -262,7 +265,7 @@ it("a selection end inside tag markup (as after Undo) takes in the whole tagged 
   expect(formatAt(touching, between)).toEqual({ bold: "on" });
   expect(formatAt(touching, nextOpening)).toEqual({ italic: "on" });
   // A caret in plain text still asks for a selection.
-  expect(() => formatTextSelection(line, 1, 1, {})).toThrow(/Select words/);
+  expect(() => formatTextSelection(line, 1, 1, {})).toThrow("editor.text.errors.noSelection");
 });
 
 it("aligns paragraphs with one tag, removes it for left and leaves other lines alone", () => {
