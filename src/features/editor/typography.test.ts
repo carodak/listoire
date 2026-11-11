@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
 import {
+  cssColor,
   effectiveTypography,
   parseTypography,
   typographySettings,
@@ -266,6 +267,36 @@ it("a selection end inside tag markup (as after Undo) takes in the whole tagged 
   expect(formatAt(touching, nextOpening)).toEqual({ italic: "on" });
   // A caret in plain text still asks for a selection.
   expect(() => formatTextSelection(line, 1, 1, {})).toThrow("editor.text.errors.noSelection");
+});
+
+it("stores any colour as six hex digits (no Ink tag) next to the named colours", () => {
+  expect(parseTypography('A <typo style="shout" color="1a2b3c">red</typo>.')).toEqual({
+    text: "A red.",
+    typography: [{ start: 2, end: 5, format: { style: "shout", color: "1a2b3c" } }],
+  });
+  for (const color of ["#1a2b3c", "1A2B3C", "123", "12345g", "red", "1a2b3c4"])
+    expect(() => parseTypography(`<typo color="${color}">x</typo>`)).toThrow();
+  expect(cssColor("1a2b3c")).toBe("#1a2b3c");
+  expect(cssColor("ocean")).toBeUndefined();
+  const line = 'A <typo color="ocean">word</typo>.';
+  const start = line.indexOf("word");
+  const custom = patchTextSelection(line, start, start + 4, { color: "336699" });
+  expect(custom.replacement).toBe('A <typo color="336699">word</typo>.');
+  // A named colour still replaces it, and "Text color" removes it.
+  const named = patchTextSelection(
+    custom.replacement,
+    custom.selection.start,
+    custom.selection.end,
+    {
+      color: "gold",
+    },
+  );
+  expect(named.replacement).toBe('A <typo color="gold">word</typo>.');
+  expect(
+    patchTextSelection(named.replacement, named.selection.start, named.selection.end, {
+      color: "inherit",
+    }).replacement,
+  ).toBe("A word.");
 });
 
 it("aligns paragraphs with one tag, removes it for left and leaves other lines alone", () => {

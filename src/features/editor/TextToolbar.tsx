@@ -1,8 +1,9 @@
-import { useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
+  cssColor,
   effectiveTypography,
   paragraphAlignments,
   typographyOptions,
@@ -10,6 +11,7 @@ import {
 } from "../../contracts/typography.ts";
 import type { ParagraphAlign, Typography } from "../../contracts/typography.ts";
 import { TypographicText } from "../presentation/TypographicText.tsx";
+import { contrastRatio, paperColor } from "../presentation/reader-theme.ts";
 import type { EditorActions, SelectionFormat, TextToggle } from "./editor-actions.ts";
 import "./text-toolbar.css";
 
@@ -35,8 +37,21 @@ const keys: Record<TextToggle, string> = {
 };
 const modifier = /Mac|iPhone|iPad/.test(globalThis.navigator?.platform ?? "") ? "⌘" : "Ctrl+";
 
+/** The named colours' swatches (the reader mixes them with the page's text colour). */
+const swatches: Record<string, string> = {
+  crimson: "#a52d40",
+  ocean: "#236784",
+  forest: "#346943",
+  gold: "#866016",
+  violet: "#75508b",
+};
+/** Below this contrast with the page, styled words are hard to read (WCAG AA, body text). */
+const MIN_CONTRAST = 4.5;
+
 /** One label for a setting's value; a toggle that is on reads as its own name ("Bold"). */
 function valueLabel(t: TFunction, key: Exclude<keyof Typography, "style">, value: string) {
+  const color = key === "color" && cssColor(value);
+  if (color) return color.toUpperCase();
   return value === "on" ? t(`editor.text.${key}`) : t(`editor.text.values.${key}.${value}`);
 }
 function settingsText(t: TFunction, format: Typography) {
@@ -47,7 +62,7 @@ function settingsText(t: TFunction, format: Typography) {
 }
 
 /** Formats the words selected in the Ink script at once; each control changes only itself. */
-export function TextToolbar({ actions }: { actions: Actions }) {
+export function TextToolbar({ actions, paper }: { actions: Actions; paper?: string }) {
   const { t } = useTranslation();
   const snapshot = useSyncExternalStore(actions.watchSelection, () =>
     JSON.stringify({ ...actions.selectionFormat(), status: actions.textStatus() }),
@@ -58,6 +73,9 @@ export function TextToolbar({ actions }: { actions: Actions }) {
   const run = actions.report;
   const style = format.style ?? "default";
   const effective = effectiveTypography(format);
+  // Named colours adapt to the page; an author's own colour may not.
+  const color = cssColor(effective.color);
+  const contrast = color ? contrastRatio(color, paperColor(paper)) : Infinity;
   const { style: _, ...changes } = format;
   const sets = settingsText(t, typographySettings({ style }));
   const summary = [
@@ -81,7 +99,8 @@ export function TextToolbar({ actions }: { actions: Actions }) {
       <div className="text-toolbar-row">
         <StylePicker style={style} onPick={(next) => run(actions.applyPreset(next))} />
         <Separator />
-        {(["font", "size", "color"] as const).map(select)}
+        {(["font", "size"] as const).map(select)}
+        <ColorSetting format={format} onChange={(color) => run(actions.patchText({ color }))} />
         <Separator />
         {toggles.map((key) => (
           <IconButton
@@ -134,6 +153,11 @@ export function TextToolbar({ actions }: { actions: Actions }) {
         </p>
       ) : (
         <p className="text-summary">{summary}</p>
+      )}
+      {contrast < MIN_CONTRAST && (
+        <p className="text-warning">
+          {t("editor.text.lowContrast", { ratio: Math.floor(contrast * 10) / 10 })}
+        </p>
       )}
     </div>
   );
@@ -230,6 +254,80 @@ function SettingSelect({
         ))}
       </select>
     </span>
+  );
+}
+
+/** Named colours as quick swatches, and any colour from the browser's colour picker. */
+function ColorSetting({
+  format,
+  onChange,
+}: {
+  format: Typography;
+  onChange: (color: string) => void;
+}) {
+  const { t } = useTranslation();
+  const menu = useRef<HTMLDetailsElement>(null);
+  const picker = useRef<HTMLInputElement>(null);
+  const style = format.style ?? "default";
+  const styleName = t(`editor.text.values.style.${style}`);
+  const inherited = effectiveTypography({ style }).color;
+  const fromStyle = typographySettings({ style }).color !== undefined;
+  const value = format.color ?? inherited;
+  const name = t("editor.text.color");
+  const label = (color: string) =>
+    color === inherited && fromStyle
+      ? t("editor.text.fromStyle", { value: valueLabel(t, "color", color), style: styleName })
+      : valueLabel(t, "color", color);
+  // The picker applies when it closes (its change event), not at every step of a drag.
+  useEffect(() => {
+    const node = picker.current;
+    if (!node) return;
+    const commit = () => {
+      menu.current?.removeAttribute("open");
+      onChange(node.value.slice(1).toLowerCase());
+    };
+    node.addEventListener("change", commit);
+    return () => node.removeEventListener("change", commit);
+  });
+  return (
+    <details className={`text-setting text-color${format.color ? " changed" : ""}`} ref={menu}>
+      <summary aria-label={`${name}: ${label(value)}`} title={`${name}: ${label(value)}`}>
+        <span className="text-color-glyph" aria-hidden="true">
+          A
+          <span style={{ background: swatches[value] ?? cssColor(value) }} />
+        </span>
+      </summary>
+      <div className="text-popover" role="group" aria-label={name}>
+        <div className="text-swatches">
+          {typographyOptions.color.map((color) => (
+            <button
+              key={color}
+              type="button"
+              className="text-swatch"
+              aria-label={label(color)}
+              title={label(color)}
+              aria-pressed={value === color}
+              style={{ background: swatches[color] }}
+              onClick={() => {
+                menu.current?.removeAttribute("open");
+                onChange(color);
+              }}
+            >
+              {color === "inherit" && <span aria-hidden="true">A</span>}
+            </button>
+          ))}
+        </div>
+        <label className="text-custom-color">
+          {t("editor.text.customColor")}
+          <input
+            key={value}
+            ref={picker}
+            type="color"
+            defaultValue={cssColor(value) ?? swatches[value] ?? "#000000"}
+          />
+        </label>
+      </div>
+    </details>
   );
 }
 

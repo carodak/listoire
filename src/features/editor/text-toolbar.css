@@ -75,6 +75,7 @@
 .text-style-menu {
   position: relative;
 }
+.text-color > summary,
 .text-more > summary,
 .text-style-menu > summary {
   list-style: none;
@@ -85,6 +86,7 @@
   border: 1px solid transparent;
   border-radius: 5px;
 }
+.text-color > summary::-webkit-details-marker,
 .text-more > summary::-webkit-details-marker,
 .text-style-menu > summary::-webkit-details-marker {
   display: none;
@@ -94,6 +96,7 @@
   width: 34px;
   font-size: 20px;
 }
+.text-color > summary:hover,
 .text-more > summary:hover,
 .text-style-menu > summary:hover {
   background: #e0e7df;
@@ -167,4 +170,66 @@
 }
 .text-toolbar .text-status {
   color: #8a3b1c;
+}
+.text-toolbar .text-warning {
+  color: #8a3b1c;
+}
+/* Colour: an "A" over the current colour, like word processors. */
+.text-color > summary {
+  justify-content: center;
+  width: 34px;
+}
+.text-color-glyph {
+  display: grid;
+  justify-items: center;
+  font:
+    600 16px/1 Georgia,
+    serif;
+}
+.text-color-glyph > span {
+  width: 18px;
+  height: 4px;
+  margin-top: 2px;
+  border: 1px solid var(--editor-line);
+  background: var(--editor-ink);
+}
+.text-color .text-popover {
+  left: 0;
+  right: auto;
+  width: max-content;
+}
+.text-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 28px);
+  gap: 6px;
+}
+.story-editor .text-swatch {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--editor-line);
+  border-radius: 50%;
+  background: white;
+  color: var(--editor-ink);
+  font:
+    600 14px/1 Georgia,
+    serif;
+}
+.story-editor .text-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--editor-ink);
+  outline-offset: 2px;
+}
+.text-custom-color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.text-custom-color input {
+  width: 44px;
+  height: 28px;
+  padding: 0 2px;
 }

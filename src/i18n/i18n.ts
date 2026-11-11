@@ -184,6 +184,9 @@ const en = {
       strike: "Strikethrough",
       glyph: { bold: "B", italic: "I", underline: "U", strike: "S" },
       clear: "Clear formatting",
+      customColor: "Any color",
+      lowContrast:
+        "Low contrast with this story's page color ({{ratio, number}}:1): these words may be hard to read. Aim for 4.5:1 or more.",
       more: "More text settings",
       alignGroup: "Paragraph alignment",
       align: { left: "Align left", center: "Center", right: "Align right", justify: "Justify" },
@@ -436,6 +439,9 @@ const fr: typeof en = {
       strike: "Barré",
       glyph: { bold: "G", italic: "I", underline: "S", strike: "B" },
       clear: "Effacer la mise en forme",
+      customColor: "Toute couleur",
+      lowContrast:
+        "Contraste faible avec la couleur des pages de cette histoire ({{ratio, number}}:1) : ces mots risquent d’être difficiles à lire. Visez au moins 4,5:1.",
       more: "Autres réglages du texte",
       alignGroup: "Alignement du paragraphe",
       align: {

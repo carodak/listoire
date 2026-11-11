@@ -145,7 +145,7 @@ function EditorShell({ context: c, actions, preview }: ShellProps) {
         onFind={actions.find}
       />
       <Ribbon
-        textTools={<TextToolbar actions={actions} />}
+        textTools={<TextToolbar actions={actions} paper={c.language.defaults.backgroundColor} />}
         tab={tab}
         collapsed={view.collapsed}
         gameMode={c.project.gameMode}

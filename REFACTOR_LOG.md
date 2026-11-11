@@ -1787,3 +1787,30 @@ sentence): `editor-actions.test.ts` "applyPreset explains why…" (two `toBe`), 
 
 Tests: unit "reports a formatting message to every listener until it is cleared"; e2e "a shortcut
 that can't format says why…" (toolbar, hidden on moving, status bar on the Story tab, French).
+
+### 1c. Color: any colour, named swatches, contrast warning
+
+- **Format (additive):** `<typo color="…">` keeps its five names and `inherit`, and also takes
+  any colour as six lowercase hex digits **without `#`** (`color="336699"`). Found while testing:
+  in Ink, `#` anywhere on a line starts a tag, so `color="#336699"` would have cut the line in
+  two. Old stories have only names: they parse and render exactly as before (same classes).
+  `DATA_CONTRACTS.md` updated.
+- **Reader:** a named colour stays a class (mixed 65 % with the page's text colour, so it adapts
+  to light and dark pages); an author's own colour is drawn exactly, as an inline style, with the
+  class `type-color-custom`.
+- **Toolbar:** the Color select became an "A" button with the current colour under it. It opens
+  six swatches (Text color + the five names, "(from Shout)" in the tooltip when the style sets
+  it) and the browser's own colour picker ("Any color"). A pick applies when the picker closes
+  (not at every step of a drag), and closes the popover.
+- **Contrast warning (my choices):** shown under the toolbar's summary line when the words'
+  colour is an author's own colour with a WCAG contrast below **4.5:1** (AA for body text) against
+  the story's page colour (`defaults.backgroundColor`, or the default dark page). Named colours
+  get no warning: they adapt to the page. The reader can still pick another paper colour; the
+  check is against the story's own page, light or dark. `contrastRatio` and `paperColor` are now
+  exported from `reader-theme.ts` (the luminance code `readerTheme` already had), so the
+  reader and the warning use the same page colour.
+
+Tests: unit (hex parse + rejects `#…`, upper case, short or 7-digit values; patch to custom, back
+to named, back to plain; custom colour rendered inline; contrast ratios and page colour); e2e
+"any color from the picker…" (dark page: dark grey → warning and rendered rgb(34, 34, 34); Ocean
+swatch → no warning; light page: dark grey → no warning, pale yellow → warning).

@@ -19,12 +19,19 @@ export const typographyOptions = {
 export const paragraphAlignments = ["left", "center", "right", "justify"] as const;
 export type ParagraphAlign = (typeof paragraphAlignments)[number];
 
+const customColor = /^[0-9a-f]{6}$/;
+/** The CSS colour of an author's own colour ("336699" → "#336699"); undefined for named ones. */
+export const cssColor = (color?: string) =>
+  color && customColor.test(color) ? `#${color}` : undefined;
+
 export const TypographySchema = z
   .object({
     style: z.enum(typographyOptions.style).optional(),
     size: z.enum(typographyOptions.size).optional(),
     font: z.enum(typographyOptions.font).optional(),
-    color: z.enum(typographyOptions.color).optional(),
+    // A named colour (it adapts to light and dark pages) or any colour as six lowercase hex
+    // digits, without "#": in Ink, "#" starts a tag anywhere on a line.
+    color: z.union([z.enum(typographyOptions.color), z.string().regex(customColor)]).optional(),
     direction: z.enum(typographyOptions.direction).optional(),
     spacing: z.enum(typographyOptions.spacing).optional(),
     shape: z.enum(typographyOptions.shape).optional(),
@@ -77,9 +84,9 @@ export function effectiveTypography(format: Typography): Required<Typography> {
 
 function attributes(tag: string): Typography {
   const source = tag.slice(5, -1);
-  const entries = [...source.matchAll(/\s+([a-z]+)="([a-z-]+)"/g)];
+  const entries = [...source.matchAll(/\s+([a-z]+)="([a-z0-9-]+)"/g)];
   if (
-    source.replace(/\s+([a-z]+)="([a-z-]+)"/g, "").trim() ||
+    source.replace(/\s+([a-z]+)="([a-z0-9-]+)"/g, "").trim() ||
     new Set(entries.map((entry) => entry[1])).size !== entries.length
   )
     throw new Error("Invalid typography attributes. Use the Text ribbon to format words.");

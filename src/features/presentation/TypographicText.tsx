@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Typography, TypographySpan } from "../../contracts/typography.ts";
-import { typographySettings } from "../../contracts/typography.ts";
+import { cssColor, typographySettings } from "../../contracts/typography.ts";
 import "./typography.css";
 
 export function TypographicText({
@@ -62,13 +62,17 @@ function StyledWords({
   visible: number;
 }) {
   const settings = typographySettings(format);
+  // Named values are classes; an author's own colour is an inline style.
+  const color = cssColor(settings.color);
   const className = [
     "narrative-type",
-    ...Object.entries(settings).map(([key, value]) => `type-${key}-${value}`),
+    ...Object.entries(settings).map(
+      ([key, value]) => `type-${key}-${key === "color" && color ? "custom" : value}`,
+    ),
   ].join(" ");
   const shaped = settings.shape === "wave" || settings.shape === "cascade";
   return (
-    <span className={className}>
+    <span className={className} style={color ? { color } : undefined}>
       {shaped
         ? Array.from(
             new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(text),

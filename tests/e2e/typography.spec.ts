@@ -8,6 +8,7 @@ async function openTypographyStory(
   narration = false,
   extra = "",
   reveal: "instant" | "progressive" = "instant",
+  backgroundColor?: string,
 ) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
@@ -36,6 +37,7 @@ async function openTypographyStory(
               narration,
               reveal,
               narratorVoice: "device:test",
+              backgroundColor,
             },
             narrationMode: "ai-live",
           },
@@ -334,6 +336,44 @@ test("a shortcut that can't format says why, in the toolbar or the status bar, i
   await expect(page.locator(".text-toolbar").getByRole("status")).toHaveText(
     "Sélectionnez des mots du récit, pas une instruction ni une balise Ink.",
   );
+});
+
+test("any color from the picker, named swatches, and a contrast warning for light and dark pages", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  const menu = page.locator(".text-color");
+  const pick = async (color: string) => {
+    await menu.locator("summary").click();
+    await menu.locator("input[type=color]").fill(color);
+  };
+  const warning = page.locator(".text-toolbar .text-warning");
+  // The story's page is the default dark one: dark grey words would be hard to read.
+  await pick("#222222");
+  await expect.poll(() => script(page)).toContain('<typo color="222222">BOOM</typo>');
+  await expect(warning).toContainText("Low contrast with this story's page color (1.");
+  await expect(menu.locator("summary")).toHaveAttribute("aria-label", "Color: #222222");
+  await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
+  await expect(page.locator(".preview-slot .prose .type-color-custom")).toHaveCSS(
+    "color",
+    "rgb(34, 34, 34)",
+  );
+  // A named colour is one click and adapts to the page: no warning.
+  await menu.locator("summary").click();
+  await page.getByRole("button", { name: "Ocean", exact: true }).click();
+  await expect.poll(() => script(page)).toContain('<typo color="ocean">BOOM</typo>');
+  await expect(warning).toHaveCount(0);
+  await expect(page.locator(".preview-slot .prose .type-color-ocean")).toHaveText("BOOM");
+  // On a light page, dark grey reads well and pale yellow does not.
+  await openTypographyStory(page, false, "", "instant", "#f4ecd8");
+  await selectBoom(page);
+  await pick("#222222");
+  await expect.poll(() => script(page)).toContain('<typo color="222222">BOOM</typo>');
+  await expect(warning).toHaveCount(0);
+  await pick("#ffff66");
+  await expect.poll(() => script(page)).toContain('<typo color="ffff66">BOOM</typo>');
+  await expect(warning).toBeVisible();
 });
 
 test("aligns the paragraph at the caret, shown in the reader, with French labels", async ({
