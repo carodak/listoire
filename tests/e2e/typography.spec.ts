@@ -202,6 +202,76 @@ test("one setting keeps the others; a preset clears manual changes and undo rest
   await expect(page.locator(".text-summary")).toHaveText("No style. No manual changes.");
 });
 
+/** The caret's line in the script, with a "|" at the caret. */
+const caretLine = (page: Page) =>
+  page.locator(".ink-editor").evaluate((node) => {
+    const editor = (
+      node as unknown as {
+        env: {
+          editor: {
+            getCursorPosition(): { row: number; column: number };
+            session: { getLine(row: number): string };
+          };
+        };
+      }
+    ).env.editor;
+    const { row, column } = editor.getCursorPosition();
+    const line = editor.session.getLine(row);
+    return `${line.slice(0, column)}|${line.slice(column)}`;
+  });
+
+test("after Undo leaves the caret inside a tag, formatting takes the whole tagged words", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
+  await selectBoom(page);
+  await page.locator(".text-style-menu summary").click();
+  await page.getByRole("button", { name: /^Shout/ }).click();
+  await page.getByLabel("Size", { exact: true }).selectOption("large");
+  await page.getByRole("button", { name: "Italic", exact: true }).click();
+  await page.locator(".text-style-menu summary").click();
+  await page.getByRole("button", { name: /^Mystery/ }).click();
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo style="shout" size="large" italic="on">BOOM</typo>');
+  // The caret is back at its old column, now inside the longer opening tag.
+  expect(await caretLine(page)).toMatch(/<typo [^>|]*\|[^>]*>BOOM/);
+  // The toolbar shows those words' settings, and a button formats all of them at once.
+  await expect(page.getByRole("button", { name: "Italic", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: "Underline", exact: true }).click();
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo style="shout" size="large" italic="on" underline="on">BOOM</typo>');
+  await expect(page.locator(".text-toolbar [role=status]")).toHaveCount(0);
+  // The same from the keyboard, with the caret inside the closing tag.
+  await page.locator(".ink-editor").evaluate((node) => {
+    const editor = (
+      node as unknown as {
+        env: {
+          editor: {
+            getCursorPosition(): { row: number };
+            session: { getLine(row: number): string };
+            clearSelection(): void;
+            moveCursorTo(row: number, column: number): void;
+          };
+        };
+      }
+    ).env.editor;
+    const { row } = editor.getCursorPosition();
+    editor.clearSelection();
+    editor.moveCursorTo(row, editor.session.getLine(row).indexOf("</typo>") + 3);
+  });
+  expect(await caretLine(page)).toContain("BOOM</t|ypo>");
+  await page.locator(".ace_text-input").press("Control+i");
+  await expect
+    .poll(() => script(page))
+    .toContain('<typo style="shout" size="large" underline="on">BOOM</typo>');
+});
+
 test("keyboard shortcuts format the word at the caret and open find and replace", async ({
   page,
 }) => {

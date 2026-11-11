@@ -85,7 +85,10 @@ it("splits overlapping styles while retaining unselected words and the exact sel
     { color: "violet" },
     { color: "ocean" },
   ]);
-  expect(() => formatTextSelection(line, 4, 10, {})).toThrow(/attributes/);
+  // Pass 8, 1a: inside the tag attributes used to be refused; it now takes the tagged words.
+  expect(formatTextSelection(line, 4, 10, {}).replacement).toBe(
+    'A red blue and <typo color="ocean">green</typo>.',
+  );
 });
 
 it("reads and writes bold, italic, underline and strikethrough; presets declare theirs", () => {
@@ -215,7 +218,8 @@ it("reads the settings at a column, ignoring markup being typed", () => {
   const line = 'A <typo style="mystery" bold="on">quiet</typo> word.';
   expect(formatAt(line, line.indexOf("quiet") + 2)).toEqual({ style: "mystery", bold: "on" });
   expect(formatAt(line, 0)).toEqual({});
-  expect(formatAt(line, 5)).toEqual({});
+  // Pass 8, 1a: a column inside the tag's markup reads that tag's words (it used to read none).
+  expect(formatAt(line, 5)).toEqual({ style: "mystery", bold: "on" });
   expect(formatAt('<typo style="shout">open', 22)).toEqual({});
   expect(effectiveTypography({ style: "mystery" })).toMatchObject({
     font: "serif",
@@ -223,6 +227,42 @@ it("reads the settings at a column, ignoring markup being typed", () => {
     size: "normal",
     bold: "off",
   });
+});
+
+it("a selection end inside tag markup (as after Undo) takes in the whole tagged words", () => {
+  const line =
+    'A <typo style="shout" size="large">red BOOM</typo> and <typo bold="on">more</typo>.';
+  const inOpening = line.indexOf("size"),
+    inClosing = line.indexOf("</typo>") + 3;
+  const whole = (start: number, end: number) =>
+    patchTextSelection(line, start, end, { italic: "on" }).replacement;
+  const expected =
+    'A <typo style="shout" size="large" italic="on">red BOOM</typo> and <typo bold="on">more</typo>.';
+  // A caret in the opening or the closing tag, and a selection from inside one to the other.
+  expect(whole(inOpening, inOpening)).toBe(expected);
+  expect(whole(inClosing, inClosing)).toBe(expected);
+  expect(whole(inOpening, inClosing)).toBe(expected);
+  // From inside the first tag to plain text after it: the tagged words and the plain words.
+  const andEnd = line.indexOf(" and") + 4;
+  expect(parseTypography(whole(inOpening, andEnd))).toEqual({
+    text: "A red BOOM and more.",
+    typography: [
+      { start: 2, end: 10, format: { style: "shout", size: "large", italic: "on" } },
+      { start: 10, end: 14, format: { italic: "on" } },
+      { start: 15, end: 19, format: { bold: "on" } },
+    ],
+  });
+  // Each tag stands for its own words, even when two tags touch.
+  const touching = '<typo bold="on">one</typo><typo italic="on">two</typo>';
+  const between = touching.indexOf("</typo>") + 2;
+  expect(formatTextSelection(touching, between, between, {}).replacement).toBe(
+    'one<typo italic="on">two</typo>',
+  );
+  const nextOpening = touching.lastIndexOf("<typo") + 2;
+  expect(formatAt(touching, between)).toEqual({ bold: "on" });
+  expect(formatAt(touching, nextOpening)).toEqual({ italic: "on" });
+  // A caret in plain text still asks for a selection.
+  expect(() => formatTextSelection(line, 1, 1, {})).toThrow(/Select words/);
 });
 
 it("aligns paragraphs with one tag, removes it for left and leaves other lines alone", () => {

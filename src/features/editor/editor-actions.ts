@@ -17,6 +17,7 @@ import {
   alignTranslations,
   formatAt,
   formatTextSelection,
+  insideMarkup,
   isParagraphLine,
   lineAlignment,
   patchTextSelection,
@@ -62,8 +63,9 @@ export class EditorActions {
     const line = editor.session.getLine(start.row);
     const caret = start.row === end.row && start.column === end.column;
     // At a caret, the letter before it (the word being edited, as in other editors).
+    const before = caret && !insideMarkup(line, start.column);
     return {
-      format: formatAt(line, caret ? Math.max(0, start.column - 1) : start.column),
+      format: formatAt(line, before ? Math.max(0, start.column - 1) : start.column),
       align: lineAlignment(line),
     };
   };
@@ -95,8 +97,13 @@ export class EditorActions {
     const { handles } = this.context;
     const editor = handles.current.editor;
     if (!editor) return "The script editor is still loading.";
-    const caret = editor.getSelectionRange();
-    if (caret.start.row === caret.end.row && caret.start.column === caret.end.column)
+    const { start: caret, end: last } = editor.getSelectionRange();
+    // A caret inside a tag's markup (after Undo) formats that tag's words as they are.
+    if (
+      caret.row === last.row &&
+      caret.column === last.column &&
+      !insideMarkup(editor.session.getLine(caret.row), caret.column)
+    )
       editor.selection.selectWord();
     const range = editor.getSelectionRange();
     if (range.start.row !== range.end.row) return "Select words within one paragraph.";

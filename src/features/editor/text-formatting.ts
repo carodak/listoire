@@ -9,21 +9,36 @@ import {
 
 const instruction = /^\s*(?:~|VAR\b|CONST\b|LIST\b|={2,}|->|\/\/)/;
 
+const typoTags = (line: string) => [...line.matchAll(/<\/?typo\b[^>]*>/g)];
+const within = (tag: RegExpExecArray, column: number) =>
+  column > tag.index && column < tag.index + tag[0].length;
+
+/** True when `column` is inside `<typo>` markup, where Undo can leave the caret. */
+export const insideMarkup = (line: string, column: number) =>
+  typoTags(line).some((tag) => within(tag, column));
+
 /** Maps a column of the raw line to an offset in its text without `<typo>` tags. */
 function plainOffsets(line: string) {
-  const tags = [...line.matchAll(/<\/?typo\b[^>]*>/g)];
-  const inside = (point: number) =>
-    tags.some((tag) => point > tag.index && point < tag.index + tag[0].length);
+  const tags = typoTags(line);
   const offset = (column: number) =>
     column -
     tags
       .filter((tag) => tag.index + tag[0].length <= column)
       .reduce((sum, tag) => sum + tag[0].length, 0);
-  return { inside, offset };
+  /** The span whose tag markup holds `column`, if any. */
+  const tagged = (column: number, spans: TypographySpan[]) => {
+    const tag = tags.find((tag) => within(tag, column));
+    if (!tag) return;
+    const closing = tag[0] === "</typo>";
+    const point = offset(closing ? tag.index : tag.index + tag[0].length);
+    return spans.find((span) => (closing ? span.end : span.start) === point);
+  };
+  return { offset, tagged };
 }
 
 function narrativeSelection(line: string, start: number, end: number) {
-  if (start === end) throw new Error("Select words in the Ink script first.");
+  if (start === end && !insideMarkup(line, start))
+    throw new Error("Select words in the Ink script first.");
   if (
     start < 0 ||
     end > line.length ||
@@ -32,12 +47,11 @@ function narrativeSelection(line: string, start: number, end: number) {
     /#/.test(line.slice(0, start))
   )
     throw new Error("Select narrative words, excluding Ink instructions and tags.");
-  const { inside, offset } = plainOffsets(line);
-  if (inside(start) || inside(end))
-    throw new Error("Select words outside the typography tag attributes.");
-  const from = offset(start),
-    to = offset(end);
+  const { offset, tagged } = plainOffsets(line);
   const { text, typography = [] } = parseTypography(line);
+  // An end inside a tag's markup takes in all the words that tag formats.
+  const from = tagged(start, typography)?.start ?? offset(start),
+    to = tagged(end, typography)?.end ?? offset(end);
   const selected = text.slice(from, to);
   if (!selected.trim() || /[\r\n#{}[\]]/.test(selected))
     throw new Error("Select narrative words within one line, excluding Ink tags and expressions.");
@@ -122,14 +136,14 @@ export function patchTextSelection(
   });
 }
 
-/** The settings of the words at `column`; plain text, or markup being typed, has none. */
+/** The settings of the words at `column`, or of the tag it is in; plain text has none. */
 export function formatAt(line: string, column: number): Typography {
   try {
-    const { inside, offset } = plainOffsets(line);
-    if (inside(column)) return {};
-    const point = offset(column);
+    const { offset, tagged } = plainOffsets(line);
     const spans = parseTypography(line).typography ?? [];
-    return spans.find((span) => span.start <= point && point < span.end)?.format ?? {};
+    const point = offset(column);
+    const span = tagged(column, spans) ?? spans.find((s) => s.start <= point && point < s.end);
+    return span?.format ?? {};
   } catch {
     return {};
   }
