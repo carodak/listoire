@@ -237,6 +237,7 @@ interface VideoSurfaceProps {
 }
 
 function VideoSurface({ illustration, block, bindNode, state, source }: VideoSurfaceProps) {
+  const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
   return (
     <>
@@ -245,7 +246,7 @@ function VideoSurface({ illustration, block, bindNode, state, source }: VideoSur
           ref={(node) => bindNode("video", node)}
           className="shot-image"
           src={source}
-          aria-label={illustration.alt || "Story video"}
+          aria-label={illustration.alt || t("video.label")}
           controls={
             !illustration.scene3d &&
             (block.layout !== "fullscreen" ||
@@ -261,18 +262,9 @@ function VideoSurface({ illustration, block, bindNode, state, source }: VideoSur
           style={{ objectFit: block.fit ?? (block.layout === "fullscreen" ? "cover" : "contain") }}
         />
       ) : (
-        <p role="status">
-          {source === null
-            ? "Video unavailable. Restore its project backup if the local file is missing."
-            : "Loading video…"}
-        </p>
+        <p role="status">{t(source === null ? "video.unavailable" : "video.loading")}</p>
       )}
-      {failed && (
-        <p role="status">
-          This browser cannot decode this video. Its file is preserved; use a compatible MP4/WebM
-          codec or another browser to play it.
-        </p>
-      )}
+      {failed && <p role="status">{t("video.undecodable")}</p>}
     </>
   );
 }

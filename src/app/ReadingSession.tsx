@@ -51,7 +51,7 @@ export function ReadingSession({
       <main id="story" className="notice" role="alert">
         <p>{t("errors.content")}</p>
         <p>{failed}</p>
-        <a href={appPath("editor")}>Open Story Editor</a>
+        <a href={appPath("editor")}>{t("openEditor")}</a>
         <button onClick={retry}>{t("retry")}</button>
       </main>
     );

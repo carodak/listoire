@@ -141,7 +141,6 @@ function CombatStage({ bundle, state, combat, log, hits, ending, ended, ...props
           <DiceRoll
             key={ending ? "ending" : combat?.turn}
             result={state.game?.lastResult}
-            french={bundle.locale.startsWith("fr")}
             instant={state.restored}
             onSettled={props.onSettled}
           />

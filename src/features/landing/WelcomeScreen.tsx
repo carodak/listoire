@@ -28,7 +28,7 @@ export function WelcomeScreen({ onPlay }: Props) {
           {t("welcome.play")}
         </button>
         <a className="welcome-create" href={appPath("editor")}>
-          Story Editor
+          {t("welcome.editor")}
         </a>
       </div>
     </main>

@@ -7,7 +7,8 @@ import type { PresentationSession } from "../presentation/presentation-session.t
 import { ReaderModal } from "../../shared/ReaderModal.tsx";
 import { DiceRoll } from "./DiceRoll.tsx";
 import { SpellFeedback } from "../presentation/SpellFeedback.tsx";
-import type { GameState, CheckOption } from "../../contracts/game.ts";
+import type { GameState } from "../../contracts/game.ts";
+import { useTranslation } from "react-i18next";
 
 export function CheckRoll({
   bundle,
@@ -27,31 +28,35 @@ export function CheckRoll({
   useEffect(() => {
     if (!pending.rolled) void director.rollCheck(state.occurrenceId);
   }, [director, state.occurrenceId, pending]);
-  const french = bundle.locale === "fr";
-  const labels = checkLabels[french ? "fr" : "en"];
+  const { t } = useTranslation();
   const choice = state.frame.choices
     .concat(state.frame.actions ?? [])
     .find((choice) => choice.id === pending.choiceId);
-  const context = choice ? checkContext(bundle, choice, state.checkOptions) : null;
+  const context = choice ? checkContext(bundle, choice, t, state.checkOptions) : null;
   const result = state.game.lastResult;
   return (
-    <ReaderModal className="check-roll-modal" title={context?.purpose ?? labels.title}>
+    <ReaderModal className="check-roll-modal" title={context?.purpose ?? t("check.title")}>
       <SpellFeedback ability={result?.abilityUsed} instant={state.restored} />
       {context && <p className="check-test">{context.test}</p>}
       {pending.rolled ? (
-        <DiceRoll result={result} french={french} instant={state.restored} onSettled={finishDice} />
+        <DiceRoll result={result} instant={state.restored} onSettled={finishDice} />
       ) : (
-        <p>{labels.prompt}</p>
+        <p>{t("check.rolling")}</p>
       )}
       {pending.rolled && settled && (
-        <CheckOutcome result={result!} option={context?.option} french={french} />
+        <p role="status" className="check-outcome">
+          {result!.roll} {context?.option?.comparison} {context?.option?.threshold}?{" "}
+          <strong data-success={result!.success}>
+            {t(result!.success ? "check.success" : "check.failure")}
+          </strong>
+        </p>
       )}
       {state.failure && (
         <>
-          <p role="alert">{labels.failure}</p>
+          <p role="alert">{t("check.saveFailed")}</p>
           {!pending.rolled && (
             <button onClick={() => void director.rollCheck(state.occurrenceId)}>
-              {french ? "Réessayer le jet" : "Retry roll"}
+              {t("check.retry")}
             </button>
           )}
         </>
@@ -61,45 +66,8 @@ export function CheckRoll({
         disabled={state.busy || !pending.rolled || !settled}
         onClick={() => void director.finishCheck(state.occurrenceId)}
       >
-        {labels.continue}
+        {t("check.continue")}
       </button>
     </ReaderModal>
   );
 }
-
-function CheckOutcome({
-  result,
-  option,
-  french,
-}: {
-  result: NonNullable<GameState["lastResult"]>;
-  option?: CheckOption;
-  french: boolean;
-}) {
-  const labels = french
-    ? { success: "Réussite", failure: "Échec" }
-    : { success: "Success", failure: "Failure" };
-  return (
-    <p role="status" className="check-outcome">
-      {result.roll} {option?.comparison} {option?.threshold}?{" "}
-      <strong data-success={result.success}>
-        {result.success ? labels.success : labels.failure}
-      </strong>
-    </p>
-  );
-}
-
-const checkLabels = {
-  fr: {
-    title: "Épreuve",
-    prompt: "Lancer en cours…",
-    failure: "Sauvegarde impossible. Réessaie.",
-    continue: "Continuer",
-  },
-  en: {
-    title: "Check",
-    prompt: "Rolling…",
-    failure: "Could not save. Please retry.",
-    continue: "Continue",
-  },
-};

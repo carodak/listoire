@@ -90,7 +90,7 @@ function CombatMenu({
   choose: (move: GameMove) => void;
   close: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const popup = useRef<HTMLDivElement>(null);
   useEffect(() => {
     popup.current?.querySelector<HTMLButtonElement>(".combat-ability-menu button")?.focus();
@@ -116,7 +116,7 @@ function CombatMenu({
             <div key={move.id} className="combat-action">
               <button onClick={() => choose(move)}>
                 {name}
-                <small>{chanceLabel(option.probability, bundle.locale === "fr")}</small>
+                <small>{chanceLabel(option.probability, t, i18n)}</small>
               </button>
               <Info label={t("combat.details", { name })}>
                 <CombatOptionDetails bundle={bundle} option={option} />

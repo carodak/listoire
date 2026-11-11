@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { TypographicText } from "../presentation/TypographicText.tsx";
 import type { StoryBundle } from "../../contracts/story.ts";
 import type { CheckOption } from "../../contracts/game.ts";
@@ -24,7 +25,7 @@ export function ChoiceList({
   checkOptions,
 }: ChoiceListProps) {
   const { t, i18n } = useTranslation();
-  const combatLabel = locale === "fr" ? "Combattre" : "Fight";
+  const combatLabel = t("combat.fight");
   if (resumeCombat)
     return (
       <nav className="choices" aria-label={t("choices")}>
@@ -41,7 +42,7 @@ export function ChoiceList({
   return (
     <nav className="choices" aria-label={t("choices")} lang={i18n.resolvedLanguage}>
       {frame.choices.map((choice) => {
-        const context = bundle ? checkContext(bundle, choice, checkOptions) : null;
+        const context = bundle ? checkContext(bundle, choice, t, checkOptions) : null;
         const combat = bundle?.game?.actions.some(
           (action) => action.id === choice.gameAction && action.kind === "combat",
         );
@@ -71,19 +72,22 @@ export function ChoiceList({
 export function checkContext(
   bundle: StoryBundle,
   choice: Frame["choices"][number],
+  t: TFunction,
   options: Record<string, CheckOption> = {},
 ) {
   const action = bundle.game?.actions.find((action) => action.id === choice.gameAction);
   if (!action || !["stat-check", "ability-check"].includes(action.kind)) return null;
   const ability = bundle.game?.abilities.find((ability) => ability.id === action.reference);
   const attribute = action.kind === "stat-check" ? action.attribute : ability?.attribute;
-  const french = bundle.locale.startsWith("fr");
   const option = options[action.id];
   return {
     option,
     purpose: action.kind === "stat-check" ? action.label : choice.text,
     test: option
-      ? `${french ? "Jet de" : "Roll"} ${option.attribute} · ${french ? "Obtenir" : "Roll"} ${option.comparison} ${option.threshold}/${option.sides}`
-      : `${french ? "Jet de" : "Roll"} ${attribute ?? ""} · ${action.kind === "stat-check" ? "d20" : "d6"}`,
+      ? t("check.test", { ...option })
+      : t("check.testDie", {
+          attribute: attribute ?? "",
+          die: action.kind === "stat-check" ? "d20" : "d6",
+        }),
   };
 }

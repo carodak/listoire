@@ -1,11 +1,13 @@
+import { useTranslation } from "react-i18next";
+import type { TFunction, i18n as I18n } from "i18next";
 import type { CombatOption } from "../../contracts/game.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 
-export function chanceLabel(probability: number, french: boolean) {
-  return `${french ? "Réussite" : "Success"} : ${percentage(probability, french)}`;
+export function chanceLabel(probability: number, t: TFunction, i18n: I18n) {
+  return t("combatInfo.chance", { chance: percentage(probability, i18n) });
 }
-function percentage(probability: number, french: boolean) {
-  return new Intl.NumberFormat(french ? "fr" : "en", {
+function percentage(probability: number, i18n: I18n) {
+  return new Intl.NumberFormat(i18n.language, {
     style: "percent",
     maximumFractionDigits: 0,
   }).format(probability);
@@ -23,66 +25,38 @@ export function CombatOptionDetails({
   bundle: StoryBundle;
   option: CombatOption;
 }) {
-  const french = bundle.locale === "fr";
+  const { t, i18n } = useTranslation();
   const name = optionName(bundle, option);
   const kind = option.move.kind;
   return (
     <section className="combat-option-details">
       {name && <strong>{name}</strong>}
-      {kind === "attack" && (
-        <p>
-          {french
-            ? "L’attaque touche toujours. Lance un d6 pour connaître les dégâts."
-            : "Your attack always hits. Roll a d6 to find the damage."}
-        </p>
-      )}
-      {kind === "ability" && (
-        <p>
-          {french
-            ? "Lance un d6. Si tu atteins le nombre indiqué, la capacité réussit. Sinon, elle ne fait aucun dégât."
-            : "Roll a d6. Reach the number shown to succeed. Otherwise, the ability deals no damage."}
-        </p>
-      )}
-      {option.attackTable && <AttackTable option={option} french={french} />}
-      {option.ranks && <RankTable option={option} french={french} />}
+      {(kind === "attack" || kind === "ability") && <p>{t(`combatInfo.${kind}`)}</p>}
+      {option.attackTable && <AttackTable option={option} />}
+      {option.ranks && <RankTable option={option} />}
       {kind === "flee" && (
         <p>
-          {french
-            ? `Lance un d20 : ${option.check?.threshold} ou moins pour fuir.`
-            : `Roll a d20: ${option.check?.threshold} or less to escape.`}{" "}
-          {chanceLabel(option.probability, french)}
+          {t("combatInfo.flee", { threshold: option.check?.threshold })}{" "}
+          {chanceLabel(option.probability, t, i18n)}
         </p>
       )}
-      {kind === "flee" && (
-        <p>
-          {french
-            ? "Si tu rates, l’adversaire peut répliquer."
-            : "If you fail, your opponent may strike back."}
-        </p>
-      )}
-      {kind === "item" && (
-        <p>
-          {french
-            ? `Récupère jusqu’à ${option.healing} PV, sans dépasser ton maximum. Aucun dé à lancer. L’objet est consommé et l’adversaire réplique.`
-            : `Recover up to ${option.healing} HP, capped at your maximum. No die roll. The item is consumed and your opponent strikes back.`}
-        </p>
-      )}
+      {kind === "flee" && <p>{t("combatInfo.fleeRisk")}</p>}
+      {kind === "item" && <p>{t("combatInfo.item", { count: option.healing })}</p>}
     </section>
   );
 }
-function RankTable({ option, french }: { option: CombatOption; french: boolean }) {
+function RankTable({ option }: { option: CombatOption }) {
+  const { t, i18n } = useTranslation();
   return (
     <>
       <table className="combat-info-table">
-        <caption>
-          {french ? "Le rang actuel est surligné." : "Your current rank is highlighted."}
-        </caption>
+        <caption>{t("combatInfo.currentRank")}</caption>
         <thead>
           <tr>
-            <th>{french ? "Rang" : "Rank"}</th>
+            <th>{t("combatInfo.rank")}</th>
             <th>d6</th>
-            <th>{french ? "Dégâts" : "Damage"}</th>
-            <th>Chance</th>
+            <th>{t("combatInfo.damage")}</th>
+            <th>{t("combatInfo.odds")}</th>
           </tr>
         </thead>
         <tbody>
@@ -91,31 +65,28 @@ function RankTable({ option, french }: { option: CombatOption; french: boolean }
               <td>{row.rank}</td>
               <td>≥ {row.threshold}</td>
               <td>{row.damage}</td>
-              <td>{percentage(row.probability, french)}</td>
+              <td>{percentage(row.probability, i18n)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p>
-        {french
-          ? "Un rang plus élevé aide à réussir. Les dégâts d’un succès restent les mêmes."
-          : "Higher ranks help you succeed. Successful hits deal the same damage."}
-      </p>
+      <p>{t("combatInfo.rankNote")}</p>
     </>
   );
 }
 
-function AttackTable({ option, french }: { option: CombatOption; french: boolean }) {
+function AttackTable({ option }: { option: CombatOption }) {
+  const { t } = useTranslation();
   return (
     <table className="combat-info-table">
       <caption>
         {option.damage?.attribute} {option.damage?.score} · bonus +{option.damage?.bonus} ·{" "}
-        {french ? "équipement" : "gear"} +{option.damage?.equipment}
+        {t("combatInfo.gear")} +{option.damage?.equipment}
       </caption>
       <thead>
         <tr>
-          <th>{french ? "Dé" : "Die"}</th>
-          <th>{french ? "Dégâts" : "Damage"}</th>
+          <th>{t("combatInfo.die")}</th>
+          <th>{t("combatInfo.damage")}</th>
         </tr>
       </thead>
       <tbody>

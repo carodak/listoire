@@ -61,6 +61,7 @@ const en = {
   },
   combat: {
     title: "Combat",
+    fight: "Fight",
     outcome: {
       victory: "Victory!",
       escaped: "Escaped",
@@ -140,8 +141,7 @@ const en = {
     title: "Step inside the story.",
     subtitle: "A new audiovisual way to experience novels, where your choices shape the story.",
     play: "Play an existing story",
-    create: "Create your own scenario",
-    soon: "Coming soon",
+    editor: "Story Editor",
   },
   loading: "Opening your story…",
   saved: "Your place is saved",
@@ -155,6 +155,47 @@ const en = {
   quiet: "A quiet place for stories",
   storyLabel: "A short story",
   skip: "Skip to content",
+  openEditor: "Open Story Editor",
+  check: {
+    title: "Check",
+    rolling: "Rolling…",
+    saveFailed: "Could not save. Please retry.",
+    continue: "Continue",
+    retry: "Retry roll",
+    success: "Success",
+    failure: "Failure",
+    test: "Roll {{attribute}} · Roll {{comparison}} {{threshold}}/{{sides}}",
+    testDie: "Roll {{attribute}} · {{die}}",
+  },
+  dice: { results: "Dice results", rolling: "Rolling die" },
+  equipment: {
+    equip: "Equip",
+    unequip: "Unequip",
+    locked: "Equipment is locked during combat",
+  },
+  combatInfo: {
+    chance: "Success: {{chance}}",
+    attack: "Your attack always hits. Roll a d6 to find the damage.",
+    ability:
+      "Roll a d6. Reach the number shown to succeed. Otherwise, the ability deals no damage.",
+    flee: "Roll a d20: {{threshold}} or less to escape.",
+    fleeRisk: "If you fail, your opponent may strike back.",
+    item: "Recover up to {{count}} HP, capped at your maximum. No die roll. The item is consumed and your opponent strikes back.",
+    currentRank: "Your current rank is highlighted.",
+    rankNote: "Higher ranks help you succeed. Successful hits deal the same damage.",
+    rank: "Rank",
+    damage: "Damage",
+    odds: "Chance",
+    die: "Die",
+    gear: "gear",
+  },
+  video: {
+    label: "Story video",
+    loading: "Loading video…",
+    unavailable: "Video unavailable. Restore its project backup if the local file is missing.",
+    undecodable:
+      "This browser cannot decode this video. Its file is preserved; use a compatible MP4/WebM codec or another browser to play it.",
+  },
   errors: {
     content: "This story could not be opened. Please try again.",
     "save-invalid":
@@ -459,6 +500,7 @@ const fr: typeof en = {
   },
   combat: {
     title: "Combat",
+    fight: "Combattre",
     outcome: {
       victory: "Victoire !",
       escaped: "Fuite réussie",
@@ -539,8 +581,7 @@ const fr: typeof en = {
     subtitle:
       "Une nouvelle façon audiovisuelle de vivre les romans, où vos choix façonnent l’histoire.",
     play: "Jouer à une histoire existante",
-    create: "Créer votre propre scénario",
-    soon: "Bientôt disponible",
+    editor: "Éditeur d’histoires",
   },
   loading: "Ouverture de votre histoire…",
   saved: "Votre progression est enregistrée",
@@ -554,6 +595,48 @@ const fr: typeof en = {
   quiet: "Un espace pour les histoires",
   storyLabel: "Une histoire courte",
   skip: "Aller à l’histoire",
+  openEditor: "Ouvrir l’éditeur d’histoires",
+  check: {
+    title: "Épreuve",
+    rolling: "Lancer en cours…",
+    saveFailed: "Sauvegarde impossible. Réessaie.",
+    continue: "Continuer",
+    retry: "Réessayer le jet",
+    success: "Réussite",
+    failure: "Échec",
+    test: "Jet de {{attribute}} · Obtenir {{comparison}} {{threshold}}/{{sides}}",
+    testDie: "Jet de {{attribute}} · {{die}}",
+  },
+  dice: { results: "Résultat des dés", rolling: "Dé en mouvement" },
+  equipment: {
+    equip: "Équiper",
+    unequip: "Retirer",
+    locked: "Équipement verrouillé pendant le combat",
+  },
+  combatInfo: {
+    chance: "Réussite : {{chance}}",
+    attack: "L’attaque touche toujours. Lance un d6 pour connaître les dégâts.",
+    ability:
+      "Lance un d6. Si tu atteins le nombre indiqué, la capacité réussit. Sinon, elle ne fait aucun dégât.",
+    flee: "Lance un d20 : {{threshold}} ou moins pour fuir.",
+    fleeRisk: "Si tu rates, l’adversaire peut répliquer.",
+    item: "Récupère jusqu’à {{count}} PV, sans dépasser ton maximum. Aucun dé à lancer. L’objet est consommé et l’adversaire réplique.",
+    currentRank: "Le rang actuel est surligné.",
+    rankNote: "Un rang plus élevé aide à réussir. Les dégâts d’un succès restent les mêmes.",
+    rank: "Rang",
+    damage: "Dégâts",
+    odds: "Chance",
+    die: "Dé",
+    gear: "équipement",
+  },
+  video: {
+    label: "Vidéo de l’histoire",
+    loading: "Chargement de la vidéo…",
+    unavailable:
+      "Vidéo indisponible. Restaurez la sauvegarde complète du projet si le fichier local manque.",
+    undecodable:
+      "Ce navigateur ne peut pas lire cette vidéo. Son fichier est conservé ; utilisez un codec MP4/WebM compatible ou un autre navigateur.",
+  },
   errors: {
     content: "Cette histoire n’a pas pu être ouverte. Veuillez réessayer.",
     "save-invalid":
