@@ -2540,3 +2540,28 @@ selected fern with `/^Remove /`; with a × on every layer that matches two butto
 
 Test: e2e "removes an image with its × or Delete in the preview, and Undo brings it back" (×
 with its tooltip, the status line and Undo; Delete then Ctrl+Z; Undo gone after another change).
+
+### 10-6. The camera e2e failure: found and fixed
+
+`image-composition.spec.ts` "uses real perspective depth, pauses camera motion…" failed every
+time since Pass 9 began (0 camera animations instead of 3).
+
+**Bisect:** reverting my code didn't change it (Pass 9 log), so I looked at what the test reads
+instead of commits. Its main image, `sketch.misty-conifer-plain-001`, is not published locally:
+`public/stories/house/media/` holds only the images the story uses (18), and was last rebuilt on
+Nov 9 at 23:48, during Pass 8, by `tools/build-editor-project.ts`, which removes images the story
+doesn't use. The story never used that image (`git log -S` finds it only in the commit that added
+the catalogue), so it disappeared at that rebuild, and the request returns the app's HTML. The
+test passed in Pass 8's earlier runs because the stale file was still there. No code commit is
+"the bad one".
+
+**The defect it reveals (reader):** before starting a camera movement, the reader waits until
+every image of the illustration has loaded with a non-zero width. An image that fails to load is
+"complete" with zero width forever, so **one missing file kept the whole page's camera still**,
+silently. Fix (`scene-playback.ts`): an image that failed (it has a source but no pixels) counts
+as settled, and the reader re-checks on `error` as well as `load`; an image whose source isn't
+set yet (still resolving) is still waited for. The test itself is unchanged and passes again
+(3/3).
+
+Tests: unit "starts an illustration's camera when one of its images fails to load, not before
+sources are set" (fails on the old code); e2e the camera test 3/3; reader suites 57/57.

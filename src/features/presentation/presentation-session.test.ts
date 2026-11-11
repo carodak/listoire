@@ -524,3 +524,52 @@ it("keeps automatic illustrations still when reduced motion is requested", async
   expect(video.play).not.toHaveBeenCalled();
   session.dispose();
 });
+
+it("starts an illustration's camera when one of its images fails to load, not before sources are set", async () => {
+  vi.useFakeTimers();
+  const play = vi.spyOn(EffectsEngine.prototype, "play").mockResolvedValue("ended");
+  const bundle = fixtureBundle();
+  bundle.scenes = {
+    threshold: {
+      title: "Illustration",
+      progress: 0,
+      events: [
+        {
+          id: "camera",
+          blockId: "picture",
+          trigger: { kind: "block", blockId: "picture" },
+          blocking: false,
+          action: { kind: "effect", effect: { id: "slow-zoom", duration: 2000, scale: 1.1 } },
+        },
+      ],
+    },
+  };
+  const session = new PresentationSession(bundle, {
+    ...defaultReadingPreferences,
+    narration: false,
+    reveal: "instant",
+  });
+  session.start(
+    { passageId: "threshold", segments: [{ id: "threshold.key", text: "Hello" }], choices: [] },
+    "new",
+    false,
+  );
+  const loaded = { complete: true, naturalWidth: 800, currentSrc: "a.webp" };
+  // The second image's source is still being resolved: no "src" yet.
+  const pending = { complete: true, naturalWidth: 0, currentSrc: "" };
+  const listeners: Record<string, () => void> = {};
+  const canvas = {
+    querySelectorAll: () => [loaded, pending],
+    addEventListener: (type: string, listener: () => void) => (listeners[type] = listener),
+    removeEventListener: () => {},
+  } as unknown as HTMLElement;
+  session.bind({ canvas }, "picture");
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).not.toHaveBeenCalled();
+  // Its file is missing: it fails to load. The camera still starts.
+  Object.assign(pending, { currentSrc: "missing.webp" });
+  listeners.error!();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(play).toHaveBeenCalledOnce();
+  session.dispose();
+});

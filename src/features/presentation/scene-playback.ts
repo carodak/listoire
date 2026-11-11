@@ -93,7 +93,9 @@ export class ScenePlayback {
   bind(targets: EffectTargets, blockId = "scene") {
     const loaded = () => this.queueTarget(blockId);
     this.targets.set(blockId, targets);
+    // An image that fails to load settles too (see imagesReady).
     targets.canvas.addEventListener?.("load", loaded, true);
+    targets.canvas.addEventListener?.("error", loaded, true);
     if (targets.video) {
       this.videos.add(targets.video);
       setVideoSound(targets, this.context.preferences);
@@ -108,6 +110,7 @@ export class ScenePlayback {
     return () => {
       observer?.disconnect();
       targets.canvas.removeEventListener?.("load", loaded, true);
+      targets.canvas.removeEventListener?.("error", loaded, true);
       if (targets.video) {
         targets.video.removeEventListener("loadeddata", loaded);
         targets.video.pause();
@@ -251,12 +254,17 @@ export class ScenePlayback {
       (!target.video || target.video.readyState >= 2),
     );
   }
+  /**
+   * Every image has settled: loaded, or failed (it has a source but no pixels). One missing file
+   * must not keep the camera still for the whole page. An image whose source isn't set yet
+   * (resolving) is still waited for.
+   */
   private imagesReady(target: EffectTargets) {
     return Array.from(
       target.canvas.querySelectorAll?.<HTMLImageElement>(
         ".shot-image, .shot-plane-image, .parallax-layer",
       ) ?? [],
-    ).every((image) => image.complete && image.naturalWidth > 0);
+    ).every((image) => image.complete && (image.naturalWidth > 0 || image.currentSrc !== ""));
   }
   private issue(event: NarrativeEvent) {
     this.issued.add(event.id);
