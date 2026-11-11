@@ -1,23 +1,26 @@
 # Listoire architecture
 
-Status: **combined Phases 2 and 3 implemented**. Reviewed 2026-11-03.
-The subsequent Story Editor request authorizes authoring at `/editor`; its current
-implementation and limits are recorded in [the editor report](docs/story-editor/implementation.md).
-Earlier editor deferrals below are historical. A game executor remains unimplemented.
+Status: **reader, RPG rules with combat, and Story Editor implemented**. Reviewed 2026-11-03;
+status lines corrected 2026-11-11 (the design sections below are otherwise as written then).
+The Story Editor lives at `/editor`; its implementation and limits are recorded in
+[the editor report](story-editor/implementation.md). Earlier editor, RPG and combat deferrals
+below are historical: the pure rules engine is `src/features/rules`, driven by
+`src/features/story-runtime/game-session.ts`.
 The cinematic extension reuses EffectsEngine and presentation transport. The editor
 imports the pure camera preset definitions to preview its thumbnails. Uploaded video
 bytes live in a separate immutable binary store; application composition supplies media
 resolution to PresentationSession. Source media markers resolve through Ink into frame
 anchors, so the reader can preserve their actual executed position. See the
-[cinematic implementation](docs/story-editor/cinematic-effects.md) for supported presets
+[cinematic implementation](story-editor/cinematic-effects.md) for supported presets
 and the explicit single-image parallax fallback.
 The executable subset below supersedes historical phase-specific descriptions.
-See [the combined report](docs/phases2-3-report.md) for verification and production limits.
 
-The full EN/FR house story uses saved Ink facts and tagged photograph actions.
+The published story keeps the stable ID `house` but is now the EN/FR Orée story
+(release `oree-1.3.0`, game mode `with-combat`), authored in `stories/house/project.json`.
 The reader adds progressive text, typography and a collapsed character panel.
-The initial profile (6/6 HP, saved 3d6 STR/DEX/WIL and two Rank 1 abilities) is
-host-owned domain state; no combat or narrative attribute checks are implemented.
+The initial profile (6/6 HP, saved 3d6 STR/DEX/WIL and Rank 1 abilities) is
+host-owned domain state; checks and combat are resolved by the rules engine inside the
+director's transaction, never from presentation callbacks.
 
 StoryDirector injects a React-independent NarrativePresentationPort. Only after a
 checkpoint commits does it start PresentationSession; cancellation never changes Ink
@@ -36,7 +39,7 @@ stay under assets; only selected story derivatives are copied to public output.
 Old foundation saves remain separate. Previous house builds are preserved as
 incompatible and exportable, with an explicit restart rather than a silent migration.
 
-Read this document for decisions; [MODULES.md](MODULES.md) for responsibilities and RPG rules; [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for contract examples; [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for delivery and acceptance checks.
+Read this document for decisions; [MODULES.md](MODULES.md) for responsibilities and RPG rules; [DATA_CONTRACTS.md](DATA_CONTRACTS.md) for contract examples.
 
 ## Current presentation and narration
 
@@ -58,8 +61,7 @@ Local Chatterbox Nano/V3 generation, per-segment caching and an optional loopbac
 preview service live in tools. Models/raw WAVs stay in assets. Production uses only
 selected optimized MP3s and requires no Python service. Segment boundaries are used
 until actual alignment exists; no word timestamps are fabricated.
-See [local narration](docs/narration.md). Combat, editor, AI planner and Capacitor
-implementation remain deferred.
+See [local narration](narration.md). The AI planner and Capacitor build remain out of scope.
 
 ## Recommendation
 
@@ -69,7 +71,7 @@ Start with the supplied house story in English and French, in narrative-only mod
 
 The module names describe responsibilities; they do not require separate packages, classes, services or React providers. Begin with one npm package, ordinary functions and direct imports. Add a module only when its first feature is built.
 
-The source now groups cohesive functionality under `features/landing`, `features/reader` and `features/story-runtime`. Within story-runtime, the loader, Ink adapter and director retain their individual dependency rules. Application composition, shared schemas, persistence and localization remain outside features. No empty RPG/editor/AI directories, barrel exports or wrapper layers are created. Future author previews can import the same React-independent engine files directly.
+The source groups cohesive functionality under `features/landing`, `reader`, `story-runtime`, `rules`, `character`, `media`, `presentation` and `editor`. Within story-runtime, the loader, Ink adapter and director retain their individual dependency rules. Application composition, shared schemas, shared UI (`src/shared`), persistence and localization remain outside features. No empty AI directories, barrel exports or wrapper layers are created. The editor preview imports the same React-independent engine files directly.
 
 Phase 1's welcome uses the original localized wording, a bounded 2.2-second reveal and reduced-motion handling. A short CC0 keyboard MP3 is attempted at animation startup; autoplay rejection is accepted without retries or controls. It does not introduce the future story audio engine. The current page palette is white on neutral light gray, controlled by shared CSS tokens. Scenario creation is explicitly unavailable rather than a placeholder route.
 
@@ -85,7 +87,7 @@ At the initial architecture review, the workspace contained `.agents/skills`, `s
 
 Both project-local Ponytail and Fallow skills are installed, readable and recorded with their expected upstream repositories in `skills-lock.json`. Their instructions were read. That establishes instruction availability, not installed analysis binaries, trusted hooks or automatic enforcement. No skill configuration was changed.
 
-Phase 1 installs the pinned Fallow executable and adds its generated guide/MCP/hook files without overwriting installed skills. Explicit CLI checks are verified; Codex project/hook trust and native hook execution remain unverified. The [Phase 1 completion record](IMPLEMENTATION_PLAN.md#phase-1-completion-record) distinguishes implemented behavior from the broader design below.
+Phase 1 installs the pinned Fallow executable and adds its generated guide/MCP/hook files without overwriting installed skills. Explicit CLI checks are verified; Codex project/hook trust and native hook execution remain unverified.
 
 Actual reference names supplied in Downloads differ from the numbered names in the request:
 
@@ -142,7 +144,7 @@ flowchart TD
   F[Future editor / AI proposals] -. validated build input .-> B
 ```
 
-StoryDirector is a facade and lifecycle coordinator. It does not calculate combat, parse arbitrary effect scripts, generate speech or manipulate React components directly. React subscribes to immutable reader snapshots and sends user commands; it owns DOM refs and attaches a small text/effect presentation port. Assembly occurs once in `app/createPlayer.ts`, outside render effects that React may repeat.
+StoryDirector is a facade and lifecycle coordinator. It does not calculate combat, parse arbitrary effect scripts, generate speech or manipulate React components directly. React subscribes to immutable reader snapshots and sends user commands; it owns DOM refs and attaches a small text/effect presentation port. Assembly occurs once in `app/create-player.ts`, outside render effects that React may repeat.
 
 Use one explicit director state transition function: `loading → presenting → choosing → committing → presenting`, with `ended` and recoverable `error` states. Image examination is a presentation substate. Combat is an optional domain interaction while Ink waits for a result. No global event bus: typed commands and a scoped event subscription suffice.
 
@@ -186,7 +188,7 @@ The overall design is approved for the Phase 1 scope. “Future support” means
 | Tags reference companion metadata   | Small tags such as passage/segment/choice/action IDs are readable. All metadata in tags becomes hard to validate; all in React becomes story-specific code.         | First slice. Same schemas feed manual work, editor and AI.                                                  |
 | StoryDirector + scoped events       | A small reducer and explicit calls make interruption and saves testable. Hooks-only coordination is initially shorter but distributes lifecycle ownership.          | First slice. Avoid a scheduler framework and plugin API.                                                    |
 | Local domain transactions           | A single atomic save protects Ink/RPG agreement and rolls. Independent localStorage keys are simpler but can tear.                                                  | First slice. Cloud storage can implement a later storage port.                                              |
-| Optional pure RPG module            | Keeps narrative-only content light and preserves the source rules. Folding rules into Ink duplicates formulas.                                                      | Mode discrimination now; rule implementation later, after ambiguities are resolved.                         |
+| Optional pure RPG module            | Keeps narrative-only content light and preserves the source rules. Folding rules into Ink duplicates formulas.                                                      | Implemented in `features/rules` (pure, seeded RNG); narrative-only stories never load it.                   |
 | Pre-generated segmented narration   | Human and generated recordings share playback. Runtime TTS per paragraph adds latency and operational cost.                                                         | Contracts now; recordings early, generation after listening evaluation. Supports future publish jobs.       |
 | CSS + Web Animations API            | Enough for finite pan/zoom/shake/fade presets. CSS alone is simpler but awkward for awaited cancellation and sequences.                                             | When cinematics are built. An allowlist can later be queried by AI.                                         |
 | Local reducer + subscriptions       | Avoids a second source of Ink/RPG truth. Zustand is reasonable if UI subscribers become cumbersome.                                                                 | First slice. No Redux/store framework needed today.                                                         |
@@ -197,7 +199,7 @@ The visible preference is one **Language** setting, persisted as settings schema
 
 ## Library evaluation
 
-Research checked official sources on 2026-11-02. Pin a tested set during implementation; upstream main branches are not dependency lockfiles.
+Research checked official sources on 2026-11-02. Pin a tested set during implementation; upstream main branches are not dependency lockfiles. What was actually installed is in `package.json`: Howler, XState, Motion/GSAP and React Flow were evaluated here but never added (AudioManager uses native `HTMLAudioElement` and speech synthesis).
 
 | Concern             | Recommendation versus alternatives                                                                             | Compatibility/evidence                                                                                                                                                                                                                                                                                    |
 | ------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -241,6 +243,6 @@ Future editor and AI tools submit versioned proposals against a source revision,
 
 ## Decisions to resolve or postpone
 
-The overall design and combined Phases 2 and 3 are approved. The user confirmed the enemy-generation formula and corrected only its example to 15 HP (approximately 74.1% victory); preserve all other RPG rules. Resolve the remaining undefined mechanics in MODULES.md before their implementation. Before narration publishing, choose tested voices, French pronunciation/region expectations and acceptable generation hardware/quality. Later phases require separate authorization.
+The overall design and combined Phases 2 and 3 are approved. The user confirmed the enemy-generation formula and corrected only its example to 15 HP (approximately 74.1% victory); preserve all other RPG rules. The mechanics the DOCX leaves undefined are listed in MODULES.md with the choice the rules engine makes for each. Before narration publishing, choose tested voices, French pronunciation/region expectations and acceptable generation hardware/quality. Later phases require separate authorization.
 
 Safely postpone accounts/cloud saves, seamless cross-language state migration, EPUB import/export, offline/PWA installation, arbitrary voice switching, live TTS hosting, advanced animation libraries, graph editing, AI planning, embeddings, runtime plugins and microservices. Set asset/bundle performance budgets after measuring the first real story on a slower mobile device.

@@ -23,13 +23,13 @@ authoring forms, imported projects and normal playback. Story locales accept two
 language codes with an optional two-letter region; the interface supports English and French.
 Editor records use a separate `listoire-editor/projects` database, optimistic revisions
 and at most 30 version checkpoints. Reader gameplay saves and settings retain their
-existing schema and database. See [the editor report](docs/story-editor/implementation.md).
+existing schema and database. See [the editor report](story-editor/implementation.md).
 
 Status: the implemented subset is defined by executable schemas in `src/contracts`; larger examples below remain illustrative TypeScript, **not a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.
 
 ## Implemented Phase 1 subset
 
-The executable contracts live in [src/contracts/story.ts](src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields. Since Pass 9 it may also hold `history`: up to 20 previous pages (oldest first), each with its Ink state, frame, and character/game state at that page, so Back still works after a reload. It is optional (older saves load without it, simply without Back), and it is dropped, never the save, when it is damaged, when a page's game state no longer validates, or when the save was written by an earlier compatible Ink version (`compatibleInkDigests`), whose pages can't be restored exactly.
+The executable contracts live in [src/contracts/story.ts](../src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields. Since Pass 9 it may also hold `history`: up to 20 previous pages (oldest first), each with its Ink state, frame, and character/game state at that page, so Back still works after a reload. It is optional (older saves load without it, simply without Back), and it is dropped, never the save, when it is damaged, when a page's game state no longer validates, or when the save was written by an earlier compatible Ink version (`compatibleInkDigests`), whose pages can't be restored exactly.
 
 Implemented inline formatting (`src/contracts/typography.ts`): narrative words carry
 `<typo …>` markup, parsed from an allowlist into `typography` spans on segments and choices
@@ -48,7 +48,7 @@ the cross-language structure check ignores `align:` tags. Any other value is a c
 
 Each choice uses the run ID/revision as its occurrence identity; the director rejects stale commands and concurrent writes. IndexedDB's atomic read/compare/update replaces the proposed generic single-writer lease, with less browser-specific infrastructure. Restore verifies the saved choices against Ink without calling Continue. Exact-build/language compatibility is enforced, and settings use a separate key. Whole-paragraph instant display means no partial-reveal cursor is needed yet.
 
-The host-request choice convention is verified against real compiled Ink and a save round-trip in an isolated test. Its tag belongs **inside** the square-bracketed choice label, for example `* [Resolve # request:door.check]`. The Phase 1 player deliberately does not execute action requests. Add action receipts/results only with the first authorized gameplay integration. Future DTOs below remain design sketches, not unused runtime code.
+The host-request choice convention is verified against real compiled Ink and a save round-trip in an isolated test. Its tag belongs **inside** the square-bracketed choice label, for example `* [Resolve # request:door.check]`. The Phase 1 player did not execute action requests; game actions now do, through `# game:<id>` choices resolved by `story-runtime/game-session.ts` against `src/contracts/game.ts` (`GameDefinitionSchema`, `GameStateSchema`). The DTOs in "RPG state and action bridge" below remain the original design sketch; `game.ts` is the executable contract.
 
 The Phase 1 follow-up adds a small published manifest (`schemaVersion`, `storyId`, `defaultLocale`, unique `locales`). Availability comes from authored locale metadata, not a speculative fallback after any network failure. Reader settings schema 2 stores `language` and the now-unused legacy `welcomeSound` field (retained for compatibility); schema 1 migrates from `interfaceLocale`, retaining every locale's existing save. A missing translation uses the declared default bundle and its own save slot. Save schema 1 and compiled Ink digests are unchanged by the structural refactor.
 
@@ -521,8 +521,9 @@ A future AI proposal uses these same schemas and semantic validators, adds its b
 
 Executable Zod schemas live in `src/contracts/story.ts`, `character.ts`, `presentation.ts`,
 `effects.ts` and `media.ts`. Infer types from these files rather than copying the broader
-design sketches above. House release is `0.3.1`, mode `rpg-no-combat`; this denotes the
-initial character profile only. Bundle/save mode must match. Save schema 1 remains
+design sketches above. This section was written for house release `0.3.1`, mode
+`rpg-no-combat` (initial character profile only); the published story is now release
+`oree-1.3.0`, mode `with-combat`, and its game contracts are in `game.ts`. Bundle/save mode must match. Save schema 1 remains
 compatible with narrative-only foundation fixtures; RPG-profile mode requires character.
 
 - Character health starts at 6/6. STR/DEX/WIL contain initial/current values and three

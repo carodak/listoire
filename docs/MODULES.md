@@ -1,6 +1,6 @@
 # Modules and rule ownership
 
-Status: combined Phases 2 and 3 plus Story Editor at `/editor` implemented. The game executor and AI planner remain deferred. See [ARCHITECTURE.md](ARCHITECTURE.md) and [the editor report](docs/story-editor/implementation.md). Implemented features include landing, reader, story-runtime, character, media, presentation and editor; shared composition, storage, contracts and localization stay outside features.
+Status: reader, RPG rules with combat and the Story Editor at `/editor` are implemented; the AI planner is out of scope. Status lines, the dependency diagram and the folder tree were corrected on 2026-11-11. See [ARCHITECTURE.md](ARCHITECTURE.md) and [the editor report](story-editor/implementation.md). Implemented features: landing, reader, story-runtime, rules, character, media, presentation and editor; shared composition, storage, contracts and localization stay outside features.
 
 `features/editor` owns authoring, Ink command insertion, media forms and compiler workers.
 `app/EditorRoute` composes its preview with the existing player and isolated memory saves.
@@ -15,7 +15,7 @@ in a separate IndexedDB database. The reader still delegates progression to Stor
 | `reader`       | React layouts, controls, dialogs, themes, settings, accessibility                              | Ink calls, dice calculations, TTS generation          |
 | `runtime`      | StoryDirector, transition reducer, serialized commands, cancellation scopes, display snapshots | Combat formulas or media-provider internals           |
 | `narrative`    | NarrativeEngine adapter, Ink state, tagged output, choices, allowlisted variable bridge        | Audio/DOM/persistence, RPG calculations               |
-| `rpg`          | RPGEngine state/actions; pure RulesEngine using one versioned RuleSet                          | React, Ink, persistence, narrative relationship rules |
+| `rules`        | Pure RulesEngine (`features/rules`): checks, equipment, XP, combat, enemies, seeded RNG        | React, Ink, persistence, narrative relationship rules |
 | `media`        | AudioManager transport/channels; NarrationManager selection and playback orchestration         | Branching, rewards, model inference in the browser    |
 | `presentation` | EffectsEngine presets, target binding, cue sequencing; text reveal helpers                     | Gameplay mutations, hardcoded passage IDs             |
 | `content`      | Bundle loading, schemas, semantic validation, VisualAssetManager catalog/filter/cache          | Narrative branching or arbitrary effect evaluation    |
@@ -23,7 +23,7 @@ in a separate IndexedDB database. The reader still delegates progression to Stor
 | `i18n`         | UI translations and formatting                                                                 | The authoritative story graph or narration text       |
 | `tools`        | Compile/validate/export, later offline narration production                                    | Runtime imports into the reader bundle                |
 
-TextRenderer is a React presentation component backed by small pure reveal helpers. VisualAssetManager is initially a typed catalog lookup plus URL resolution, not a new asset server. Character, statistics, abilities, inventory, equipment, dice, progression, combat, enemies, effects and rules are focused files within `rpg`, not eleven independently initialized engines.
+TextRenderer is a React presentation component backed by small pure reveal helpers. VisualAssetManager is initially a typed catalog lookup plus URL resolution, not a new asset server. Character, statistics, abilities, inventory, equipment, dice, progression, combat, enemies and effects are focused files within `features/rules` (`actions`, `character`, `check-options`, `combat`, `combat-options`, `enemy`, `random`), not eleven independently initialized engines. `story-runtime/game-session.ts` applies a rules result inside the director's transaction.
 
 Story relationships live in Ink variables. Narrative-only story objects also live in Ink; RPG story inventory lives in RPGEngine, with read-only queries exposed to Ink. Each value has exactly one authoritative owner. Any mirrored Ink facts are derived, refreshed before narrative evaluation, and cannot be assigned independently.
 
@@ -38,7 +38,8 @@ permit new imports between them. Oxlint prohibits React imports in story-runtime
 `app/ReadingSession.tsx` stays in app because it composes the loader, storage and
 React presentation. Shared persistence serves both preferences and checkpoints;
 shared contracts/localization serve multiple features. They do not move merely
-for consistency. No reusable UI primitives or utility directory is needed yet.
+for consistency. Reusable UI primitives (Dialog, ReaderModal, ReaderSidebar, CloseButton,
+tab keys, the reduced-motion hook) live in `src/shared`; there is no catch-all utility directory.
 
 ## Compile-time dependencies
 
@@ -55,7 +56,9 @@ flowchart LR
   app --> reader
   app --> runtime
   app --> narrative
-  app --> rpg
+  app --> character
+  app --> editor
+  app --> shared
   app --> media
   app --> presentation
   app --> persistence
@@ -68,9 +71,22 @@ flowchart LR
   runtime --> contracts
   narrative --> contracts
   narrative --> inkjs
-  rpg --> contracts
+  reader --> character
+  reader --> shared
+  runtime --> rules
+  rules --> contracts
+  character --> contracts
+  character --> shared
   media --> contracts
   presentation --> contracts
+  presentation --> media
+  presentation --> shared
+  editor --> contracts
+  editor --> persistence
+  editor --> media
+  editor --> presentation
+  editor --> shared
+  shared --> contracts
   persistence --> contracts
   content --> contracts
   tools --> contracts
@@ -86,7 +102,7 @@ Use stable tags for passage, segment, choice and action IDs. Companion JSON maps
 
 Ink external functions are synchronous. Allow only bounded pure queries such as `has_item(id)`; do not return Promises or mutate domain state, roll dice, write saves or play audio from an external function. Ink's lookahead and evaluation replay make such side effects unsafe. This follows the runtime's documented separation between bound functions and story control. [Ink runtime documentation](https://github.com/inkle/ink/blob/master/Documentation/RunningYourInk.md)
 
-For a gameplay action, use an explicit host-request boundary: a singleton internal Ink choice tagged with an action ID, which the adapter yields as a request rather than displaying. Ink is genuinely waiting at a choice boundary. The director resolves the registered typed action, writes its structured outcome to declared Ink result variables, then consumes that internal choice. Outcomes select ordinary Ink branches. The Phase 1 spike verified this boundary and its restore/result timing with InkJS 2.4.0. Choice tags must be inside bracketed labels (`* [Resolve # request:door.check]`), not after the closing bracket. This is a tested extension point, not an implemented RPG action executor; asynchronous bound functions remain prohibited.
+For a gameplay action, use an explicit host-request boundary: a singleton internal Ink choice tagged with an action ID, which the adapter yields as a request rather than displaying. Ink is genuinely waiting at a choice boundary. The director resolves the registered typed action, writes its structured outcome to declared Ink result variables, then consumes that internal choice. Outcomes select ordinary Ink branches. The Phase 1 spike verified this boundary and its restore/result timing with InkJS 2.4.0. Choice tags must be inside bracketed labels (`* [Resolve # request:door.check]`), not after the closing bracket. Game actions use this boundary (`# game:<id>` choices, resolved by `game-session.ts`); asynchronous bound functions remain prohibited.
 
 Visible choices also have stable IDs. Only the adapter maps them to ephemeral Ink choice indexes; stale indexes must never escape into UI commands. Image hotspots submit a declared interaction ID to the director, which resolves a permitted action/Ink interaction at the current boundary. They cannot jump to arbitrary Ink paths or set arbitrary variables.
 
@@ -136,11 +152,29 @@ The ordinary-attack distribution is finite. Compute exact integer outcome counts
 | 15                         | 160/216 = 20/27 ≈ 74.074%           |
 | 17, stated in the document | 108/216 = 1/2 = 50%                 |
 
-Independent enumeration of all 216 ordinary-attack outcomes selects **15** as closest to the 75% target. The user explicitly approved retaining the written formula and correcting the numerical example to **15 HP at approximately 74.1%**. This erratum is the only rules change; the original DOCX remains unmodified and its original digest remains valid. RPG implementation is deferred beyond Phase 1, with the other gaps below still unresolved.
+Independent enumeration of all 216 ordinary-attack outcomes selects **15** as closest to the 75% target. The user explicitly approved retaining the written formula and correcting the numerical example to **15 HP at approximately 74.1%**. This erratum is the only rules change; the original DOCX remains unmodified and its original digest remains valid. `features/rules/enemy.ts` implements the algorithm and `rules.test.ts` pins the 15 HP example.
 
-### Other rule decisions needed before their implementation
+### Gaps in the working rules, and what the rules engine does today
 
-These are gaps in the working rules, not permission to fill them with conventional RPG assumptions:
+The DOCX leaves the points below open. The engine had to pick something; these are the
+current choices, several of them author-configurable per story (`GameRulesSchema` in
+`contracts/game.ts`), not approved rule text:
+
+- Nearest integer: `Math.round` (positive halves round up).
+- Level-up attribute: one of the three at random, including a capped one (the increase is then lost).
+- Equipment: one item per slot (weapon, accessory); attribute totals cap at 18, ability ranks
+  at 4; an HP bonus raises maximum HP and heals only if `hpBonusHeals` (default off). Unarmed,
+  the attack attribute is the highest current one, STR winning ties, then DEX.
+- Special effects: applied before the retaliation by default (`effectsBeforeRetaliation`); stun
+  cancels the retaliation (`stunCancelsRetaliation`); weaken lowers it by
+  `weakeningDamageReduction` (default 1); charm ends the combat with a narrative resolution;
+  at most two active effects, a new one replacing the oldest; durations drop by one after each
+  retaliation.
+- Flee: d20 ≤ `fleeAttribute` (default DEX); a failed attempt is followed by a retaliation
+  unless `fleeFailureRetaliates` is off. Using a healing consumable is followed by a retaliation.
+- Starting current HP is 6/6.
+
+The original list of open questions:
 
 - Half-integer behavior for “nearest integer” is unspecified. Recommend rounding positive halves upward, subject to approval.
 - Random attribute improvement at the cap: select among all three and possibly waste the increase, or select only uncapped attributes? What if all reach 18?
@@ -148,7 +182,7 @@ These are gaps in the working rules, not permission to fill them with convention
 - Special effects: turn definition, whether activation applies before the immediate retaliation, expiration point, scope of the nonstacking restriction, and exact mechanics for charm/stun/weakening. An authored label is not executable rule logic.
 - Flee procedure, enemy retaliation after non-damaging actions/items, simultaneous defeat interactions, recovery outside the explicit progression/boss rules, and starting current HP. The document does not define universal rest, potions or flee odds.
 
-Implement only settled actions for each RPG milestone. Never claim full combat conformance while these questions remain unresolved. Persist combat phase, whose action is next, fixed enemy stats, active effects and remaining duration; save only at atomic action boundaries, not midway through applying damage/XP.
+Never claim full combat conformance while these questions remain unapproved. Persist combat phase, whose action is next, fixed enemy stats, active effects and remaining duration; save only at atomic action boundaries, not midway through applying damage/XP.
 
 ## Current folder tree
 
@@ -157,33 +191,33 @@ beside the source; browser flows live under `tests/e2e`.
 
 ```text
 src/
-  app/                         # composition, ReadingSession, app.css/tokens
-  contracts/story.ts           # shared Zod schemas and runtime types
+  app/                  # composition: App, ReadingSession, EditorRoute, create-player, app.css
+  contracts/            # Zod schemas, inferred types, small ports; imports no feature
   features/
-    landing/                   # WelcomeScreen, intro hook, optional typing sound
-    reader/                    # StoryPlayer and reader.css
-    story-runtime/
-      bundle-loader.ts         # browser content boundary + manifest validation
-      ink-engine.ts            # Ink adapter, no React or DOM
-      director.ts              # coordinator, no React or DOM
-      *.test.ts
-  persistence/                 # shared SaveManager and IndexedDB adapter
-  i18n/i18n.ts                 # shared EN/FR UI resources
+    landing/            # WelcomeScreen, intro hook, optional typing sound
+    reader/             # StoryPlayer, passage text, choices, controls, game and combat UI
+    story-runtime/      # bundle-loader, ink-engine/-frame/-checkpoint, director, game-session
+    rules/              # pure RPG rules: actions, character, combat, enemy, options, random
+    character/          # initial profile factory, CharacterPanel
+    media/              # AudioManager, NarrationManager, narration clips, speech options
+    presentation/       # PresentationSession, EffectsEngine, illustration, camera, dice, react-bits/
+    editor/             # Story Editor: script, media, narration and game authoring, compiler worker
+  shared/               # Dialog, ReaderModal, ReaderSidebar, CloseButton, tab keys, reduced motion
+  persistence/          # SaveManager, IndexedDB adapter, editor-store, media-store
+  i18n/i18n.ts          # shared EN/FR UI resources
   main.tsx
   test-fixtures.ts
-stories/foundation/
-  en.ink / fr.ink
-  metadata.json                # ID/release/default locale, titles/chapters, IDs
-public/stories/foundation/      # generated manifest and compiled language bundles
-  manifest.json / en.json / fr.json
-tools/build-story.ts
-tests/e2e/                     # welcome and reader browser flows
-docs/                          # baseline and critical findings review
+stories/house/          # the published story: project.json (authoritative) and media/
+stories/foundation/     # small EN/FR fixture for regression tests, never published
+public/stories/         # generated bundles (ignored)
+tools/                  # build-story.ts and the asset, narration and coverage tools
+tests/e2e/              # browser flows
+docs/                   # architecture, contracts, reports
 ```
 
-Future RPG, authoring and AI features can be added under `features/` when authorized;
-they are not scaffolded now. Shared schemas and directly importable engine modules
-let the future author preview use the same runtime without importing reader React UI.
+Authoring and AI features are added under `features/` only when authorized;
+nothing is scaffolded ahead. Shared schemas and directly importable engine modules
+let the editor preview use the same runtime as the reader.
 
 Extract packages only after actual consumers exist. Publishing/editor code must not enlarge the reader bundle; build tools and future authoring routes are separate entry points with lazy loading where appropriate.
 
@@ -194,7 +228,8 @@ The director receives a shared NarrativePresentationPort; it commits Ink/frame/c
 state before presentation starts. Media failures cannot roll back a committed story.
 Ink owns discoveries, inventory facts and encounter facts. Profile generation is pure
 in `features/character/create-character.ts`; application composition supplies unbiased
-cryptographic dice. No optional future RPG executor directory is scaffolded.
+cryptographic dice. Checks, equipment, XP and combat are resolved by `features/rules`
+through `story-runtime/game-session.ts`.
 
 `features/character` owns the saved initial profile factory and CharacterPanel. The
 compact character popover is initially collapsed, immediately right of Reading
@@ -220,7 +255,8 @@ exclusions preserve upstream bytes; dependency/cycle/boundary analysis still inc
 the vendor graph. `ogl` is the sole added runtime dependency, required by RippleDistortion.
 
 Fallow enforces reader → presentation/character/contracts, presentation → media/contracts,
-media/character → contracts, and runtime → shared presentation-port contracts. There is
+media/character → contracts, runtime → rules/contracts, editor → contracts/persistence/media/
+presentation/shared-ui, and runtime → shared presentation-port contracts (`.fallowrc.json`). There is
 no reciprocal runtime/media import. No barrel exports or feature wrappers are added.
 
 `tools/asset-library.py` safely extracts/inventories source libraries. `prepare-assets.py`

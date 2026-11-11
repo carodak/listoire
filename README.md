@@ -173,8 +173,8 @@ frame, complete text and paused audio without reapplying Ink actions. Sound effe
 are off by default; playback rejection never blocks choices. The approved landing
 keeps its own optional startup recording and no extra controls.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md), [MODULES.md](MODULES.md),
-[DATA_CONTRACTS.md](DATA_CONTRACTS.md) and [the combined report](docs/phases2-3-report.md). Combat, visual editor, AI planner
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md), [MODULES.md](docs/MODULES.md),
+[DATA_CONTRACTS.md](docs/DATA_CONTRACTS.md) and [the combined report](docs/phases2-3-report.md). Combat, visual editor, AI planner
 and Capacitor remain deferred. Initial profile: 6/6 HP, saved 3d6 STR/DEX/WIL, two
 Rank 1 abilities without narrative checks. Previous house saves remain exportable
 but need an explicit restart after this Ink/profile change.
