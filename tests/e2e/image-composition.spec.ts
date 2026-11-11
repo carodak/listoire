@@ -116,7 +116,12 @@ test("composes gallery layers, crops and wraps them, then restores a complete pr
   await dialog.getByRole("button", { name: "Safe frame", exact: true }).click();
   await expect(dialog.locator(".image-safe-margin")).toBeVisible();
   // Pass 11: no "More options"; each settings category is its own folded section.
-  for (const section of [/^Look on the page/, /^Camera settings/, /^Description & caption/])
+  for (const section of [
+    /^Look on the page/,
+    /^Camera ·/,
+    /^Camera settings/,
+    /^Description & caption/,
+  ])
     await dialog.locator(".image-section > summary").filter({ hasText: section }).click();
   await dialog.getByLabel("Text wrapping", { exact: true }).selectOption("right");
   // Pass 11: the presets are cards (with a moving preview), not a list.
@@ -344,6 +349,10 @@ test("camera and entrance presets preview their movement on hover or focus, stil
   const dialog = page.getByRole("dialog", { name: "Add Image", exact: true });
   await dialog.getByRole("button", { name: "Ready-made scenes", exact: true }).click();
   await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await dialog
+    .locator(".image-section > summary")
+    .filter({ hasText: /^Camera ·/ })
+    .click();
   const camera = dialog.getByRole("group", { name: "Camera", exact: true });
   const cards = camera.getByRole("button");
   await expect(cards).toHaveCount(16);

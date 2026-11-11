@@ -5,6 +5,7 @@ import type { Illustration } from "../../contracts/illustration.ts";
 import { illustrationDefaults } from "../../contracts/illustration.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
+import type { MediaAsset } from "../../contracts/presentation.ts";
 import type { ImageDraft, MediaEdit } from "./media-edit.ts";
 import { MediaLayout } from "./MediaLayout.tsx";
 import { ImageStage } from "./ImageLayers.tsx";
@@ -237,29 +238,6 @@ export function ImageEditor(props: ImageEditorProps) {
             )}
           </section>
         )}
-        <MediaLayout layout={form.layout} onLayout={(layout) => patch({ layout })} />
-        {value.layers.length > 0 && (
-          <>
-            <CameraSelect
-              motion={form.motion}
-              asset={assets.find((asset) => asset.id === form.asset)}
-              onChange={(motion) => patch({ motion })}
-            />
-            <Section
-              title={t("editor.image.groups.cameraDetails")}
-              set={[
-                (form.motion.durationMs !== undefined ||
-                  form.motion.speed !== "normal" ||
-                  form.motion.intensity !== "subtle" ||
-                  form.motion.direction !== "auto" ||
-                  form.motion.atmosphere !== "none") &&
-                  "changed",
-              ]}
-            >
-              <CinematicOptions motion={form.motion} onChange={(motion) => patch({ motion })} />
-            </Section>
-          </>
-        )}
         <ImageSettings
           {...props}
           value={value}
@@ -284,10 +262,13 @@ const entrances: Record<Entrance, Keyframe[]> = {
 /** A settings category, folded until opened; its summary says what is set inside. */
 function Section({
   title,
+  value,
   set = [],
   children,
 }: {
   title: string;
+  /** The current choice, shown next to the title (a layout, a camera preset). */
+  value?: string;
   set?: (string | false | null | undefined)[];
   children: ReactNode;
 }) {
@@ -297,6 +278,7 @@ function Section({
     <details className="image-section">
       <summary>
         {title}
+        {value && <small>{` · ${value}`}</small>}
         {items.length > 0 && (
           <small>
             {" · "}
@@ -311,7 +293,7 @@ function Section({
   );
 }
 
-/** Everything most images don't need, one folded section per category. */
+/** The settings, one folded section per category: page, camera, timing, text, gameplay. */
 function ImageSettings({
   form,
   patch,
@@ -332,33 +314,20 @@ function ImageSettings({
   return (
     <>
       <Section
-        title={t("editor.image.groups.description")}
-        set={[draft.alt && "description", draft.caption && "caption"]}
+        title={t("editor.image.groups.look")}
+        value={t(`editor.image.layouts.${layout}`)}
+        set={[(draft.width !== 100 || draft.positionOverride || value.wrap !== "none") && "page"]}
       >
-        <Field
-          label={t("editor.image.description")}
-          help={t("editor.image.descriptionHint")}
-          value={draft.alt}
-          onChange={(event) => onDraft({ alt: event.target.value })}
-        />
-        <Field
-          label={t("editor.image.caption")}
-          value={draft.caption}
-          onChange={(event) => onDraft({ caption: event.target.value })}
-        />
+        <MediaLayout layout={layout} onLayout={(next) => patch({ layout: next })} />
+        <PageCompositionFields value={value} onChange={setValue} layout={layout} />
+        <ImagePlacement {...draftProps} />
       </Section>
-      {/* Gameplay on the image; a cinematic image disappears, so it can't be examined. */}
-      {layout !== "fullscreen" && (
-        <Section
-          title={t("editor.image.groups.interactivity")}
-          set={[draft.examination && "examine"]}
-        >
-          <ExaminationFields
-            value={draft.examination ?? null}
-            onChange={(examination) => onDraft({ examination })}
-            locale={locale}
-          />
-        </Section>
+      {layered && (
+        <CameraSection
+          motion={form.motion}
+          asset={form.language.configuration.assets?.find((asset) => asset.id === form.asset)}
+          onChange={(motion) => patch({ motion })}
+        />
       )}
       <Section
         title={t("editor.image.groups.when")}
@@ -404,12 +373,61 @@ function ImageSettings({
         )}
       </Section>
       <Section
-        title={t("editor.image.groups.look")}
-        set={[(draft.width !== 100 || draft.positionOverride || value.wrap !== "none") && "page"]}
+        title={t("editor.image.groups.description")}
+        set={[draft.alt && "description", draft.caption && "caption"]}
       >
-        <PageCompositionFields value={value} onChange={setValue} layout={layout} />
-        <ImagePlacement {...draftProps} />
+        <Field
+          label={t("editor.image.description")}
+          help={t("editor.image.descriptionHint")}
+          value={draft.alt}
+          onChange={(event) => onDraft({ alt: event.target.value })}
+        />
+        <Field
+          label={t("editor.image.caption")}
+          value={draft.caption}
+          onChange={(event) => onDraft({ caption: event.target.value })}
+        />
       </Section>
+      {/* Gameplay on the image; a cinematic image disappears, so it can't be examined. */}
+      {layout !== "fullscreen" && (
+        <Section
+          title={t("editor.image.groups.interactivity")}
+          set={[draft.examination && "examine"]}
+        >
+          <ExaminationFields
+            value={draft.examination ?? null}
+            onChange={(examination) => onDraft({ examination })}
+            locale={locale}
+          />
+        </Section>
+      )}
     </>
+  );
+}
+
+/** The camera presets, then their settings folded inside. */
+function CameraSection({
+  motion,
+  asset,
+  onChange,
+}: {
+  motion: Cinematic;
+  asset?: MediaAsset;
+  onChange: (motion: Cinematic) => void;
+}) {
+  const { t } = useTranslation();
+  const changed =
+    motion.durationMs !== undefined ||
+    motion.speed !== "normal" ||
+    motion.intensity !== "subtle" ||
+    motion.direction !== "auto" ||
+    motion.atmosphere !== "none";
+  return (
+    <Section title={t("editor.image.camera")} value={t(`editor.image.presets.${motion.preset}`)}>
+      <CameraSelect motion={motion} asset={asset} onChange={onChange} />
+      <Section title={t("editor.image.groups.cameraDetails")} set={[changed && "changed"]}>
+        <CinematicOptions motion={motion} onChange={onChange} />
+      </Section>
+    </Section>
   );
 }

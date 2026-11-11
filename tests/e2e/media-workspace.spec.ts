@@ -39,6 +39,7 @@ test("keeps the illustration visible while choosing duplicate layer instances in
       .locator("img")
       .evaluate((image) => image.style.getPropertyValue("--layer-rotation")),
   ).toBe("1deg");
+  await openSection(dialog, "Camera");
   await dialog.getByRole("group", { name: "Camera", exact: true }).scrollIntoViewIfNeeded();
   await expect(dialog.getByRole("region", { name: "Preview", exact: true })).toBeInViewport();
   await expect(dialog.locator(".multiplane-viewport")).toBeInViewport();
@@ -156,7 +157,7 @@ async function readyMade(dialog: Locator, scene: string) {
 async function openSection(dialog: Locator, title: string) {
   await dialog
     .locator(".image-section > summary")
-    .filter({ hasText: new RegExp(`^${title}`) })
+    .filter({ hasText: new RegExp(`^${title}( ·|$)`) })
     .click();
 }
 /** Searches the open picker and clicks that image: one click. */
@@ -179,7 +180,10 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   // No depths, no camera, no selected-image settings until there is an image.
   await expect(dialog.getByRole("group", { name: "Background", exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Selected picture")).toHaveCount(0);
-  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toHaveCount(0);
+  // Pass 11: the camera is a folded section; a single image has none.
+  await expect(
+    dialog.locator(".image-section > summary").filter({ hasText: /^Camera/ }),
+  ).toHaveCount(0);
   // Pass 11: the settings are folded sections, all closed (no "More options").
   await expect(dialog.locator(".image-section")).not.toHaveCount(0);
   await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
@@ -195,7 +199,10 @@ test("a new image is one image: choose it, and it is stored as a single image", 
   await start.getByRole("button", { name: "Choose an image", exact: true }).click();
   await pick(dialog, "Choose an image", misty);
   await expect(image).toContainText("Misty conifer plain");
-  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toHaveCount(0);
+  // Pass 11: the camera is a folded section; a single image has none.
+  await expect(
+    dialog.locator(".image-section > summary").filter({ hasText: /^Camera/ }),
+  ).toHaveCount(0);
   await expect(dialog.getByLabel("Depth", { exact: true })).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "+ Add layer", exact: true })).toBeEnabled();
   // Pass 11: no "Choose" once there is an image; the selected image's "Replace image" changes it.
@@ -247,7 +254,9 @@ test("+ Add layer makes a layered scene in two clicks, at the depth each image s
     .evaluateAll((planes) => planes.map((item) => (item as HTMLElement).dataset.role).sort());
   expect(roles).toEqual(["background", "foreground", "midground"]);
   // With several layers, the camera list and the depth appear; a layer can change depth.
-  await expect(dialog.getByRole("group", { name: "Camera", exact: true })).toBeVisible();
+  await expect(
+    dialog.locator(".image-section > summary").filter({ hasText: /^Camera ·/ }),
+  ).toBeVisible();
   await dialog
     .getByRole("group", { name: "Middleground", exact: true })
     .locator(".image-picture")
@@ -620,7 +629,7 @@ test("no More options: each settings category is its own section, closed by defa
   await readyMade(dialog, "Character in forest");
   await expect(dialog.getByText("More options")).toHaveCount(0);
   const sections = dialog.locator(".image-section");
-  await expect(sections).toHaveCount(5);
+  await expect(sections).toHaveCount(6);
   await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
   // Each opens on its own.
   await openSection(dialog, "Look on the page");
@@ -685,16 +694,19 @@ test("Interactivity: image examination has its own section", async ({ page }) =>
   await openSection(dialog, "Interactivity");
   await expect(summary).toContainText("set: examine");
   // A cinematic (full-screen) image disappears: nothing to examine, no section.
+  await openSection(dialog, "Look on the page");
   await dialog.getByRole("button", { name: "Cinematic", exact: true }).click();
   await expect(summary).toHaveCount(0);
 });
 
-test("Camera settings fold right under the camera choice", async ({ page }) => {
+test("the camera is a folded section, with its settings folded right under the presets", async ({
+  page,
+}) => {
   const dialog = await openNewImage(page);
   await dialog.getByRole("button", { name: "Choose an image", exact: true }).click();
   await pick(dialog, "Choose an image", misty);
   // A single image has no camera, so no camera settings.
-  const settings = dialog.locator(".image-section").filter({
+  const settings = dialog.locator(".image-section .image-section").filter({
     has: page.locator("summary", { hasText: /^Camera settings/ }),
   });
   await expect(settings).toHaveCount(0);
@@ -702,19 +714,51 @@ test("Camera settings fold right under the camera choice", async ({ page }) => {
   await pick(dialog, "Add a layer", character);
   await expect(settings).toHaveCount(1);
   await expect(settings).not.toHaveAttribute("open");
-  // Right after the camera choice.
+  // The Camera section is closed too; inside, the settings come right after the presets.
+  const camera = settings.locator("..");
+  await expect(camera).not.toHaveAttribute("open");
+  await openSection(dialog, "Camera");
   const next = await dialog
     .getByRole("group", { name: "Camera", exact: true })
-    .evaluate(
-      (select) =>
-        select.closest("label, fieldset")!.nextElementSibling ===
-        select.closest(".image-editor-main")!.querySelector(".image-section"),
-    );
-  expect(next).toBe(true);
+    .evaluate((presets) => presets.nextElementSibling?.querySelector("summary")?.textContent);
+  expect(next).toMatch(/^Camera settings/);
   await openSection(dialog, "Camera settings");
   const duration = dialog.getByLabel("Movement duration (seconds)", { exact: true });
   await expect(duration).toBeVisible();
   await duration.fill("7");
   await openSection(dialog, "Camera settings");
   await expect(settings.locator("summary")).toContainText("set: changed");
+});
+
+test("settings order: Look on the page (with On the page), Camera, When it appears, Description & caption", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await readyMade(dialog, "Character in forest");
+  const sections = dialog.locator(".image-editor-main > .image-section");
+  const titles = await sections
+    .locator("> summary")
+    .evaluateAll((items) => items.map((item) => item.firstChild!.textContent));
+  expect(titles).toEqual([
+    "Look on the page",
+    "Camera",
+    "When it appears",
+    "Description & caption",
+    "Interactivity",
+  ]);
+  await expect(dialog.locator(".image-section[open]")).toHaveCount(0);
+  // "On the page" is inside "Look on the page", whose summary shows the layout.
+  const look = sections.first();
+  await expect(look.locator(".media-layout")).toHaveCount(1);
+  await expect(dialog.locator(".image-editor-main > .media-layout")).toHaveCount(0);
+  await openSection(dialog, "Look on the page");
+  await look.getByRole("button", { name: "Wide", exact: true }).click();
+  await openSection(dialog, "Look on the page");
+  await expect(look.locator("> summary")).toHaveText("Look on the page · Wide");
+  // The camera folds too, with its settings folded inside; its summary shows the preset.
+  const camera = sections.nth(1);
+  await openSection(dialog, "Camera");
+  await camera.getByRole("button", { name: "Gentle depth", exact: true }).click();
+  await expect(camera.locator("> summary")).toHaveText("Camera · Gentle depth");
+  await expect(camera.locator(".image-section > summary")).toHaveText("Camera settings");
 });
