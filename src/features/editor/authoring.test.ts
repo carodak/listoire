@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { insertLocalized } from "./localized-insertion.ts";
 import { buildInkCommand } from "./ink-commands.ts";
@@ -479,4 +479,72 @@ it("restores the target image when reopening a sound cue triggered by that image
     next.languages.en!.configuration.scenes!.intro,
   );
   expect(restored.target).toBe(input.target);
+});
+
+describe("cutting and pasting a // @media line (REVIEW #3)", () => {
+  const annotated = withMediaReferences(original).languages.en!;
+  const lines = annotated.script.split("\n");
+  const row = mediaReferenceLine(annotated.script, "intro", "intro.illustration");
+  const cut = lines.filter((_, index) => index !== row);
+  const without = (rows: string[]) => rows.join("\n");
+  const media = (language: typeof annotated, scene = "intro") =>
+    language.configuration.scenes![scene]!;
+  const blockAt = (language: typeof annotated) =>
+    media(language).blocks!.findIndex((b) => b.kind === "media" && b.id === "intro.illustration");
+
+  it("restores the image, its cues and its place when the line is pasted back", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    expect(blockAt(removed)).toBe(-1);
+    expect(media(removed).events!.some((e) => e.blockId === "intro.illustration")).toBe(false);
+    const pasted = [...cut];
+    pasted.splice(row, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    expect(media(restored)).toEqual(media(annotated));
+    expect(restored.script).toBe(annotated.script);
+    expect(kept.size).toBe(0);
+  });
+
+  it("puts the image after the text the pasted line now follows", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    const text = media(annotated).blocks!.filter((b) => b.kind === "text");
+    const last = text.at(-1)!;
+    const target = cut.findIndex(
+      (line) => last.kind === "text" && line.includes(`# segment:${last.segmentId}`),
+    );
+    const pasted = [...cut];
+    pasted.splice(target + 1, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    const blocks = media(restored).blocks!;
+    expect(blocks[blockAt(restored) - 1]).toEqual(last);
+    expect(media(restored).events).toEqual(expect.arrayContaining(media(annotated).events!));
+  });
+
+  it("keeps the image in its own scene when the line is pasted into another passage", () => {
+    const kept = new Map();
+    const removed = editMediaScript(annotated, without(cut), kept);
+    const room = cut.findIndex((line) => line.startsWith("=== room"));
+    const pasted = [...cut];
+    pasted.splice(room + 1, 0, lines[row]!);
+    const restored = editMediaScript(removed, without(pasted), kept);
+    expect(blockAt(restored)).toBe(blockAt(annotated));
+    expect(media(restored, "room")).toEqual(media(annotated, "room"));
+  });
+
+  it("a deleted line that never comes back stays deleted; two lines cut together both return", () => {
+    const kept = new Map();
+    const second = mediaReferenceLine(annotated.script, "room", "room.illustration");
+    const both = lines.filter((_, index) => index !== row && index !== second);
+    const removed = editMediaScript(annotated, without(both), kept);
+    expect(kept.size).toBe(2);
+    // (The cut also dropped the cue lines aimed at these images; editing on keeps them gone.)
+    expect(editMediaScript(removed, removed.script, kept)).toEqual(removed);
+    const restored = editMediaScript(removed, annotated.script, kept);
+    expect(media(restored)).toEqual(media(annotated));
+    expect(media(restored, "room")).toEqual(media(annotated, "room"));
+    // Without the session's buffer (a reload), a pasted line stays a dead comment, as before.
+    const reloaded = editMediaScript(removed, annotated.script);
+    expect(blockAt(reloaded)).toBe(-1);
+  });
 });

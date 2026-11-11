@@ -1980,3 +1980,32 @@ picture); a picture without them renders exactly as today.
 (test only); (c) small commits that keep matching them: tilt/flip, typed draft, new layout,
 picker and empty state, duplicate / remove / drag. E2E: empty state, adding a picture to each
 depth in 2 clicks, drag and drop, Duplicate.
+
+### 2a. REVIEW #3: cutting and pasting a `// @media` line restores its settings
+
+Before: deleting or cutting a reference line deleted that image's block, its cues and the
+scene's image; pasting the line back left a dead comment (and the next edit removed it).
+
+Now `editMediaScript` keeps what a removed line took away in the editor session's cut buffer
+(`handles.keptMedia`, keyed `scene/id`): the block, each cue **with its place in the list**,
+and whether it was the scene's image. When the same line comes back (paste, or typing it
+again), they are restored exactly:
+
+- pasted at the same place: the scene is exactly as before (block position, cues, scene image);
+- pasted after other text of the same passage: the image now follows that text;
+- pasted into another passage: the line still names its own scene (`intro/…`), so the image
+  stays in its scene, at its old place (limit; moving an image to another passage is done by
+  re-adding it there);
+- a deletion that is never pasted back stays a deletion (publishing unchanged; Undo/History
+  still recover it); two lines cut together both come back.
+
+The buffer lasts until the editor is reloaded (then a pasted line is a dead comment, as before).
+No contract change. Cutting an image also drops the cue lines aimed at it (as before); when the
+image comes back, its cues come back and the editor re-adds their lines (`withMediaReferences`).
+No status message ("paste the line back…"): the status bar is overwritten by autosave within a
+second, so it would only flash.
+
+Tests: unit `authoring.test.ts` "cutting and pasting a // @media line (REVIEW #3)" (4 cases);
+e2e `media-workspace.spec.ts` "cutting a // @media line and pasting it back…" (real Ctrl+X /
+Ctrl+V in the script: the image leaves and returns in the live preview with the same number of
+layers, and the Image dialog opens it as "Edit Image"). The e2e fails on the old code.

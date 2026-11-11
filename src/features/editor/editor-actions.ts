@@ -9,6 +9,7 @@ import { compileInWorker } from "./compile-client.ts";
 import { insertLocalized } from "./localized-insertion.ts";
 import { outlineEntries } from "./ink-outline.ts";
 import { editMediaScript, mediaInsertionPosition, mediaReferenceLine } from "./media-script.ts";
+import type { KeptMedia } from "./media-script.ts";
 import { sceneMediaEntries } from "./scene-media.ts";
 import type { ParagraphAlign, Typography } from "../../contracts/typography.ts";
 import { effectiveTypography } from "../../contracts/typography.ts";
@@ -41,6 +42,8 @@ type Handles = {
   liveIssue?: string;
   /** The project version the preview was compiled from: no refresh needed for it. */
   previewed?: StoryProject;
+  /** Media whose `// @media` line was cut, until the line is pasted back (this session). */
+  keptMedia?: Map<string, KeptMedia>;
 };
 export interface EditorActionContext {
   project: StoryProject;
@@ -179,7 +182,14 @@ export class EditorActions {
     update(
       {
         ...project!,
-        languages: { ...project!.languages, [activeLocale]: editMediaScript(language, script) },
+        languages: {
+          ...project!.languages,
+          [activeLocale]: editMediaScript(
+            language,
+            script,
+            (handles.current.keptMedia ??= new Map()),
+          ),
+        },
       },
       `Edited ${activeLocale} Ink`,
     );

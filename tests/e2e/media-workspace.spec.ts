@@ -63,3 +63,56 @@ test("authors a combat action and enables the existing game mode", async ({ page
   await expect(page.getByLabel("Game Mode", { exact: true })).toHaveValue("with-combat");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
 });
+
+test("cutting a // @media line and pasting it back restores the image and its settings", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/editor");
+  await expect(page.locator(".preview-slot .prose")).toBeVisible({ timeout: 20_000 });
+  const image = page.locator('.preview-slot [data-block="matin-ville.illustration"]');
+  await expect(image).toBeVisible();
+  const planes = await image.locator(".multiplane-plane").count();
+  const script = () =>
+    page
+      .locator(".ink-editor")
+      .evaluate((node) =>
+        (node as unknown as { env: { editor: { getValue(): string } } }).env.editor.getValue(),
+      );
+  const line = "// @media matin-ville/matin-ville.illustration";
+  // Select the whole reference line, as an author would before Ctrl+X.
+  await page.locator(".ink-editor").evaluate((node, text) => {
+    const editor = (
+      node as unknown as {
+        env: {
+          editor: {
+            getValue(): string;
+            gotoLine(row: number, column: number): void;
+            selection: { selectLine(): void };
+          };
+        };
+      }
+    ).env.editor;
+    const row = editor
+      .getValue()
+      .split("\n")
+      .findIndex((value) => value.startsWith(text));
+    editor.gotoLine(row + 1, 0);
+    editor.selection.selectLine();
+  }, line);
+  const input = page.locator(".ace_text-input");
+  await input.press("Control+x");
+  await expect.poll(script).not.toContain(line);
+  await expect(image).toHaveCount(0);
+  await input.press("Control+v");
+  await expect.poll(script).toContain(line);
+  await expect(image).toBeVisible();
+  await expect(image.locator(".multiplane-plane")).toHaveCount(planes);
+  // Its settings came back too: the dialog opens it as an existing image.
+  await input.press("ArrowUp");
+  await page.getByRole("tab", { name: "Media", exact: true }).click();
+  await page.getByRole("button", { name: "Edit Selected Media", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Edit Image", exact: true })).toBeVisible();
+});
