@@ -2670,3 +2670,29 @@ include the other writer's uncommitted files (their new test fails each time). T
 were repeated: the REVIEW #8 Ink timing flake (`house.test.ts`) once, and the lazy `Noise.jsx`
 capture race (handled by dropping source-less browser entries before merging). Full Chromium
 e2e at the end: 136/137 (the failure is the other writer's test).
+
+## Pass 11 — Media → Image: start area, picker tabs, layers panel, sections, preset previews (branch `features/editor-ux`)
+
+Your nine Image-dialog items, one commit each with an e2e test (added to the existing image
+spec files), then your "sync story.json after deleting Ink scenes" work (committed by you as
+`43dfdd3` at the start of this pass).
+
+### How checks run this pass (your change of plan, mid-pass)
+
+- **Per commit** (fast but complete): typecheck + lint, all unit tests (`npx vitest --run`), the
+  e2e spec(s) the item touches (chromium), `npx fallow health --score` (no `--coverage`),
+  `npx fallow security --gate new --changed-since main`, `npx fallow dupes`. Anything failing is
+  fixed before the next item.
+- **Once, at the end:** full e2e on chromium, then `npm run test:coverage` and
+  `fallow health --coverage` (score ≥ 92), then the before/after screenshots. A failure there is
+  bisected over this pass's commits and fixed in a new commit.
+- **Dev server:** started once from **PowerShell** on 4175 and kept running, warmed before e2e.
+  Why: from Git Bash the drive letter is lowercase (`c:/Users/…`). Vitest then loads two copies
+  of itself (every suite fails with "Cannot read properties of undefined (reading 'config')"),
+  and the Vite dev server served modules under both casings: dynamic imports (`DiceModel.tsx`,
+  `RippleDistortion.jsx`) failed and 14 reader/react-bits e2e failed. From PowerShell: 464/464
+  unit tests, and those e2e pass.
+- Commits 1–2 also got the earlier full block (coverage + health `--coverage` 93.5, security 0,
+  dupes 0). The coverage runner stops before its merge when any e2e fails (your WIP test does),
+  so the merge was run by hand; the second time it hit a captured entry without source code,
+  left for the final run.
