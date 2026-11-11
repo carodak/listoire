@@ -1888,3 +1888,95 @@ write keeps the pages as they were", "drops saved pages that can't be restored e
 the save"; e2e `reader.spec.ts` "Back still works after a reload, through the saved previous
 pages" (two choices, reload, Back twice, then Back disabled). Reader e2e suites (reader,
 reader-request, page-frame, reader-data): 41/41.
+
+### 2. Media → Image — revised design note (replaces Pass 8's)
+
+Your feedback: (1) too many things on screen; (2) in a layered composition it isn't clear where
+to start; (3) it isn't clear how to add new images. Pass 8's note mostly regrouped the existing
+controls. This one starts from what an author does, most often first:
+
+1. **Put one picture on the page** and say what it shows (alt text). Most images.
+2. **Change** that picture, or **where it sits** on the page (inline, wide, right page,
+   background, cinematic).
+3. **Build a layered scene**: a background, a character in front, maybe a framing foreground;
+   move and size the character; pick a camera movement.
+4. Rarely: when it appears, hiding it after a while, letting the reader examine it, frame /
+   blend / wrap, width and offset, auto-crop, tilt and flip, camera fine-tuning, starter scenes.
+
+**Visible by default** (everything for 1–3, nothing else):
+
+```
+┌ Add image ─────────────────────────────────────────────────────────── × ┐
+│ PICTURES, front to back           │ ┌────────────── preview ───────────┐ │
+│  Front    + Add                   │ │ drag the selected picture        │ │
+│  Middle   ▣ Curly-haired woman    │ │ to move it; arrow keys too       │ │
+│           + Add                   │ │                                  │ │
+│  Back     ▣ Misty conifer plain   │ └──────────────────────────────────┘ │
+│           + Add                   │   ▷ Replay    ⊡ Safe frame           │
+│ SELECTED  Curly-haired woman                                            │
+│  Size ──●──   Turn ──●──   Change…  Duplicate  Remove  Reset            │
+│  ▸ Tilt, flip and exact position                                        │
+│ ON THE PAGE  [Inline | Wide | Right page | Background | Cinematic]      │
+│ CAMERA       [Slow push in ▾]           (only with two pictures or more) │
+│ DESCRIPTION  [what the picture shows, for screen readers]               │
+│ ▸ More options · caption, examine, when it appears, look on the page    │
+├──────────────────────────────────────────────────────────────────────────┤
+│ ☑ Same in all languages                                Cancel   [Apply] │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Where to start (problem 2):** the pictures panel always shows the three depths, front to
+  back, as image editors do. With no picture yet, the preview says "Start with a picture" with
+  one button, and offers the five starter scenes; the Back row says "Start here". A single image
+  is simply one picture: no mode to choose.
+- **Adding pictures (problem 3):** every depth has its own "+ Add". It opens a picker over the
+  preview: a search field, then "In this story" (pictures the story already uses) and "Library"
+  (pictures made for that depth first). **One click on a picture adds it there and selects it:
+  2 clicks in all.** "Change…" uses the same picker. **Duplicate** adds the same picture again,
+  slightly shifted (a second tree). **Drag and drop:** drag the selected picture in the preview
+  to move it (as today), and drag a picture's row onto another depth to move it there.
+  Uploading your own image files is not added: the stored-media contract only accepts uploaded
+  videos, WebP and 3D models, so it would be a format change.
+- **Less on screen (problem 1):** the default view has one panel, one preview, the selected
+  picture's two sliders and four buttons, one placement row, one camera list, one text field.
+
+**Under "More options"** (closed; its summary lists what is set, e.g. "caption · examine"):
+
+| Group             | Controls                                                                                           | Why here                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Text              | Caption; Examine (magnify, details, reverse side)                                                  | Optional; examine is for a few photographs          |
+| When it appears   | Scene (when adding), Show (page / text line / delay), Hide after … s, Entrance (fade, one picture) | The defaults (with the page, stays) fit most images |
+| Look on the page  | Frame, Blend, Text wrapping (inline), Width %, Offset X/Y, Alignment, Smart auto-crop              | The defaults (paper blend, frame by depth) fit most |
+| Camera details    | Speed, intensity, direction, atmosphere, exact duration (two pictures or more)                     | The named camera already sets them                  |
+| Ready-made scenes | The five starter scenes (also offered in the empty state)                                          | Decision 2: kept, under Advanced                    |
+
+**Under the selected picture, "Tilt, flip and exact position"** (closed): tilt forward/back and
+turn left/right (−75° to 75°, decision 1), Flip (mirror), and exact X/Y sliders (the keyboard
+alternative to dragging).
+
+**Removed, and why**
+
+| Control                                                                                                | Why                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| "Illustration" mode select (Single / Layered / Auto Compose (future))                                  | The number of pictures says it; switching to Single silently deleted every layer; Auto Compose was a dead placeholder                  |
+| "Browse media library", with the image's description under it                                          | Replaced by "+ Add" / "Change…"; the description repeated the alt text                                                                 |
+| The big embedded library for images (category, theme, usage and depth filters; "Use this media" cards) | Search plus "In this story" / "Library" is enough to pick a picture: one click instead of three. Audio and video keep the full library |
+| "Smart blend with text"                                                                                | A one-shot that set four fields which keep their own controls                                                                          |
+| Camera thumbnail grid (the same image 16 times)                                                        | A named list (decision 3); the preview shows the movement (Replay)                                                                     |
+| "Show crop / safe margins" checkbox                                                                    | A "Safe frame" toggle on the preview                                                                                                   |
+| Helper paragraphs ("A single illustration stays still…", the camera hint)                              | A tooltip, or shown by the preview                                                                                                     |
+| "Layer depth" select of the selected image                                                             | The rows are the depths: drag a row, or use the row's depth menu (keyboard)                                                            |
+| "Apply shared configuration to all languages"                                                          | "Same in all languages", in the footer next to Apply (same setting)                                                                    |
+
+Nothing stored is removed: every field still loads, keeps its value and stays editable. Defaults
+are unchanged (inline, paper blend, frame by depth, camera None, with the page).
+
+**Under the hood:** one typed `MediaEdit` draft (a reducer) replaces the hidden JSON inputs and
+the `FormData` reading for Image and Video (REVIEW §4); the other kinds keep their fields. New
+labels go through i18n (en + fr). Tilt and flip are additive (`tiltX`, `tiltY`, `flip` on a
+picture); a picture without them renders exactly as today.
+
+**Order:** (a) REVIEW #3; (b) reference screenshots of Orée's layered images on today's code
+(test only); (c) small commits that keep matching them: tilt/flip, typed draft, new layout,
+picker and empty state, duplicate / remove / drag. E2E: empty state, adding a picture to each
+depth in 2 clicks, drag and drop, Duplicate.
