@@ -359,6 +359,7 @@ const en = {
       safeFrameHint: "Shows the inner frame that stays visible while the camera moves.",
       preview: "Preview",
       dragHint: "Drag the selected picture to move it, or use the arrow keys.",
+      resizeHint: "Drag a corner to resize (the Size slider is more precise).",
       sameEverywhere: "Same in all languages",
       sameEverywhereHint: "Uncheck to change this language only. The default is in Settings.",
       picker: {
@@ -752,6 +753,8 @@ const fr: typeof en = {
         "Montre le cadre intérieur qui reste visible pendant le mouvement de la caméra.",
       preview: "Aperçu",
       dragHint: "Faites glisser l’image sélectionnée pour la déplacer, ou utilisez les flèches.",
+      resizeHint:
+        "Faites glisser un coin pour la redimensionner (le curseur Taille est plus précis).",
       sameEverywhere: "Identique dans toutes les langues",
       sameEverywhereHint:
         "Décochez pour ne modifier que cette langue. Le réglage par défaut est dans les Paramètres.",

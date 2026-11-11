@@ -364,3 +364,38 @@ test("an added image shows whole, a single image's frame follows its shape, and 
   await pick(dialog, "Choose image", fern);
   await expect(frame).toHaveValue("square");
 });
+
+test("corner handles resize the selected image in the preview; the slider stays in step", async ({
+  page,
+}) => {
+  const dialog = await openNewImage(page);
+  await dialog.getByRole("button", { name: "Character in forest", exact: true }).click();
+  await dialog
+    .getByRole("group", { name: "Middle", exact: true })
+    .locator(".image-picture")
+    .click();
+  const handles = dialog.locator(".image-handle");
+  await expect(handles).toHaveCount(4);
+  const person = plane(dialog, character);
+  const scale = () => layerStyle(person, "--layer-scale").then(Number);
+  const before = await scale();
+  // Drag the bottom-right corner away from the centre: bigger.
+  const corner = handles.and(dialog.locator('[data-corner="se"]'));
+  const box = (await corner.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 60, box.y + 60, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(scale).toBeGreaterThan(before);
+  const bigger = await scale();
+  await expect(dialog.getByLabel("Size", { exact: true })).toHaveValue(String(bigger));
+  // Towards the centre: smaller. Dragging a corner never moves the image.
+  const x = await layerStyle(person, "--layer-x");
+  const top = (await dialog.locator('.image-handle[data-corner="nw"]').boundingBox())!;
+  await page.mouse.move(top.x + top.width / 2, top.y + top.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(top.x + 80, top.y + 80, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(scale).toBeLessThan(bigger);
+  expect(await layerStyle(person, "--layer-x")).toBe(x);
+});

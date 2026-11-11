@@ -326,6 +326,45 @@
   cursor: grabbing;
 }
 
+/* The selected picture's outline and corner handles (drag a corner to resize). */
+.image-handles {
+  position: absolute;
+  z-index: 4;
+  outline: 1px solid #427257;
+  pointer-events: none;
+}
+.image-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px;
+  border: 2px solid #427257;
+  border-radius: 2px;
+  background: white;
+  pointer-events: auto;
+  touch-action: none;
+}
+.image-handle[data-corner="nw"] {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+.image-handle[data-corner="ne"] {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+.image-handle[data-corner="sw"] {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+.image-handle[data-corner="se"] {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
 /* Where the picture sits on the page (also used by Video). */
 .media-layout-cards {
   display: grid;

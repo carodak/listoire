@@ -2502,3 +2502,21 @@ the author picked stays when the image changes). References: 10/10.
 Found: some catalogue images aren't published locally (only 18 `.webp` in
 `public/stories/house/media/`; e.g. `sketch.misty-conifer-plain-001` returns the app's HTML),
 so they show as broken in the editor. Not changed (local asset library).
+
+### 10-4. Corner handles on the selected image
+
+The selected image gets an outline and four corner handles in the preview, around the part
+where its picture is drawn (not its letterboxed box). Dragging a corner scales the image from
+its centre (away from the centre: bigger; towards it: smaller), in the Size slider's steps
+(0.05) so both always show the same value; it never moves the image. Dragging inside the image
+still moves it, the arrow keys too; the Size slider stays for precision. A single untouched
+image has handles too (the first drag gives it a frame).
+
+The preview measures, once per animation frame, where the selected image is drawn (the same
+loop decides whether to show the faded outside, 10-3). It finds the image through a new neutral
+attribute on the reader's planes, `data-layer` (0 = the main image), which changes nothing
+drawn. Tooltip "Drag a corner to resize (the Size slider is more precise)" in en + fr.
+
+Test: e2e "corner handles resize the selected image in the preview; the slider stays in step"
+(four handles; bottom-right outward → bigger, slider equal; top-left inward → smaller; x
+unchanged). References: 10/10.

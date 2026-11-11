@@ -146,6 +146,7 @@ export function ImageEditor(props: ImageEditorProps) {
             motion={form.motion}
             layout={form.layout}
             layer={picture}
+            selected={picture.index}
             onLayerChange={(change) => setValue(patchPicture(value, picture.index, change))}
           />
         ) : (

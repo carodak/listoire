@@ -82,6 +82,7 @@ export function LayeredIllustration({
             asset && (
               <ImagePlane
                 key={`${index}:${layer.image}`}
+                index={index}
                 asset={asset}
                 layer={layer}
                 autoCrop={illustration.autoCrop ?? false}
@@ -118,6 +119,7 @@ function SolitaryImage({
 }
 
 interface ImagePlaneProps {
+  index: number;
   asset: MediaAsset;
   autoCrop: boolean;
   solitary: boolean;
@@ -125,7 +127,7 @@ interface ImagePlaneProps {
   resolveAsset: PresentationSession["resolveAsset"];
 }
 
-function ImagePlane({ asset, autoCrop, solitary, layer, resolveAsset }: ImagePlaneProps) {
+function ImagePlane({ index, asset, autoCrop, solitary, layer, resolveAsset }: ImagePlaneProps) {
   const original = useAssetSource(asset, resolveAsset);
   const source = useSmartCrop(original || undefined, autoCrop);
   const weight = solitary ? 1 : { foreground: 1, midground: 0.5, background: 0.15 }[layer.role];
@@ -134,6 +136,7 @@ function ImagePlane({ asset, autoCrop, solitary, layer, resolveAsset }: ImagePla
     <div
       className="multiplane-plane"
       data-role={layer.role}
+      data-layer={index}
       data-image={asset.id}
       data-distance={800 / weight}
       style={style}
