@@ -563,3 +563,7 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   "stops reading a body without a declared length…". Changed test code (assertion kept): "answers
   an oversized declared body…" gave the same `Response` object to two fetches; it now gets a new
   one per call (a body can only be read once, and the first call now pipes it).
+- **Illustration pack overwrote caption/examination.** "Apply new illustration pack" still takes
+  the sample's picture and direction (image, layout, motion, illustration…) but keeps the author's
+  `caption`, `photograph` and `examination` (including their absence). Alt text is on the asset,
+  which the pack never replaced. Test: `illustration-pack.test.ts` "replaces a sample's picture…".

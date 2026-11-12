@@ -25,6 +25,9 @@ export function addIllustrationLibrary(project: StoryProject, source: StoryProje
   return next;
 }
 
+/** What the author wrote on a sample picture: a new pack keeps it. */
+const authored = ["caption", "photograph", "examination"] as const;
+
 export function applyIllustrationPack(project: StoryProject, source: StoryProject) {
   const next = addIllustrationLibrary(project, source);
   for (const [locale, language] of Object.entries(next.languages)) {
@@ -41,7 +44,11 @@ export function applyIllustrationPack(project: StoryProject, source: StoryProjec
         if (updated?.kind !== "media") return block;
         replaced.add(block.id);
         if (scene.image === block.image) scene.image = updated.image;
-        return structuredClone(updated);
+        const next = structuredClone(updated);
+        for (const key of authored)
+          if (block[key] === undefined) delete next[key];
+          else Object.assign(next, { [key]: block[key] });
+        return next;
       });
       scene.events = [
         ...(scene.events ?? []).filter(
