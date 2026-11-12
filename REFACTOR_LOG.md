@@ -643,3 +643,18 @@ generated for this project). I did not invent a licence name: **tell me if you w
   character boundary). Every test and assertion is kept; "checkpoints deterministic unbiased dice
   and applies rank thresholds" tested two modules and is now two tests (`random`: same dice from
   the same checkpoint; `actions`: thresholds 5,4,3,2 and 1 XP). 501 → 502 tests.
+- **`reader-request.spec.ts` split by feature** (956 lines, 24 tests) into
+  `reader-pages.spec.ts` (pages, choices, checks, page presentation; 13), `reader-combat.spec.ts`
+  (8) and `reader-saves.spec.ts` (old editor draft, check and encounter restored after reload; 3).
+  Its private helpers are now shared in `oree.ts` (`enterReader`, `fixDice`, `settlePage`,
+  `next`, `readUntil`, `reachCombat`, `fightToEnd`, `animationsOn`); new `speech.ts` (fake device
+  voice) and `editor-db.ts` (read/write the editor's IndexedDB keys, also used by the editor
+  lockout test). Every test ≤ 40 lines (the French chapter's per-duel checks are helpers). Same 24
+  tests, all passing.
+  Removed as duplicates: in "shows the item as a notification, fades the illustration…" (now
+  "after an item, fades the illustration…"), the reward card text and "no window" checks, covered
+  by `rewards.spec.ts` "an item shows a compact notification…" (card text) and its `acceptLetter`
+  (the story goes on to `preuve` with no window). Nothing in `reader-data.spec.ts` overlapped.
+  One check is unchanged but written differently: "plays instant-text illustrations…" still tags
+  the running animations and checks the same ones keep running.
+  `tools/run-test-coverage.ts` lists the three new specs instead of `reader-request.spec.ts`.

@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { browserHouseProject } from "../fixtures/house-project.ts";
+import { readEditorKeys, writeEditorKey } from "./editor-db.ts";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/stories/house/project.json", (route) =>
@@ -597,22 +598,8 @@ test("after an editor update that no longer reads the saved draft, keeps it and 
   await openEditor(page);
   await expect(page.locator(".editor-status [role=status]")).toContainText("Saved");
   // A stored draft from a schema this editor does not know.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open("listoire-editor");
-        request.onsuccess = () => {
-          const projects = request.result
-            .transaction("projects", "readwrite")
-            .objectStore("projects");
-          const record = projects.get("house/record");
-          record.onsuccess = () =>
-            projects.put({ ...record.result, draft: { retired: true } }, "house/record");
-          projects.transaction.oncomplete = () => resolve();
-          projects.transaction.onerror = () => reject(projects.transaction.error);
-        };
-      }),
-  );
+  const [record] = (await readEditorKeys(page, ["house/record"])) as [object];
+  await writeEditorKey(page, "house/record", { ...record, draft: { retired: true } });
   await page.reload();
   await expect(page.getByRole("status")).toContainText("does not match this version");
   const saved = page.waitForEvent("download");
