@@ -80,24 +80,29 @@ it("keeps a checkpoint per named save, autosaves at most every 30 s, and the las
   ).toHaveLength(30);
 });
 
-it("drops the oldest versions beyond the history byte budget, never the newest", async () => {
-  // 30 copies of the real 2.3 MB Orée project are over the 64 MB budget.
-  let record = await writeEditorRecord(oree.draft, 0, "First");
-  for (let index = 1; index < 30; index++) {
-    const next = structuredClone(oree.draft);
-    next.languages.en.configuration.title = `Save ${index}`;
-    record = await writeEditorRecord(next, record.revision, `Save ${index}`);
-  }
-  const total = record.history.reduce((sum, version) => sum + version.size, 0);
-  expect(total).toBeLessThanOrEqual(64_000_000);
-  expect(record.history.length).toBeLessThan(30);
-  expect(record.history.at(-1)!.label).toBe("Save 29");
-  const oldest = await readEditorVersion(record.history[0]!.id);
-  expect(oldest.languages.en!.configuration.title).toBe(record.history[0]!.label);
-  expect(
-    (await keys(store)).filter((key) => String(key).startsWith("house/version/")),
-  ).toHaveLength(record.history.length);
-});
+// About 70 MB of real project data: slow under coverage instrumentation.
+it(
+  "drops the oldest versions beyond the history byte budget, never the newest",
+  { timeout: 30_000 },
+  async () => {
+    // 30 copies of the real 2.3 MB Orée project are over the 64 MB budget.
+    let record = await writeEditorRecord(oree.draft, 0, "First");
+    for (let index = 1; index < 30; index++) {
+      const next = structuredClone(oree.draft);
+      next.languages.en.configuration.title = `Save ${index}`;
+      record = await writeEditorRecord(next, record.revision, `Save ${index}`);
+    }
+    const total = record.history.reduce((sum, version) => sum + version.size, 0);
+    expect(total).toBeLessThanOrEqual(64_000_000);
+    expect(record.history.length).toBeLessThan(30);
+    expect(record.history.at(-1)!.label).toBe("Save 29");
+    const oldest = await readEditorVersion(record.history[0]!.id);
+    expect(oldest.languages.en!.configuration.title).toBe(record.history[0]!.label);
+    expect(
+      (await keys(store)).filter((key) => String(key).startsWith("house/version/")),
+    ).toHaveLength(record.history.length);
+  },
+);
 
 it("keeps the published bundles until a new publication replaces them", async () => {
   const published = { revision: 2, bundles: {}, defaults: {} };
