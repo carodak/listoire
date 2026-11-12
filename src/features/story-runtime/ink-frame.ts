@@ -1,4 +1,4 @@
-import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
+import { FrameSchema, passageSlug, ReaderFailure } from "../../contracts/story.ts";
 import { parseTypography } from "../../contracts/typography.ts";
 import type { Story } from "inkjs";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
@@ -31,13 +31,7 @@ export function inkChoices(story: Story, bundle: StoryBundle, actions = false) {
     }));
 }
 function inkPassage(bundle: StoryBundle, tags: string[], previous: string, path: string) {
-  const fallback = bundle.authored
-    ? path
-        .split(".")[0]!
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/^[^a-z]+/, "") || "start"
-    : "";
+  const fallback = bundle.authored ? passageSlug(path.split(".")[0]!) : "";
   const next = tag(tags, "passage", previous || fallback);
   if (previous && previous !== next && !bundle.authored) throw new ReaderFailure("content");
   return previous || next;

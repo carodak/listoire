@@ -5,6 +5,7 @@ import { compileLanguage } from "./compiler.ts";
 import { withMediaReferences } from "./media-script.ts";
 import { ProjectHistory } from "./project-history.ts";
 import { declaredPassages, synchronizeScenes } from "./scene-script.ts";
+import { outlineEntries } from "./ink-outline.ts";
 import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
 
 it("removes obsolete scene properties and media references before saving and publishing", async () => {
@@ -51,4 +52,20 @@ Text. # passage:custom # segment:custom.one
 # passage:untagged
 -> END`),
   ).toEqual({ custom: ["custom.one"], untagged: [], "opening-scene": ["text"] });
+});
+
+it("names a knot's passage as the reader does, even when it starts with a digit", () => {
+  // The reader's passage IDs start with a letter (ink-frame.ts, through passageSlug).
+  for (const [knot, passage] of [
+    ["Room_2b", "room-2b"],
+    ["2nd_floor", "nd-floor"],
+  ] as const) {
+    expect(
+      Object.keys(
+        declaredPassages(`=== ${knot} ===
+Text`),
+      ),
+    ).toEqual([passage]);
+    expect(outlineEntries(`=== ${knot} ===`)[0]!.knot).toBe(passage);
+  }
 });

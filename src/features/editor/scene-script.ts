@@ -1,3 +1,4 @@
+import { passageSlug } from "../../contracts/story.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { knotNames } from "./ink-outline.ts";
 
@@ -19,8 +20,7 @@ export function declaredPassages(script: string) {
     const segment = line.match(/#\s*segment:([a-z][a-z0-9.-]*)/);
     if (segment) (passages[passage] ??= []).push(segment[1]!);
   }
-  for (const name of knotNames(script))
-    passages[name.toLowerCase().replace(/_/g, "-")] ??= ["text"];
+  for (const name of knotNames(script)) passages[passageSlug(name)] ??= ["text"];
   if (!Object.keys(passages).length) passages.start = ["text"];
   return passages;
 }

@@ -22,6 +22,16 @@ const variableId = z.string().regex(/^[a-z][a-z0-9._-]*$/);
 export const LocaleSchema = z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/);
 export type Locale = z.infer<typeof LocaleSchema>;
 
+/** The passage ID of an Ink knot (`Room_2b` → `room-2b`), in the editor and the reader alike. */
+export function passageSlug(knot: string) {
+  return (
+    knot
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/^[^a-z]+/, "") || "start"
+  );
+}
+
 const typography = z.array(TypographySpanSchema).max(500).optional();
 const SegmentSchema = z
   .object({

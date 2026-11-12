@@ -1,3 +1,4 @@
+import { passageSlug } from "../../contracts/story.ts";
 export function knotNames(script: string) {
   return outlineEntries(script)
     .filter((entry) => entry.kind === "Knot")
@@ -18,7 +19,7 @@ export function outlineEntries(script: string) {
       {
         name,
         path: main ? name : `${knot}.${name}`,
-        knot: knot.toLowerCase().replace(/_/g, "-"),
+        knot: passageSlug(knot),
         row,
         kind: main ? "Knot" : "Stitch",
       },

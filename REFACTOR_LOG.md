@@ -552,3 +552,8 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
 - **"Preview from intro".** The editor opened on a hard-coded `intro` passage that the shipped
   story doesn't have. It now opens on the script's first passage (Orée: `matin-ville`). Test:
   `editor-tabs.spec.ts` "the editor opens on the story's first passage".
+- **Two slug functions.** One `passageSlug()` in `contracts/story.ts` (the reader's rule: lower
+  case, other characters → `-`, leading non-letters dropped, `start` if empty) is used by the
+  reader (`ink-frame.ts`) and the editor (`ink-outline.ts`, `scene-script.ts`). A knot such as
+  `2nd_floor` was `2nd-floor` in the editor (not even a valid ID) and `nd-floor` in the reader.
+  Test: `scene-script.test.ts` "names a knot's passage as the reader does…".
