@@ -826,3 +826,4 @@ generated for this project). I did not invent a licence name: **tell me if you w
   Audit: that commit failed the audit (a moved, untested ability-list arrow over the CRAP limit; my helper did not stop the commit). Fixed in the next commit by looking abilities up in one list; my helper now exits 1 on a failing verdict.
 - **§4 `deferRoll` naming:** it rolled at once and held the check on its page: renamed `holdCheck`, with a comment on what it does.
 - **§5 #10 `actionTargets`:** the action kind → definitions map (schema check and editor field) is one `actionTargets()` in `contracts/game.ts`.
+  Lint fix (`fix(reader): …` below): that commit read the panel `id` inside an effect without listing it (I had linted the wrong folder); `[id]` now (the id never changes, so behaviour is the same).

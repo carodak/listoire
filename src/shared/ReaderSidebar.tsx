@@ -23,7 +23,7 @@ export function ReaderSidebar({ id, label, className, onClose, children }: Reade
       if (opener instanceof HTMLElement && opener.isConnected)
         opener.focus({ preventScroll: true });
     };
-  }, []);
+  }, [id]);
   return (
     <aside
       ref={panel}
