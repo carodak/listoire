@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { message } from "../../contracts/error-message.ts";
 import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
+import {
+  readEditorRecord,
+  readEditorVersion,
+  writeEditorRecord,
+} from "../../persistence/editor-store.ts";
 import { compileInWorker } from "./compile-client.ts";
 import { ProjectHistory } from "./project-history.ts";
 import { loadAce } from "./ace.ts";
@@ -71,6 +75,13 @@ export function useEditorProject() {
     replaceProject(session.current, next, label);
   }
   const save = (label = "Save project") => saveSession(session.current, label);
+  async function restoreVersion(id: number) {
+    try {
+      update(await readEditorVersion(id), "Restored history checkpoint");
+    } catch (error) {
+      setStatus(`Restore failed: ${message(error)}`);
+    }
+  }
   useEffect(() => {
     if (!project || !session.current.dirty) return;
     const timer = setTimeout(() => {
@@ -87,6 +98,7 @@ export function useEditorProject() {
     issues,
     setIssues,
     versions,
+    restoreVersion,
     undo: () => replaceProject(session.current, history.undo(), "Undid an editing change"),
     redo: () => replaceProject(session.current, history.redo(), "Redid an editing change"),
     illustrationPack,

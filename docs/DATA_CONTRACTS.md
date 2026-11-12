@@ -21,8 +21,14 @@ live outside project history and enter complete backups as `uploadedFiles`.
 The same scene/effect contracts validate
 authoring forms, imported projects and normal playback. Story locales accept two-letter
 language codes with an optional two-letter region; the interface supports English and French.
-Editor records use a separate `listoire-editor/projects` database, optimistic revisions
-and at most 30 version checkpoints. Reader gameplay saves and settings retain their
+Editor records use a separate `listoire-editor/projects` database and optimistic revisions.
+`house/record` holds the draft, the publication and the history index (`id`, `at`, `label`,
+`size`); each checkpoint's project is its own `house/version/<id>` key, validated when it
+is restored. At most 30 checkpoints and 64 M JSON characters are kept (oldest dropped first,
+the newest always kept). A record in the earlier single-key format (`house`, versions inline)
+is moved once on load: the new keys are written, read back and compared, then `house` is
+deleted, only if no other tab wrote to it meanwhile. If the move fails, `house` stays the
+record that is read and written, with a console warning. Reader gameplay saves and settings retain their
 existing schema and database. See [the editor report](story-editor/implementation.md).
 
 Status: the implemented subset is defined by executable schemas in `src/contracts`; larger examples below remain illustrative TypeScript, **not a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.

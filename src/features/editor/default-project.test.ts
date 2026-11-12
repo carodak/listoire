@@ -3,7 +3,11 @@ import { readFileSync } from "node:fs";
 import { clear, createStore } from "idb-keyval";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
-import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
+import {
+  readEditorRecord,
+  readEditorVersion,
+  writeEditorRecord,
+} from "../../persistence/editor-store.ts";
 import { readActiveProject } from "./default-project.ts";
 import { compileProject } from "./compiler.ts";
 
@@ -32,7 +36,7 @@ it.each(["oree-1.1.0", "oree-1.2.0"])(
     vi.stubGlobal("fetch", fetch);
     const result = await readActiveProject(new AbortController().signal);
     expect(result!.draft).toEqual(built);
-    expect(result!.history.at(-2)!.project).toEqual(draft);
+    expect(await readEditorVersion(result!.history.at(-2)!.id)).toEqual(draft);
     expect(result!.history.at(-2)!.label).toContain("complete previous draft");
     expect(result!.draft.languages.fr!.configuration.checkpointId).not.toBe(
       draft.languages.fr!.configuration.checkpointId,
@@ -104,7 +108,7 @@ it("updates gallery portraits and direction while preserving scripts, voices and
     after = await compileProject(updated!.draft);
   for (const locale of ["en", "fr"])
     expect(after[locale]!.inkDigest).toBe(before[locale]!.inkDigest);
-  expect(updated!.history.at(-2)!.project).toEqual(draft);
+  expect(await readEditorVersion(updated!.history.at(-2)!.id)).toEqual(draft);
   expect(await readActiveProject(new AbortController().signal)).toEqual(updated);
 });
 it("does not repeatedly archive a current draft for a custom encounter without a portrait", async () => {

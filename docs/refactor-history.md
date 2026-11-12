@@ -4,6 +4,262 @@ Older passes moved out of `REFACTOR_LOG.md` (which keeps the last three in detai
 2026-11-11: the summaries of Passes 5 to 9 and the first session, then the detail of everything up
 to Pass 9. Paths such as `REVIEW.md` or `review-screenshots/…` are as they were when written.
 
+Moved on 2026-11-12: the summary and the detail of Pass 10.
+
+## ☀ Summary — Pass 10 (previous session)
+
+Branch `features/editor-ux`, 7 commits on top of Pass 9 (`b3484bb`), the last one being this
+summary (nothing pushed, nothing on `main`). **Your five Image-dialog fixes are done, each in its
+own commit with an e2e test, and the camera e2e failure is found and fixed.** Text toolbar 1c/1d,
+Back after reloading and the other tabs' polish were already done in Pass 9 (summary below).
+
+|                                         | Pass 9 end (`b3484bb`) | Now                                                                                             |
+| --------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- |
+| Health (`--score --hotspots`), floor 92 | 93.5                   | **93.5** after every commit                                                                     |
+| Unit tests                              | 459                    | **464** (+ the other writer's new ones, below)                                                  |
+| E2E, chromium (full run)                | 132/133                | **136/137**: the camera test passes again; the 1 failure is the other writer's uncommitted test |
+| `fallow security` / dupes / dead code   | pass / 0 / 0           | pass / 0 / 0                                                                                    |
+
+### What was done
+
+- **10-1** `84360d7`: an image starts as **one image** (one row, its own "Choose image"); **"+ Add
+  layer"** (2 clicks) makes a layered scene, and only then do depths and the camera appear. A
+  single image is stored as before (main image, no layers).
+- **10-2** `699ce5b`: one way to choose an image: the layer's own **"Choose image"** (the
+  preview's button and "Change…" are gone).
+- **10-3** `41e75d8`: added or changed images show **whole** (additive `fit: "contain"`); a single
+  image's **frame follows its shape** (portrait / landscape / square) until you pick a Frame;
+  while editing, whatever goes **outside the frame shows faded** around it (the reader still
+  crops there). Stored compositions draw as before (references 10/10).
+- **10-4** `1cc913a`: **corner handles** on the selected image resize it from its centre, in
+  the Size slider's steps; moving it by dragging is unchanged.
+- **10-5** `c13952a`: a visible **×** on each layer ("Remove this image"), **Delete** in the
+  preview, and **Undo** (or Ctrl+Z) after a removal.
+- **10-6** `6cc1049`: the camera e2e. No code commit broke it: the test's image stopped being
+  published when the media folder was rebuilt (Nov 9, 23:48). It revealed a reader bug, now
+  fixed: **one image that fails to load kept the whole page's camera still**.
+
+### ⚠ Needs you
+
+- **Someone else is editing this checkout.** Uncommitted changes appeared during this pass that
+  aren't mine: `src/features/editor/scene-script.ts` (+ test, new), `compiler.ts`,
+  `use-editor-project.ts`, `tests/e2e/editor.spec.ts` (a new test, "synchronizes story.json after
+  deleting Ink scenes…", which **fails**), `docs/story-editor/implementation.md`. The other
+  Claude session on this machine (`listoire-4a`) says they aren't its own either. I didn't stage
+  or commit any of it (in `editor.spec.ts` I staged only my own two lines). They are still
+  uncommitted in your working tree. One slip: early in this pass I ran the formatter
+  over all of `src` once, which may have reformatted those files (formatting only).
+- From Pass 9, still true: a save written by this build is refused by an _older_ build (the
+  optional `history`); old saves load fine.
+- Some catalogue images aren't published locally (only 18 in `public/stories/house/media/`), so
+  they appear broken in the editor's picker (e.g. "Misty conifer plain").
+
+### Decisions I made myself (Pass 10)
+
+- A new layer goes to the depth its catalogue entry suggests (scenery back, characters middle,
+  framing plants front), in front when the catalogue says nothing; the first image goes to the
+  back by default, as before.
+- "Frame chosen by the author" = changed in this dialog session; a single image's frame then
+  stays when its picture changes. Starter scenes keep their stored look (no `fit`).
+- The faded outside lives in a ring that takes the column gaps, so the frame keeps its size
+  (otherwise the 3D projection moved Orée's references by one rounding step). While something
+  is outside the frame, the dialog lifts the paper-edge mask (it would hide the outside).
+- Corner handles snap to 0.05 like the slider; the undo of a removal is forgotten as soon as
+  anything else changes (it can never wipe a later edit).
+- Camera: a failed image counts as settled; an image whose source is still resolving is still
+  waited for. The test is unchanged.
+
+### Screenshots and recordings (untracked, `review-screenshots/`)
+
+- **Image dialog, before** (Pass 9): `pass9-after/image-new-empty.png`, `image-chemin*.png`,
+  `image-built.png`, `image-two-clicks.webm`. **After** (Pass 10): `pass10-after/image-new.png`
+  (one image), `image-choose.png` (its picker), `image-single.png`, `image-single-oversized.png`
+  (faded outside), `image-three-layers-handles.png`, `image-removed-undo.png`, recording
+  `image-flow.webm` (choose, + Add layer, resize by a corner, drag, Delete, Undo). Spec:
+  `review-screenshots/pass10-image.spec.ts`.
+- Other tabs, text toolbar: unchanged since Pass 9 (see its list below).
+
+### How to try it
+
+`npm run dev`, open `/editor`, Media → Image:
+
+- **One image:** the left column shows "Image — No image yet — Choose image": choose one;
+  "+ Add layer" adds another (then Front / Middle / Back appear, and the Camera list).
+- **Choose:** every layer has its own "Choose image" (the only way).
+- **Size:** a portrait character gets a portrait frame; raise Size: the parts outside the frame
+  show faded around it; open More options → Frame to pick one yourself.
+- **Handles:** drag a corner of the selected image; drag inside it to move it.
+- **Remove:** the × on a layer row, or click the preview and press Delete; then Undo (or
+  Ctrl+Z).
+- **Camera fix:** a layered image whose file is missing still moves (the e2e "uses real
+  perspective depth…" checks it).
+
+## Pass 10 — Media → Image feedback, then what was left (branch `features/editor-ux`)
+
+Your feedback on the new dialog (keep moving images in the preview), in five commits, each with
+an e2e test; then the camera e2e failure (bisect and fix). Parts 1c, 1d, 3 and 4 were already
+done in Pass 9 (see above), so nothing else was left from the original prompt.
+
+**Another writer in the checkout.** While I worked, uncommitted changes appeared that are not
+mine: `src/features/editor/scene-script.ts` and its test (new), `compiler.ts`,
+`use-editor-project.ts`, `tests/e2e/editor.spec.ts` (a new test, "synchronizes story.json after
+deleting Ink scenes…", which fails here), `docs/story-editor/implementation.md`. The other
+Claude session on this machine (`listoire-4a`) says they aren't its own either. I didn't touch,
+stage or commit them: every Pass 10 commit stages only my own paths. They do affect this pass's
+checks (the health score and the coverage run include them, and that test fails).
+
+### 10-1. A single image first; "+ Add layer" makes a layered scene
+
+- The left column starts with **one row, "Image"**: an empty thumbnail, "No image yet" and the
+  image's own **"Choose image"** button. That's a single image: no depth, no camera, no depth
+  groups. Stored as today: the main image, `layers: []` (e2e checks the exported backup).
+- **"+ Add layer"** (enabled once there is an image) opens the picker; one click on an image adds
+  it as a layer: 2 clicks. From then on the panel is **"Layers, front to back"**, grouped Front /
+  Middle / Back, each row with its own "Choose image"; the Camera list and the Depth select
+  appear.
+- **Decision:** a new layer goes to the depth its catalogue entry suggests (scenery at the back,
+  characters in the middle, framing plants in front), in front when the catalogue says nothing;
+  the Depth select or dragging its row changes it. The first image too (back by default, as
+  before).
+- Removed: the three per-depth "+ Add" buttons and "Start here" (and their strings).
+- Tests: e2e "a new image is one image: choose it, and it is stored as a single image" and
+  "+ Add layer makes a layered scene in two clicks, at the depth each image suits" replace "a
+  new image starts with one clear step…" and "adds a picture at each depth in two clicks"
+  (Pass 9): the flows they tested are gone by your request; the new ones check the same things
+  (empty start, 2 clicks per image, depths, camera) plus the stored single image. Changed
+  selectors only in "keeps the illustration visible…" and "…layered…" ("Add a picture in
+  front" → "+ Add layer", picker "Add a picture: Front" → "Add a layer"). The new-image tests now
+  start from the "chemin" page (they used the editor's default scene "intro", which Orée doesn't
+  have and which the other writer's scene sync removes).
+
+### 10-2. One way to choose an image: the layer's own "Choose image"
+
+Removed: the preview's "Choose a picture" button (empty state) and the selected image's
+"Change…" button. Each image row's "Choose image" is the only way to choose or change an image,
+for the first image as for every other layer. The empty preview now says "Choose it on the left
+with “Choose image”, or start from a ready-made scene:" and keeps the five starters (decision 2).
+Strings removed: `empty.choose`, `empty.starters`, `change`.
+
+Tests: e2e checks that a single image has exactly one "Choose…" button, a three-layer scene
+three, and that a layer's own button changes that layer's image. Changed selectors only:
+`editor.spec.ts` (two tests) and `image-composition.spec.ts` ("Choose a picture" → "Choose
+image"). In `editor.spec.ts` I staged only those two lines (the file also holds the other
+writer's uncommitted test).
+
+### 10-3. Added images show whole; a single image's frame follows its shape; overflow shows
+
+- **Why sizes looked wrong:** an image at the back filled the frame (`object-fit: cover`), so a
+  picture whose shape differs from the 3:2 frame was cut; and a single untouched image was drawn
+  at full width and natural height in the dialog (no cap), so it looked enormous and cut.
+- **Format (additive):** optional `fit` on a picture (`contain` | `cover`), which overrides the
+  depth's default. The dialog sets `fit: "contain"` on every image it adds or changes (first
+  image, + Add layer, Choose image); Duplicate copies it. Stored compositions have no `fit` and
+  draw exactly as before (the references hold). `DATA_CONTRACTS.md` updated.
+- **Frame:** when a single image gets its picture, its frame becomes the picture's own shape
+  (portrait / landscape / square, from the asset's stored dimensions: ratio > 1.15, < 0.87,
+  else square), unless the author picked a Frame in this dialog (then it stays). Decision:
+  "picked" means changed during this dialog session; an existing image's stored frame is kept
+  until its picture changes.
+- **Never silently cropped:** around the frame, a ring (in the column gaps, so the frame keeps
+  its size) shows whatever goes outside the frame, faded; the reader still crops at the frame.
+  While something is outside, the dialog lifts the paper-edge mask (it would hide the outside);
+  the soft edge is back as soon as everything fits, and the reader preview beside the dialog
+  always has it. A single untouched image is capped at 56 % of the screen height in the dialog.
+- Starter scenes are kept as they are (no `fit`): they are ready-made compositions.
+
+**Changed assertions** (both mine, Pass 9, `image-pictures.test.ts`): the promoted main picture
+and the duplicate now include `fit: "contain"`, the behaviour this item asks for.
+
+Tests: unit (new and changed images carry `contain`; `shapeOf`); e2e "an added image shows
+whole, a single image's frame follows its shape, and overflow shows faded" (portrait frame for a
+portrait image; at 2× the image goes 1.5× past the frame, the frame doesn't clip in the dialog
+and has its veil, the reader preview still clips; a back layer added later is `contain`; a frame
+the author picked stays when the image changes). References: 10/10.
+
+Found: some catalogue images aren't published locally (only 18 `.webp` in
+`public/stories/house/media/`; e.g. `sketch.misty-conifer-plain-001` returns the app's HTML),
+so they show as broken in the editor. Not changed (local asset library).
+
+### 10-4. Corner handles on the selected image
+
+The selected image gets an outline and four corner handles in the preview, around the part
+where its picture is drawn (not its letterboxed box). Dragging a corner scales the image from
+its centre (away from the centre: bigger; towards it: smaller), in the Size slider's steps
+(0.05) so both always show the same value; it never moves the image. Dragging inside the image
+still moves it, the arrow keys too; the Size slider stays for precision. A single untouched
+image has handles too (the first drag gives it a frame).
+
+The preview measures, once per animation frame, where the selected image is drawn (the same
+loop decides whether to show the faded outside, 10-3). It finds the image through a new neutral
+attribute on the reader's planes, `data-layer` (0 = the main image), which changes nothing
+drawn. Tooltip "Drag a corner to resize (the Size slider is more precise)" in en + fr.
+
+Test: e2e "corner handles resize the selected image in the preview; the slider stays in step"
+(four handles; bottom-right outward → bigger, slider equal; top-left inward → smaller; x
+unchanged). References: 10/10.
+
+### 10-5. Removing an image: a × on each layer, Delete in the preview, and Undo
+
+- Each layer row has a visible × (the shared `CloseButton`), tooltip "Remove this image", named
+  "Remove <image>" for screen readers. With the preview focused, **Delete** (or Backspace)
+  removes the selected image. The selected image's "Remove" button is gone (one way to do it,
+  as for choosing).
+- **Undo:** after a removal, "Image removed: <name>. [Undo]" appears under the layers; Undo (or
+  Ctrl+Z in the dialog, outside text fields) puts the image back where it was, selected.
+  Decision: the undo is forgotten as soon as anything else changes, so it can never wipe a later
+  edit; Cancel still discards everything, as before. Removing the main image makes the next
+  layer the main one (Pass 9); removing the last one returns to the empty image.
+- Strings: `removeHint`, `removed`, `undo` (en + fr); `remove` removed.
+
+**Changed selector:** `image-composition.spec.ts` "upgrades legacy image layers…" removed the
+selected fern with `/^Remove /`; with a × on every layer that matches two buttons, so it names
+"Remove Fern fronds".
+
+Test: e2e "removes an image with its × or Delete in the preview, and Undo brings it back" (×
+with its tooltip, the status line and Undo; Delete then Ctrl+Z; Undo gone after another change).
+
+### 10-6. The camera e2e failure: found and fixed
+
+`image-composition.spec.ts` "uses real perspective depth, pauses camera motion…" failed every
+time since Pass 9 began (0 camera animations instead of 3).
+
+**Bisect:** reverting my code didn't change it (Pass 9 log), so I looked at what the test reads
+instead of commits. Its main image, `sketch.misty-conifer-plain-001`, is not published locally:
+`public/stories/house/media/` holds only the images the story uses (18), and was last rebuilt on
+Nov 9 at 23:48, during Pass 8, by `tools/build-editor-project.ts`, which removes images the story
+doesn't use. The story never used that image (`git log -S` finds it only in the commit that added
+the catalogue), so it disappeared at that rebuild, and the request returns the app's HTML. The
+test passed in Pass 8's earlier runs because the stale file was still there. No code commit is
+"the bad one".
+
+**The defect it reveals (reader):** before starting a camera movement, the reader waits until
+every image of the illustration has loaded with a non-zero width. An image that fails to load is
+"complete" with zero width forever, so **one missing file kept the whole page's camera still**,
+silently. Fix (`scene-playback.ts`): an image that failed (it has a source but no pixels) counts
+as settled, and the reader re-checks on `error` as well as `load`; an image whose source isn't
+set yet (still resolving) is still waited for. The test itself is unchanged and passes again
+(3/3).
+
+Tests: unit "starts an illustration's camera when one of its images fails to load, not before
+sources are set" (fails on the old code); e2e the camera test 3/3; reader suites 57/57.
+
+### Pass 10 checks
+
+| Commit    | Item                                                    | Score |
+| --------- | ------------------------------------------------------- | ----- |
+| `84360d7` | 10-1. one image first, + Add layer                      | 93.5  |
+| `699ce5b` | 10-2. one way to choose an image                        | 93.5  |
+| `41e75d8` | 10-3. whole images, frame follows shape, faded overflow | 93.5  |
+| `1cc913a` | 10-4. corner handles                                    | 93.5  |
+| `c13952a` | 10-5. × / Delete / Undo                                 | 93.5  |
+| `6cc1049` | 10-6. camera: a failed image no longer stops it         | 93.5  |
+
+`fallow security --gate new`: pass after every commit; `fallow dupes`: 0. The coverage runs
+include the other writer's uncommitted files (their new test fails each time). Two coverage runs
+were repeated: the REVIEW #8 Ink timing flake (`house.test.ts`) once, and the lazy `Noise.jsx`
+capture race (handled by dropping source-less browser entries before merging). Full Chromium
+e2e at the end: 136/137 (the failure is the other writer's test).
+
 ## ☀ Summary — Pass 9 (previous session)
 
 Branch `features/editor-ux`, 18 commits on top of `0af6c46`, the last one being this summary
@@ -2420,4 +2676,3 @@ After: `review-screenshots/pass9-after/part4-4-ribbon-height/` (all `*-ribbon.pn
   a timing flake under coverage, nothing changed.
 - `fallow security --gate new --changed-since main`: pass after every commit. `fallow dupes`: 0.
   `fallow dead-code`: 0 (after removing three exports in `f6cdff0`).
-

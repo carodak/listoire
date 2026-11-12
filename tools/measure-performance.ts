@@ -445,7 +445,7 @@ async function editor(browser: Browser): Promise<Metrics> {
 }
 
 /**
- * One editor store write of the real project with a full history (30 versions): a named save
+ * One editor store write of the real project with a full history (after 30 named saves): a named save
  * (adds a version) and an autosave within 30 s (adds none). Imports the store module from the
  * dev server, so it measures the browser's own IndexedDB.
  */
@@ -459,7 +459,7 @@ async function editorWrite(browser: Browser): Promise<Metrics> {
     const url = "/src/persistence/editor-store.ts";
     const store = (await import(url)) as typeof import("../src/persistence/editor-store.ts");
     let record = (await store.readEditorRecord())!;
-    for (let index = 0; record.history.length < 30; index++)
+    for (let index = 0; index < 30; index++)
       record = await store.writeEditorRecord(record.draft, record.revision, `Fill ${index}`);
     const named: number[] = [];
     const autosave: number[] = [];

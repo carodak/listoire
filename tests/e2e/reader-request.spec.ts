@@ -765,17 +765,21 @@ test("updates an old active Orée draft while keeping its full previous version 
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
           const database = request.result;
-          const item = database.transaction("projects").objectStore("projects").get("house");
-          item.onsuccess = () => {
-            database.close();
-            resolve({
-              release: item.result.draft.release,
-              archived: item.result.history.at(-2).project.languages.en.script,
-            });
+          const projects = database.transaction("projects").objectStore("projects");
+          const record = projects.get("house/record");
+          record.onsuccess = () => {
+            const version = projects.get(`house/version/${record.result.history.at(-2).id}`);
+            version.onsuccess = () => {
+              database.close();
+              resolve({
+                release: record.result.draft.release,
+                archived: version.result.languages.en.script,
+              });
+            };
           };
-          item.onerror = () => {
+          projects.transaction.onerror = () => {
             database.close();
-            reject(item.error);
+            reject(projects.transaction.error);
           };
         };
       }),
