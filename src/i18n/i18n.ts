@@ -214,6 +214,10 @@ const en = {
       download: "Download the saved project",
       startAgain: "Start from the original story",
     },
+    effects: {
+      webglLimits:
+        "Readers see this effect only on screens at least 700 px wide, with 4 or more processor cores, WebGL, no data saver and motion allowed (so not on most phones). It runs at reduced resolution and quality, and never flickers.",
+    },
     text: {
       toolbar: "Text formatting",
       style: "Text style",
@@ -659,6 +663,10 @@ const fr: typeof en = {
       hint: "Votre projet enregistré ne correspond pas à cette version de l’éditeur. Il est conservé tel quel : téléchargez-en une copie, ou repartez de l’histoire d’origine (vos versions de l’historique restent).",
       download: "Télécharger le projet enregistré",
       startAgain: "Repartir de l’histoire d’origine",
+    },
+    effects: {
+      webglLimits:
+        "Les lecteurs ne voient cet effet que sur un écran d’au moins 700 px de large, avec 4 cœurs de processeur ou plus, WebGL, sans économiseur de données et avec les animations permises (donc pas sur la plupart des téléphones). Il tourne en résolution et qualité réduites, et ne scintille jamais.",
     },
     text: {
       toolbar: "Mise en forme du texte",

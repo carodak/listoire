@@ -585,3 +585,12 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   `# segment:` tag. Test: `ink-engine.test.ts` "names untagged authored lines from their text…".
   Docs: `DATA_CONTRACTS.md` (also the Back history size cap from the previous item),
   `story-editor/implementation.md`.
+- **ReactBits safety overrides.** The `safety` table replaced authored values, so it also *raised*
+  cheaper ones (30 particles → 60, 6 fps → 12, DPR 0.5 → 1, 10 threads → 30). It is now
+  `react-bits/safety.ts` (`safeProps`): cost settings are ceilings (lower authored values kept);
+  `flicker: 0` (photosensitivity) and `quality: "low"` stay fixed, as before. The schema still
+  accepts higher values (narrowing it would reject stored projects). The editor now says, under
+  Animation when a ReactBits effect is chosen, when readers see it (≥ 700 px wide, 4+ cores,
+  WebGL, no data saver, motion allowed: not on most phones) and that it runs reduced and never
+  flickers (en + fr). Test: `safety.test.ts` (the cost case fails with the old override, checked
+  by running it against a copy of the old table).

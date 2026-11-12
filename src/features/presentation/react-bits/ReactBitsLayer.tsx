@@ -3,6 +3,7 @@ import { Component, Suspense, lazy, useEffect, useRef, useState } from "react";
 import type { ComponentType, LazyExoticComponent, ReactNode } from "react";
 import type { ReactBitsEffect } from "../../../contracts/effects.ts";
 import { reactBitsLoaders } from "./registry.ts";
+import { safeProps } from "./safety.ts";
 const components = Object.fromEntries(
   Object.entries(reactBitsLoaders).map(([id, loader]) => [id, lazy(loader)]),
 ) as Record<ReactBitsEffect["id"], LazyExoticComponent<ComponentType<Record<string, unknown>>>>;
@@ -14,22 +15,6 @@ function hasWebGL() {
   context?.getExtension("WEBGL_lose_context")?.loseContext();
   return webglAvailable;
 }
-const safety: Record<string, Record<string, unknown>> = {
-  "react-bits.light-rays": { maxDevicePixelRatio: 1 },
-  "react-bits.lightning": { dpr: 1, flicker: 0 },
-  "react-bits.particles": { pixelRatio: 1, particleCount: 60 },
-  "react-bits.dark-veil": { dpr: 1 },
-  "react-bits.magic-rings": { maxDevicePixelRatio: 1 },
-  "react-bits.noise": { fps: 12, flicker: 0 },
-  "react-bits.ripple-distortion": { quality: "low" },
-  "react-bits.aurora": { dpr: 1 },
-  "react-bits.side-rays": { maxDevicePixelRatio: 1 },
-  "react-bits.light-pillar": { quality: "low", resolution: 0.5 },
-  "react-bits.splash-cursor": { quality: "low", contained: true },
-  "react-bits.prismatic-burst": { quality: "low", dpr: 1 },
-  "react-bits.ghost-fibers": { threads: 30 },
-};
-
 class EffectBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -80,8 +65,7 @@ export function ReactBitsLayer({ effect, imageUrl }: ReactBitsLayerProps) {
     };
   }, [effect.id]);
   const props = {
-    ...effect.props,
-    ...safety[effect.id],
+    ...safeProps(effect),
     style: { width: "100%", height: "100%" },
     ...(effect.id === "react-bits.grid-distortion" ? { imageSrc: imageUrl } : {}),
     ...(effect.id === "react-bits.ripple-distortion" ? { src: imageUrl } : {}),
