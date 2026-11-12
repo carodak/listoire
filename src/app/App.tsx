@@ -32,9 +32,9 @@ export function App({ saves, initialSettings }: Props) {
       </a>
       {!entered && (
         <header className="site-header">
-          <button className="wordmark" onClick={() => setEntered(false)} aria-label={t("home")}>
+          <span className="wordmark">
             listoire<span aria-hidden="true">.</span>
-          </button>
+          </span>
           <LanguageSetting
             language={settings.language}
             busy={settingsBusy}

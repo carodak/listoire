@@ -23,6 +23,12 @@ test("language choices display flags and support keyboard selection and Escape",
   await expect(page.getByRole("heading", { name: "Entrez dans l’histoire." })).toBeVisible();
 });
 
+test("the wordmark is the site's name, not a button that does nothing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".site-header").getByText("listoire.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Listoire home" })).toHaveCount(0);
+});
+
 test("the original welcome reveals its subtitle and offers stories within three seconds", async ({
   page,
 }, info) => {

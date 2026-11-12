@@ -537,3 +537,7 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   worst). Back pages are now also capped at 2 M Ink-state characters in total (oldest dropped,
   the last page always kept). Orée's state is ~1.3 KB a page, so it keeps all 20. Test:
   `director.test.ts` "keeps fewer previous pages when their Ink states are heavy…".
+- **No-op wordmark button.** The header (with the wordmark) only shows on the welcome screen,
+  where "go home" did nothing: it is now plain text, no longer a focusable button. Its
+  `.reader-shell .site-header` / `.reader-shell .wordmark` rules could never match and are
+  deleted. Test: `welcome.spec.ts` "the wordmark is the site's name…".
