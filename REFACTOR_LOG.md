@@ -7,8 +7,8 @@ If interrupted: resume from the first unchecked item.
 
 - [x] Part 0 — `_to_delete/` deleted (148 MB, untracked); `git status` identical before/after.
 - [x] Part 1 — REVIEW #4 (a): one key per history version (write 669 → 73 ms with a full history).
-- [ ] Part 2 — REVIEW section 3 bugs (lockout, re-present, settings, previousPages, rest), library copies.
-- [ ] Part 3 — `docs/contributions.md`.
+- [x] Part 2 — REVIEW section 3: 14 fixes, 1 left as is (logged), unused media removed.
+- [x] Part 3 — `docs/contributions.md` lists the story and library resources only.
 - [ ] Part 4 — test consolidation.
 - [ ] Part 5 — firefox/webkit/mobile failures.
 - [ ] Part 6 — REVIEW sections 4, 5, 8.
@@ -611,3 +611,19 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   and 77 narration clips no longer listed in `narration.json`. Nothing reads them (only their IDs
   appear in historical docs and test data). 11.6 MB; the folder goes from 143 files / 18 MB to
   29 / 6.1 MB. The story build and all unit tests pass; they remain in git history.
+
+### Part 3 — `docs/contributions.md`
+
+Rewritten from the bundles and the catalogue: the story uses 18 sketch-pack images, 8 Sonniss
+sounds (344 Audio ×5, CB Sounddesign, Epic Stock Media, Jake Fielding), the 2 original score
+pieces and 1 generated English narration clip; the published library is 181 sketch-pack images,
+344 Sonniss sounds (17 suppliers) and the 2 score pieces. Each with its licence and required
+attribution (none required except the Chatterbox MIT notice); the app's own resources (keyboard
+sound, Caveat, React Bits, OGL, Inky Web, Ace, dice, icons) in a second table. Removed: the old
+story's entries (TCP, Heritage, the four house sounds, 72 clips), the unused
+`public/licenses/tcp-CC-BY-3.0.txt`, the TCP-only check in `tools/verify-assets.py`, and the
+TCP/Heritage paragraph of `ARCHITECTURE.md`. `verify-assets.py --published-only` passes.
+
+Wording I chose for the sketch pack: "supplied by the project's author, who authorises their
+publication" (the catalogue's `userAuthorization`; the generation manifest shows they were
+generated for this project). I did not invent a licence name: **tell me if you want one stated.**

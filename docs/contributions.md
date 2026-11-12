@@ -1,77 +1,67 @@
 # Contributions
 
-## Mechanical Keyboard Typing (Treble Version)
+What the published story (_The School of Impossible Things_ / _L'École des choses
+impossibles_, Orée 1.3.0) and the published library use, with each resource's licence and the
+attribution it requires. Per-file origin, hashes and rights for every library entry are in
+[the curated catalogue](../assets/catalog/curated.json); the published `project.json` carries
+the library's catalogue (titles, categories, themes).
 
-- Author: stu556
-- Source: [Freesound](https://freesound.org/s/450282/)
-- License: CC0
+## Story and library
 
-The 2.2-second mono MP3 was converted from the supplied WAV with FFmpeg.
-Published path: `public/audio/keyboard-typing.mp3`.
+| Resource                                                                                              | Used by                                | Licence / rights                                                                                          | Attribution required   |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Sketch pack (graphite sketch illustrations)                                                           | 18 images in the story; 181 in library | Supplied by the project's author, who authorises their publication (catalogue `rights.userAuthorization`) | No                     |
+| Sonniss #GameAudioGDC 2026 bundles (sound effects)                                                    | 8 sounds in the story; 344 in library  | Sonniss GDC bundle licence: royalty-free, commercial use, no attribution                                  | No (credited below)    |
+| Original score: _Tomorrow there will be a lesson_, _The missing note_ (`oree.wonder`, `oree.silence`) | Story and library                      | Made for Listoire by `tools/compose-magic-score.py`                                                       | No                     |
+| Generated narration (1 English clip, `matin-ville.p1`)                                                | Story, read aloud                      | Resemble AI Chatterbox Nano, MIT                                                                          | Licence notice (below) |
 
-## Published illustrations and sound design
+**Sketch pack.** Images generated for this project from the author's own references
+(`assets/images/sketch-pack/catalog/generation_manifest.json`) and supplied by the author. The
+optimised copies the story uses are in `stories/house/media/`.
 
-Eight selected dependencies are used: four images and four sound/music excerpts.
-No embedded prototype image is reused. Original paths, local license evidence,
-source/output hashes and excerpts are in [the curated catalog](../assets/catalog/curated.json).
+**Sonniss.** From the five Sonniss.com GDC 2026 Game Audio Bundles. The bundles' licence
+(`License - GDC Game Audio.pdf` and `Readme.txt` in each bundle, and the
+[official licence](https://sonniss.com/gdc-bundle-license/)) allows use in finished projects,
+commercial or not, without attribution; it forbids redistributing the sounds as a sound
+library and using them to train or develop AI. They are published here only inside the story
+and its editor library, and are never given to a model. Sounds the story uses, by supplier:
 
-| Resource                                   | Creator / source                                         | Use                                                                                         |
-| ------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Antique telephone receiver                 | 344 Audio                                                | House scene cue only; no reusable sound library                                             |
-| Chimney wind                               | InMotionAudio                                            | House scene cue only; no reusable sound library                                             |
-| Metal impact accent                        | 344 Audio                                                | House scene cue only; no reusable sound library                                             |
-| Keeper of Keys — Element 1                 | HTC Heritage Type GmbH; historical artist not identified | Illustrates the brass key found inside the letter                                           |
-| Spirit & Myth — Element 5                  | HTC Heritage Type GmbH; historical artist not identified | Bird emblem associated with the letter seal                                                 |
-| Music Box A 013                            | Sonic Bat                                                | Quiet music-box recollection during the telephone lullaby; not presented as literal humming |
-| Childhood Memories 02 — Element 3          | HTC Heritage Type GmbH; historical artist not identified | Restrained hand outline at the window revelation                                            |
-| TCP Human 5 — Terrible Character Portraits | Jeff Preston; project coordinated by Duane O’Brien       | Girl portrait and interactive photograph; selected by the user                              |
+- **344 Audio:** Antique Books Flicking Through Pages 11; Magic Christmas Bells 2; Ambience,
+  Forest Crickets, Birds, Connecticut 02; Water, Liquid Impact, Bubble, Sci Fi, Hit 04; Wind,
+  Rush, Whoosh, Long x5 01.
+- **CB Sounddesign:** Magic Creation 23 (APPlicable Sounds).
+- **Epic Stock Media:** Magic Light Spell Enchantment Potion Effect Tonal Bright 03 (Fantasy
+  Game 2).
+- **Jake Fielding:** Heavy Rain on Window, Constant (Interior Wind, Rain and Storms).
 
-**TCP Human 5 / Terrible Character Portraits:** art by [Jeff Preston](http://team-preston.com),
-project coordinated by [Duane O'Brien](http://aterribleidea.com/ccworks/).
-License: [CC BY 3.0 Unported](https://creativecommons.org/licenses/by/3.0/), supplied in
-`assets/images/TCP/license.txt` and `readme.txt`. The JPEG is converted to WebP.
-Attribution is also displayed in the photograph dialog. No endorsement is claimed.
+The library's other Sonniss sounds come from 344 Audio, Epic Stock Media, InMotionAudio,
+Cinematic Sound Design, SoundBits, Sonic Bat, The Noisery, Jake Fielding, TheWorkRoom,
+Alexander Kopeikin, Ivo Vicic, Federico Soler, Sonik Sound Library, CB Sounddesign, David
+Dumais Audio, Just Sound Effects and Victor Ermakov.
 
-**Heritage:** [Heritage Library](https://www.heritagetype.com/pages/free-vintage-illustrations),
-HTC Heritage Type GmbH; historical artists are not independently identified.
-Included collection PDFs record a public-domain/CC0 basis with restrictions on
-redistribution/rebundling as resource downloads. These edits are incorporated in the
-finished story, not offered as an author resource pack. Credit is voluntary.
+**Generated narration.** Resemble AI [Chatterbox Nano](https://huggingface.co/ResembleAI/chatterbox-nano),
+MIT, copyright 2025 Resemble AI, with the provider's built-in voice (no voice reference) and
+its watermark kept. Notice: `public/licenses/chatterbox-MIT.txt`. Model revisions and output
+provenance: [narration-models.json](../assets/catalog/narration-models.json),
+[narration-output.json](../assets/catalog/narration-output.json). The clip is a preview until a
+person listens to it.
 
-**Sonniss:** 344 Audio, InMotionAudio and Sonic Bat, GDC 2026 bundles. Included licenses
-and the [official EULA](https://sonniss.com/gdc-bundle-license/) allow finished interactive
-projects, restricting raw-library redistribution and AI training/development use without
-permission. No Sonniss recording is supplied to a model or used as a voice reference.
-Music Box A 013 is a memory/music accent, not literal humming.
+## The reader and editor around the story
 
-## Generated narration
+| Resource                                                                                          | Licence                                               | Notice                                                      |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
+| Mechanical Keyboard Typing (Treble Version), stu556, [Freesound](https://freesound.org/s/450282/) | CC0                                                   | — (`public/audio/keyboard-typing.mp3`)                      |
+| Caveat font, The Caveat Project Authors ([source](https://github.com/googlefonts/caveat))         | SIL OFL 1.1                                           | `public/licenses/caveat-OFL.txt`                            |
+| 14 React Bits components, revision `4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4`                     | MIT + Commons Clause                                  | `public/licenses/react-bits.txt`                            |
+| [OGL](https://github.com/oframe/ogl) 1.0.11                                                       | Unlicense                                             | `public/licenses/ogl-Unlicense.txt`                         |
+| [Inky Web](https://github.com/dtsykunov/inky-web) (editor menu, Ink mode)                         | MIT                                                   | `public/licenses/inky-web-MIT.txt`                          |
+| Ace 1.2.6 (script editor)                                                                         | BSD                                                   | `public/licenses/ace-BSD.txt`                               |
+| d6 and d20 meshes and textures from a dice set supplied by the author (`assets/dnd-dice-set`)     | Author's authorisation; provider licence not verified | — (`src/features/presentation/dice-assets/provenance.json`) |
+| Home and character toolbar icons (`public/home-icon.png`, `public/rpg-icon.png`)                  | Supplied by the author                                | —                                                           |
 
-Resemble AI [Chatterbox Nano](https://huggingface.co/ResembleAI/chatterbox-nano) and
-[Chatterbox Multilingual V3](https://huggingface.co/ResembleAI/chatterbox), MIT model cards;
-source copyright 2025 Resemble AI. The provider's embedded default conditioning is used,
-with no external voice reference. Provider watermarking is retained.
-See [model revisions](../assets/catalog/narration-models.json) and
-[output provenance](../assets/catalog/narration-output.json).
-The 72 included clips are previews pending human listening.
-The code notice is included in `public/licenses/chatterbox-MIT.txt`.
-
-## Presentation and handwriting
-
-Fourteen official React Bits JSX/CSS components are vendored at revision
-`4dc7b5b7772e1217c8fb8d2a7aa074302180e5b4`, with hashes in
-[provenance.json](../src/features/presentation/react-bits/vendor/provenance.json).
-The [license](../src/features/presentation/react-bits/vendor/LICENSE.md) is MIT plus
-Commons Clause, not plain MIT. Reassess toolkit/editor-platform redistribution against
-those terms. Components are locally bundled as deferred chunks.
-The notice is included in `public/licenses/react-bits.txt`.
-
-RippleDistortion uses [OGL](https://github.com/oframe/ogl), pinned to 1.0.11,
-**Unlicense**, as stated in the installed package and README.
-Notice: `public/licenses/ogl-Unlicense.txt`.
-
-Handwriting uses **Caveat**, copyright 2014 The Caveat Project Authors
-([source](https://github.com/googlefonts/caveat)), SIL Open Font License 1.1.
-The font is subset to Latin/punctuation and converted to WOFF2; the original stays
-under `assets/fonts/`. License: `public/licenses/caveat-OFL.txt`.
-A shared SVG mask reveals continuous handwritten lines after a native fade.
-All eleven native effects and shared camera/magnifier logic are implemented locally.
+The keyboard sound was converted from the supplied WAV to a 2.2-second mono MP3 with FFmpeg. The
+Caveat font is subset to Latin and punctuation and converted to WOFF2 (original in
+`assets/fonts/`). React Bits is MIT plus Commons Clause, not plain MIT: reassess before
+redistributing the editor as a toolkit or platform. Vendor hashes:
+[React Bits provenance](../src/features/presentation/react-bits/vendor/provenance.json),
+[editor provenance](../src/features/editor/vendor/provenance.json).

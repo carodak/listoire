@@ -55,9 +55,6 @@ for locale in ("en", "fr"):
             if "background" not in roles:
                 alpha = illustration.getchannel("A").getextrema() if illustration.mode == "RGBA" else (255, 255)
                 assert alpha[0] <= 1 and alpha[1] >= 240, asset["id"]
-            if asset["id"].startswith("tcp."):
-                assert illustration.getpixel((10, 10))[3] == 0, "Exterior paper must be transparent"
-                assert illustration.getpixel((illustration.width//2, illustration.height//2))[3] > 240, "Retain the face inside the cutout"
         paths = [entry["optimizedPath"], "public/stories/house/"+asset["path"], "dist/stories/house/"+asset["path"]]
         if not published_only and "originalPath" in entry: paths.append(entry["originalPath"])
         for path in paths:

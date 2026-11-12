@@ -31,9 +31,9 @@ clips, requests local generation during development, and supports optional devic
 Generated demonstration recordings are explicitly marked preview. Restore displays
 the saved resolved frame, without replaying transient effects or narration.
 
-All illustrations come from the downloaded TCP and Heritage libraries. Eight selected
-illustration/sound derivatives and 72 narration MP3s are hash/rights checked at build time;
-source inventories stay offline. Scene events, character portraits, examination and
+Illustrations come from the author's sketch pack, sounds from the Sonniss GDC 2026 bundles
+(see [contributions.md](contributions.md)). Every file the story uses, narration clips
+included, is hash- and rights-checked at build time; source libraries stay offline. Scene events, character portraits, examination and
 narration references all participate in publication allowlisting. Source libraries
 stay under assets; only selected story derivatives are copied to public output.
 Old foundation saves remain separate. Previous house builds are preserved as
