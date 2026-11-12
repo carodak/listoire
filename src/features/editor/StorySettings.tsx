@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
+import { gameModes } from "../../contracts/story.ts";
 import { EditorDialog, EditorFormActions } from "./EditorDialog.tsx";
 import { NarrationModeSelect } from "./NarrationModeSelect.tsx";
 import { PaperPalette } from "../presentation/PaperPalette.tsx";
@@ -49,7 +50,7 @@ export function StorySettings({ project, locale, onApply, onClose }: Props) {
         <SelectField
           label="Game Mode"
           value={draft.gameMode}
-          options={["narrative", "rpg-no-combat", "with-combat"] as const}
+          options={gameModes}
           onChange={(gameMode) => setDraft({ ...draft, gameMode })}
           labels={{
             narrative: "Narrative Only",

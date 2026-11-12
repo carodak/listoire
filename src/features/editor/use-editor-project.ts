@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { message } from "../../contracts/error-message.ts";
 import type { RefObject } from "react";
 import type { StoryProject } from "../../contracts/editor-project.ts";
-import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-store.ts";
+import {
+  readEditorRecord,
+  readEditorVersion,
+  UnreadableEditorRecord,
+  writeEditorRecord,
+} from "../../persistence/editor-store.ts";
 import { compileInWorker } from "./compile-client.ts";
 import { ProjectHistory } from "./project-history.ts";
 import { loadAce } from "./ace.ts";
@@ -40,6 +45,8 @@ export function useEditorProject() {
   const [issues, setIssues] = useState<string[]>([]);
   const [versions, setVersions] = useState<Versions>([]);
   const [illustrationPack, setIllustrationPack] = useState<StoryProject | null>(null);
+  const [unreadable, setUnreadable] = useState<UnreadableEditorRecord | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [history] = useState(() => new ProjectHistory());
   const session = useRef(
     createSession({ setProject, setStatus, setIssues, setVersions, setIllustrationPack }),
@@ -50,14 +57,15 @@ export function useEditorProject() {
     current.mounted = true;
     const scope = new AbortController();
     void loadSession(current, scope.signal).catch((error) => {
-      if (!scope.signal.aborted)
-        setStatus(`Load failed: ${message(error)}. Stored data has been kept.`);
+      if (scope.signal.aborted) return;
+      if (error instanceof UnreadableEditorRecord) setUnreadable(error);
+      setStatus(`Load failed: ${message(error)}. Stored data has been kept.`);
     });
     return () => {
       current.mounted = false;
       scope.abort();
     };
-  }, []);
+  }, [attempt]);
   useLeaveGuard(session);
 
   function update(next: StoryProject, label: string) {
@@ -71,6 +79,28 @@ export function useEditorProject() {
     replaceProject(session.current, next, label);
   }
   const save = (label = "Save project") => saveSession(session.current, label);
+  /** Replaces an unreadable stored draft with the original story; its history stays. */
+  async function startAgain(revision: number) {
+    try {
+      const built = await loadDefaultProject(undefined, new AbortController().signal);
+      await writeEditorRecord(
+        built!,
+        revision,
+        "Started again: the saved project could not be read",
+      );
+      setUnreadable(null);
+      setAttempt((value) => value + 1);
+    } catch (error) {
+      setStatus(`Start failed: ${message(error)}`);
+    }
+  }
+  async function restoreVersion(id: number) {
+    try {
+      update(await readEditorVersion(id), "Restored history checkpoint");
+    } catch (error) {
+      setStatus(`Restore failed: ${message(error)}`);
+    }
+  }
   useEffect(() => {
     if (!project || !session.current.dirty) return;
     const timer = setTimeout(() => {
@@ -87,6 +117,9 @@ export function useEditorProject() {
     issues,
     setIssues,
     versions,
+    restoreVersion,
+    unreadable,
+    startAgain,
     undo: () => replaceProject(session.current, history.undo(), "Undid an editing change"),
     redo: () => replaceProject(session.current, history.redo(), "Redid an editing change"),
     illustrationPack,

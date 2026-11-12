@@ -316,12 +316,9 @@ function CommandGroup({
             <button
               key={command.label}
               title={
-                command.action === "unavailable"
-                  ? `${command.label}: the existing engine does not implement this operation`
-                  : (commandHelp[command.label] ??
-                    `Insert ${command.label.toLowerCase()} into the Ink script.`)
+                commandHelp[command.label] ??
+                `Insert ${command.label.toLowerCase()} into the Ink script.`
               }
-              disabled={command.action === "unavailable"}
               onClick={() =>
                 command.action === "insert"
                   ? onInsert(command.snippet!)

@@ -375,10 +375,7 @@ export class ScenePlayback {
     });
   };
   revealRemaining = () => {
-    this.context.publish({ revealAll: true });
-    this.context.publish({
-      visibleMedia: this.mediaIds(),
-    });
+    this.context.publish({ revealAll: true, visibleMedia: this.mediaIds() });
   };
   cancel() {
     this.videos.forEach((video) => video.pause());

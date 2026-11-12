@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IdSchema, Sha256Schema, SixDigitColorSchema } from "./primitives.ts";
 
 import { NarrativeEventSchema } from "./narrative-events.ts";
 import { NativeEffectSchema } from "./native-effects.ts";
@@ -28,9 +29,11 @@ export function mediaIsVisible(
   );
 }
 
+/** Where a media block sits on the page (the editor offers them in this order). */
+export const mediaLayouts = ["inline", "wide", "right", "background", "fullscreen"] as const;
 export const RuntimeAssetSchema = z
   .object({
-    id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
+    id: IdSchema,
     path: z.string().regex(/^media\/[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/),
     type: z.enum(["image", "audio", "video", "model3d"]),
     dimensions: z
@@ -44,7 +47,7 @@ export const RuntimeAssetSchema = z
     scene3d: Scene3DSchema.optional(),
     upload: z
       .object({
-        digest: z.string().regex(/^[a-f0-9]{64}$/),
+        digest: Sha256Schema,
         mime: z.enum(["video/mp4", "video/webm", "image/webp", "model/gltf-binary"]),
         size: z.number().int().positive().max(50_000_000),
         rights: z.string().trim().min(1).max(500),
@@ -103,7 +106,7 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
       kind: z.literal("media"),
       id: z.string(),
       image: z.string(),
-      layout: z.enum(["inline", "wide", "right", "fullscreen", "background"]),
+      layout: z.enum(mediaLayouts),
       widthPercent: z.number().min(10).max(100).optional(),
       align: z.enum(["left", "center", "right"]).optional(),
       fit: z.enum(["contain", "cover"]).optional(),
@@ -167,14 +170,8 @@ export const PanelSchema = z
 
 export const ReadingPreferencesSchema = z
   .object({
-    dropCapColor: z
-      .string()
-      .regex(/^#[a-fA-F0-9]{6}$/)
-      .optional(),
-    backgroundColor: z
-      .string()
-      .regex(/^#[a-fA-F0-9]{6}$/)
-      .optional(),
+    dropCapColor: SixDigitColorSchema.optional(),
+    backgroundColor: SixDigitColorSchema.optional(),
     masterVolume: z.number().min(0).max(1).optional(),
     fontSize: z.enum(["small", "medium", "large"]),
     fontFamily: z.enum(["serif", "sans"]),

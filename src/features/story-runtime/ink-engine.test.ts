@@ -43,6 +43,22 @@ it("validates companion segment references and refuses untagged choices", () => 
   expect(() => new InkNarrativeEngine({ ...bundle, ink }).advance()).toThrow("content");
 });
 
+it("names untagged authored lines from their text, so editing other lines keeps their IDs", () => {
+  const frame = (script: string) =>
+    new InkNarrativeEngine({
+      ...fixtureBundle(),
+      authored: true,
+      ink: JSON.parse(
+        new Compiler(`-> start\n=== start ===\n${script}\n-> END`).Compile().ToJson()!,
+      ),
+    }).advance();
+  const before = frame("The door creaks.");
+  const after = frame("A new first line.\n\nThe door creaks.");
+  expect(after.segments.at(-1)!.id).toBe(before.segments[0]!.id);
+  const repeated = frame("Again.\nAgain.").segments.map((segment) => segment.id);
+  expect(new Set(repeated).size).toBe(2);
+});
+
 it("rejects a frame that disagrees with saved choices and a corrupt Ink state", () => {
   const engine = new InkNarrativeEngine(fixtureBundle());
   const frame = engine.advance();

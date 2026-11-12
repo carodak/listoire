@@ -265,14 +265,14 @@ function HistoryPanel({ context: c }: { context: Context }) {
       {c.state.versions
         .slice()
         .reverse()
-        .map((version, index) => (
-          <div className="version" key={`${version.at}:${index}`}>
+        .map((version) => (
+          <div className="version" key={version.id}>
             <span>
               {new Date(version.at).toLocaleString()} · {version.label}
             </span>
             <button
               onClick={() => {
-                c.state.update(version.project, "Restored history checkpoint");
+                void c.state.restoreVersion(version.id);
                 c.onClose();
               }}
             >

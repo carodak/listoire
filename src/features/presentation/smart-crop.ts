@@ -38,7 +38,7 @@ export function useSmartCrop(source: string | undefined, enabled: boolean) {
   return enabled ? (crop && crop.source === source ? crop.url : undefined) : source;
 }
 
-export function cropImage(image: HTMLImageElement): Promise<Blob | null> | null {
+function cropImage(image: HTMLImageElement): Promise<Blob | null> | null {
   const sample = document.createElement("canvas");
   const context = sample.getContext("2d", { willReadFrequently: true });
   if (!context) return null;
@@ -51,27 +51,32 @@ export function cropImage(image: HTMLImageElement): Promise<Blob | null> | null 
     sample.width,
     sample.height,
   );
-  if (!bounds || bounds.width * bounds.height > 0.98) return null;
-  const width = image.naturalWidth * bounds.width;
-  const height = image.naturalHeight * bounds.height;
+  const crop = cropOutput(image.naturalWidth, image.naturalHeight, bounds);
+  if (!crop) return null;
   const output = document.createElement("canvas");
   const draw = output.getContext("2d");
   if (!draw) return null;
-  const scale = Math.min(1, 2048 / Math.max(width, height));
-  output.width = Math.max(1, Math.round(width * scale));
-  output.height = Math.max(1, Math.round(height * scale));
-  draw.drawImage(
-    image,
-    image.naturalWidth * bounds.x,
-    image.naturalHeight * bounds.y,
-    width,
-    height,
-    0,
-    0,
-    output.width,
-    output.height,
-  );
+  output.width = crop.width;
+  output.height = crop.height;
+  draw.drawImage(image, ...crop.source, 0, 0, crop.width, crop.height);
   return new Promise((resolve) => output.toBlob(resolve, "image/webp", 0.95));
+}
+
+/** The cropped picture: its source rectangle and size (at most 2048 px); null to keep it whole. */
+export function cropOutput(width: number, height: number, bounds: ReturnType<typeof inkBounds>) {
+  if (!bounds || bounds.width * bounds.height > 0.98) return null;
+  const source = [
+    width * bounds.x,
+    height * bounds.y,
+    width * bounds.width,
+    height * bounds.height,
+  ] as const;
+  const scale = Math.min(1, 2048 / Math.max(source[2], source[3]));
+  return {
+    source,
+    width: Math.max(1, Math.round(source[2] * scale)),
+    height: Math.max(1, Math.round(source[3] * scale)),
+  };
 }
 
 export function inkBounds(data: Uint8ClampedArray, width: number, height: number) {

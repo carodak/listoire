@@ -10,10 +10,8 @@ const en = {
   automaticVoice: "Automatic voice",
   voiceNextSegment: "Replay this page to hear the new voice immediately.",
   language: "Language",
-  chapterOne: "Chapter One",
   pause: "Pause",
   resume: "Resume",
-  replayVoice: "Replay voice",
   skipCinematic: "Skip cinematic",
   readAloud: "Read aloud",
   deviceVoice: "Use device voice when recordings are unavailable",
@@ -31,7 +29,6 @@ const en = {
     "Move the pointer or drag with one finger. Keyboard: arrows move the lens, plus and minus change magnification, Home centers it.",
   notes: "Notes",
   personalNotes: "Your notes",
-  notesHint: "Saved only when you click Save, independently of story progress.",
   saveNotes: "Save",
   notesSaved: "Notes saved.",
   notesDiscardConfirm: "Discard unsaved notes?",
@@ -46,7 +43,6 @@ const en = {
   notesSaveError: "Notes could not be saved. Copy your text before leaving this page.",
   myCharacter: "My Character",
   health: "Health",
-  xpLabel: "Experience · XP",
   xpProgress: "Progress to next level",
   inventory: "Inventory",
   rewards: {
@@ -105,13 +101,9 @@ const en = {
   examinePhoto: "Examine the photograph",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
-  panLeft: "Pan left",
-  panRight: "Pan right",
   turnPhoto: "Turn over",
   nextDetail: "Examine details",
-  resetView: "Reset view",
   readingPreferences: "Reading preferences",
-  storyNotes: "Story notes",
   nothingFound: "Nothing discovered yet.",
   fontSize: "Text size",
   small: "Small",
@@ -131,7 +123,6 @@ const en = {
   storyProgress: "Story progress",
   changeLanguage: "Change language",
   home: "Listoire home",
-  library: "Library",
   examineImage: "Examine the image",
   languageNames: { en: "English", fr: "French" },
   storyFallback: "This story is available in {{language}}. Your saved progress is preserved.",
@@ -152,8 +143,6 @@ const en = {
   retry: "Reload your saved place",
   backup: "Download saved progress",
   choices: "Choose your next step",
-  quiet: "A quiet place for stories",
-  storyLabel: "A short story",
   skip: "Skip to content",
   openEditor: "Open Story Editor",
   check: {
@@ -209,6 +198,15 @@ const en = {
     backup: "The copy of your saved progress could not be downloaded. Nothing was changed.",
   },
   editor: {
+    unreadable: {
+      hint: "Your saved project does not match this version of the editor. It is kept as it is: download a copy, or start from the original story (your history checkpoints stay).",
+      download: "Download the saved project",
+      startAgain: "Start from the original story",
+    },
+    effects: {
+      webglLimits:
+        "Readers see this effect only on screens at least 700 px wide, with 4 or more processor cores, WebGL, no data saver and motion allowed (so not on most phones). It runs at reduced resolution and quality, and never flickers.",
+    },
     text: {
       toolbar: "Text formatting",
       style: "Text style",
@@ -448,10 +446,8 @@ const fr: typeof en = {
   voiceNextSegment:
     "Relancez la lecture de cette page pour entendre la nouvelle voix immédiatement.",
   language: "Langue",
-  chapterOne: "Chapitre un",
   pause: "Pause",
   resume: "Reprendre",
-  replayVoice: "Réécouter",
   skipCinematic: "Passer la cinématique",
   readAloud: "Lire à voix haute",
   deviceVoice: "Utiliser la voix de l’appareil sans enregistrement",
@@ -469,8 +465,6 @@ const fr: typeof en = {
     "Déplacez le pointeur ou glissez avec un doigt. Clavier : flèches pour la loupe, plus et moins pour le grossissement, Origine pour centrer.",
   notes: "Notes",
   personalNotes: "Vos notes",
-  notesHint:
-    "Enregistrées uniquement en cliquant sur Enregistrer, indépendamment de la progression.",
   saveNotes: "Enregistrer",
   notesSaved: "Notes enregistrées.",
   notesDiscardConfirm: "Abandonner les modifications non enregistrées ?",
@@ -481,11 +475,10 @@ const fr: typeof en = {
   samplePaperColor: "Prélever une couleur sur la page",
   samplePaperHint: "Cliquez sur la page ou une illustration. Échap pour annuler.",
   samplePaperUnavailable: "Couleur indisponible. Essayez un autre endroit.",
-  notesLoadError: "Impossible de charger les notes. Vos notes sauvegardees sont conservees.",
+  notesLoadError: "Impossible de charger les notes. Vos notes sauvegardées sont conservées.",
   notesSaveError: "Impossible de sauvegarder. Copiez vos notes avant de quitter cette page.",
   myCharacter: "Mon personnage",
   health: "PV",
-  xpLabel: "Expérience · XP",
   xpProgress: "Progression vers le prochain niveau",
   inventory: "Inventaire",
   rewards: {
@@ -544,13 +537,9 @@ const fr: typeof en = {
   examinePhoto: "Examiner la photographie",
   zoomIn: "Agrandir",
   zoomOut: "Réduire",
-  panLeft: "Déplacer vers la gauche",
-  panRight: "Déplacer vers la droite",
   turnPhoto: "Retourner",
   nextDetail: "Examiner les détails",
-  resetView: "Réinitialiser la vue",
   readingPreferences: "Préférences de lecture",
-  storyNotes: "Notes du récit",
   nothingFound: "Aucune découverte pour le moment.",
   fontSize: "Taille du texte",
   small: "Petite",
@@ -570,7 +559,6 @@ const fr: typeof en = {
   storyProgress: "Progression du récit",
   changeLanguage: "Changer de langue",
   home: "Accueil Listoire",
-  library: "Bibliothèque",
   examineImage: "Examiner l’image",
   languageNames: { en: "anglais", fr: "français" },
   storyFallback: "Cette histoire est disponible en {{language}}. Votre progression est conservée.",
@@ -592,8 +580,6 @@ const fr: typeof en = {
   retry: "Recharger ma progression",
   backup: "Télécharger ma sauvegarde",
   choices: "Choisissez la suite",
-  quiet: "Un espace pour les histoires",
-  storyLabel: "Une histoire courte",
   skip: "Aller à l’histoire",
   openEditor: "Ouvrir l’éditeur d’histoires",
   check: {
@@ -650,6 +636,15 @@ const fr: typeof en = {
     backup: "La copie de votre sauvegarde n’a pas pu être téléchargée. Rien n’a été modifié.",
   },
   editor: {
+    unreadable: {
+      hint: "Votre projet enregistré ne correspond pas à cette version de l’éditeur. Il est conservé tel quel : téléchargez-en une copie, ou repartez de l’histoire d’origine (vos versions de l’historique restent).",
+      download: "Télécharger le projet enregistré",
+      startAgain: "Repartir de l’histoire d’origine",
+    },
+    effects: {
+      webglLimits:
+        "Les lecteurs ne voient cet effet que sur un écran d’au moins 700 px de large, avec 4 cœurs de processeur ou plus, WebGL, sans économiseur de données et avec les animations permises (donc pas sur la plupart des téléphones). Il tourne en résolution et qualité réduites, et ne scintille jamais.",
+    },
     text: {
       toolbar: "Mise en forme du texte",
       style: "Style du texte",

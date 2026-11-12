@@ -21,15 +21,21 @@ live outside project history and enter complete backups as `uploadedFiles`.
 The same scene/effect contracts validate
 authoring forms, imported projects and normal playback. Story locales accept two-letter
 language codes with an optional two-letter region; the interface supports English and French.
-Editor records use a separate `listoire-editor/projects` database, optimistic revisions
-and at most 30 version checkpoints. Reader gameplay saves and settings retain their
+Editor records use a separate `listoire-editor/projects` database and optimistic revisions.
+`house/record` holds the draft, the publication and the history index (`id`, `at`, `label`,
+`size`); each checkpoint's project is its own `house/version/<id>` key, validated when it
+is restored. At most 30 checkpoints and 64 M JSON characters are kept (oldest dropped first,
+the newest always kept). A record in the earlier single-key format (`house`, versions inline)
+is moved once on load: the new keys are written, read back and compared, then `house` is
+deleted, only if no other tab wrote to it meanwhile. If the move fails, `house` stays the
+record that is read and written, with a console warning. Reader gameplay saves and settings retain their
 existing schema and database. See [the editor report](story-editor/implementation.md).
 
 Status: the implemented subset is defined by executable schemas in `src/contracts`; larger examples below remain illustrative TypeScript, **not a finalized API**. Implement schemas with the first vertical slice, then infer DTO types from them instead of maintaining two definitions. Runtime ports stay TypeScript interfaces. All IDs below are case-sensitive, author-assigned strings, never paragraph hashes or translated labels.
 
 ## Implemented Phase 1 subset
 
-The executable contracts live in [src/contracts/story.ts](../src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields. Since Pass 9 it may also hold `history`: up to 20 previous pages (oldest first), each with its Ink state, frame, and character/game state at that page, so Back still works after a reload. It is optional (older saves load without it, simply without Back), and it is dropped, never the save, when it is damaged, when a page's game state no longer validates, or when the save was written by an earlier compatible Ink version (`compatibleInkDigests`), whose pages can't be restored exactly.
+The executable contracts live in [src/contracts/story.ts](../src/contracts/story.ts) and are deliberately smaller than the target examples below. Zod defines bundle, text-frame, save and reader-language schemas; types are inferred from them. The narrative-only bundle embeds compiled Ink, locale, release/runtime/digest identifiers and companion passage/segment IDs. The saved envelope contains the resolved text/choices and post-evaluation Ink state, plus run ID and revision. It contains no inactive RPG, audio, asset or cinematic fields. Since Pass 9 it may also hold `history`: up to 20 previous pages (oldest first, at most 2 M characters of Ink state in all), each with its Ink state, frame, and character/game state at that page, so Back still works after a reload. It is optional (older saves load without it, simply without Back), and it is dropped, never the save, when it is damaged, when a page's game state no longer validates, or when the save was written by an earlier compatible Ink version (`compatibleInkDigests`), whose pages can't be restored exactly.
 
 Implemented inline formatting (`src/contracts/typography.ts`): narrative words carry
 `<typo …>` markup, parsed from an allowlist into `typography` spans on segments and choices

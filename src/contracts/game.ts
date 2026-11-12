@@ -1,14 +1,20 @@
 import { z } from "zod";
+import { IdSchema } from "./primitives.ts";
 import { CharacterSchema } from "./character.ts";
-const id = z.string().regex(/^[a-z][a-z0-9.-]*$/);
+const id = IdSchema;
 export const attributes = ["STR", "DEX", "WIL"] as const;
 const attribute = z.enum(attributes);
+// Lists the editor offers as they are (in this order).
+export const itemSlots = ["none", "weapon", "accessory"] as const;
+export const abilityEffects = ["none", "stun", "weaken", "charm"] as const;
+export const difficulties = ["easy", "normal", "hard", "boss"] as const;
+export const enemyProfiles = ["resilient", "balanced", "offensive"] as const;
 const bonus = z.number().int().min(0).max(10);
 export const GameItemSchema = z
   .object({
     id,
     name: z.string().min(1).max(100),
-    slot: z.enum(["weapon", "accessory", "none"]),
+    slot: z.enum(itemSlots),
     attribute: attribute.default("STR"),
     bonus: z
       .object({
@@ -32,15 +38,15 @@ const ability = z
     description: z.string().max(1000).optional(),
     attribute: attribute,
     offensive: z.boolean().default(false),
-    effect: z.enum(["none", "stun", "weaken", "charm"]).default("none"),
+    effect: z.enum(abilityEffects).default("none"),
   })
   .strict();
 export const EncounterSchema = z
   .object({
     id,
     name: z.string().min(1).max(100),
-    difficulty: z.enum(["easy", "normal", "hard", "boss"]),
-    profile: z.enum(["resilient", "balanced", "offensive"]),
+    difficulty: z.enum(difficulties),
+    profile: z.enum(enemyProfiles),
     portrait: z.string().optional(),
   })
   .strict();
@@ -95,15 +101,7 @@ export const GameDefinitionSchema = z
       if (new Set(list.map((item) => item.id)).size !== list.length)
         context.addIssue({ code: "custom", message: "Duplicate game definition ID" });
     for (const action of game.actions) {
-      const targets: Partial<Record<typeof action.kind, { id: string }[]>> = {
-        combat: game.encounters,
-        "give-item": game.items,
-        "remove-item": game.items,
-        "ability-check": game.abilities,
-        train: game.abilities,
-        learn: game.abilities,
-      };
-      const list = targets[action.kind];
+      const list = actionTargets(game, action.kind);
       if (list && !list.some((item) => item.id === action.reference))
         context.addIssue({
           code: "custom",
@@ -221,4 +219,20 @@ export interface CombatOption {
   ranks?: { rank: number; threshold: number; damage: number; probability: number }[];
   rank?: number;
   healing?: number;
+}
+
+/** The definitions an action of this kind refers to (its `reference` is one of their IDs). */
+export function actionTargets(
+  game: Pick<GameDefinition, "encounters" | "items" | "abilities">,
+  kind: GameAction["kind"],
+): { id: string }[] | undefined {
+  const targets: Partial<Record<GameAction["kind"], { id: string }[]>> = {
+    combat: game.encounters,
+    "give-item": game.items,
+    "remove-item": game.items,
+    "ability-check": game.abilities,
+    train: game.abilities,
+    learn: game.abilities,
+  };
+  return targets[kind];
 }

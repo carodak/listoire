@@ -4,6 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
 const port = process.env.E2E_PORT ?? "4173";
 if (!/^\d{2,5}$/.test(port)) throw new Error(`E2E_PORT must be a port number, got "${port}".`);
 
+const mute = ["--mute-audio"];
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -17,9 +19,16 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    // Muted: tests must not be heard (WebKit has no switch; see tests/e2e/test.ts).
+    { name: "chromium", use: { ...devices["Desktop Chrome"], launchOptions: { args: mute } } },
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+        launchOptions: { firefoxUserPrefs: { "media.volume_scale": "0.0" } },
+      },
+    },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "mobile", use: { ...devices["Pixel 7"], launchOptions: { args: mute } } },
   ],
 });

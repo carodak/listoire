@@ -49,6 +49,33 @@ it("adds a supplied gallery without overwriting draft text, images or page prefe
   expect(addIllustrationLibrary(next, project)).toEqual(next);
   expect(addIllustrationLibrary(old, null)).toBe(old);
 });
+it("replaces a sample's picture and direction but keeps the author's caption and examination", () => {
+  const draft = structuredClone(project);
+  const block = draft.languages.en!.configuration.scenes!.intro!.blocks![0]!;
+  if (block.kind !== "media") throw new Error("Expected media");
+  Object.assign(block, { image: gallery[2], caption: "My caption", photograph: true });
+  block.examination = {
+    image: gallery[2]!,
+    title: "My title",
+    descriptions: ["My description"],
+    reverse: "",
+  };
+  const source = structuredClone(project);
+  const updated = source.languages.en!.configuration.scenes!.intro!.blocks![0]!;
+  Object.assign(updated, {
+    caption: "Sample caption",
+    motion: CinematicSchema.parse({ preset: "parallax" }),
+  });
+  const result = applyIllustrationPack(draft, source).languages.en!.configuration.scenes!.intro!
+    .blocks![0]!;
+  expect(result).toMatchObject({
+    image: gallery[0],
+    motion: CinematicSchema.parse({ preset: "parallax" }),
+    caption: "My caption",
+    photograph: true,
+    examination: block.examination,
+  });
+});
 it("updates matching sample directions without changing Ink, narration or uploaded illustrations", async () => {
   const draft = structuredClone(project);
   draft.languages.en!.script += "\n// Retained note";

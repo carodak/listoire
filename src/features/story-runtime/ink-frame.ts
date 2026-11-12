@@ -1,4 +1,4 @@
-import { FrameSchema, ReaderFailure } from "../../contracts/story.ts";
+import { FrameSchema, passageSlug, ReaderFailure } from "../../contracts/story.ts";
 import { parseTypography } from "../../contracts/typography.ts";
 import type { Story } from "inkjs";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
@@ -31,13 +31,7 @@ export function inkChoices(story: Story, bundle: StoryBundle, actions = false) {
     }));
 }
 function inkPassage(bundle: StoryBundle, tags: string[], previous: string, path: string) {
-  const fallback = bundle.authored
-    ? path
-        .split(".")[0]!
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/^[^a-z]+/, "") || "start"
-    : "";
+  const fallback = bundle.authored ? passageSlug(path.split(".")[0]!) : "";
   const next = tag(tags, "passage", previous || fallback);
   if (previous && previous !== next && !bundle.authored) throw new ReaderFailure("content");
   return previous || next;
@@ -58,11 +52,26 @@ export function validateInkFrame(bundle: StoryBundle, frame: Frame): Frame {
 
 type Segment = Frame["segments"][number];
 
+/**
+ * An untagged authored line is named from its text (and its repeat count on the page), so
+ * editing other lines keeps its ID, and the narration or cues attached to it.
+ */
+function lineId(passageId: string, text: string, seen: Map<string, number>) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++)
+    hash = Math.imul(hash ^ text.charCodeAt(index), 0x01000193);
+  const id = `${passageId}.line-${(hash >>> 0).toString(36)}`;
+  const count = (seen.get(id) ?? 0) + 1;
+  seen.set(id, count);
+  return count > 1 ? `${id}-${count}` : id;
+}
+
 export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
   const segments: Frame["segments"] = [];
   const mediaAnchors: NonNullable<Frame["mediaAnchors"]> = [];
   let passageId = "";
   let steps = 0;
+  const lines = new Map<string, number>();
   while (story.canContinue) {
     if (++steps > 200) throw new ReaderFailure("content");
     const path = story.state.currentPathString ?? "start";
@@ -78,7 +87,7 @@ export function readInkFrame(story: Story, bundle: StoryBundle): Frame {
     const segmentId = tag(
       tags,
       "segment",
-      bundle.authored ? `${passageId}.line-${steps}` : undefined,
+      bundle.authored ? lineId(passageId, text, lines) : undefined,
     );
     const align = tag(tags, "align", "left");
     segments.push({

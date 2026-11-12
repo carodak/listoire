@@ -52,7 +52,12 @@ it("reveals all text without completing or stopping an illustration animation", 
   await vi.advanceTimersByTimeAsync(1);
   expect(play).toHaveBeenCalledOnce();
   stop.mockClear();
+  const listener = vi.fn();
+  const unsubscribe = session.subscribe(listener);
   session.revealRemaining();
+  // One update: the text and every image of the page become visible together.
+  expect(listener).toHaveBeenCalledOnce();
+  unsubscribe();
   expect(stop).not.toHaveBeenCalled();
   expect(session.getSnapshot()).toMatchObject({
     revealAll: true,

@@ -7,14 +7,16 @@ import { i18n } from "./i18n/i18n.ts";
 import { createIndexedDbStore } from "./persistence/indexeddb-store.ts";
 import { SaveManager } from "./persistence/save-manager.ts";
 import { unlockAudio } from "./features/media/audio-unlock.ts";
+import type { ReaderSettings } from "./contracts/story.ts";
 import "./app/app.css";
 
 const saves = new SaveManager(createIndexedDbStore());
-const initialSettings = await saves.settings().catch(() => ({
-  schemaVersion: 2 as const,
-  language: "en" as const,
-  welcomeSound: true,
-}));
+const defaults: ReaderSettings = { schemaVersion: 2, language: "en", welcomeSound: true };
+// Waited for so the first render has the reader's language; a blocked database never answers.
+const initialSettings = await Promise.race([
+  saves.settings().catch(() => defaults),
+  new Promise<ReaderSettings>((resolve) => setTimeout(() => resolve(defaults), 3000)),
+]);
 await i18n.changeLanguage(initialSettings.language);
 // Browsers allow sound only after a gesture: start audio on the first one (Play, or in the editor).
 for (const type of ["click", "keydown"])

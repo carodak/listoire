@@ -118,6 +118,28 @@ it("rolls back failed writes and allows retry without losing the selected branch
   await director.choose("listen", director.getSnapshot().occurrenceId!);
   expect(director.getSnapshot().frame?.segments[0]!.text).toContain("clock");
 });
+it("presents the page again under a new occurrence after a failed save, so its media bind again", async () => {
+  const presentation = { start: vi.fn(), cancel: vi.fn(), dispose: vi.fn() };
+  const director = new StoryDirector(
+    bundle,
+    new InkNarrativeEngine(bundle),
+    saves,
+    undefined,
+    presentation,
+  );
+  await director.load();
+  const before = director.getSnapshot().occurrenceId!;
+  const commit = vi.spyOn(saves, "commit").mockRejectedValueOnce(new Error("QuotaExceededError"));
+  await director.choose("call", before);
+  commit.mockRestore();
+  // The page view is keyed by occurrence: a new one remounts it, and its media bind again.
+  const after = director.getSnapshot().occurrenceId!;
+  expect(after).not.toBe(before);
+  expect(presentation.start).toHaveBeenLastCalledWith(director.getSnapshot().frame, after, true);
+  expect(director.getSnapshot().restored).toBe(true);
+  await director.choose("listen", after);
+  expect(director.getSnapshot().frame?.segments[0]!.text).toContain("clock");
+});
 it("restarts presentation and clears earlier pages under a new coherent save identity", async () => {
   const presentation = { start: vi.fn(), cancel: vi.fn(), reset: vi.fn(), dispose: vi.fn() };
   const director = new StoryDirector(
@@ -239,6 +261,38 @@ it("migrates the previous two-language preference without rewriting story saves"
   });
   expect(await saves.backup(bundle)).toBe(before);
 });
+it("keeps every stored preference that still reads when another one does not", async () => {
+  await store.update("reader-settings", () => ({
+    schemaVersion: 2,
+    language: "fr",
+    welcomeSound: false,
+    reading: {
+      fontSize: "huge",
+      fontFamily: "sans",
+      lineHeight: "spacious",
+      reveal: "progressive",
+      sound: false,
+      narrationRate: 1.5,
+      volumes: { sfx: 2, ambience: 0.3, music: 0.3, narration: 0.8 },
+      preferenceFromALaterVersion: true,
+    },
+  }));
+  expect(await saves.settings()).toEqual({
+    schemaVersion: 2,
+    language: "fr",
+    welcomeSound: false,
+    reading: {
+      fontSize: "medium",
+      fontFamily: "sans",
+      lineHeight: "spacious",
+      reveal: "progressive",
+      sound: false,
+      narrationRate: 1.5,
+    },
+  });
+  await store.update("reader-settings", () => ({ schemaVersion: 2, language: "de", reading: 3 }));
+  expect(await saves.settings()).toEqual({ schemaVersion: 2, language: "en", welcomeSound: true });
+});
 it("rejects a checkpoint for another story before writing the current slot", async () => {
   await player().load();
   const save = (await saves.read(bundle))!;
@@ -300,6 +354,29 @@ it("keeps at most 20 previous pages, dropping the oldest", async () => {
   expect(history).toHaveLength(SAVED_PAGES);
   expect(history[0]!.frame.passageId).toBe("page-1");
   expect(history.at(-1)!.frame.passageId).toBe("threshold");
+});
+
+it("keeps fewer previous pages when their Ink states are heavy, dropping the oldest", async () => {
+  const director = player();
+  await director.load();
+  const start = (await saves.read(bundle))!;
+  // Trailing spaces keep the JSON valid: 20 pages of 300 KB each.
+  const heavy = start.inkStateJson + " ".repeat(300_000 - start.inkStateJson.length);
+  const pages = Array.from({ length: SAVED_PAGES }, (_, index) => ({
+    inkStateJson: heavy,
+    frame: { ...start.frame, passageId: `page-${index}` },
+  }));
+  await saves.commit(bundle, { ...start, revision: start.revision + 1, history: pages }, start);
+  director.dispose();
+  const reloaded = player();
+  await reloaded.load();
+  await reloaded.choose("listen", reloaded.getSnapshot().occurrenceId!);
+  const history = (await saves.read(bundle))!.history!;
+  const size = history.reduce((sum, page) => sum + page.inkStateJson.length, 0);
+  expect(size).toBeLessThanOrEqual(2_000_000);
+  expect(history.length).toBeGreaterThan(1);
+  expect(history.at(-1)!.frame.passageId).toBe("threshold");
+  expect(history.at(-2)!.frame.passageId).toBe("page-19");
 });
 
 it("a save without history loads without Back; a failed write keeps the pages as they were", async () => {

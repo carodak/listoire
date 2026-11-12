@@ -47,9 +47,30 @@ describe("sameOriginFetch", () => {
   });
 
   it("answers an oversized declared body with a failed response", async () => {
-    fetch.mockResolvedValue(new Response("x", { headers: { "content-length": "11" } }));
+    fetch.mockImplementation(
+      async () => new Response("x", { headers: { "content-length": "11" } }),
+    );
     expect((await sameOriginFetch("/a.mp3", { maxBytes: 11 })).ok).toBe(true);
     expect((await sameOriginFetch("/a.mp3", { maxBytes: 10 })).ok).toBe(false);
+  });
+
+  it("stops reading a body without a declared length once it passes the limit", async () => {
+    const chunked = () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            for (let index = 0; index < 3; index++) controller.enqueue(new Uint8Array(6));
+            controller.close();
+          },
+        }),
+      );
+    fetch.mockResolvedValueOnce(chunked()).mockResolvedValueOnce(chunked());
+    expect(
+      (await (await sameOriginFetch("/a.mp3", { maxBytes: 18 })).arrayBuffer()).byteLength,
+    ).toBe(18);
+    await expect((await sameOriginFetch("/a.mp3", { maxBytes: 10 })).arrayBuffer()).rejects.toThrow(
+      "larger than 10 bytes",
+    );
   });
 
   it("aborts on either the caller's signal or its timeout", async () => {

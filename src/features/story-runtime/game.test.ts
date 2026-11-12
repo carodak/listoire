@@ -181,10 +181,15 @@ it("retains the exact combat checkpoint after a failed turn or restart", async (
   await director.gameTurn({ kind: "attack" }, snapshot.occurrenceId!);
   expect(director.getSnapshot()).toMatchObject({ ...snapshot, failure: "storage" });
   await director.restart();
-  expect(director.getSnapshot()).toMatchObject({ ...snapshot, failure: "storage" });
+  // A failed page change presents the same checkpoint again under a new occurrence.
+  const { occurrenceId, restored, ...retained } = director.getSnapshot();
+  const { occurrenceId: _, restored: __, ...checkpoint } = snapshot;
+  expect(retained).toMatchObject({ ...checkpoint, failure: "storage" });
+  expect(occurrenceId).toMatch(new RegExp(`^${snapshot.occurrenceId}:retry:`));
+  expect(restored).toBe(true);
   expect(await saves.backup(bundle)).toBe(before);
   fail(false);
-  await director.gameTurn({ kind: "attack" }, snapshot.occurrenceId!);
+  await director.gameTurn({ kind: "attack" }, occurrenceId!);
   expect(director.getSnapshot().failure).toBeNull();
   expect(director.getSnapshot().game!.rng).not.toBe(snapshot.game!.rng);
 });

@@ -78,14 +78,6 @@ input:focus-visible {
   border: 1px solid var(--border);
   box-shadow: 0 5px 22px var(--shadow);
 }
-.reader-shell .site-header {
-  max-width: none;
-  padding: 8px clamp(28px, 5vw, 80px);
-}
-.reader-shell .wordmark {
-  font-size: 23px;
-  letter-spacing: 0;
-}
 .site-header {
   position: relative;
   z-index: 6;
@@ -99,9 +91,6 @@ input:focus-visible {
   border-bottom: 1px solid var(--border);
 }
 .wordmark {
-  padding: 0;
-  border: 0;
-  background: transparent;
   font:
     28px Georgia,
     serif;

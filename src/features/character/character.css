@@ -305,52 +305,6 @@
   font-weight: 300;
   line-height: 1.1;
 }
-.character-damage {
-  position: absolute;
-  top: 25%;
-  left: 53%;
-  z-index: 4;
-  color: #c52b2b;
-  font:
-    bold 31px/1 system-ui,
-    sans-serif;
-  text-shadow: 0 1px 4px #fff9;
-  animation: character-damage-rise 1.05s ease-out both;
-  pointer-events: none;
-}
-.character-hit {
-  animation: character-hit-shake 340ms ease-out;
-}
-@keyframes character-hit-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  18%,
-  55% {
-    transform: translateX(-7px);
-  }
-  35%,
-  72% {
-    transform: translateX(6px);
-  }
-}
-@keyframes character-damage-rise {
-  0% {
-    transform: translateY(12px) scale(0.7);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-48px) scale(1.06);
-    opacity: 0;
-  }
-}
 .character-detail-modal {
   width: min(470px, calc(100vw - 30px));
 }
@@ -399,19 +353,4 @@
 }
 .character-notes-actions button {
   flex-shrink: 0;
-}
-.character-sheet-combat .character-sheet-heading h2 {
-  font-size: 25px !important;
-}
-.character-sheet-combat .character-portrait {
-  height: 155px;
-}
-.character-sheet-combat .character-portrait-area {
-  min-height: 150px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .character-hit,
-  .character-damage {
-    animation: none;
-  }
 }

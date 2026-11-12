@@ -3,7 +3,29 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 export { expect } from "@playwright/test";
-export const test = playwright.extend<{ coverage: void }>({
+export const test = playwright.extend<{ coverage: void; silence: void }>({
+  // Tests run unattended: no voice or sound reaches the speakers. Chromium and Firefox are muted
+  // in playwright.config.ts; device voices (the OS speech engine) and WebKit media are muted here.
+  silence: [
+    async ({ page, browserName }, use) => {
+      await page.addInitScript((muteMedia) => {
+        const speak = globalThis.SpeechSynthesis?.prototype.speak;
+        if (speak)
+          SpeechSynthesis.prototype.speak = function (utterance) {
+            utterance.volume = 0;
+            return speak.call(this, utterance);
+          };
+        if (!muteMedia) return;
+        const play = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+          this.muted = true;
+          return play.call(this);
+        };
+      }, browserName === "webkit");
+      await use();
+    },
+    { auto: true },
+  ],
   coverage: [
     async ({ page, browserName }, use, info) => {
       const directory = process.env.FALLOW_BROWSER_COVERAGE;

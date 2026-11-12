@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { arrowKeyTabs } from "../../shared/tab-keys.ts";
 import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
 import { PictureIcon } from "../../shared/PictureIcon.tsx";
@@ -36,7 +36,6 @@ interface Props {
   onToggle: () => void;
 }
 
-/** The normal sheet retains its open/closed state while combat temporarily displays its own copy. */
 export function CharacterPanel(props: Props) {
   const { t } = useTranslation();
   if (!props.bundle.character || !props.profile) return null;
@@ -67,7 +66,7 @@ export function CharacterPanel(props: Props) {
   );
 }
 
-type SheetProps = Omit<Props, "open" | "onToggle"> & { onClose?: () => void; combat?: boolean };
+type SheetProps = Omit<Props, "open" | "onToggle"> & { onClose?: () => void };
 function CharacterSheet({
   bundle,
   frame,
@@ -78,7 +77,6 @@ function CharacterSheet({
   notes,
   portraitSource,
   onClose,
-  combat = false,
 }: SheetProps) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab | null>(null);
@@ -86,43 +84,34 @@ function CharacterSheet({
   if (!definition || !profile) return null;
   const dismissTab = () => setTab(null);
   return (
-    <div className={`character-sheet${combat ? " character-sheet-combat" : ""}`}>
+    <div className="character-sheet">
       <header className="character-sheet-heading">
         <h2>{t("myCharacter")}</h2>
         {onClose && <CloseButton className="character-close" onClick={onClose} />}
       </header>
-      <CharacterIdentity bundle={bundle} xp={combat ? undefined : (game?.xp ?? 0)} />
-      <CharacterPortrait
+      <CharacterIdentity bundle={bundle} xp={game?.xp ?? 0} />
+      <CharacterPortrait bundle={bundle} source={portraitSource} />
+      <CharacterStats profile={profile} details={attributeDetails} />
+      <nav className="character-actions" aria-label={t("myCharacter")}>
+        {(["inventory", "abilities", "encounters", "notes"] as const).map((kind) => (
+          <button key={kind} type="button" onClick={() => setTab(kind)}>
+            <span aria-hidden="true" className="character-action-icon">
+              {tabIcons[kind]}
+            </span>
+            {t(kind)}
+          </button>
+        ))}
+      </nav>
+      <CharacterDetails
         bundle={bundle}
-        source={portraitSource}
-        health={profile.health.current}
-        combat={combat}
+        frame={frame}
+        profile={profile}
+        game={game}
+        notes={notes}
+        inventoryControls={inventoryControls}
+        tab={tab}
+        onDismiss={dismissTab}
       />
-      <CharacterStats profile={profile} details={attributeDetails} showHealth={!combat} />
-      {!combat && (
-        <nav className="character-actions" aria-label={t("myCharacter")}>
-          {(["inventory", "abilities", "encounters", "notes"] as const).map((kind) => (
-            <button key={kind} type="button" onClick={() => setTab(kind)}>
-              <span aria-hidden="true" className="character-action-icon">
-                {tabIcons[kind]}
-              </span>
-              {t(kind)}
-            </button>
-          ))}
-        </nav>
-      )}
-      {!combat && (
-        <CharacterDetails
-          bundle={bundle}
-          frame={frame}
-          profile={profile}
-          game={game}
-          notes={notes}
-          inventoryControls={inventoryControls}
-          tab={tab}
-          onDismiss={dismissTab}
-        />
-      )}
     </div>
   );
 }
@@ -130,27 +119,23 @@ function CharacterSheet({
 function CharacterStats({
   profile,
   details,
-  showHealth = true,
 }: {
   profile: CharacterProfile;
   details?: AttributeDetails | null;
-  showHealth?: boolean;
 }) {
   const { t } = useTranslation();
   const attributes = ["STR", "DEX", "WIL"] as const;
   return (
     <dl className="character-stats" aria-label={t("myCharacter")}>
-      {showHealth && (
-        <div title={t("health")}>
-          <dt>
-            <span aria-hidden="true">♡</span>
-            <span className="sr-only">{t("health")}</span>
-          </dt>
-          <dd>
-            {profile.health.current}/{profile.health.max}
-          </dd>
-        </div>
-      )}
+      <div title={t("health")}>
+        <dt>
+          <span aria-hidden="true">♡</span>
+          <span className="sr-only">{t("health")}</span>
+        </dt>
+        <dd>
+          {profile.health.current}/{profile.health.max}
+        </dd>
+      </div>
       {attributes.map((attribute) => {
         const { base, equipment, total, capped } = details?.[attribute] ?? {
           base: profile.attributes[attribute].current,
@@ -354,70 +339,34 @@ function InventoryTabs({
   );
 }
 
-function CharacterPortrait({
-  bundle,
-  source,
-  health,
-  combat,
-}: {
-  bundle: StoryBundle;
-  source?: string;
-  health: number;
-  combat: boolean;
-}) {
-  const [damage, setDamage] = useState<{ amount: number; key: number } | null>(null);
-  const previousHealth = useRef(health);
-  const hitSequence = useRef(0);
-  useEffect(() => {
-    const hp = health;
-    if (
-      hp !== undefined &&
-      previousHealth.current !== undefined &&
-      hp < previousHealth.current &&
-      combat
-    )
-      setDamage({ amount: previousHealth.current - hp, key: ++hitSequence.current });
-    previousHealth.current = hp;
-  }, [health, combat]);
-  useEffect(() => {
-    if (!damage) return;
-    const timeout = window.setTimeout(() => setDamage(null), 1050);
-    return () => window.clearTimeout(timeout);
-  }, [damage]);
+function CharacterPortrait({ bundle, source }: { bundle: StoryBundle; source?: string }) {
   const portrait = bundle.assets?.find((asset) => asset.id === bundle.character?.portrait);
   return (
-    <div className={`character-portrait-area${damage ? " character-hit" : ""}`}>
+    <div className="character-portrait-area">
       {portrait && source && (
         <img className="character-portrait themed-art" src={source} alt={portrait.alt} />
-      )}
-      {damage && (
-        <strong key={damage.key} className="character-damage" aria-live="assertive">
-          −{damage.amount}
-        </strong>
       )}
     </div>
   );
 }
 
-function CharacterIdentity({ bundle, xp }: { bundle: StoryBundle; xp?: number }) {
+function CharacterIdentity({ bundle, xp }: { bundle: StoryBundle; xp: number }) {
   const { t } = useTranslation();
   const definition = bundle.character!;
   return (
     <div className="character-identity">
       <h3>{definition.name || (bundle.locale === "fr" ? "Personnage" : "Character")}</h3>
-      {xp !== undefined && (
-        <div
-          className="character-xp-track"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={5}
-          aria-valuenow={xp}
-          aria-label={t("xpProgress")}
-        >
-          <div className="character-xp-fill" style={{ width: `${((xp ?? 0) / 5) * 100}%` }} />
-          <span>{xp} / 5 XP</span>
-        </div>
-      )}
+      <div
+        className="character-xp-track"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={5}
+        aria-valuenow={xp}
+        aria-label={t("xpProgress")}
+      >
+        <div className="character-xp-fill" style={{ width: `${(xp / 5) * 100}%` }} />
+        <span>{xp} / 5 XP</span>
+      </div>
     </div>
   );
 }
@@ -430,12 +379,11 @@ function CharacterAbilities({
   profile: CharacterProfile;
 }) {
   const { t } = useTranslation();
+  const known = [...(bundle.character?.abilities ?? []), ...(bundle.game?.abilities ?? [])];
   return (
     <>
       {profile.abilities.map((ability) => {
-        const details =
-          bundle.character?.abilities.find((item) => item.id === ability.id) ??
-          bundle.game?.abilities.find((item) => item.id === ability.id);
+        const details = known.find((item) => item.id === ability.id);
         return (
           <section className="character-detail-item" key={ability.id}>
             <h3>
@@ -477,7 +425,7 @@ function CharacterDetails({
   inventoryControls,
   tab,
   onDismiss,
-}: Omit<SheetProps, "onClose" | "combat" | "attributeDetails"> & {
+}: Omit<SheetProps, "onClose" | "attributeDetails"> & {
   profile: CharacterProfile;
   tab: Tab | null;
   onDismiss: () => void;

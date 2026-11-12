@@ -4,6 +4,7 @@ import { withFixtureStory } from "./fixture-story.ts";
 
 test("a photograph detail runs a hidden story action whose clue survives reload", async ({
   page,
+  isMobile,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await withFixtureStory(page);
@@ -24,6 +25,8 @@ test("a photograph detail runs a hidden story action whose clue survives reload"
     "Photograph clue",
   );
   await page.keyboard.press("Escape");
+  // On a phone the panel covers the page: close it first, as a reader would.
+  if (isMobile) await page.keyboard.press("Escape");
   await examine.click();
   await expect(
     page.getByRole("button", { name: "Inspect the photograph detail", exact: true }),

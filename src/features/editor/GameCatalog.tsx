@@ -5,6 +5,7 @@ import {
   GameDefinitionSchema,
   attributes,
 } from "../../contracts/game.ts";
+import { abilityEffects, difficulties, enemyProfiles, itemSlots } from "../../contracts/game.ts";
 import type { GameDefinition } from "../../contracts/game.ts";
 import { Field, SelectField } from "./Fields.tsx";
 interface Props {
@@ -138,7 +139,7 @@ function AbilityFields({ ability, onChange }: AbilityFieldsProps) {
         <SelectField
           label="Special effect"
           value={ability.effect}
-          options={["none", "stun", "weaken", "charm"] as const}
+          options={abilityEffects}
           onChange={(effect) => update({ effect })}
         />
       )}
@@ -161,13 +162,13 @@ function EncounterFields({ game, selected, onChange }: Props & { selected: numbe
       <SelectField
         label="Difficulty"
         value={item.difficulty}
-        options={["easy", "normal", "hard", "boss"] as const}
+        options={difficulties}
         onChange={(difficulty) => update({ difficulty })}
       />
       <SelectField
         label="Profile"
         value={item.profile}
-        options={["resilient", "balanced", "offensive"] as const}
+        options={enemyProfiles}
         onChange={(profile) => update({ profile })}
       />
       <p>
@@ -189,7 +190,7 @@ function ItemFields({ game, selected, onChange }: Props & { selected: number }) 
       <SelectField
         label="Equipment slot"
         value={item.slot}
-        options={["none", "weapon", "accessory"] as const}
+        options={itemSlots}
         onChange={(slot) => update({ slot })}
       />
       <SelectField

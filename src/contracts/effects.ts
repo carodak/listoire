@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { HexColorSchema } from "./primitives.ts";
 const duration = z.number().min(0).max(10000);
-const color = z.string().regex(/^#[a-fA-F0-9]{3,8}$/);
+const color = HexColorSchema;
 const intensity = z.number().min(0).max(1);
 const speed = z.number().min(0).max(3);
 const dpr = z.number().min(0.5).max(1.5);

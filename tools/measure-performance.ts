@@ -2,7 +2,7 @@
  * Repeatable performance measurement of the Reader and the Story Editor (Chromium).
  *
  *   npm run perf -- [--base http://127.0.0.1:4175] [--runs 5] [--out file.json]
- *                                     [--only reader,readerMotion,readerWithDraft,combat,editor]
+ *                                     [--only reader,readerMotion,readerWithDraft,combat,editor,editorWrite]
  *
  * Needs a running dev server (see AGENTS.md) and, for the bundle section, a `dist/` from
  * `npm run build`. Every number is the median of `--runs` fresh browser contexts, in
@@ -444,6 +444,40 @@ async function editor(browser: Browser): Promise<Metrics> {
   return metrics;
 }
 
+/**
+ * One editor store write of the real project with a full history (after 30 named saves): a named save
+ * (adds a version) and an autosave within 30 s (adds none). Imports the store module from the
+ * dev server, so it measures the browser's own IndexedDB.
+ */
+async function editorWrite(browser: Browser): Promise<Metrics> {
+  const { context, page } = await newPage(browser, "reduce");
+  await page.goto(base + "/editor");
+  await page.waitForFunction(() =>
+    (document.querySelector(".editor-status [role=status]")?.textContent ?? "").startsWith("Saved"),
+  );
+  const times = await page.evaluate(async () => {
+    const url = "/src/persistence/editor-store.ts";
+    const store = (await import(url)) as typeof import("../src/persistence/editor-store.ts");
+    let record = (await store.readEditorRecord())!;
+    for (let index = 0; index < 30; index++)
+      record = await store.writeEditorRecord(record.draft, record.revision, `Fill ${index}`);
+    const named: number[] = [];
+    const autosave: number[] = [];
+    for (let index = 0; index < 5; index++)
+      for (const [label, list] of [
+        [`Save ${index}`, named],
+        ["Autosave", autosave],
+      ] as const) {
+        const start = performance.now();
+        record = await store.writeEditorRecord(record.draft, record.revision, label);
+        list.push(performance.now() - start);
+      }
+    return { named, autosave };
+  });
+  await context.close();
+  return { namedSave: median(times.named), autosave: median(times.autosave) };
+}
+
 /** Chunk sizes from dist/, and what the reader's entry pulls in before any lazy import. */
 async function bundle(): Promise<Metrics> {
   const metrics: Metrics = {};
@@ -507,7 +541,7 @@ async function repeat(name: string, measure: () => Promise<Metrics>) {
   return result;
 }
 
-const browser = await chromium.launch({ args: ["--enable-precise-memory-info"] });
+const browser = await chromium.launch({ args: ["--enable-precise-memory-info", "--mute-audio"] });
 // One discarded visit of each page first: a cold dev server compiles modules on demand.
 await reader(browser, "reduce");
 await editor(browser);
@@ -517,6 +551,7 @@ const results: Metrics = {
   ...(await section("readerWithDraft", () => readerWithDraft(browser))),
   ...(await section("combat", () => combat(browser))),
   ...(await section("editor", () => editor(browser))),
+  ...(await section("editorWrite", () => editorWrite(browser))),
   ...Object.fromEntries(
     Object.entries(await bundle()).map(([key, value]) => [
       `bundle.${key}`,

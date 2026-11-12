@@ -1,16 +1,14 @@
 import { z } from "zod";
+import { LocaleSchema, Sha256Schema } from "./primitives.ts";
 export const NarrationClipSchema = z
   .object({
     segmentId: z.string(),
-    locale: z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/),
+    locale: LocaleSchema,
     voiceId: z.string(),
-    settingsKey: z
-      .string()
-      .regex(/^[a-f0-9]{64}$/)
-      .optional(),
-    spokenTextDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    settingsKey: Sha256Schema.optional(),
+    spokenTextDigest: Sha256Schema,
     assetId: z.string(),
-    audioDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    audioDigest: Sha256Schema,
     durationMs: z.number().positive().max(180000),
     marks: z
       .array(

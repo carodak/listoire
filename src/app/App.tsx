@@ -32,9 +32,9 @@ export function App({ saves, initialSettings }: Props) {
       </a>
       {!entered && (
         <header className="site-header">
-          <button className="wordmark" onClick={() => setEntered(false)} aria-label={t("home")}>
+          <span className="wordmark">
             listoire<span aria-hidden="true">.</span>
-          </button>
+          </span>
           <LanguageSetting
             language={settings.language}
             busy={settingsBusy}
@@ -89,7 +89,10 @@ function useReaderSettings(saves: SaveManager, initialSettings: ReaderSettings) 
     setSettings(next);
     setSettingsBusy(true);
     setSettingsFailed(false);
-    const write = settingsWrites.current.catch(() => {}).then(() => saves.saveSettings(next));
+    // A write still waiting when newer settings arrive is skipped: a slider drag stores its end.
+    const write = settingsWrites.current
+      .catch(() => {})
+      .then(() => (latestSettings.current === next ? saves.saveSettings(next) : undefined));
     settingsWrites.current = write;
     try {
       await write;

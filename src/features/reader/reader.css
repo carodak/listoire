@@ -1725,9 +1725,6 @@
     padding-left: 0;
     padding-top: 12px;
   }
-  .character-sheet-combat .character-portrait-area {
-    display: none;
-  }
   .reader-combat-modal {
     max-height: 96dvh;
   }

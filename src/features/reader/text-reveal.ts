@@ -1,3 +1,4 @@
+import type { Frame } from "../../contracts/story.ts";
 export function advanceReveal(cursor: number, elapsedMs: number, limit: number, narrated = false) {
   const rate = narrated ? Math.max(18, Math.min(38, (limit - cursor) * 4)) : 1000 / 13;
   return Math.max(cursor, Math.min(limit, cursor + (Math.min(64, elapsedMs) * rate) / 1000));
@@ -32,7 +33,6 @@ export function narrationLead(
   }
   return count;
 }
-import type { Frame } from "../../contracts/story.ts";
 
 type LetterSegment = Frame["segments"][number] & { letters: { text: string; end: number }[] };
 export function revealParagraphs(

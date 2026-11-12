@@ -1,12 +1,8 @@
 import { appPath, storyFileUrl } from "../../contracts/app-path.ts";
 import { sha256 } from "../../contracts/digest.ts";
 import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
-import {
-  BundleSchema,
-  LocaleSchema,
-  ReaderFailure,
-  StoryManifestSchema,
-} from "../../contracts/story.ts";
+import { LocaleSchema } from "../../contracts/primitives.ts";
+import { BundleSchema, ReaderFailure, StoryManifestSchema } from "../../contracts/story.ts";
 import type { Locale, StoryBundle, StoryManifest } from "../../contracts/story.ts";
 import packageInfo from "../../../package.json";
 

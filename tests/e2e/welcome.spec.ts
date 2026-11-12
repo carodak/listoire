@@ -23,6 +23,22 @@ test("language choices display flags and support keyboard selection and Escape",
   await expect(page.getByRole("heading", { name: "Entrez dans l’histoire." })).toBeVisible();
 });
 
+test("the wordmark is the site's name, not a button that does nothing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".site-header").getByText("listoire.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Listoire home" })).toHaveCount(0);
+});
+
+test("the welcome opens even when the browser's storage never answers", async ({ page }) => {
+  // A blocked database upgrade: open() never succeeds nor fails.
+  await page.addInitScript(() => {
+    indexedDB.open = () => ({}) as IDBOpenDBRequest;
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Play an existing story" })).toBeVisible();
+});
+
 test("the original welcome reveals its subtitle and offers stories within three seconds", async ({
   page,
 }, info) => {
@@ -147,4 +163,19 @@ test("typing recording is attempted once at startup and paused when the intro en
   expect(events.filter((event) => event === "play")).toHaveLength(1);
   expect(events).toContain("/audio/keyboard-typing.mp3");
   expect(events).toContain("pause");
+});
+
+test("centers the Story Editor label within its landing button", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const link = page.getByRole("link", { name: "Story Editor", exact: true });
+  await expect(link).toBeVisible();
+  const difference = await link.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const text = range.getBoundingClientRect(),
+      button = element.getBoundingClientRect();
+    return Math.abs((text.top + text.bottom) / 2 - (button.top + button.bottom) / 2);
+  });
+  expect(difference).toBeLessThan(2);
 });

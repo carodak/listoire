@@ -3,6 +3,7 @@ import { chooseFirst, playStory, readTo } from "./oree.ts";
 
 test("character starts collapsed, retains rolled attributes, and reveals only known encounters", async ({
   page,
+  isMobile,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
@@ -25,9 +26,13 @@ test("character starts collapsed, retains rolled attributes, and reveals only kn
     "Rank 1",
   );
   await page.keyboard.press("Escape");
+  // On a phone the panel covers the page: close it to read on, as a reader would. On a wider
+  // screen it sits beside the text and stays open from page to page.
+  if (isMobile) await page.keyboard.press("Escape");
   await chooseFirst(page);
-  await expect(tab).toHaveAttribute("aria-expanded", "true");
+  if (!isMobile) await expect(tab).toHaveAttribute("aria-expanded", "true");
   await readTo(page, "messagere"); // Nour delivers the letter
+  if (isMobile) await tab.click();
   await page.getByRole("button", { name: /Encounters/ }).click();
   await expect(encounters).toContainText("Nour");
   await expect(encounters.getByRole("heading", { name: "Nour", exact: true })).toBeVisible();

@@ -9,9 +9,11 @@ import type { Drop, Picture } from "./image-pictures.ts";
 
 type Role = Picture["role"];
 const depths: Role[] = ["foreground", "midground", "background"];
+/** Safari keeps only standard drag data types: the row travels as plain text. */
+const pictureDrag = "listoire-picture:";
 const dragged = (event: DragEvent) => {
-  const value = event.dataTransfer.getData("text/x-picture");
-  return value === "" ? undefined : Number(value);
+  const value = event.dataTransfer.getData("text/plain");
+  return value.startsWith(pictureDrag) ? Number(value.slice(pictureDrag.length)) : undefined;
 };
 /** The lower half of a row means "behind it" (the list goes front to back). */
 const lowerHalf = (event: DragEvent<HTMLElement>) => {
@@ -115,7 +117,7 @@ export function PicturesPanel({
           title={layered ? t("editor.image.layerHint") : undefined}
           onClick={() => onSelect(picture.index)}
           onDragStart={(event) =>
-            event.dataTransfer.setData("text/x-picture", String(picture.index))
+            event.dataTransfer.setData("text/plain", `${pictureDrag}${picture.index}`)
           }
           onDragEnd={() => setDrop(null)}
           onKeyDown={(event) => {

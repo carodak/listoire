@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MediaLayout } from "./MediaLayout.tsx";
 import { useState } from "react";
 import type { ImageDraft, MediaEdit } from "./media-edit.ts";
@@ -149,6 +150,7 @@ export function AnimationFields({
   onTarget,
 }: AnimationFieldsProps) {
   const [effect, setEffect] = useState(input.effect);
+  const { t } = useTranslation();
   const effects = animationOptions(target, blocks);
   const selectedEffect = effects.includes(effect) ? effect : effects[0]!;
   return (
@@ -173,6 +175,9 @@ export function AnimationFields({
         onChange={setEffect}
         options={effects}
       />
+      {selectedEffect.startsWith("react-bits.") && (
+        <p className="editor-hint">{t("editor.effects.webglLimits")}</p>
+      )}
       <NumberField name="duration" label="Duration (ms)" max={10000} value={input.duration} />
       <NumberField name="intensity" label="Intensity" max={1} step={0.05} value={input.intensity} />
     </>

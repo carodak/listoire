@@ -23,6 +23,12 @@ import type {
   ReaderSnapshot,
 } from "../../contracts/story.ts";
 
+/**
+ * Ink state characters kept for Back, in memory and in every save: a story with a heavy state
+ * keeps fewer than SAVED_PAGES pages.
+ */
+const BACK_BUDGET = 2_000_000;
+
 interface Saves {
   read(bundle: StoryBundle): Promise<SaveData | null>;
   commit(bundle: StoryBundle, next: SaveData, expected: SaveData | null | undefined): Promise<void>;
@@ -109,7 +115,15 @@ export class StoryDirector implements ReaderController {
       this.engine.restore(inkBefore, frameBefore);
       this.previousPages.splice(0, Infinity, ...pagesBefore);
       this.publish({ canGoBack: pagesBefore.length > 0 });
-      if (this.snapshot.frame) this.present(this.snapshot.frame, this.snapshot.occurrenceId!, true);
+      if (this.snapshot.frame) {
+        // After a transition, cancel() dropped the page's media bindings: a new occurrence
+        // remounts the page view so they bind again.
+        const occurrenceId = transition
+          ? `${this.snapshot.occurrenceId}:retry:${crypto.randomUUID()}`
+          : this.snapshot.occurrenceId!;
+        this.present(this.snapshot.frame, occurrenceId, true);
+        this.publish({ occurrenceId, restored: transition || this.snapshot.restored });
+      }
       this.publish({ failure: error instanceof ReaderFailure ? error.code : "storage" });
     } finally {
       this.publish({ busy: false });
@@ -305,7 +319,12 @@ export class StoryDirector implements ReaderController {
   private rememberPage(before: SaveData) {
     const { history: _, ...page } = before;
     this.previousPages.push(page);
-    if (this.previousPages.length > SAVED_PAGES) this.previousPages.shift();
+    let size = this.previousPages.reduce((sum, { inkStateJson }) => sum + inkStateJson.length, 0);
+    while (
+      this.previousPages.length > SAVED_PAGES ||
+      (this.previousPages.length > 1 && size > BACK_BUDGET)
+    )
+      size -= this.previousPages.shift()!.inkStateJson.length;
     this.publish({ canGoBack: true });
   }
   private currentSave(occurrenceId: string) {

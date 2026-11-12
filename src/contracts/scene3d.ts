@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IdSchema } from "./primitives.ts";
 import { CinematicSchema } from "./cinematic.ts";
 
 const sceneLayers = ["main", "background", "midground", "foreground"] as const;
@@ -62,7 +63,7 @@ export const Scene3DSchema = z
       .array(
         z
           .object({
-            assetId: z.string().regex(/^[a-z][a-z0-9.-]*$/),
+            assetId: IdSchema,
             layer: z.enum(sceneLayers),
             animation: z.string().max(100).optional(),
             visible: z.boolean().optional(),

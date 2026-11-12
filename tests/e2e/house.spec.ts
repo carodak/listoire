@@ -101,11 +101,15 @@ test("progressive text can be revealed immediately and preferences persist", asy
   await preferences.click();
   await page.getByRole("button", { name: "Page color #faf8f2", exact: true }).click();
   await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(250, 248, 242)");
+  // Larger than medium on every layout (phones use smaller sizes than computers).
+  const size = () =>
+    page.locator(".prose").evaluate((node) => parseFloat(getComputedStyle(node).fontSize));
+  const medium = await size();
   await page.getByLabel("Text size", { exact: true }).selectOption("large");
   await page.getByLabel("Typeface", { exact: true }).selectOption("sans");
   await page.getByLabel("Line spacing", { exact: true }).selectOption("spacious");
   await page.getByLabel("Text display", { exact: true }).selectOption("instant");
-  await expect(page.locator(".prose")).toHaveCSS("font-size", "25px");
+  await expect.poll(size).toBeGreaterThan(medium);
   await preferences.click();
   await chooseFirst(page);
   await onPage(page, "etabli");

@@ -32,3 +32,10 @@ test("ribbon and project tabs follow the ARIA tab pattern with arrow keys", asyn
   await expectTabPattern(page, page.getByRole("tablist", { name: "Ribbon categories" }));
   await expectTabPattern(page, page.getByRole("tablist", { name: "Project panels" }));
 });
+
+test("the editor opens on the story's first passage", async ({ page }) => {
+  await page.goto("/editor");
+  await expect(
+    page.getByRole("button", { name: "Preview from matin-ville", exact: true }),
+  ).toBeVisible({ timeout: 20000 });
+});
