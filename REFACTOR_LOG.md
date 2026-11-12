@@ -914,6 +914,16 @@ generated for this project). I did not invent a licence name: **tell me if you w
   is in view. It and the two tunnel checks of "retains the entire Inky Web menu…" now read the
   script. 24/24 on four browsers with `--repeat-each=3`. No e2e test reads Ace's rendered text now.
 
+  - `reader-saves` "waits for Fight even after restoring an encounter…" (webkit) — **not fixed,
+    for you to decide.** It walks 35 pages to the first fight: ~24 s of its 30 s on WebKit alone
+    (passes 3/3 with one worker), so it times out when four browsers run at once. Not a
+    regression: `main`'s original test on `main`'s app takes the same 25.6 s (measured back to
+    back). I removed a redundant settle per page that my Part 4 helper (`readUntil`) had added
+    (~2.5 s), but did not raise its timeout (your rule). Options: the 90 s budget its sibling
+    combat tests have, or fewer workers for WebKit.
+  - Also seen once while checking that: `reader-combat` "two beats per turn…" on webkit under
+    load; 3/3 when repeated and it passed in the full run.
+
 ### Part 6 — REVIEW sections 4, 5, 8
 
 - **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).

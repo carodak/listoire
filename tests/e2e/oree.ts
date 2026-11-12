@@ -117,10 +117,8 @@ export async function next(page: Page) {
 
 /** Follows the first choice until `found` shows (a fight, a check…). */
 export async function readUntil(page: Page, found: Locator, steps = 42) {
-  for (let step = 0; step < steps && !(await found.count()); step++) {
-    await settlePage(page);
-    await next(page);
-  }
+  // next() settles each page it opens.
+  for (let step = 0; step < steps && !(await found.count()); step++) await next(page);
   await expect(found.first()).toBeVisible();
   return found.first();
 }
