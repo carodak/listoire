@@ -749,3 +749,13 @@ generated for this project). I did not invent a licence name: **tell me if you w
   pass on chromium, firefox, webkit and mobile; editor and typography specs pass on chromium.
 - **Process:** the fallow commit hook did not block a failing audit earlier (Part 1, Part 4); I
   run `fallow audit --base main` myself before every commit.
+- **`audio-start` (webkit ×3) — test.** Probed: Playwright's WebKit for Windows has no
+  `AudioContext` at all (`ReferenceError`; Safari has one), while `<audio>` plays MP3s fine. The
+  test's recorder did `class extends window.AudioContext`, which threw and aborted the whole init
+  script, so it never hooked `play()` either: hence "no music" too. The app already copes without
+  Web Audio (`unlockAudio` catches). The recorder now wraps `AudioContext` only where it exists;
+  the two "context started in the gesture" checks expect one context resumed in the gesture where
+  the browser has Web Audio, none otherwise; every other check (sound effects on by default, the
+  first sound plays, music and ambience time advances) is unchanged and now runs on WebKit too.
+  12/12 on chromium, firefox, webkit, mobile except one firefox editor-load wait under the
+  four-browser load (12/12 alone; watched in the final run).
