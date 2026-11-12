@@ -266,6 +266,13 @@ test("an author formats words with the toolbar and the keyboard, and reads them 
   await formatFromInsideATag(page);
   await shortcuts(page);
   await shortcutMessages(page);
+});
+
+// Its own test: browser coverage keeps only the scripts of the page loaded last.
+test("a preset previews on hover and survives the preview, Undo/Redo, save and reload", async ({
+  page,
+}) => {
+  await openTypographyStory(page);
   await presetToReload(page);
 });
 

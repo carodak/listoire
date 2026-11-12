@@ -658,7 +658,7 @@ generated for this project). I did not invent a licence name: **tell me if you w
   One check is unchanged but written differently: "plays instant-text illustrations…" still tags
   the running animations and checks the same ones keep running.
   `tools/run-test-coverage.ts` lists the three new specs instead of `reader-request.spec.ts`.
-- **Typography: 17 e2e tests → 3 journeys** (each of the old tests opened the editor and
+- **Typography: 17 e2e tests → 3 journeys (+ 1, see below)** (each of the old tests opened the editor and
   imported the story again). (1) "an author formats words with the toolbar and the keyboard…"
   runs the old toolbar/keyboard tests as steps on one editor (colours on a dark page, point sizes,
   one setting keeps the others / presets / Undo, formatting from inside a tag after Undo,
@@ -695,3 +695,9 @@ generated for this project). I did not invent a licence name: **tell me if you w
   right. The test now reads the script itself and expects it to start with `VAR ` (the same
   behaviour, more precisely). Diagnosed with a temporary spec (deleted): `VAR` at offset 0 in
   10/10 runs. Now 30/30 with `--repeat-each=10 --workers=4`.
+- **Coverage check caught a measurement trap:** after the first consolidation, `TextToolbar.tsx`
+  lost 14 covered statements although the journey uses every handler. Cause (probed with a
+  coverage capture of that test alone): Chromium's JS coverage keeps only the scripts of the
+  page loaded last, and the journey ended with a reload. The save-and-reload step is its own test
+  again ("a preset previews on hover and survives … save and reload"), as it was before;
+  typography is 4 e2e tests.
