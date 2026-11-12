@@ -27,7 +27,12 @@ async function clearBoom(page: Page) {
 async function pickColor(page: Page, color: string) {
   const menu = page.locator(".text-color");
   await menu.locator("summary").click();
-  await menu.locator("input[type=color]").fill(color);
+  // What a browser does when its colour picker closes (WebKit ignores fill() on this input).
+  await menu.locator("input[type=color]").evaluate((input: HTMLInputElement, color) => {
+    input.value = color;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, color);
   return menu;
 }
 

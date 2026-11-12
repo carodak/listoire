@@ -725,3 +725,8 @@ generated for this project). I did not invent a licence name: **tell me if you w
   click, so the side panel remembered `body` as its opener and Escape left focus nowhere. A real
   Safari user (mouse, then keyboard) would lose their place. `ReaderSidebar` now falls back to the
   toggle that controls it (`aria-controls`). Passes on chromium, firefox, webkit.
+- **`typography` colour picker (webkit ×2) — test.** Playwright's `fill()` on
+  `<input type="color">` fires no `change` in WebKit; the toolbar applies a colour on `change`,
+  which every browser fires when its native picker closes (a Safari user is fine). The test now
+  sets the value and fires `input` + `change` itself, the same in every browser. 12/12 on
+  chromium, firefox, webkit.
