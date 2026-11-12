@@ -627,3 +627,14 @@ TCP/Heritage paragraph of `ARCHITECTURE.md`. `verify-assets.py --published-only`
 Wording I chose for the sketch pack: "supplied by the project's author, who authorises their
 publication" (the catalogue's `userAuthorization`; the generation manifest shows they were
 generated for this project). I did not invent a licence name: **tell me if you want one stated.**
+
+### Part 4 — test consolidation
+
+- **Rules tests, one file per module.** `rules.test.ts`, `combat-log.test.ts` and
+  `stat-breakdown.test.ts` became `actions`, `character`, `combat`, `enemy` and `random`
+  `.test.ts` (`check-options`/`combat-options` already matched their modules); the hero, game,
+  definitions and the "already fighting the guard" set-up, written out four times, are in
+  `src/test-fixtures.ts` (the tests zone; a fixture beside the rules would cross the rules →
+  character boundary). Every test and assertion is kept; "checkpoints deterministic unbiased dice
+  and applies rank thresholds" tested two modules and is now two tests (`random`: same dice from
+  the same checkpoint; `actions`: thresholds 5,4,3,2 and 1 XP). 501 → 502 tests.
