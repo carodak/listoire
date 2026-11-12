@@ -6,15 +6,15 @@ Branch **`chore/next`** (from `main`), nothing pushed, nothing on `main`. Every 
 is done or explicitly listed as not done; details per part in "Pass 13" at the end of this file.
 Your uncommitted `AGENTS.md` change is still uncommitted (yours).
 
-|                                             | Start of session                     | Now                                         |
-| ------------------------------------------- | ------------------------------------ | ------------------------------------------- |
-| Unit tests                                  | 484                                  | **504** (69 files)                          |
-| Test files / test LOC (cloc)                | 91 / 12,075                          | **95 / 12,094** (before Part 4: 93 / 12,495) |
-| E2E tests per browser                       | 152 (chromium 164 s)                 | **143** (chromium CHROMIUM_TIME)            |
-| Coverage: statements / branches / functions | 58.55 / 65.25 / 73.72 %              | **59.44 / 66.20 / 75.27 %**                 |
-| Health `--coverage` (floor 92)              | 93                                   | **93**                                      |
-| E2E, four browsers                          | 33 failures (fx 2, wk 11, mobile 20) | FOUR_BROWSER_RESULT                         |
-| `stories/house/media/`                      | 143 files, 18 MB                     | 29 files, 6.1 MB                            |
+|                                             | Start of session                     | Now                                                                                                  |
+| ------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Unit tests                                  | 484                                  | **504** (69 files)                                                                                   |
+| Test files / test LOC (cloc)                | 91 / 12,075                          | **95 / 12,142** (before Part 4: 93 / 12,495)                                                         |
+| E2E tests per browser                       | 152 (chromium 164 s)                 | **143** (chromium 174 s, one run; see Part 4)                                                        |
+| Coverage: statements / branches / functions | 58.55 / 65.25 / 73.72 %              | **59.44 / 66.20 / 75.27 %**                                                                          |
+| Health `--coverage` (floor 92)              | 93                                   | **93**                                                                                               |
+| E2E, four browsers                          | 33 failures (fx 2, wk 11, mobile 20) | **550 passed, 2 failed, 20 skipped** (by design); since then 1 fixed, 1 open (WebKit timing, Part 5) |
+| `stories/house/media/`                      | 143 files, 18 MB                     | 29 files, 6.1 MB                                                                                     |
 
 - **Part 0:** `_to_delete/` deleted (148 MB); `git status` identical before and after.
 - **Part 1** (REVIEW #4 a, approved): one IndexedDB key per history version, 30 versions and a
@@ -29,7 +29,8 @@ Your uncommitted `AGENTS.md` change is still uncommitted (yours).
 - **Part 4:** rules tests one file per module; `reader-request` split into pages, combat and saves
   (each test ≤ 40 lines, helpers shared); typography 17 → 4 e2e tests; three image specs → one;
   crop arithmetic moved to a unit test; scene3d kept (imported by 3 contracts). Coverage up.
-- **Part 5:** the 33 failures fixed on their browsers: **4 app fixes for Safari/WebKit** (side
+- **Part 5:** the 33 failures fixed on their browsers (one WebKit timing failure under four-browser
+  load remains, for you to decide: "Needs you"): **4 app fixes for Safari/WebKit** (side
   panels return focus, scroll keys after a toolbar click, a new page starts at the top, dragging
   image layers), the rest test-side (each explained); mobile image references generated and
   reviewed. Test browsers now make **no sound** (your request).
@@ -46,45 +47,49 @@ reader with a draft −24 %, Image dialog open −38 %.
 
 ### REVIEW (docs/REVIEW.md) — status after this pass
 
-| Item                                         | Status                                                          |
-| -------------------------------------------- | --------------------------------------------------------------- |
-| #4 history format                            | **Done** `d98e30c` (option a); #4 is fully done                 |
-| #12 editor code on the reader path           | Unchanged (Pass 12: ~10 KB, measured)                           |
-| #14 editable "Stable ID"                     | Unchanged (needs a rename-references design)                    |
-| §3 editor lockout after a schema change      | **Done** `6a6017f`                                              |
-| §3 director re-present after a failed save   | **Done** `3ea5b24`                                              |
-| §3 `previousPages` memory                    | **Done** `688d5c6`                                              |
-| §3 untagged line IDs                         | **Done** `e0159ff`                                              |
-| §3 two slug functions                        | **Done** `63316b0`                                              |
-| §3 hex colour regex                          | **Done** `53365cc`                                              |
-| §3 `sameOriginFetch` byte limit              | **Done** `82af413`                                              |
-| §3 `usePreviewPlayer` reset                  | **Not changed** (deliberate since `1932886`; see Part 2)        |
-| §3 top-level `await` in `main.tsx`           | **Done** `d0f0f70`                                              |
-| §3 settings all-or-nothing                   | **Done** `82506a8`                                              |
-| §3 volume slider writes                      | **Done** `2a1a2e3`                                              |
-| §3 ReactBits safety overrides                | **Done** `95fa9f3` (+ editor note on the mobile policy)         |
-| §3 full `mediaLibrary` published             | **No longer relevant** (your decision)                          |
-| §3 illustration pack caption/examination     | **Done** `810d6f5`                                              |
-| §3 no-op wordmark button                     | **Done** `88476f3`                                              |
-| §3 "Preview from intro"                      | **Done** `19aa4dc`                                              |
-| §3 README stale                              | **Done** `70657ab`                                              |
-| §4 dead `combat` prop                        | **Done** `6816364` + `4d01990`                                  |
-| §4 Ribbon `"unavailable"`                    | **Done** `6e4d38f`                                              |
-| §4 `deferRoll` naming                        | **Done** `52c9bbf` (`holdCheck`)                                |
-| §4 `revealRemaining` double publish          | **Done** `fc00a8d`                                              |
-| §4 mid-file import                           | **Done** `e4514e7`                                              |
-| §4 unused i18n keys                          | **Done** `0fbd908` (all 13)                                     |
-| §4 FR typo                                   | **Done** `4f81367`                                              |
-| §4 `storyId: "house"`                        | **Skipped: stored format**                                      |
-| §4 tooltips observer, prop drilling          | Open (refactors; reasons in Part 6)                             |
-| §5 #8 regex primitives                       | **Done** `53365cc` + `f8612ab`                                  |
-| §5 #9 enum lists                             | **Done** `ccd5b58`                                              |
-| §5 #10 `actionTargets`                       | **Done** `aef58d4`                                              |
-| §5 #12, #14–#18                              | Open (refactors; reasons in Part 6)                             |
-| §8 CSP, structural equality, `dissolveWords`, scene3d flag | Open (reasons in Part 6)                          |
+| Item                                                       | Status                                                   |
+| ---------------------------------------------------------- | -------------------------------------------------------- |
+| #4 history format                                          | **Done** `d98e30c` (option a); #4 is fully done          |
+| #12 editor code on the reader path                         | Unchanged (Pass 12: ~10 KB, measured)                    |
+| #14 editable "Stable ID"                                   | Unchanged (needs a rename-references design)             |
+| §3 editor lockout after a schema change                    | **Done** `6a6017f`                                       |
+| §3 director re-present after a failed save                 | **Done** `3ea5b24`                                       |
+| §3 `previousPages` memory                                  | **Done** `688d5c6`                                       |
+| §3 untagged line IDs                                       | **Done** `e0159ff`                                       |
+| §3 two slug functions                                      | **Done** `63316b0`                                       |
+| §3 hex colour regex                                        | **Done** `53365cc`                                       |
+| §3 `sameOriginFetch` byte limit                            | **Done** `82af413`                                       |
+| §3 `usePreviewPlayer` reset                                | **Not changed** (deliberate since `1932886`; see Part 2) |
+| §3 top-level `await` in `main.tsx`                         | **Done** `d0f0f70`                                       |
+| §3 settings all-or-nothing                                 | **Done** `82506a8`                                       |
+| §3 volume slider writes                                    | **Done** `2a1a2e3`                                       |
+| §3 ReactBits safety overrides                              | **Done** `95fa9f3` (+ editor note on the mobile policy)  |
+| §3 full `mediaLibrary` published                           | **No longer relevant** (your decision)                   |
+| §3 illustration pack caption/examination                   | **Done** `810d6f5`                                       |
+| §3 no-op wordmark button                                   | **Done** `88476f3`                                       |
+| §3 "Preview from intro"                                    | **Done** `19aa4dc`                                       |
+| §3 README stale                                            | **Done** `70657ab`                                       |
+| §4 dead `combat` prop                                      | **Done** `6816364` + `4d01990`                           |
+| §4 Ribbon `"unavailable"`                                  | **Done** `6e4d38f`                                       |
+| §4 `deferRoll` naming                                      | **Done** `52c9bbf` (`holdCheck`)                         |
+| §4 `revealRemaining` double publish                        | **Done** `fc00a8d`                                       |
+| §4 mid-file import                                         | **Done** `e4514e7`                                       |
+| §4 unused i18n keys                                        | **Done** `0fbd908` (all 13)                              |
+| §4 FR typo                                                 | **Done** `4f81367`                                       |
+| §4 `storyId: "house"`                                      | **Skipped: stored format**                               |
+| §4 tooltips observer, prop drilling                        | Open (refactors; reasons in Part 6)                      |
+| §5 #8 regex primitives                                     | **Done** `53365cc` + `f8612ab`                           |
+| §5 #9 enum lists                                           | **Done** `ccd5b58`                                       |
+| §5 #10 `actionTargets`                                     | **Done** `aef58d4`                                       |
+| §5 #12, #14–#18                                            | Open (refactors; reasons in Part 6)                      |
+| §8 CSP, structural equality, `dissolveWords`, scene3d flag | Open (reasons in Part 6)                                 |
 
 ### ⚠ Needs you
 
+- **One e2e failure left (WebKit, under load only):** `reader-saves` "waits for Fight…" walks 35
+  pages (~24 s of its 30 s on WebKit) and times out when four browsers run at once; same on
+  `main`. I did not raise its timeout (your rule). The 90 s its sibling combat tests have, or
+  fewer WebKit workers?
 - **Sketch pack licence wording** in `docs/contributions.md`: "supplied by the project's author,
   who authorises their publication" (from the catalogue). Should a licence name be stated?
 - **Phone Image dialog:** the preview scrolls away from its settings on one column. I tried
@@ -609,7 +614,7 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   original story** (replaces the draft at that revision; history checkpoints stay, each one is
   validated when restored). Nothing is deleted without the author's click. Tests:
   `editor-store.test.ts` (2), `editor.spec.ts` "after an editor update that no longer reads…".
-  Limit: an *old-format* record whose history versions no longer read stays unreadable as a whole
+  Limit: an _old-format_ record whose history versions no longer read stays unreadable as a whole
   (the move needs every version); start again replaces only its draft.
 - **Director re-present after a failed save.** After a failed page change (a transition: the
   presentation was cancelled, which drops the page's media bindings), the page is presented
@@ -679,7 +684,7 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   `# segment:` tag. Test: `ink-engine.test.ts` "names untagged authored lines from their text…".
   Docs: `DATA_CONTRACTS.md` (also the Back history size cap from the previous item),
   `story-editor/implementation.md`.
-- **ReactBits safety overrides.** The `safety` table replaced authored values, so it also *raised*
+- **ReactBits safety overrides.** The `safety` table replaced authored values, so it also _raised_
   cheaper ones (30 particles → 60, 6 fps → 12, DPR 0.5 → 1, 10 threads → 30). It is now
   `react-bits/safety.ts` (`safeProps`): cost settings are ceilings (lower authored values kept);
   `flicker: 0` (photosensitivity) and `quality: "low"` stay fixed, as before. The schema still
@@ -795,6 +800,10 @@ generated for this project). I did not invent a licence name: **tell me if you w
   page loaded last, and the journey ended with a reload. The save-and-reload step is its own test
   again ("a preset previews on hover and survives … save and reload"), as it was before;
   typography is 4 e2e tests.
+- **Part 4 numbers:** test files / LOC 93 / 12,495 → 95 / 12,142 (the user-requested splits add
+  files: rules 3 → 5, reader-request 1 → 3; the image merge removes 2); e2e 152 → 143 tests per
+  browser; chromium full run 164 s → 174 s (one run each, hours apart; the machine drifts by
+  more than that, and the slowest spec now holds journeys that each run longer).
 - **Coverage, before → after Part 4** (`npm run test:coverage`, unit + the listed chromium
   specs): statements 58.55 → 59.31 %, branches 65.25 → 66.05 %, functions 73.72 → 75.18 %
   (229 files; health 93 both times). Per file, three statements were hit before and not after,
@@ -875,7 +884,7 @@ generated for this project). I did not invent a licence name: **tell me if you w
     the next tap on the story hit the panel (Playwright: "aside … intercepts pointer events") and
     the tests timed out. They now close the panel first, as a phone reader does; "the panel stays
     open from page to page" (it sits beside the text on wider screens) is checked off-phone only.
-  All four pass on chromium, firefox, webkit, mobile.
+    All four pass on chromium, firefox, webkit, mobile.
 - **`reader-combat` "two beats per turn, then the outcome between the portraits…" (mobile) —
   test.** Screenshot of the phone's combat ending: "Victory!" is centred on the 36 px gap between
   the portraits, wider than the gap, so its pill overlaps both, still legible (desktop: a 337 px
