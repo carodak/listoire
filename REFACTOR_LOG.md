@@ -10,7 +10,7 @@ If interrupted: resume from the first unchecked item.
 - [x] Part 2 — REVIEW section 3: 14 fixes, 1 left as is (logged), unused media removed.
 - [x] Part 3 — `docs/contributions.md` lists the story and library resources only.
 - [x] Part 4 — test consolidation (numbers under "Part 4" below).
-- [ ] Part 5 — firefox/webkit/mobile failures.
+- [x] Part 5 — firefox/webkit/mobile failures (5 app fixes, the rest test-side; see Part 5).
 - [ ] Part 6 — REVIEW sections 4, 5, 8.
 - [ ] End — full checks, four browsers, perf, REVIEW table, this summary.
 
@@ -814,3 +814,7 @@ generated for this project). I did not invent a licence name: **tell me if you w
   position, scale, rotation), boxes within 1 % of the frame (rounding on the smaller frame);
   the 5 reader pictures show the same composition (checked `chemin`, `bibliotheque` side by side).
   Stable: 40/40 with `--repeat-each=2` on mobile and chromium.
+
+### Part 6 — REVIEW sections 4, 5, 8
+
+- **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).

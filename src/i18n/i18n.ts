@@ -490,7 +490,7 @@ const fr: typeof en = {
   samplePaperColor: "Prélever une couleur sur la page",
   samplePaperHint: "Cliquez sur la page ou une illustration. Échap pour annuler.",
   samplePaperUnavailable: "Couleur indisponible. Essayez un autre endroit.",
-  notesLoadError: "Impossible de charger les notes. Vos notes sauvegardees sont conservees.",
+  notesLoadError: "Impossible de charger les notes. Vos notes sauvegardées sont conservées.",
   notesSaveError: "Impossible de sauvegarder. Copiez vos notes avant de quitter cette page.",
   myCharacter: "Mon personnage",
   health: "PV",
