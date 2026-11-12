@@ -1,4 +1,7 @@
 import { z } from "zod";
+export const cinematicSpeeds = ["slow", "normal", "fast"] as const;
+export const cinematicIntensities = ["subtle", "normal", "strong"] as const;
+export const cinematicDirections = ["auto", "up", "down", "left", "right"] as const;
 export const cameraPresets = [
   "none",
   "slow-reveal",
@@ -54,9 +57,9 @@ export const atmospheres = [
 export const CinematicSchema = z
   .object({
     preset: z.enum(cameraPresets),
-    speed: z.enum(["slow", "normal", "fast"]).default("normal"),
-    intensity: z.enum(["subtle", "normal", "strong"]).default("subtle"),
-    direction: z.enum(["auto", "up", "down", "left", "right"]).default("auto"),
+    speed: z.enum(cinematicSpeeds).default("normal"),
+    intensity: z.enum(cinematicIntensities).default("subtle"),
+    direction: z.enum(cinematicDirections).default("auto"),
     atmosphere: z.enum(atmospheres).default("none"),
     layers: z.array(z.string()).max(4).default([]),
     durationMs: z.number().min(1000).max(30000).optional(),

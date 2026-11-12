@@ -29,6 +29,8 @@ export function mediaIsVisible(
   );
 }
 
+/** Where a media block sits on the page (the editor offers them in this order). */
+export const mediaLayouts = ["inline", "wide", "right", "background", "fullscreen"] as const;
 export const RuntimeAssetSchema = z
   .object({
     id: IdSchema,
@@ -104,7 +106,7 @@ const PresentationBlockSchema = z.discriminatedUnion("kind", [
       kind: z.literal("media"),
       id: z.string(),
       image: z.string(),
-      layout: z.enum(["inline", "wide", "right", "fullscreen", "background"]),
+      layout: z.enum(mediaLayouts),
       widthPercent: z.number().min(10).max(100).optional(),
       align: z.enum(["left", "center", "right"]).optional(),
       fit: z.enum(["contain", "cover"]).optional(),

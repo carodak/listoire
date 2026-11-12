@@ -1,10 +1,10 @@
+import { mediaLayouts } from "../../contracts/presentation.ts";
 import { useTranslation } from "react-i18next";
 import type { MediaEdit } from "./media-edit.ts";
 interface MediaLayoutProps {
   layout: MediaEdit["layout"];
   onLayout: (layout: MediaEdit["layout"]) => void;
 }
-const layouts = ["inline", "wide", "right", "background", "fullscreen"] as const;
 
 /** Where the picture sits on the reading page. */
 export function MediaLayout({ layout, onLayout }: MediaLayoutProps) {
@@ -13,7 +13,7 @@ export function MediaLayout({ layout, onLayout }: MediaLayoutProps) {
     <fieldset className="media-layout">
       <legend>{t("editor.image.onPage")}</legend>
       <div className="media-layout-cards">
-        {layouts.map((type) => (
+        {mediaLayouts.map((type) => (
           <button
             type="button"
             key={type}

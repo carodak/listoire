@@ -1,5 +1,11 @@
 import type { SyntheticEvent } from "react";
-import { illustrationPresets, atmospheres } from "../../contracts/cinematic.ts";
+import {
+  atmospheres,
+  cinematicDirections,
+  cinematicIntensities,
+  cinematicSpeeds,
+  illustrationPresets,
+} from "../../contracts/cinematic.ts";
 import type { Cinematic } from "../../contracts/cinematic.ts";
 import type { MediaAsset } from "../../contracts/presentation.ts";
 import { useTranslation } from "react-i18next";
@@ -134,9 +140,9 @@ export function CinematicOptions({
           onChange={(value) => setMotion({ ...motion, [field]: value })}
           options={
             {
-              speed: ["slow", "normal", "fast"],
-              intensity: ["subtle", "normal", "strong"],
-              direction: ["auto", "up", "down", "left", "right"],
+              speed: cinematicSpeeds,
+              intensity: cinematicIntensities,
+              direction: cinematicDirections,
               atmosphere: atmospheres,
             }[field]
           }

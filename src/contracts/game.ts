@@ -4,12 +4,17 @@ import { CharacterSchema } from "./character.ts";
 const id = IdSchema;
 export const attributes = ["STR", "DEX", "WIL"] as const;
 const attribute = z.enum(attributes);
+// Lists the editor offers as they are (in this order).
+export const itemSlots = ["none", "weapon", "accessory"] as const;
+export const abilityEffects = ["none", "stun", "weaken", "charm"] as const;
+export const difficulties = ["easy", "normal", "hard", "boss"] as const;
+export const enemyProfiles = ["resilient", "balanced", "offensive"] as const;
 const bonus = z.number().int().min(0).max(10);
 export const GameItemSchema = z
   .object({
     id,
     name: z.string().min(1).max(100),
-    slot: z.enum(["weapon", "accessory", "none"]),
+    slot: z.enum(itemSlots),
     attribute: attribute.default("STR"),
     bonus: z
       .object({
@@ -33,15 +38,15 @@ const ability = z
     description: z.string().max(1000).optional(),
     attribute: attribute,
     offensive: z.boolean().default(false),
-    effect: z.enum(["none", "stun", "weaken", "charm"]).default("none"),
+    effect: z.enum(abilityEffects).default("none"),
   })
   .strict();
 export const EncounterSchema = z
   .object({
     id,
     name: z.string().min(1).max(100),
-    difficulty: z.enum(["easy", "normal", "hard", "boss"]),
-    profile: z.enum(["resilient", "balanced", "offensive"]),
+    difficulty: z.enum(difficulties),
+    profile: z.enum(enemyProfiles),
     portrait: z.string().optional(),
   })
   .strict();

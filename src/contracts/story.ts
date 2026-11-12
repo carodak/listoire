@@ -21,6 +21,8 @@ import {
 const id = IdSchema;
 const variableId = z.string().regex(/^[a-z][a-z0-9._-]*$/);
 export type Locale = z.infer<typeof LocaleSchema>;
+export const gameModes = ["narrative", "rpg-no-combat", "with-combat"] as const;
+export const narrationModes = ["ai-live", "ai-pregenerated", "human", "disabled"] as const;
 
 /** The passage ID of an Ink knot (`Room_2b` → `room-2b`), in the editor and the reader alike. */
 export function passageSlug(knot: string) {
@@ -68,7 +70,7 @@ export const BundleSchema = z
     checkpointId: id.optional(),
     release: z.string().min(1),
     locale: LocaleSchema,
-    mode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
+    mode: z.enum(gameModes),
     title: z.string().min(1),
     chapter: z.string().min(1),
     inkDigest: Sha256Schema,
@@ -76,7 +78,7 @@ export const BundleSchema = z
     compatibleInkDigests: z.array(Sha256Schema).max(20).optional(),
     inkjsVersion: z.string().min(1),
     authored: z.boolean().optional(),
-    narrationMode: z.enum(["ai-live", "ai-pregenerated", "human", "disabled"]).optional(),
+    narrationMode: z.enum(narrationModes).optional(),
     readingDefaults: ReadingPreferencesSchema.optional(),
     narratorVoiceSelection: z.array(z.string()).max(8).optional(),
     speechSettings: SpeechSettingsSchema.optional(),
@@ -181,7 +183,7 @@ export const SaveSchema = z
     storyId: id,
     release: z.string(),
     locale: LocaleSchema,
-    mode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
+    mode: z.enum(gameModes),
     inkDigest: z.string(),
     inkjsVersion: z.string(),
     runId: z.uuid(),

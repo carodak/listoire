@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { LocaleSchema } from "./primitives.ts";
-import { BundleSchema } from "./story.ts";
+import { BundleSchema, gameModes, narrationModes } from "./story.ts";
 import { ReadingPreferencesSchema } from "./presentation.ts";
 import { CharacterSchema } from "./character.ts";
 
@@ -41,7 +41,7 @@ export const StoryProjectSchema = z
     release: z.string().min(1).max(100),
     defaultLocale: LocaleSchema,
     shareConfiguration: z.boolean().optional(),
-    gameMode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
+    gameMode: z.enum(gameModes),
     variables: z.array(z.string()).max(100),
     mediaLibrary: z
       .array(
@@ -68,7 +68,7 @@ export const StoryProjectSchema = z
           missingTranslation: z.boolean(),
           configuration: StoryConfigurationSchema,
           defaults: ReadingPreferencesSchema,
-          narrationMode: z.enum(["ai-live", "ai-pregenerated", "human", "disabled"]),
+          narrationMode: z.enum(narrationModes),
         })
         .strict(),
     ),

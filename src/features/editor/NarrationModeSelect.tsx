@@ -1,4 +1,5 @@
 import type { StoryProject } from "../../contracts/editor-project.ts";
+import { narrationModes } from "../../contracts/story.ts";
 import { SelectField } from "./Fields.tsx";
 type Mode = StoryProject["languages"][string]["narrationMode"];
 interface NarrationModeSelectProps {
@@ -12,7 +13,7 @@ export function NarrationModeSelect({ value, onChange }: NarrationModeSelectProp
       label="Narration mode"
       value={value}
       onChange={onChange}
-      options={["ai-live", "ai-pregenerated", "human", "disabled"] as const}
+      options={narrationModes}
       labels={{
         "ai-live": "AI Live — local Chatterbox",
         "ai-pregenerated": "AI Pre-generated",
