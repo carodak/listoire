@@ -572,3 +572,9 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   skipped (each settings object is complete, so the last one carries everything). A fast drag of
   20 steps stored 20 times, now at most 2. Test: `side-panels.spec.ts` "dragging a volume slider…"
   (counts `reader-settings` writes after the last value is stored; checks it after reload).
+- **Top-level `await` in `main.tsx`.** The settings read is still awaited before the first render
+  (so the page appears in the reader's language, without a flash of English), but no longer than
+  3 s: a database that never answers (blocked upgrade) opens the welcome with default settings
+  instead of a blank page. The editor does use these settings (its i18n texts follow the reader's
+  language), so it keeps waiting too. Test: `welcome.spec.ts` "the welcome opens even when the
+  browser's storage never answers".

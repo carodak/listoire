@@ -29,6 +29,16 @@ test("the wordmark is the site's name, not a button that does nothing", async ({
   await expect(page.getByRole("button", { name: "Listoire home" })).toHaveCount(0);
 });
 
+test("the welcome opens even when the browser's storage never answers", async ({ page }) => {
+  // A blocked database upgrade: open() never succeeds nor fails.
+  await page.addInitScript(() => {
+    indexedDB.open = () => ({}) as IDBOpenDBRequest;
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Play an existing story" })).toBeVisible();
+});
+
 test("the original welcome reveals its subtitle and offers stories within three seconds", async ({
   page,
 }, info) => {
