@@ -688,3 +688,10 @@ generated for this project). I did not invent a licence name: **tell me if you w
   illustration…". 36 → 35 e2e tests. Coverage list updated.
 - **`src/contracts/scene3d.ts` kept:** `fallow dead-code --trace` shows `presentation.ts`,
   `story.ts` and `uploaded-media.ts` import it (not only tests).
+- **Flaky `game-authoring.spec.ts` "inserts upstream Ink snippets…" (chromium, 1 in 10 under
+  load):** "Declare Variable" inserts `VAR` at the top of the script (a global declaration) while
+  the caret stays at the end; the test looked for "VAR" in Ace's rendered lines, which only hold
+  what is in view, so it passed only when the view had not yet scrolled to the end. The app is
+  right. The test now reads the script itself and expects it to start with `VAR ` (the same
+  behaviour, more precisely). Diagnosed with a temporary spec (deleted): `VAR` at offset 0 in
+  10/10 runs. Now 30/30 with `--repeat-each=10 --workers=4`.

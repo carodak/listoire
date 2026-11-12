@@ -1,4 +1,5 @@
 import { expect, test } from "./test.ts";
+import { script } from "./typography-story.ts";
 
 test("edits game rules and definitions together without changing authored text", async ({
   page,
@@ -44,7 +45,8 @@ test("inserts upstream Ink snippets and opens validated character properties", a
   await page.keyboard.press("Control+End");
   await page.getByRole("tab", { name: "Logic", exact: true }).click();
   await page.getByRole("button", { name: "Declare Variable", exact: true }).click();
-  await expect(page.locator(".ace_content")).toContainText("VAR");
+  // A global variable goes at the top of the script, out of view: read the script itself.
+  await expect.poll(() => script(page)).toMatch(/^VAR /);
   await page.getByRole("tab", { name: "Game", exact: true }).click();
   await page.getByRole("button", { name: "Character", exact: true }).click();
   await expect(
