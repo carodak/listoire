@@ -1,8 +1,8 @@
 /**
  * Repeatable performance measurement of the Reader and the Story Editor (Chromium).
  *
- *   node tools/measure-performance.ts [--base http://127.0.0.1:4175] [--runs 5] [--out file.json]
- *                                     [--only reader,readerMotion,combat,editor]
+ *   npm run perf -- [--base http://127.0.0.1:4175] [--runs 5] [--out file.json]
+ *                                     [--only reader,readerMotion,readerWithDraft,combat,editor]
  *
  * Needs a running dev server (see AGENTS.md) and, for the bundle section, a `dist/` from
  * `npm run build`. Every number is the median of `--runs` fresh browser contexts, in
