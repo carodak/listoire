@@ -818,3 +818,4 @@ generated for this project). I did not invent a licence name: **tell me if you w
 ### Part 6 — REVIEW sections 4, 5, 8
 
 - **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).
+- **§4 mid-file import** in `text-reveal.ts` moved to the top.
