@@ -168,10 +168,7 @@ async function copyAssets(
   for (const asset of bundle.assets ?? []) {
     if (bundle.embeddedAudio?.[asset.id]) continue;
     if (asset.upload) {
-      const data = uploadedFiles[asset.id];
-      if (!data) throw new Error(`Missing uploaded media bytes: ${asset.id}`);
-      const blob = await verifyUploadedMedia(asset, decodeUploadedFile(asset, data));
-      await writeFile(new URL(asset.path, output), new Uint8Array(await blob.arrayBuffer()));
+      await writeUpload(asset, output, uploadedFiles);
       referenced.add(asset.path.slice("media/".length));
       continue;
     }
@@ -179,22 +176,38 @@ async function copyAssets(
     const signature = `${asset.path}:${expected}`;
     if (copied.get(asset.id) === signature) continue;
     if (copied.has(asset.id)) throw new Error(`Localized asset identity mismatch: ${asset.id}`);
-    // The library cache is local and ignored; a fresh checkout builds from the copy kept
-    // beside the story, which every build with the cache refreshes.
-    const kept = new URL(`stories/house/${asset.path}`, root);
-    const cached = await readFile(new URL(source, root)).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
-      return null;
-    });
-    const bytes = cached ?? (await readFile(kept));
-    if (createHash("sha256").update(bytes).digest("hex") !== expected)
-      throw new Error(`Stale editor asset ${asset.id}`);
-    if (cached && kept.href !== new URL(source, root).href) {
-      await mkdir(new URL("./", kept), { recursive: true });
-      await writeFile(kept, bytes);
-    }
+    const bytes = await libraryBytes(root, asset, source, expected);
     await writeFile(new URL(asset.path, output), bytes);
     copied.set(asset.id, signature);
     referenced.add(asset.path.slice("media/".length));
   }
+}
+
+type Asset = NonNullable<StoryBundle["assets"]>[number];
+
+async function writeUpload(asset: Asset, output: URL, uploadedFiles: Record<string, string>) {
+  const data = uploadedFiles[asset.id];
+  if (!data) throw new Error(`Missing uploaded media bytes: ${asset.id}`);
+  const blob = await verifyUploadedMedia(asset, decodeUploadedFile(asset, data));
+  await writeFile(new URL(asset.path, output), new Uint8Array(await blob.arrayBuffer()));
+}
+
+/**
+ * A library file's verified bytes. The library cache is local and ignored; a fresh checkout
+ * builds from the copy kept beside the story, which every build with the cache refreshes.
+ */
+async function libraryBytes(root: URL, asset: Asset, source: string, expected: string) {
+  const kept = new URL(`stories/house/${asset.path}`, root);
+  const cached = await readFile(new URL(source, root)).catch((error: NodeJS.ErrnoException) => {
+    if (error.code !== "ENOENT") throw error;
+    return null;
+  });
+  const bytes = cached ?? (await readFile(kept));
+  if (createHash("sha256").update(bytes).digest("hex") !== expected)
+    throw new Error(`Stale editor asset ${asset.id}`);
+  if (cached && kept.href !== new URL(source, root).href) {
+    await mkdir(new URL("./", kept), { recursive: true });
+    await writeFile(kept, bytes);
+  }
+  return bytes;
 }
