@@ -132,6 +132,11 @@ async function loadReadingBundle(locale: Locale, signal: AbortSignal) {
   const record = await readActiveProject(signal).catch(() => null);
   if (record) {
     const chosen = record.draft.languages[locale] ? locale : record.draft.defaultLocale;
+    // The editor publishes a draft that compiles under the draft's own revision: those
+    // bundles are this draft, compiled. Any other draft is compiled here, so its errors show.
+    const published =
+      record.published?.revision === record.revision ? record.published.bundles[chosen] : undefined;
+    if (published) return { bundle: published, fromDraft: true };
     const bundles = await compileInWorker(record.draft, chosen);
     return { bundle: bundles[chosen]!, fromDraft: true };
   }
