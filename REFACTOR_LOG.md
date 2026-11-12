@@ -605,3 +605,9 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   page uses it, except when that copy is the entry's own source; other files there (narration
   sources) are left alone. Test: `publication.test.ts` "removes the copy kept beside the story…".
   The real build changes nothing today: every library copy there is used.
+- **Old-story media deleted.** `stories/house/media/` held 114 files no page uses and that are not
+  in the current catalogue, so no build rule could reach them: the earlier stories' images
+  (`paper.*`, `heritage.*`, `tcp.*`, `shadow.*`, `unsplash.*`, `house.*`), their `sonniss.*` sounds
+  and 77 narration clips no longer listed in `narration.json`. Nothing reads them (only their IDs
+  appear in historical docs and test data). 11.6 MB; the folder goes from 143 files / 18 MB to
+  29 / 6.1 MB. The story build and all unit tests pass; they remain in git history.
