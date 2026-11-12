@@ -3,7 +3,10 @@ export const mp3DataUrl = /^data:audio\/mpeg;base64,[A-Za-z0-9+/]+=*$/;
 
 interface Options extends RequestInit {
   timeoutMs?: number;
-  /** A larger declared Content-Length is answered with a failed (`!ok`) response. */
+  /**
+   * A larger declared Content-Length is answered with a failed (`!ok`) response; a body without
+   * one fails while it is read, as soon as it passes the limit.
+   */
   maxBytes?: number;
 }
 
@@ -27,10 +30,22 @@ export async function sameOriginFetch(
     redirect: "error",
     credentials: "same-origin",
   });
-  if (maxBytes === undefined || !(Number(response.headers.get("content-length")) > maxBytes))
-    return response;
-  await response.body?.cancel();
-  return Response.error();
+  if (maxBytes === undefined) return response;
+  if (Number(response.headers.get("content-length")) > maxBytes) {
+    await response.body?.cancel();
+    return Response.error();
+  }
+  if (!response.body) return response;
+  let read = 0;
+  const limited = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      read += chunk.byteLength;
+      if (read > maxBytes) controller.error(new Error(`Response larger than ${maxBytes} bytes`));
+      else controller.enqueue(chunk);
+    },
+  });
+  const { status, statusText, headers } = response;
+  return new Response(response.body.pipeThrough(limited), { status, statusText, headers });
 }
 
 function isAllowed(url: string | URL) {

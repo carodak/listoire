@@ -557,3 +557,9 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   reader (`ink-frame.ts`) and the editor (`ink-outline.ts`, `scene-script.ts`). A knot such as
   `2nd_floor` was `2nd-floor` in the editor (not even a valid ID) and `nd-floor` in the reader.
   Test: `scene-script.test.ts` "names a knot's passage as the reader does…".
+- **`sameOriginFetch` byte limit on chunked responses.** With `maxBytes`, a body without a
+  declared length is now counted while it is read and errors as soon as it passes the limit (a
+  declared length over the limit is still refused at once). Test: `same-origin-fetch.test.ts`
+  "stops reading a body without a declared length…". Changed test code (assertion kept): "answers
+  an oversized declared body…" gave the same `Response` object to two fetches; it now gets a new
+  one per call (a body can only be read once, and the first call now pipes it).
