@@ -544,3 +544,11 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
 - **Hex colour regex `{3,8}`.** One `HexColorSchema` (`contracts/primitives.ts`): `#rgb` or
   `#rrggbb`, used by both effect schemas. Every colour in the shipped and test stories is 6-digit.
   Test: `primitives.test.ts` (fails with the old pattern, checked by swapping it in).
+- **`usePreviewPlayer` reset — not changed.** Keeping the previous preview until the next one is
+  ready is deliberate (`1932886`: live refresh without a flash). The old director is disposed
+  only during the synchronous part of `createPlayer` (one cached module import), and the start
+  knot always comes from the script's own outline, so a new player practically never fails. No
+  test could observe the gap reliably; I left it.
+- **"Preview from intro".** The editor opened on a hard-coded `intro` passage that the shipped
+  story doesn't have. It now opens on the script's first passage (Orée: `matin-ville`). Test:
+  `editor-tabs.spec.ts` "the editor opens on the story's first passage".

@@ -9,6 +9,7 @@ import { EditorActions } from "./editor-actions.ts";
 import type { EditorActionContext } from "./editor-actions.ts";
 import { useEditorProject } from "./use-editor-project.ts";
 import { download } from "./downloads.ts";
+import { outlineEntries } from "./ink-outline.ts";
 import { useEditorTooltips } from "./tooltips.ts";
 import { editorShortcut } from "./editor-shortcuts.ts";
 import { EditorHeader } from "./EditorHeader.tsx";
@@ -36,8 +37,8 @@ const initialView: EditorView = {
   tab: "Story",
   collapsed: false,
   dialog: "",
-  selectedScene: "intro",
-  selectedPath: "intro",
+  selectedScene: "",
+  selectedPath: "",
   selectedMedia: undefined,
   preview: null,
   busy: false,
@@ -79,7 +80,14 @@ function LoadedEditor({ state, project, renderPreview }: LoadedProps) {
       ...before,
       ...(typeof change === "function" ? change(before) : change),
     }),
-    initialView,
+    project,
+    // The editor opens on the script's first passage.
+    ({ languages, defaultLocale }) => {
+      const first = outlineEntries(
+        (languages[initialView.locale] ?? languages[defaultLocale]!).script,
+      )[0];
+      return { ...initialView, selectedScene: first?.knot ?? "", selectedPath: first?.path ?? "" };
+    },
   );
   const handles = useRef<EditorActionContext["handles"]["current"]>({
     editor: null,
