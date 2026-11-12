@@ -544,9 +544,7 @@ test("backs up a human recording and restores the complete project from history"
     .getByLabel("Rights attestation")
     .fill("Automated test fixture; no publication approval.");
   await page.getByLabel("Duration in seconds (optional override)", { exact: true }).fill("2.5");
-  await page
-    .getByLabel("Upload MP3")
-    .setInputFiles(resolve("stories/house/media/sonniss.telephone.mp3"));
+  await page.getByLabel("Upload MP3").setInputFiles(resolve("public/audio/keyboard-typing.mp3"));
   await expect(page.getByRole("dialog").getByRole("status")).toContainText(
     "Human recording attached",
   );

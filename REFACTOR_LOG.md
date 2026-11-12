@@ -611,6 +611,11 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   and 77 narration clips no longer listed in `narration.json`. Nothing reads them (only their IDs
   appear in historical docs and test data). 11.6 MB; the folder goes from 143 files / 18 MB to
   29 / 6.1 MB. The story build and all unit tests pass; they remain in git history.
+  **My miss, fixed in `test(editor)` below:** one e2e test uploaded
+  `stories/house/media/sonniss.telephone.mp3` as "any MP3"; my reference check cut its output at
+  three matches per file and hid it. The full chromium run caught it; the test now uploads the
+  tracked `public/audio/keyboard-typing.mp3` (same assertions). A full untruncated search finds
+  no other use of the deleted files.
 
 ### Part 3 — `docs/contributions.md`
 
