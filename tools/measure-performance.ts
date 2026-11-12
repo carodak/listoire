@@ -238,6 +238,28 @@ async function reader(browser: Browser, motion: "reduce" | "no-preference"): Pro
   return metrics;
 }
 
+/** The reader in a browser where the Story Editor has saved a draft (the author's case). */
+async function readerWithDraft(browser: Browser): Promise<Metrics> {
+  const { context, page, requests } = await newPage(browser, "reduce");
+  await page.goto(base + "/editor");
+  await page.waitForFunction(
+    () => /^Saved/.test(document.querySelector(".editor-status [role=status]")?.textContent ?? ""),
+    undefined,
+    { timeout: 60_000 },
+  );
+  requests.length = 0;
+  await page.goto(base + "/");
+  await page.locator(".welcome-play:enabled").waitFor();
+  const firstPage = await timed(
+    page,
+    click(page, ".welcome-play"),
+    `document.querySelector('.reader-copy h1') && ${idle}`,
+  );
+  const workers = requests.filter((path) => /compiler\.worker/.test(path)).length;
+  await context.close();
+  return { firstPage, compileWorkers: workers };
+}
+
 async function combat(browser: Browser): Promise<Metrics> {
   const { context, page } = await newPage(browser, "reduce");
   await withFixtureStory(page);
@@ -492,6 +514,7 @@ await editor(browser);
 const results: Metrics = {
   ...(await section("reader", () => reader(browser, "reduce"))),
   ...(await section("readerMotion", () => reader(browser, "no-preference"))),
+  ...(await section("readerWithDraft", () => readerWithDraft(browser))),
   ...(await section("combat", () => combat(browser))),
   ...(await section("editor", () => editor(browser))),
   ...Object.fromEntries(
