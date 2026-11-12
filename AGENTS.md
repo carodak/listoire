@@ -20,10 +20,9 @@ still required.
 - Features live in src/features/*; shared contracts, storage, i18n and
   app composition stay outside features. Same validated contracts for
   manual stories and the editor.
-- assets/ source libraries stay local and unchanged; publish only
-  referenced, licensed, optimized files. Never expose catalogs as a
-  redistribution service. Record provider-verified and user-attested
-  rights separately.
+- assets/ source libraries stay local and unchanged. Library images
+  are freely licensed and may be published, catalog included. Keep
+  each asset's license and attribution in docs/contributions.md.
 - Generated narration clips remain previews until a human listens.
 - Update the affected doc in docs/ when a contract or boundary changes.
 
@@ -68,6 +67,9 @@ After each commit (~1-2 min):
 - the e2e spec(s) you touched, chromium only
 - fallow audit runs automatically before each commit (hook); fix what
   it reports.
+- Run e2e with 4 workers (--workers=4), except when measuring
+  performance.
+- Run npm run perf only when a change targets performance.
 
 Once at the end of a session:
 - full e2e on chromium
