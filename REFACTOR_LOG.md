@@ -517,3 +517,13 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   `editor-store.test.ts` (2), `editor.spec.ts` "after an editor update that no longer reads…".
   Limit: an *old-format* record whose history versions no longer read stays unreadable as a whole
   (the move needs every version); start again replaces only its draft.
+- **Director re-present after a failed save.** After a failed page change (a transition: the
+  presentation was cancelled, which drops the page's media bindings), the page is presented
+  again under a new occurrence (`<old>:retry:<uuid>`, like `replay()`), so the keyed page view
+  remounts and binds its videos and effect targets again; `restored: true` (no entrance). A
+  failure without a transition (combat turn, check roll) keeps its occurrence, as before.
+  Test: `director.test.ts` "presents the page again under a new occurrence…".
+  Changed assertion: `game.test.ts` "retains the exact combat checkpoint…" expected the snapshot
+  after a failed `restart()` to keep its `occurrenceId`; it now checks the same checkpoint
+  (every other field), an occurrence `^<old>:retry:`, `restored: true`, and continues the fight
+  with that occurrence. The checkpoint, save and RNG assertions are unchanged.

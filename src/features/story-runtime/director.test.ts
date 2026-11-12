@@ -118,6 +118,28 @@ it("rolls back failed writes and allows retry without losing the selected branch
   await director.choose("listen", director.getSnapshot().occurrenceId!);
   expect(director.getSnapshot().frame?.segments[0]!.text).toContain("clock");
 });
+it("presents the page again under a new occurrence after a failed save, so its media bind again", async () => {
+  const presentation = { start: vi.fn(), cancel: vi.fn(), dispose: vi.fn() };
+  const director = new StoryDirector(
+    bundle,
+    new InkNarrativeEngine(bundle),
+    saves,
+    undefined,
+    presentation,
+  );
+  await director.load();
+  const before = director.getSnapshot().occurrenceId!;
+  const commit = vi.spyOn(saves, "commit").mockRejectedValueOnce(new Error("QuotaExceededError"));
+  await director.choose("call", before);
+  commit.mockRestore();
+  // The page view is keyed by occurrence: a new one remounts it, and its media bind again.
+  const after = director.getSnapshot().occurrenceId!;
+  expect(after).not.toBe(before);
+  expect(presentation.start).toHaveBeenLastCalledWith(director.getSnapshot().frame, after, true);
+  expect(director.getSnapshot().restored).toBe(true);
+  await director.choose("listen", after);
+  expect(director.getSnapshot().frame?.segments[0]!.text).toContain("clock");
+});
 it("restarts presentation and clears earlier pages under a new coherent save identity", async () => {
   const presentation = { start: vi.fn(), cancel: vi.fn(), reset: vi.fn(), dispose: vi.fn() };
   const director = new StoryDirector(

@@ -109,7 +109,15 @@ export class StoryDirector implements ReaderController {
       this.engine.restore(inkBefore, frameBefore);
       this.previousPages.splice(0, Infinity, ...pagesBefore);
       this.publish({ canGoBack: pagesBefore.length > 0 });
-      if (this.snapshot.frame) this.present(this.snapshot.frame, this.snapshot.occurrenceId!, true);
+      if (this.snapshot.frame) {
+        // After a transition, cancel() dropped the page's media bindings: a new occurrence
+        // remounts the page view so they bind again.
+        const occurrenceId = transition
+          ? `${this.snapshot.occurrenceId}:retry:${crypto.randomUUID()}`
+          : this.snapshot.occurrenceId!;
+        this.present(this.snapshot.frame, occurrenceId, true);
+        this.publish({ occurrenceId, restored: transition || this.snapshot.restored });
+      }
       this.publish({ failure: error instanceof ReaderFailure ? error.code : "storage" });
     } finally {
       this.publish({ busy: false });
