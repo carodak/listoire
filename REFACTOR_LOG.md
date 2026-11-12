@@ -594,3 +594,8 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   WebGL, no data saver, motion allowed: not on most phones) and that it runs reduced and never
   flickers (en + fr). Test: `safety.test.ts` (the cost case fails with the old override, checked
   by running it against a copy of the old table).
+- **README stale.** Rewritten against the current state: the Orée story, the editor, combat and
+  rules, the four e2e browsers, `npm run perf`, the structure, assets and licences; dead links
+  (`docs/phases2-3-report.md`) and "Coming soon" / "deferred" claims removed. No test (a doc).
+- **Full `mediaLibrary` in the published `project.json` — no longer relevant:** library images are
+  freely licensed and may be published with their catalogue (your instruction; AGENTS.md updated).
