@@ -766,3 +766,9 @@ generated for this project). I did not invent a licence name: **tell me if you w
   land mid-page. A new page now scrolls the window to the top, then focuses its heading without
   scrolling. `rewards`, `page-frame`, `reader`, `side-panels` pass on all four browsers; the other
   reader specs on chromium.
+- **`image-editor` drag and drop, layers panel (webkit ×2) — app.** Probed with a minimal page:
+  WebKit delivers HTML5 drag and drop (`dragstart`, `dragover`, `drop`) from a button or a div,
+  but drops custom data types: `getData("text/x-picture")` is empty in `drop`, `text/plain`
+  survives. Safari restricts custom drag types the same way, so a Safari author could not reorder
+  layers by dragging. The layer row now travels as `text/plain` `listoire-picture:<index>`
+  (anything else dropped there is ignored). 6/6 on chromium, firefox, webkit.
