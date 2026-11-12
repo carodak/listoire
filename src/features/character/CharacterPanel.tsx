@@ -379,12 +379,11 @@ function CharacterAbilities({
   profile: CharacterProfile;
 }) {
   const { t } = useTranslation();
+  const known = [...(bundle.character?.abilities ?? []), ...(bundle.game?.abilities ?? [])];
   return (
     <>
       {profile.abilities.map((ability) => {
-        const details =
-          bundle.character?.abilities.find((item) => item.id === ability.id) ??
-          bundle.game?.abilities.find((item) => item.id === ability.id);
+        const details = known.find((item) => item.id === ability.id);
         return (
           <section className="character-detail-item" key={ability.id}>
             <h3>
