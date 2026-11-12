@@ -1,0 +1,116 @@
+{
+  "en": {
+    "title": "The orchard room",
+    "progress": 0.35,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "chambre.p1"
+      },
+      {
+        "kind": "media",
+        "id": "chambre.illustration",
+        "image": "sketch.single-bed-with-blanket-001",
+        "layout": "inline",
+        "widthPercent": 44,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "chambre.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "chambre.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "La chambre du verger",
+    "progress": 0.35,
+    "events": [],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "chambre.p1"
+      },
+      {
+        "kind": "media",
+        "id": "chambre.illustration",
+        "image": "sketch.single-bed-with-blanket-001",
+        "layout": "inline",
+        "widthPercent": 44,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "none",
+          "speed": "normal",
+          "intensity": "subtle",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": []
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [],
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "chambre.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "chambre.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

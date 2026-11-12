@@ -806,3 +806,11 @@ generated for this project). I did not invent a licence name: **tell me if you w
   element as it starts. Media still plays, so "music and ambience really play" and the volume
   checks still pass: audio-start, narration, house, welcome 80/80 on four browsers, the editor's
   narration tests on chromium.
+- **`image-editor` references on mobile (×10) — references added, reviewed.** "mobile" is
+  Chromium (Pixel 7), so the Chromium-only references ran there but existed only under the desktop
+  project's name. I generated mobile references (your preferred option: real coverage of the
+  phone layout) and reviewed them against Chromium's: the 11 "stored" references are identical
+  byte for byte in value; the 5 "layers" references have the same layers (role, image, order,
+  position, scale, rotation), boxes within 1 % of the frame (rounding on the smaller frame);
+  the 5 reader pictures show the same composition (checked `chemin`, `bibliotheque` side by side).
+  Stable: 40/40 with `--repeat-each=2` on mobile and chromium.

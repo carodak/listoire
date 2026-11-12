@@ -1,0 +1,234 @@
+{
+  "en": {
+    "title": "The gateway plan",
+    "progress": 0.625,
+    "events": [
+      {
+        "id": "bibliotheque.paper",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "bibliotheque.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.bca76d831cf5165ab7b0",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.3,
+          "fadeMs": 80
+        }
+      },
+      {
+        "id": "bibliotheque.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "bibliotheque.illustration"
+        },
+        "blocking": false,
+        "blockId": "bibliotheque.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "sideways-drift",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p1"
+      },
+      {
+        "kind": "media",
+        "id": "bibliotheque.illustration",
+        "image": "sketch.bare-deciduous-tree-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "sideways-drift",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.adult-male-fantasy-stonemason-in-simple-apron-001",
+              "role": "midground",
+              "x": 25,
+              "y": 10,
+              "scale": 0.8
+            },
+            {
+              "image": "sketch.thin-grass-fringe-framing-the-lower-edge-001",
+              "role": "foreground",
+              "x": 0,
+              "y": 20,
+              "scale": 1.2
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "Le plan des passages",
+    "progress": 0.625,
+    "events": [
+      {
+        "id": "bibliotheque.paper",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "bibliotheque.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.bca76d831cf5165ab7b0",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.3,
+          "fadeMs": 80
+        }
+      },
+      {
+        "id": "bibliotheque.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "bibliotheque.illustration"
+        },
+        "blocking": false,
+        "blockId": "bibliotheque.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "sideways-drift",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p1"
+      },
+      {
+        "kind": "media",
+        "id": "bibliotheque.illustration",
+        "image": "sketch.bare-deciduous-tree-001",
+        "layout": "inline",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "sideways-drift",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.adult-male-fantasy-stonemason-in-simple-apron-001",
+              "role": "midground",
+              "x": 25,
+              "y": 10,
+              "scale": 0.8
+            },
+            {
+              "image": "sketch.thin-grass-fringe-framing-the-lower-edge-001",
+              "role": "foreground",
+              "x": 0,
+              "y": 20,
+              "scale": 1.2
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p2"
+      },
+      {
+        "kind": "text",
+        "segmentId": "bibliotheque.p3"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}

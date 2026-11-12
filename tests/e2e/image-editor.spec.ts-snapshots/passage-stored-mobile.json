@@ -1,0 +1,296 @@
+{
+  "en": {
+    "title": "The crossing",
+    "progress": 0.275,
+    "events": [
+      {
+        "id": "passage.arrival",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.19ec79604baff7cb7e7a",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.4,
+          "fadeMs": 80
+        }
+      },
+      {
+        "id": "passage.birds",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.f972b0a958807be29e67",
+          "channel": "ambience",
+          "loop": true,
+          "volume": 0.2,
+          "fadeMs": 1400
+        }
+      },
+      {
+        "id": "passage.board-beat",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "blockId": "page",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "light-flicker",
+            "duration": 2000,
+            "target": "canvas",
+            "intensity": 0.35,
+            "color": "#c7a55c"
+          }
+        }
+      },
+      {
+        "id": "passage.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "passage.illustration"
+        },
+        "blocking": true,
+        "blockId": "passage.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "high-arrival-hold-pullback",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "passage.p1"
+      },
+      {
+        "kind": "media",
+        "id": "passage.illustration",
+        "image": "sketch.upland-meadow-footpath-001",
+        "layout": "fullscreen",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "high-arrival-hold-pullback",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.arched-stone-doorway-standing-alone-001",
+              "role": "midground",
+              "x": 0,
+              "y": 4,
+              "scale": 1.1
+            },
+            {
+              "image": "sketch.fern-fronds-001",
+              "role": "foreground",
+              "x": -28,
+              "y": 18,
+              "scale": 1.25
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "passage.p2"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  },
+  "fr": {
+    "title": "La traversée",
+    "progress": 0.275,
+    "events": [
+      {
+        "id": "passage.arrival",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.19ec79604baff7cb7e7a",
+          "channel": "sfx",
+          "loop": false,
+          "volume": 0.4,
+          "fadeMs": 80
+        }
+      },
+      {
+        "id": "passage.birds",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "action": {
+          "kind": "audio",
+          "assetId": "audio.f972b0a958807be29e67",
+          "channel": "ambience",
+          "loop": true,
+          "volume": 0.2,
+          "fadeMs": 1400
+        }
+      },
+      {
+        "id": "passage.board-beat",
+        "trigger": {
+          "kind": "segment",
+          "segmentId": "passage.p1"
+        },
+        "blocking": false,
+        "blockId": "page",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "light-flicker",
+            "duration": 2000,
+            "target": "canvas",
+            "intensity": 0.35,
+            "color": "#c7a55c"
+          }
+        }
+      },
+      {
+        "id": "passage.illustration.motion",
+        "trigger": {
+          "kind": "block",
+          "blockId": "passage.illustration"
+        },
+        "blocking": true,
+        "blockId": "passage.illustration",
+        "action": {
+          "kind": "effect",
+          "effect": {
+            "id": "cinematic-camera",
+            "duration": 6000,
+            "cinematic": {
+              "preset": "high-arrival-hold-pullback",
+              "speed": "normal",
+              "intensity": "normal",
+              "direction": "auto",
+              "atmosphere": "none",
+              "layers": [],
+              "durationMs": 6000
+            }
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "kind": "text",
+        "segmentId": "passage.p1"
+      },
+      {
+        "kind": "media",
+        "id": "passage.illustration",
+        "image": "sketch.upland-meadow-footpath-001",
+        "layout": "fullscreen",
+        "widthPercent": 100,
+        "align": "center",
+        "fit": "contain",
+        "motion": {
+          "preset": "high-arrival-hold-pullback",
+          "speed": "normal",
+          "intensity": "normal",
+          "direction": "auto",
+          "atmosphere": "none",
+          "layers": [],
+          "durationMs": 6000
+        },
+        "illustration": {
+          "base": {
+            "role": "background",
+            "x": 0,
+            "y": 0,
+            "scale": 1
+          },
+          "layers": [
+            {
+              "image": "sketch.arched-stone-doorway-standing-alone-001",
+              "role": "midground",
+              "x": 0,
+              "y": 4,
+              "scale": 1.1
+            },
+            {
+              "image": "sketch.fern-fronds-001",
+              "role": "foreground",
+              "x": -28,
+              "y": 18,
+              "scale": 1.25
+            }
+          ],
+          "autoCrop": false,
+          "aspect": "landscape",
+          "blend": "paper",
+          "wrap": "none"
+        },
+        "show": {
+          "kind": "page",
+          "delayMs": 0
+        },
+        "photograph": false,
+        "caption": ""
+      },
+      {
+        "kind": "text",
+        "segmentId": "passage.p2"
+      },
+      {
+        "kind": "choices"
+      }
+    ]
+  }
+}
