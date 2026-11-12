@@ -1,7 +1,8 @@
+import { reducedMotionMedia } from "../contracts/reduced-motion.ts";
 import { useSyncExternalStore } from "react";
 
 const query = () =>
-  typeof matchMedia === "undefined" ? undefined : matchMedia("(prefers-reduced-motion: reduce)");
+  typeof matchMedia === "undefined" ? undefined : matchMedia(reducedMotionMedia);
 
 function subscribe(change: () => void) {
   const media = query();

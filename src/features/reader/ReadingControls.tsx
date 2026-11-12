@@ -1,3 +1,4 @@
+import { allowsDeviceVoice, defaultVolumes } from "../../contracts/presentation.ts";
 import { useSyncExternalStore } from "react";
 import { ReaderSidebar } from "../../shared/ReaderSidebar.tsx";
 import { CloseButton } from "../../shared/CloseButton.tsx";
@@ -83,9 +84,7 @@ export function ReadingControls({
 }
 function useReaderVoices(presentation: PresentationSession, bundle: StoryBundle) {
   const voices = presentation.voices;
-  const allowDeviceVoices = !["disabled", "human", "ai-pregenerated"].includes(
-    bundle.narrationMode ?? "",
-  );
+  const allowDeviceVoices = allowsDeviceVoice(bundle.narrationMode);
   const deviceVoices = useDeviceVoices(bundle.locale, allowDeviceVoices).map((voice) => ({
     id: `device:${voice.voiceURI}`,
     label: `${voice.name} (${voice.lang})`,
@@ -239,7 +238,7 @@ function BookSound({ preferences, onChange, voices, unavailable }: NarrationPref
 }
 function AudioVolumes({ preferences, onChange }: PreferencesProps) {
   const { t } = useTranslation();
-  const volumes = { sfx: 0.65, ambience: 0.3, music: 0.3, narration: 0.8, ...preferences.volumes };
+  const volumes = { ...defaultVolumes, ...preferences.volumes };
   return (
     <>
       {" "}

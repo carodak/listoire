@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { CinematicSchema } from "../../contracts/cinematic.ts";
 import type { ImageDraft, MediaEdit, MediaBlock, Scene } from "./media-edit.ts";
@@ -144,7 +145,7 @@ export function mediaContext(
       .map((m) => m[1]!)
       .filter((id) => id.startsWith(`${sceneId}.`)),
     alt: chosen?.alt ?? "",
-    assetUrl: chosen ? `/stories/house/${chosen.path}` : undefined,
+    assetUrl: chosen ? storyFileUrl("house", chosen.path) : undefined,
     blocks: blocks.filter((b) => b.kind === "media").map((b) => b.id),
     trigger: events.find((e) => e.id === selectedId)?.trigger.kind ?? "passage",
   };

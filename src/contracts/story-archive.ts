@@ -10,6 +10,15 @@ export function splitStoryArchive(raw: unknown) {
     uploadedFiles: z.record(z.string(), z.string().max(67_000_100)).parse(uploadedFiles ?? {}),
   };
 }
+/** A file as a base64 data URL: what a backup stores, and decodeUploadedFile reads back. */
+export function encodeDataUrl(blob: Blob, failure: string) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(failure));
+    reader.readAsDataURL(blob);
+  });
+}
 export function decodeUploadedFile(asset: MediaAsset, data: string) {
   const prefix = `data:${asset.upload?.mime};base64,`;
   if (

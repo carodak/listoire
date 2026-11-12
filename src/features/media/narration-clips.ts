@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { NarrationClip, NarrationProgress } from "../../contracts/media.ts";
 import { sha256, textDigest } from "../../contracts/digest.ts";
@@ -36,9 +37,7 @@ export async function findRecording(
   if (clip && asset)
     return {
       clip,
-      audioUrl:
-        bundle.embeddedAudio?.[asset.id] ??
-        `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+      audioUrl: bundle.embeddedAudio?.[asset.id] ?? storyFileUrl(bundle.storyId, asset.path),
     };
   const local =
     voiceId && (!bundle.narrationMode || bundle.narrationMode === "ai-live")

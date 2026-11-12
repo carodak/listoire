@@ -1,18 +1,17 @@
+import { prefersReducedMotion, reducedMotionMedia } from "../../contracts/reduced-motion.ts";
 import { useEffect, useState } from "react";
 import { playTypingSound } from "./typing-sound.ts";
 
 export function useWelcomeIntro(text: string) {
   const letters = Array.from(text);
-  const [skipped, setSkipped] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden,
-  );
+  const [skipped, setSkipped] = useState(() => prefersReducedMotion() || document.hidden);
   const [count, setCount] = useState(0);
   const complete = skipped || count >= letters.length;
 
   useEffect(() => {
     if (complete) return;
     const stopSound = playTypingSound();
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = matchMedia(reducedMotionMedia);
     const reduce = () => {
       if (motion.matches) setSkipped(true);
     };

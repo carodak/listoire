@@ -1,4 +1,6 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
 import type { GameState } from "../../contracts/game.ts";
+import { useTranslation } from "react-i18next";
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 
 const DiceModel = lazy(() =>
@@ -7,21 +9,19 @@ const DiceModel = lazy(() =>
 
 export function DiceRoll({
   result,
-  french,
   instant = false,
   onSettled,
 }: {
   result: GameState["lastResult"];
-  french: boolean;
   instant?: boolean;
   onSettled?: () => void;
 }) {
+  const { t } = useTranslation();
   const [rolling, setRolling] = useState(!instant);
   const dice = result?.dice;
   const [finishedModels, setFinishedModels] = useState(0);
   const finishModel = useCallback(() => setFinishedModels((count) => count + 1), []);
-  const reduced =
-    typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = prefersReducedMotion();
   const modelCount = dice?.filter((die) => die.sides === 6 || die.sides === 20).length ?? 0;
   useEffect(() => {
     if (!dice?.length) return;
@@ -41,14 +41,13 @@ export function DiceRoll({
     <div
       className={`dice-roll${rolling ? " dice-rolling" : ""}`}
       role="group"
-      aria-label={french ? "Résultat des dés" : "Dice results"}
+      aria-label={t("dice.results")}
     >
       {result.dice.map((die, index) => (
         <DieFace
           key={index}
           die={die}
           rolling={rolling}
-          french={french}
           animate={!instant && !reduced}
           onSettled={finishModel}
         />
@@ -60,23 +59,20 @@ export function DiceRoll({
 function DieFace({
   die,
   rolling,
-  french,
   animate,
   onSettled,
 }: {
   die: NonNullable<NonNullable<GameState["lastResult"]>["dice"]>[number];
   rolling: boolean;
-  french: boolean;
   animate: boolean;
   onSettled: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="dice-result"
       data-sides={die.sides}
-      aria-label={
-        rolling ? (french ? "Dé en mouvement" : "Rolling die") : `d${die.sides}: ${die.value}`
-      }
+      aria-label={rolling ? t("dice.rolling") : `d${die.sides}: ${die.value}`}
     >
       <small>d{die.sides}</small>
       {die.sides === 6 || die.sides === 20 ? (

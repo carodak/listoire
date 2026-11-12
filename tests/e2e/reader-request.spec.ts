@@ -233,18 +233,11 @@ for (const { title, seed, move, line, french = false } of [
     }
     // Pass 7: each turn plays in beats and the last one hides the actions before the outcome.
     const outcome = combat.locator(".combat-ending-title");
-    const button = combat.getByRole("button", { name: move, exact: true });
+    const button = combat.getByRole("button", { name: move, exact: true, disabled: false });
     for (let turn = 0; turn < 30; turn++) {
-      await expect
-        .poll(
-          async () =>
-            (await outcome.count()) > 0 ||
-            ((await button.count()) > 0 && (await button.isEnabled())),
-          {
-            timeout: 15000,
-          },
-        )
-        .toBe(true);
+      // One retrying check of the whole page: isEnabled() on a button that the last blow has
+      // just removed waits for it to come back, and the ending then closed unseen.
+      await expect(outcome.or(button)).toBeVisible({ timeout: 15000 });
       if (await outcome.count()) break;
       await button.click();
     }

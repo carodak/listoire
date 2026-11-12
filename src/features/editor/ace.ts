@@ -1,3 +1,4 @@
+import { appPath } from "../../contracts/app-path.ts";
 export interface AcePosition {
   row: number;
   column: number;
@@ -57,7 +58,7 @@ let loading: Promise<Ace> | undefined;
 function script(file: string) {
   return new Promise<void>((resolve, reject) => {
     const element = document.createElement("script");
-    element.src = `/editor/vendor/${file}`;
+    element.src = appPath(`editor/vendor/${file}`);
     element.onload = () => resolve();
     element.onerror = () => {
       element.remove();
@@ -71,10 +72,10 @@ export function loadAce() {
     .then(() => script("ink-mode.js"))
     .then(() => script("ext-searchbox.js"))
     .then(() => {
-      window.ace.config.set("basePath", "/editor/vendor");
+      window.ace.config.set("basePath", appPath("editor/vendor"));
       const theme = document.createElement("link");
       theme.rel = "stylesheet";
-      theme.href = "/editor/vendor/ink-theme.css";
+      theme.href = appPath("editor/vendor/ink-theme.css");
       document.head.append(theme);
       return window.ace;
     })

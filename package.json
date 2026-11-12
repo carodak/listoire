@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:coverage": "node tools/run-test-coverage.ts",
     "test:e2e": "playwright test",
+    "perf": "node tools/measure-performance.ts",
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

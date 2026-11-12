@@ -1,4 +1,8 @@
-import { splitStoryArchive, decodeUploadedFile } from "../../contracts/story-archive.ts";
+import {
+  splitStoryArchive,
+  decodeUploadedFile,
+  encodeDataUrl,
+} from "../../contracts/story-archive.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import { readUploadedMedia, storeUploadedMedia } from "../../persistence/media-store.ts";
 function uploads(project: StoryProject) {
@@ -14,23 +18,15 @@ function uploads(project: StoryProject) {
   ];
 }
 export async function exportProjectArchive(project: StoryProject) {
-  const files = await Promise.all(
-    uploads(project).map(async (asset) => [
-      asset.id,
-      await new Promise<string>((resolve, reject) => {
-        void readUploadedMedia(asset)
-          .then((blob) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(String(reader.result));
-            reader.onerror = () => reject(new Error("Could not export media."));
-            reader.readAsDataURL(blob);
-          })
-          .catch(reject);
-      }),
-    ]),
-  );
+  // One file at a time: only its bytes and its text are in memory together, not every upload.
+  const uploadedFiles: Record<string, string> = {};
+  for (const asset of uploads(project))
+    uploadedFiles[asset.id] = await encodeDataUrl(
+      await readUploadedMedia(asset),
+      "Could not export media.",
+    );
   return JSON.stringify(
-    files.length ? { ...project, uploadedFiles: Object.fromEntries(files) } : project,
+    Object.keys(uploadedFiles).length ? { ...project, uploadedFiles } : project,
     null,
     2,
   );

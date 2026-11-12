@@ -1,3 +1,4 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
 import type { NarrativePresentationPort } from "../../contracts/presentation-port.ts";
 import type { Frame, StoryBundle } from "../../contracts/story.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
@@ -15,6 +16,8 @@ export class PresentationSession implements NarrativePresentationPort {
   readonly resolveAsset: (asset: MediaAsset) => Promise<{ url: string; dispose: () => void }>;
   readonly getSnapshot: PlaybackContext["getSnapshot"];
   readonly subscribe: PlaybackContext["subscribe"];
+  readonly getProgress: PlaybackContext["getProgress"];
+  readonly subscribeProgress: PlaybackContext["subscribeProgress"];
   readonly pause: ScenePlayback["pause"];
   readonly bind: ScenePlayback["bind"];
   readonly bindPage: ScenePlayback["bindPage"];
@@ -39,11 +42,13 @@ export class PresentationSession implements NarrativePresentationPort {
     this.resolveAsset =
       resolveAsset ??
       (async (asset) => ({
-        url: `${import.meta.env.BASE_URL}stories/${bundle.storyId}/${asset.path}`,
+        url: storyFileUrl(bundle.storyId, asset.path),
         dispose() {},
       }));
     this.getSnapshot = this.context.getSnapshot;
     this.subscribe = this.context.subscribe;
+    this.getProgress = this.context.getProgress;
+    this.subscribeProgress = this.context.subscribeProgress;
     this.bind = this.scene.bind.bind(this.scene);
     this.pause = this.scene.pause.bind(this.scene);
     this.bindPage = this.scene.bindPage.bind(this.scene);

@@ -1,3 +1,5 @@
+import { prefersReducedMotion } from "../../contracts/reduced-motion.ts";
+import { defaultVolumes } from "../../contracts/presentation.ts";
 import type { ReadingPreferences } from "../../contracts/presentation.ts";
 import { mediaIsVisible } from "../../contracts/presentation.ts";
 import type { ReactBitsEffect } from "../../contracts/effects.ts";
@@ -43,7 +45,7 @@ export class ScenePlayback {
     this.blocking = 0;
   }
   configure(preferences: ReadingPreferences, wasEnabled: boolean | undefined) {
-    const volumes = preferences.volumes ?? { sfx: 0.65, ambience: 0.3, music: 0.3, narration: 0.8 };
+    const volumes = preferences.volumes ?? defaultVolumes;
     for (const channel of ["sfx", "ambience", "music", "narration"] as const)
       this.audio.setVolume(channel, volumes[channel] * (preferences.masterVolume ?? 1));
     this.audio.setRate(preferences.narrationRate ?? 1);
@@ -203,9 +205,7 @@ export class ScenePlayback {
     this.context.publish({ departed: true });
   }
   reducedMotion() {
-    return (
-      typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
+    return prefersReducedMotion();
   }
   showSegmentMedia(id: string) {
     for (const block of this.blocks)
@@ -397,5 +397,6 @@ export class ScenePlayback {
 function setVideoSound(target: EffectTargets, preferences: ReadingPreferences) {
   if (!target.video) return;
   target.video.muted = Boolean(target.silentVideo) || !preferences.sound;
-  target.video.volume = (preferences.volumes?.sfx ?? 0.65) * (preferences.masterVolume ?? 1);
+  target.video.volume =
+    (preferences.volumes?.sfx ?? defaultVolumes.sfx) * (preferences.masterVolume ?? 1);
 }

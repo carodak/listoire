@@ -247,7 +247,8 @@ export type FailureCode =
   | "save-invalid"
   | "save-incompatible"
   | "save-conflict"
-  | "storage";
+  | "storage"
+  | "backup";
 
 export class ReaderFailure extends Error {
   readonly code: FailureCode;

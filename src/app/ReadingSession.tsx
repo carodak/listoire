@@ -1,3 +1,5 @@
+import { message } from "../contracts/error-message.ts";
+import { appPath } from "../contracts/app-path.ts";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Locale, StoryBundle } from "../contracts/story.ts";
@@ -50,7 +52,7 @@ export function ReadingSession({
       <main id="story" className="notice" role="alert">
         <p>{t("errors.content")}</p>
         <p>{failed}</p>
-        <a href="/editor">Open Story Editor</a>
+        <a href={appPath("editor")}>{t("openEditor")}</a>
         <button onClick={retry}>{t("retry")}</button>
       </main>
     );
@@ -116,8 +118,7 @@ function useReadingPlayer(
         await director.load();
       })
       .catch((error) => {
-        if (!scope.signal.aborted)
-          setFailed(error instanceof Error ? error.message : "Content unavailable");
+        if (!scope.signal.aborted) setFailed(message(error));
       });
     return () => {
       scope.abort();
@@ -131,6 +132,11 @@ async function loadReadingBundle(locale: Locale, signal: AbortSignal) {
   const record = await readActiveProject(signal).catch(() => null);
   if (record) {
     const chosen = record.draft.languages[locale] ? locale : record.draft.defaultLocale;
+    // The editor publishes a draft that compiles under the draft's own revision: those
+    // bundles are this draft, compiled. Any other draft is compiled here, so its errors show.
+    const published =
+      record.published?.revision === record.revision ? record.published.bundles[chosen] : undefined;
+    if (published) return { bundle: published, fromDraft: true };
     const bundles = await compileInWorker(record.draft, chosen);
     return { bundle: bundles[chosen]!, fromDraft: true };
   }

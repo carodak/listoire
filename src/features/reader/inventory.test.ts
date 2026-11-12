@@ -1,6 +1,8 @@
 import { expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
+import { I18nextProvider } from "react-i18next";
+import { i18n } from "../../i18n/i18n.ts";
 import { GameInventory } from "./GamePanel.tsx";
 import { fixtureBundle } from "../../test-fixtures.ts";
 import { GameDefinitionSchema, GameStateSchema } from "../../contracts/game.ts";
@@ -8,6 +10,7 @@ import { StoryDirector } from "../story-runtime/director.ts";
 import { InkNarrativeEngine } from "../story-runtime/ink-engine.ts";
 
 it.each(["en", "fr"])("renders equipment state and locks changes during combat in %s", (locale) => {
+  void i18n.changeLanguage(locale);
   const bundle = {
     ...fixtureBundle(),
     locale,
@@ -35,7 +38,13 @@ it.each(["en", "fr"])("renders equipment state and locks changes during combat i
     }),
   };
   const render = () =>
-    renderToStaticMarkup(createElement(GameInventory, { bundle, state, director }));
+    renderToStaticMarkup(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(GameInventory, { bundle, state, director }),
+      ),
+    );
   expect(render()).toContain(locale === "fr" ? "Équiper" : "Equip");
   expect(render()).toContain("Letter");
   expect(render()).not.toContain("missing");

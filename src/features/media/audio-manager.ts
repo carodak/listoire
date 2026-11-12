@@ -1,3 +1,4 @@
+import { defaultVolumes } from "../../contracts/presentation.ts";
 export type AudioChannel = "sfx" | "ambience" | "music" | "narration";
 export type PlaybackResult = "ended" | "blocked" | "aborted" | "error" | "timeout" | "unavailable";
 interface SpeechControls {
@@ -27,12 +28,7 @@ const STALL_MS = 15000;
 
 export class AudioManager {
   private readonly tracks = new Set<PlayingTrack>();
-  private readonly volumes: Record<AudioChannel, number> = {
-    sfx: 0.65,
-    ambience: 0.3,
-    music: 0.3,
-    narration: 0.8,
-  };
+  private readonly volumes: Record<AudioChannel, number> = { ...defaultVolumes };
   private muted = false;
   private ducked = false;
   private musicGain = 1;

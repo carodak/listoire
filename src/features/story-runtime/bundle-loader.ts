@@ -1,3 +1,4 @@
+import { appPath, storyFileUrl } from "../../contracts/app-path.ts";
 import { sha256 } from "../../contracts/digest.ts";
 import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 import {
@@ -10,8 +11,8 @@ import type { Locale, StoryBundle, StoryManifest } from "../../contracts/story.t
 import packageInfo from "../../../package.json";
 
 async function fetchStoryFile(file: "manifest" | Locale, signal: AbortSignal): Promise<unknown> {
-  const base = new URL(import.meta.env.BASE_URL, window.location.href);
-  const url = new URL(`stories/house/${file}.json`, base);
+  const base = new URL(appPath(), window.location.href);
+  const url = new URL(storyFileUrl("house", `${file}.json`), window.location.href);
   if (!url.pathname.startsWith(base.pathname)) throw new ReaderFailure("content");
   const response = await sameOriginFetch(url, { signal });
   if (!response.ok) throw new ReaderFailure("content");

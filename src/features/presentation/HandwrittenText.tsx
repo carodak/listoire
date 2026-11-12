@@ -1,3 +1,4 @@
+import { prefersReducedMotion, reducedMotionMedia } from "../../contracts/reduced-motion.ts";
 import { useEffect, useId, useRef, useState } from "react";
 import { runEffect } from "./effects.ts";
 
@@ -64,7 +65,7 @@ function useHandwritingReveal() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const scope = new AbortController();
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+    const reduce = matchMedia(reducedMotionMedia);
     const playback = runEffect(
       root.current!,
       { id: "fade-in", duration: 420 },
@@ -79,7 +80,7 @@ function useHandwritingReveal() {
   useEffect(() => {
     if (!ready) return;
     const paths = root.current!.querySelectorAll<SVGPathElement>("mask path");
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     const animations = Array.from(paths, (path, index) =>
       path.animate([{ strokeDashoffset: 600 }, { strokeDashoffset: 0 }], {
         duration: 1400,

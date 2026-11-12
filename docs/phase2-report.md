@@ -83,7 +83,7 @@ licensing and unmeasured mobile cost are recorded. Only fade-in, zoom and pan ar
 implemented. There is no full effect sequencer and no installed React Bits package,
 downloaded overlay, additional texture or spritesheet.
 
-[contributions.md](../contributions.md) records source/license evidence and use.
+[contributions.md](contributions.md) records source/license evidence and use.
 The local Heritage license and bundled Sonniss licenses were inspected alongside
 the official provider pages. Both provider copies require care about supplying
 resources as reusable packs; commercial project use is not treated as platform

@@ -443,9 +443,9 @@ it("retains late timing marks while paused so resuming cannot strand a segment",
   session.pause();
   progress({ segmentId: "threshold.key", characters: 5, done: true });
   expect(session.getSnapshot().paused).toBe(true);
-  expect(session.getSnapshot().progress["threshold.key"]).toBe(5);
+  expect(session.getProgress()["threshold.key"]).toBe(5);
   session.resume();
-  expect(session.getSnapshot().progress["threshold.key"]).toBe(5);
+  expect(session.getProgress()["threshold.key"]).toBe(5);
   session.dispose();
 });
 

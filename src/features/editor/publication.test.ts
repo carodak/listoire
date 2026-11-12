@@ -78,6 +78,18 @@ it("publishes both languages, copies only referenced licensed files and removes 
     JSON.parse(await readFile(new URL("public/stories/house/manifest.json", root), "utf8")),
   ).toMatchObject({ locales: ["en", "fr"] });
 });
+it("builds a fresh checkout from the copy kept beside the story (REVIEW #1)", async () => {
+  await buildEditorProject(root);
+  const kept = new URL("stories/house/media/image.webp", root);
+  expect(await readFile(kept)).toEqual(bytes);
+  // A fresh checkout has no ignored library cache and no generated output.
+  await rm(new URL(".fallow/library-cache/", root), { recursive: true });
+  await rm(new URL("public/stories/house/media/image.webp", root));
+  await buildEditorProject(root);
+  expect(await readFile(new URL("public/stories/house/media/image.webp", root))).toEqual(bytes);
+  await writeFile(kept, "edited by hand");
+  await expect(buildEditorProject(root)).rejects.toThrow("Stale editor asset test.image");
+});
 it("merges generated preview clips without replacing an approved recording", async () => {
   const project = StoryProjectSchema.parse(
     JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),

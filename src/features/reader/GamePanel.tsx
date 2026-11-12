@@ -123,10 +123,10 @@ function RewardEvent({ director, state }: Pick<GamePanelProps, "director" | "sta
 }
 
 export function GameInventory({ bundle, director, state }: GamePanelProps) {
+  const { t } = useTranslation();
   const { game, occurrenceId } = state;
   if (!game || !occurrenceId || !game.inventory.length) return null;
   const combat = game.combat;
-  const french = bundle.locale.startsWith("fr");
   return (
     <div className="game-inventory">
       {game.inventory.map((id) => {
@@ -139,16 +139,12 @@ export function GameInventory({ bundle, director, state }: GamePanelProps) {
             {item.slot !== "none" && (
               <button
                 disabled={state.busy || Boolean(combat)}
-                title={
-                  french
-                    ? "Équipement verrouillé pendant le combat"
-                    : "Equipment is locked during combat"
-                }
+                title={t("equipment.locked")}
                 onClick={() =>
                   void director.gameTurn({ kind: selected ? "unequip" : "equip", id }, occurrenceId)
                 }
               >
-                {selected ? (french ? "Retirer" : "Unequip") : french ? "Équiper" : "Equip"}
+                {t(selected ? "equipment.unequip" : "equipment.equip")}
               </button>
             )}
           </div>

@@ -1,3 +1,5 @@
+import { storyFileUrl } from "../../contracts/app-path.ts";
+import { sameOriginFetch } from "../../contracts/same-origin-fetch.ts";
 import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import type { StoryProject } from "../../contracts/editor-project.ts";
 import type { NarrativeEvent } from "../../contracts/narrative-events.ts";
@@ -5,7 +7,7 @@ import { readEditorRecord, writeEditorRecord } from "../../persistence/editor-st
 
 export async function loadDefaultProject(draft: StoryProject | undefined, signal: AbortSignal) {
   try {
-    const response = await fetch("/stories/house/project.json", { signal, redirect: "error" });
+    const response = await sameOriginFetch(storyFileUrl("house", "project.json"), { signal });
     if (!response.ok)
       throw new Error("The built story project is unavailable. Run npm run stories:build.");
     return StoryProjectSchema.parse(await response.json());

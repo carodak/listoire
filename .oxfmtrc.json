@@ -1,6 +1,5 @@
 {
   "ignorePatterns": [
-    "archive/stories/**",
     "assets/catalog/curated.json",
     ".agents/**",
     ".codex/**",

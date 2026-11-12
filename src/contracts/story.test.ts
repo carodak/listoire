@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fixtureBundle } from "../test-fixtures.ts";
 import { BundleSchema } from "./story.ts";
+import { allowsDeviceVoice, defaultReadingPreferences, defaultVolumes } from "./presentation.ts";
 
 const digest = "a".repeat(64);
 /** A valid bundle with one image and one narration recording for `threshold.key`. */
@@ -110,4 +111,15 @@ describe("BundleSchema", () => {
     b.assets[0]!.path = path;
     expect(issues(b)).not.toEqual([]);
   });
+});
+
+it("shares the default volumes and the rule for device voices (REVIEW section 5 #2, #11)", () => {
+  expect(defaultReadingPreferences.volumes ?? defaultVolumes).toEqual(defaultVolumes);
+  expect(Object.keys(defaultVolumes).sort()).toEqual(["ambience", "music", "narration", "sfx"]);
+  expect(["ai-live", undefined].map(allowsDeviceVoice)).toEqual([true, true]);
+  expect(["disabled", "human", "ai-pregenerated"].map(allowsDeviceVoice)).toEqual([
+    false,
+    false,
+    false,
+  ]);
 });

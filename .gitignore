@@ -2,8 +2,10 @@ node_modules/
 dist/
 public/stories/
 playwright-report/
-test-results/
+test-results*/
 coverage/
+*.log
+_to_delete/
 .fallow/
 .npm-cache/
 *.tsbuildinfo

@@ -1,3 +1,4 @@
+import { reducedMotionMedia } from "../../contracts/reduced-motion.ts";
 import { useCombatChoice } from "./use-combat-choice.ts";
 import { ReaderToolbar } from "./ReaderToolbar.tsx";
 import type { StoryPlayerProps as Props } from "./ReaderToolbar.tsx";
@@ -69,7 +70,7 @@ function usePresentationLifecycle({ presentation, preferences }: Props) {
         presentation.resume();
       }
     };
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = matchMedia(reducedMotionMedia);
     const reduce = () => presentation.skipCinematic();
     document.addEventListener("visibilitychange", visibility);
     motion.addEventListener("change", reduce);

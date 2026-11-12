@@ -123,7 +123,7 @@
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
-.reader h1:focus {
+.reader h1:focus:not(:focus-visible) {
   outline: none;
 }
 .prose {
@@ -2091,7 +2091,6 @@
 }
 .reader .examine-photo {
   margin: 0px auto 0;
-  outline: 0;
 }
 .reader .photo-controls-group button {
   display: grid;
