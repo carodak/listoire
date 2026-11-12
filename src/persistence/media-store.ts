@@ -17,7 +17,22 @@ export async function storeUploadedMedia(asset: MediaAsset, blob: Blob) {
     store,
   );
 }
-export async function readUploadedMedia(asset: MediaAsset, storyId = "house"): Promise<Blob> {
+/**
+ * Uploads verified in this page, by id: each component that shows one, on every page, used to
+ * read it again and hash it again (up to 50 MB). An upload's id holds its digest, so its bytes
+ * never change. shortcut: kept until the page closes; evict if many large uploads appear.
+ */
+const verified = new Map<string, Promise<Blob>>();
+export function readUploadedMedia(asset: MediaAsset, storyId = "house"): Promise<Blob> {
+  let reading = verified.get(asset.id);
+  if (!reading) {
+    reading = readAndVerify(asset, storyId);
+    verified.set(asset.id, reading);
+    reading.catch(() => verified.delete(asset.id));
+  }
+  return reading;
+}
+async function readAndVerify(asset: MediaAsset, storyId: string): Promise<Blob> {
   const cached = await get<Blob | MediaBytes>(asset.id, store);
   let blob =
     cached instanceof Blob
