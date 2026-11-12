@@ -222,12 +222,15 @@ export function MediaPicker({ language, library, kind, asset, onAsset }: MediaPi
 }
 const resolvePreview = (asset: MediaAsset) => resolveMediaAsset(asset, "house");
 export function VisualPreview({ asset }: { asset: MediaAsset }) {
-  const url = useAssetSource(asset, resolvePreview);
+  // Only uploads live in this browser and need resolving; a library file is a plain URL, so
+  // the browser loads it lazily, when its card scrolls into view.
+  const uploaded = useAssetSource(asset.upload ? asset : undefined, resolvePreview);
+  const url = asset.upload ? uploaded : storyFileUrl("house", asset.path);
   if (asset.type === "image")
     return url ? (
-      <img className="asset-preview" src={url} alt={asset.alt} loading="lazy" />
+      <img className="asset-preview" src={url} alt={asset.alt} loading="lazy" decoding="async" />
     ) : (
-      <p>Loading image?</p>
+      <p>Loading image…</p>
     );
   return url ? (
     <video
