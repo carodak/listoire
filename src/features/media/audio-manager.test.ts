@@ -40,6 +40,19 @@ it("starts the next spoken page after the previous page was canceled while pause
     vi.unstubAllGlobals();
   }
 });
+it("reports device speech unavailable without a voice for the language, or once aborted", async () => {
+  vi.stubGlobal("speechSynthesis", { getVoices: () => [{ voiceURI: "fr", lang: "fr-FR" }] });
+  vi.stubGlobal("SpeechSynthesisUtterance", class {});
+  const audio = new AudioManager();
+  try {
+    const signal = new AbortController().signal;
+    expect(await audio.speak("Hello", "en", 1, signal, vi.fn())).toBe("unavailable");
+    expect(await audio.speak("Bonjour", "fr", 1, AbortSignal.abort(), vi.fn())).toBe("unavailable");
+  } finally {
+    audio.dispose();
+    vi.unstubAllGlobals();
+  }
+});
 class FakeAudio extends EventTarget {
   volume = 1;
   loop = false;

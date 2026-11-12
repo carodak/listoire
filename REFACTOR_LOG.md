@@ -701,3 +701,12 @@ generated for this project). I did not invent a licence name: **tell me if you w
   page loaded last, and the journey ended with a reload. The save-and-reload step is its own test
   again ("a preset previews on hover and survives … save and reload"), as it was before;
   typography is 4 e2e tests.
+- **Coverage, before → after Part 4** (`npm run test:coverage`, unit + the listed chromium
+  specs): statements 58.55 → 59.31 %, branches 65.25 → 66.05 %, functions 73.72 → 75.18 %
+  (229 files; health 93 both times). Per file, three statements were hit before and not after,
+  all early-return guards reached only by timing: `Noise.jsx` (component gone before its blob),
+  `use-device-voices.ts` (hook disabled) and `audio-manager.ts` "unavailable" (no voice / aborted
+  signal). The last is real behaviour, so it now has a deterministic unit test
+  (`audio-manager.test.ts` "reports device speech unavailable…"). The coverage run also showed my
+  Part 1 byte-budget test passing 5 s under instrumentation: it now has a 30 s limit (70 MB of
+  real data).
