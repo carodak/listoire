@@ -676,3 +676,15 @@ generated for this project). I did not invent a licence name: **tell me if you w
   narration on every following page…" to `editor.spec.ts` (editor preview), "centers the Story
   Editor label…" to `welcome.spec.ts`. Shared: `typography-story.ts` (test story, opener, script),
   `speech.ts` (one fake voice instead of two).
+- **Image specs merged into `image-editor.spec.ts`**: `media-workspace` (18 tests),
+  `image-composition` (7) and `image-references` (10) became three `describe` blocks of one file
+  (the Image dialog on Orée; composition on the house fixture, with its routes in its own
+  `beforeEach`; Orée's references, Chromium-only as before), with one shared `caretTo` (the
+  dialog tests had their own copy) and the snapshot folder renamed with the file. Moved to unit
+  tests: "crops pale borders, preserves full frames and limits the output size" ran pure
+  arithmetic in the browser; that arithmetic is now `cropOutput()` in `smart-crop.ts`, tested in
+  `smart-crop.test.ts` (cap at 2048 px, whole picture kept), next to the existing `inkBounds`
+  test; the browser cropping itself stays covered by `reader-pages.spec.ts` "shows a cropped
+  illustration…". 36 → 35 e2e tests. Coverage list updated.
+- **`src/contracts/scene3d.ts` kept:** `fallow dead-code --trace` shows `presentation.ts`,
+  `story.ts` and `uploaded-media.ts` import it (not only tests).

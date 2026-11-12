@@ -38,7 +38,7 @@ const commands = [
     "tests/e2e/reader-pages.spec.ts",
     "tests/e2e/reader-combat.spec.ts",
     "tests/e2e/reader-saves.spec.ts",
-    "tests/e2e/image-composition.spec.ts",
+    "tests/e2e/image-editor.spec.ts",
     "tests/e2e/presentation.spec.ts",
     "tests/e2e/effects.spec.ts",
     "tests/e2e/reader-data.spec.ts",
