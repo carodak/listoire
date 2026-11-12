@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IdSchema, LocaleSchema, Sha256Schema, SixDigitColorSchema } from "./primitives.ts";
 import { mp3DataUrl } from "./same-origin-fetch.ts";
 import { paragraphAlignments, TypographySpanSchema, validTypographySpans } from "./typography.ts";
 import { GameDefinitionSchema, GameStateSchema } from "./game.ts";
@@ -17,9 +18,8 @@ import {
   SceneSchema,
 } from "./presentation.ts";
 
-const id = z.string().regex(/^[a-z][a-z0-9.-]*$/);
+const id = IdSchema;
 const variableId = z.string().regex(/^[a-z][a-z0-9._-]*$/);
-export const LocaleSchema = z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/);
 export type Locale = z.infer<typeof LocaleSchema>;
 
 /** The passage ID of an Ink knot (`Room_2b` → `room-2b`), in the editor and the reader alike. */
@@ -71,12 +71,9 @@ export const BundleSchema = z
     mode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
     title: z.string().min(1),
     chapter: z.string().min(1),
-    inkDigest: z.string().regex(/^[a-f0-9]{64}$/),
+    inkDigest: Sha256Schema,
     /** Earlier Ink of this release whose saves still load (the author added pages, nothing moved). */
-    compatibleInkDigests: z
-      .array(z.string().regex(/^[a-f0-9]{64}$/))
-      .max(20)
-      .optional(),
+    compatibleInkDigests: z.array(Sha256Schema).max(20).optional(),
     inkjsVersion: z.string().min(1),
     authored: z.boolean().optional(),
     narrationMode: z.enum(["ai-live", "ai-pregenerated", "human", "disabled"]).optional(),
@@ -104,10 +101,7 @@ export const BundleSchema = z
       .object({
         style: z.string(),
         colorMode: z.literal("grayscale"),
-        palette: z
-          .array(z.string().regex(/^#[a-fA-F0-9]{6}$/))
-          .min(2)
-          .max(8),
+        palette: z.array(SixDigitColorSchema).min(2).max(8),
         complexity: z.string(),
       })
       .strict()

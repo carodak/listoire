@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { IdSchema } from "./primitives.ts";
 import { CharacterSchema } from "./character.ts";
-const id = z.string().regex(/^[a-z][a-z0-9.-]*$/);
+const id = IdSchema;
 export const attributes = ["STR", "DEX", "WIL"] as const;
 const attribute = z.enum(attributes);
 const bonus = z.number().int().min(0).max(10);

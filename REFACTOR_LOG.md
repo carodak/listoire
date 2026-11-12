@@ -827,3 +827,4 @@ generated for this project). I did not invent a licence name: **tell me if you w
 - **§4 `deferRoll` naming:** it rolled at once and held the check on its page: renamed `holdCheck`, with a comment on what it does.
 - **§5 #10 `actionTargets`:** the action kind → definitions map (schema check and editor field) is one `actionTargets()` in `contracts/game.ts`.
   Lint fix (`fix(reader): …` below): that commit read the panel `id` inside an effect without listing it (I had linted the wrong folder); `[id]` now (the id never changes, so behaviour is the same).
+- **§5 #8 regex primitives:** the identical regexes are one schema each in `contracts/primitives.ts`: `IdSchema` (5 copies), `LocaleSchema` (4), `Sha256Schema` (6), `SixDigitColorSchema` (3), next to `HexColorSchema`. Patterns unchanged, so stored data validates exactly as before; `variableId` and the speech ID (different patterns) stay where they are.

@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { IdSchema } from "./primitives.ts";
 import { NativeEffectSchema } from "./native-effects.ts";
 import { ReactBitsEffectSchema } from "./effects.ts";
 export const NarrativeEventSchema = z
   .object({
-    id: z.string().regex(/^[a-z][a-z0-9.-]*$/),
+    id: IdSchema,
     phase: z.enum(["enter", "exit"]).optional(),
     trigger: z
       .object({

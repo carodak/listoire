@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LocaleSchema } from "./primitives.ts";
 import { BundleSchema } from "./story.ts";
 import { ReadingPreferencesSchema } from "./presentation.ts";
 import { CharacterSchema } from "./character.ts";
@@ -38,7 +39,7 @@ export const StoryProjectSchema = z
     schemaVersion: z.literal(1),
     storyId: z.literal("house"),
     release: z.string().min(1).max(100),
-    defaultLocale: z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/),
+    defaultLocale: LocaleSchema,
     shareConfiguration: z.boolean().optional(),
     gameMode: z.enum(["narrative", "rpg-no-combat", "with-combat"]),
     variables: z.array(z.string()).max(100),
@@ -58,7 +59,7 @@ export const StoryProjectSchema = z
       .max(1000)
       .optional(),
     languages: z.record(
-      z.string().regex(/^[a-z]{2}(?:-[A-Z]{2})?$/),
+      LocaleSchema,
       z
         .object({
           script: z.string().max(500_000),
