@@ -541,7 +541,7 @@ async function repeat(name: string, measure: () => Promise<Metrics>) {
   return result;
 }
 
-const browser = await chromium.launch({ args: ["--enable-precise-memory-info"] });
+const browser = await chromium.launch({ args: ["--enable-precise-memory-info", "--mute-audio"] });
 // One discarded visit of each page first: a cold dev server compiles modules on demand.
 await reader(browser, "reduce");
 await editor(browser);

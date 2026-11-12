@@ -798,3 +798,11 @@ generated for this project). I did not invent a licence name: **tell me if you w
   after enlarging to 1.45×, the phone's small preview clips the picture's top-left corner (as a
   desktop does for larger pictures), so the phone shrinks with the bottom-right corner. 76/76 on
   four browsers. **Your call:** whether the phone Image dialog should keep its preview in view.
+- **Silent test runs (your request mid-session: you heard every voice).** Chromium and mobile
+  start with `--mute-audio`, Firefox with `media.volume_scale = 0` (`playwright.config.ts`, so the
+  local config inherits it); the perf tool's Chromium too. Device voices go to the OS speech
+  engine, which those switches do not reach: an automatic fixture in `tests/e2e/test.ts` sets
+  every utterance's volume to 0 in all browsers, and on WebKit (no mute switch) mutes each media
+  element as it starts. Media still plays, so "music and ambience really play" and the volume
+  checks still pass: audio-start, narration, house, welcome 80/80 on four browsers, the editor's
+  narration tests on chromium.
