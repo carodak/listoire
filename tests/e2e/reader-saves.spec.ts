@@ -1,6 +1,7 @@
 import { expect, test } from "./test.ts";
 import { readEditorKeys, writeEditorKey } from "./editor-db.ts";
-import { enterReader, playStory, readUntil, settlePage } from "./oree.ts";
+import { enterReader, playStory, settlePage } from "./oree.ts";
+import { startBeforeFirstFight } from "./oree-saves.ts";
 
 test("updates an old active Orée draft while keeping its full previous version in history", async ({
   page,
@@ -76,10 +77,14 @@ test("keeps a check on its page until its dice settle and the reader confirms", 
 test("waits for Fight even after restoring an encounter and animates the combat viewport", async ({
   page,
 }) => {
-  await enterReader(page);
+  await startBeforeFirstFight(page);
+  await enterReader(page, { skipIntro: false });
   const combat = page.locator(".reader-combat-modal");
-  const fight = page.locator(".choices button").filter({ hasText: /^Fight/ });
-  await (await readUntil(page, fight, 35)).click();
+  await page
+    .locator(".choices button")
+    .filter({ hasText: /^Fight/ })
+    .first()
+    .click();
   await expect(combat).toBeVisible();
   await page.reload();
   await playStory(page);
