@@ -541,3 +541,6 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   where "go home" did nothing: it is now plain text, no longer a focusable button. Its
   `.reader-shell .site-header` / `.reader-shell .wordmark` rules could never match and are
   deleted. Test: `welcome.spec.ts` "the wordmark is the site's name…".
+- **Hex colour regex `{3,8}`.** One `HexColorSchema` (`contracts/primitives.ts`): `#rgb` or
+  `#rrggbb`, used by both effect schemas. Every colour in the shipped and test stories is 6-digit.
+  Test: `primitives.test.ts` (fails with the old pattern, checked by swapping it in).

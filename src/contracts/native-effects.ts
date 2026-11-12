@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { HexColorSchema } from "./primitives.ts";
 import { CinematicSchema } from "./cinematic.ts";
 const duration = z.number().min(0).max(10000);
 const timing = {
@@ -6,7 +7,7 @@ const timing = {
   delay: z.number().min(0).max(5000).optional(),
   target: z.enum(["image", "canvas"]).optional(),
 };
-const color = z.string().regex(/^#[a-fA-F0-9]{3,8}$/);
+const color = HexColorSchema;
 const intensity = z.number().min(0).max(1);
 const point = z.number().min(-25).max(25);
 export const NativeEffectSchema = z.discriminatedUnion("id", [
