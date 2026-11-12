@@ -45,12 +45,16 @@ export function startPlayer(
     : undefined;
   return { character, game };
 }
+/**
+ * Applies a story action. `holdCheck`: a check is rolled now and stays on its page, pending,
+ * until the reader confirms it (finishCheck); Back restores the roll's origin.
+ */
 export function resolveGameAction(
   bundle: StoryBundle,
   before: SaveData,
   id: string,
   choiceId: string,
-  deferRoll = false,
+  holdCheck = false,
 ) {
   const definition = GameDefinitionSchema.parse(bundle.game ?? {});
   const action = definition.actions.find((action) => action.id === id);
@@ -58,7 +62,7 @@ export function resolveGameAction(
     throw new ReaderFailure("content");
   const update = copyPlayer(before);
   ruled(() => performAction(update.character, update.game, definition, action, choiceId));
-  if (deferRoll && ["stat-check", "ability-check"].includes(action.kind))
+  if (holdCheck && ["stat-check", "ability-check"].includes(action.kind))
     update.game.pendingCheck = {
       actionId: id,
       choiceId,
