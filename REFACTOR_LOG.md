@@ -599,3 +599,9 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   (`docs/phases2-3-report.md`) and "Coming soon" / "deferred" claims removed. No test (a doc).
 - **Full `mediaLibrary` in the published `project.json` — no longer relevant:** library images are
   freely licensed and may be published with their catalogue (your instruction; AGENTS.md updated).
+- **Unused library copies in `stories/house/media/`.** Checked: the build removed an unused
+  library file from `public/stories/house/media/` but never from `stories/house/media/` (the
+  copies kept so a fresh checkout builds). It now removes a library entry's kept copy once no
+  page uses it, except when that copy is the entry's own source; other files there (narration
+  sources) are left alone. Test: `publication.test.ts` "removes the copy kept beside the story…".
+  The real build changes nothing today: every library copy there is used.

@@ -90,6 +90,21 @@ it("builds a fresh checkout from the copy kept beside the story (REVIEW #1)", as
   await writeFile(kept, "edited by hand");
   await expect(buildEditorProject(root)).rejects.toThrow("Stale editor asset test.image");
 });
+it("removes the copy kept beside the story once no page uses a library file", async () => {
+  const unused = { ...entry, id: "test.unused", runtimePath: "media/unused.webp" };
+  await writeFile(
+    new URL("assets/catalog/curated.json", root),
+    JSON.stringify({ entries: [entry, unused] }),
+  );
+  await mkdir(new URL("stories/house/media/", root), { recursive: true });
+  await writeFile(new URL("stories/house/media/unused.webp", root), bytes);
+  await writeFile(new URL("stories/house/media/not-a-library-file.mp3", root), bytes);
+  await buildEditorProject(root);
+  expect((await readdir(new URL("stories/house/media/", root))).sort()).toEqual([
+    "image.webp",
+    "not-a-library-file.mp3",
+  ]);
+});
 it("merges generated preview clips without replacing an approved recording", async () => {
   const project = StoryProjectSchema.parse(
     JSON.parse(await readFile(new URL("stories/house/project.json", root), "utf8")),

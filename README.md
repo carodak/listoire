@@ -77,7 +77,8 @@ variables and rewards; presentation never grants items or rolls dice.
 Source libraries stay local under `assets/` (not published as such). The
 [curated catalogue](assets/catalog/curated.json) records each library file's origin, hash and
 optimised copy; the build copies the files the story uses into `stories/house/media/` (so a
-fresh checkout builds without the libraries) and `public/stories/house/media/`. Licences and
+fresh checkout builds without the libraries) and `public/stories/house/media/`, and removes
+both copies once no page uses the file. Licences and
 attributions are in [contributions.md](docs/contributions.md).
 
 Read aloud uses recorded or generated clips where the story has them (generated clips remain

@@ -87,6 +87,12 @@ export async function buildEditorProject(root: URL) {
   for (const file of await readdir(new URL("media/", output)))
     if (/^[a-z0-9.-]+\.(webp|mp3|mp4|webm|glb)$/.test(file) && !referenced.has(file))
       await rm(new URL(`media/${file}`, output));
+  // The copies kept beside the story follow it too, unless a copy is the library file's source.
+  for (const entry of curated.entries as CuratedAsset[]) {
+    const path = entry.runtimePath ?? entry.optimizedPath.replace("stories/house/", "");
+    if (!referenced.has(path.slice("media/".length)) && !entry.optimizedPath.startsWith("stories/"))
+      await rm(new URL(`stories/house/${path}`, root), { force: true });
+  }
 }
 
 function libraryEntry(entry: {
