@@ -737,7 +737,15 @@ generated for this project). I did not invent a licence name: **tell me if you w
   departure (pauses its animations, as "dissolves words upward…" already does), checks the old
   heading and the 920 ms illustration fade, then lets it play. 15/15 on chromium, firefox,
   webkit with `--repeat-each=5 --workers=4`.
-- **My first `page-frame` attempt, reverted (your instruction):** letting the reader scroll the
-  text for keys pressed inside it did not make `page-frame` pass on webkit. Investigating again.
+- **`page-frame` "keys scroll the text without a click" (webkit) — app.** My first attempt
+  (also scroll for keys pressed inside the text) was reverted on your instruction: it did not make
+  the test pass. Found the second cause: after a toolbar click Safari/WebKit leaves the focus on
+  `<body>`, outside the `<main>` that held the key handler, so End/PageDown never reached it. Two
+  gaps a real Safari keyboard reader has: (1) a focused heading does not scroll its overflow
+  container natively; (2) keys after a toolbar click go to `<body>`. The reader's scroll keys are
+  now handled on the document, for keys from inside the reader or from `<body>` (not in the
+  editor's preview, where `<body>` is the editor's), still leaving controls, windows, space on
+  buttons and already-handled keys alone. `page-frame`, `side-panels`, `magnifier`, `reader`
+  pass on chromium, firefox, webkit and mobile; editor and typography specs pass on chromium.
 - **Process:** the fallow commit hook did not block a failing audit earlier (Part 1, Part 4); I
   run `fallow audit --base main` myself before every commit.

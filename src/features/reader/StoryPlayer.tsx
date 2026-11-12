@@ -3,7 +3,7 @@ import { useCombatChoice } from "./use-combat-choice.ts";
 import { ReaderToolbar } from "./ReaderToolbar.tsx";
 import type { StoryPlayerProps as Props } from "./ReaderToolbar.tsx";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { KeyboardEvent, Ref } from "react";
+import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { FailureCode, Frame } from "../../contracts/story.ts";
 import type { ReaderSnapshot } from "../../contracts/story.ts";
@@ -102,6 +102,17 @@ function ReaderPassage(props: ReaderPassageProps) {
   useEffect(() => {
     if (!player.preview) heading.current?.focus();
   }, [state.occurrenceId, player.preview]);
+  // On the document: Safari leaves the focus on the body after a toolbar click.
+  useEffect(() => {
+    const keys = (event: KeyboardEvent) => {
+      const target = event.target as Node;
+      const outside = player.preview || target !== document.body;
+      if (!page.current?.contains(target) && outside) return;
+      scrollText(event, board.current);
+    };
+    document.addEventListener("keydown", keys);
+    return () => document.removeEventListener("keydown", keys);
+  }, [player.preview]);
 
   return (
     <main
@@ -111,7 +122,6 @@ function ReaderPassage(props: ReaderPassageProps) {
       lang={bundle.locale}
       aria-busy={state.busy}
       style={pageStyle(player)}
-      onKeyDown={(event) => scrollText(event, board.current)}
     >
       <ReaderToolbar
         player={player}
@@ -221,15 +231,16 @@ function PageEffects({ layers }: { layers: PresentationState["layers"] }) {
 const SCROLL_KEYS = new Set(["PageDown", "PageUp", "ArrowDown", "ArrowUp", "Home", "End", " "]);
 
 /**
- * Scroll keys pressed outside the text (after a toolbar click) still scroll the text when the
- * board is the scroll container (fixed frame). Controls and windows keep their own keys.
+ * Scroll keys scroll the text when the board is the scroll container (fixed frame), wherever the
+ * focus is in the reader: after a toolbar click, and on the focused heading, which Safari does
+ * not scroll from. Controls and windows keep their own keys.
  */
-function scrollText(event: KeyboardEvent<HTMLElement>, board: HTMLDivElement | null) {
+function scrollText(event: KeyboardEvent, board: HTMLDivElement | null) {
   const target = event.target as HTMLElement;
   if (
     !board ||
+    event.defaultPrevented ||
     !SCROLL_KEYS.has(event.key) ||
-    board.contains(target) ||
     board.scrollHeight <= board.clientHeight ||
     target.closest("input, select, textarea, dialog, .reader-sidebar, details") ||
     (event.key === " " && target.closest("button, a, summary"))
