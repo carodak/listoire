@@ -527,3 +527,8 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   after a failed `restart()` to keep its `occurrenceId`; it now checks the same checkpoint
   (every other field), an occurrence `^<old>:retry:`, `restored: true`, and continues the fight
   with that occurrence. The checkpoint, save and RNG assertions are unchanged.
+- **Settings parsed all-or-nothing.** `SaveManager.settings()` reads each field on its own:
+  language and welcome sound fall back alone; each reading preference that no longer reads takes
+  its default (required ones) or is dropped (optional ones); unknown keys are dropped. Before,
+  one bad preference reset all of them (and the next save overwrote them). Test:
+  `director.test.ts` "keeps every stored preference that still reads…".

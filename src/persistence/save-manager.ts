@@ -1,6 +1,8 @@
 import { SaveSchema, ReaderFailure, SettingsSchema } from "../contracts/story.ts";
 import type { ReaderSettings, SaveData, StoryBundle } from "../contracts/story.ts";
 import { validateCheckpoint } from "../contracts/save-validation.ts";
+import { defaultReadingPreferences, ReadingPreferencesSchema } from "../contracts/presentation.ts";
+import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { z } from "zod";
 
 const LegacySettings = z
@@ -10,6 +12,13 @@ const LegacySettings = z
     storyLocale: SettingsSchema.shape.language,
   })
   .strict();
+
+const record = (value: unknown): Record<string, unknown> =>
+  typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+function field<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
+  const parsed = schema.safeParse(value);
+  return parsed.success && parsed.data !== undefined ? parsed.data : fallback;
+}
 
 export interface SaveStore {
   read(key: string): Promise<unknown>;
@@ -58,16 +67,32 @@ export class SaveManager {
     return JSON.stringify(await this.store.read(this.key(bundle)), null, 2) ?? "null";
   }
 
+  /** Field by field: one preference that no longer reads falls back alone, not all of them. */
   async settings(): Promise<ReaderSettings> {
     const raw = await this.store.read("reader-settings");
-    const parsed = SettingsSchema.safeParse(raw);
-    if (parsed.success) return parsed.data;
     const legacy = LegacySettings.safeParse(raw);
-    return {
+    const stored = record(raw);
+    const reading = record(stored.reading);
+    const fields = ReadingPreferencesSchema.shape;
+    return SettingsSchema.parse({
       schemaVersion: 2,
-      language: legacy.success ? legacy.data.interfaceLocale : "en",
-      welcomeSound: true,
-    };
+      language: field(
+        SettingsSchema.shape.language,
+        stored.language,
+        legacy.success ? legacy.data.interfaceLocale : "en",
+      ),
+      welcomeSound: field(SettingsSchema.shape.welcomeSound, stored.welcomeSound, true),
+      ...(stored.reading !== undefined &&
+        Object.keys(reading).length && {
+          reading: Object.fromEntries(
+            Object.entries(fields).flatMap(([key, schema]) => {
+              const fallback = defaultReadingPreferences[key as keyof ReadingPreferences];
+              const value = field(schema as z.ZodType, reading[key], fallback);
+              return value === undefined ? [] : [[key, value]];
+            }),
+          ),
+        }),
+    });
   }
 
   async saveSettings(settings: ReaderSettings): Promise<void> {

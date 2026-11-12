@@ -261,6 +261,38 @@ it("migrates the previous two-language preference without rewriting story saves"
   });
   expect(await saves.backup(bundle)).toBe(before);
 });
+it("keeps every stored preference that still reads when another one does not", async () => {
+  await store.update("reader-settings", () => ({
+    schemaVersion: 2,
+    language: "fr",
+    welcomeSound: false,
+    reading: {
+      fontSize: "huge",
+      fontFamily: "sans",
+      lineHeight: "spacious",
+      reveal: "progressive",
+      sound: false,
+      narrationRate: 1.5,
+      volumes: { sfx: 2, ambience: 0.3, music: 0.3, narration: 0.8 },
+      preferenceFromALaterVersion: true,
+    },
+  }));
+  expect(await saves.settings()).toEqual({
+    schemaVersion: 2,
+    language: "fr",
+    welcomeSound: false,
+    reading: {
+      fontSize: "medium",
+      fontFamily: "sans",
+      lineHeight: "spacious",
+      reveal: "progressive",
+      sound: false,
+      narrationRate: 1.5,
+    },
+  });
+  await store.update("reader-settings", () => ({ schemaVersion: 2, language: "de", reading: 3 }));
+  expect(await saves.settings()).toEqual({ schemaVersion: 2, language: "en", welcomeSound: true });
+});
 it("rejects a checkpoint for another story before writing the current slot", async () => {
   await player().load();
   const save = (await saves.read(bundle))!;
