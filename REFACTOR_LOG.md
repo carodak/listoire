@@ -782,3 +782,10 @@ generated for this project). I did not invent a licence name: **tell me if you w
     the tests timed out. They now close the panel first, as a phone reader does; "the panel stays
     open from page to page" (it sits beside the text on wider screens) is checked off-phone only.
   All four pass on chromium, firefox, webkit, mobile.
+- **`reader-combat` "two beats per turn, then the outcome between the portraits…" (mobile) —
+  test.** Screenshot of the phone's combat ending: "Victory!" is centred on the 36 px gap between
+  the portraits, wider than the gap, so its pill overlaps both, still legible (desktop: a 337 px
+  gap, title inside it). The test required the whole title inside the gap. It now requires the
+  title centred on the gap (±2 px) on every layout, and inside it whenever the gap is at least the
+  title's width (so exactly as before on every desktop). 4/4 browsers.
+  **Look by hand:** whether you want the phone's "Victory!" smaller, to fit between the portraits.

@@ -177,7 +177,7 @@ test("combat: info opens from the keyboard, items open in a popup inside the win
   await expect(items).toBeFocused();
 });
 
-/** The outcome title sits between the two portraits. */
+/** The outcome title is centred between the two portraits, and inside the gap if it fits. */
 async function outcomeBetweenPortraits(combat: Locator) {
   const [enemy, player, middle] = await Promise.all(
     [
@@ -186,8 +186,14 @@ async function outcomeBetweenPortraits(combat: Locator) {
       ".combat-ending-title",
     ].map(async (selector) => (await combat.locator(selector).boundingBox())!),
   );
-  expect(middle!.x).toBeGreaterThanOrEqual(enemy!.x + enemy!.width - 1);
-  expect(middle!.x + middle!.width).toBeLessThanOrEqual(player!.x + 1);
+  const gap = { left: enemy!.x + enemy!.width, right: player!.x };
+  const centre = middle!.x + middle!.width / 2;
+  expect(Math.abs(centre - (gap.left + gap.right) / 2)).toBeLessThan(2);
+  // Inside the gap whenever it fits (a phone's gap is narrower than the title).
+  if (gap.right - gap.left >= middle!.width) {
+    expect(middle!.x).toBeGreaterThanOrEqual(gap.left - 1);
+    expect(middle!.x + middle!.width).toBeLessThanOrEqual(gap.right + 1);
+  }
 }
 
 /** Records whether the combat window took its closing (fade-out) class. */
