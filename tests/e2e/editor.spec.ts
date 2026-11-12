@@ -642,7 +642,10 @@ test("the preview follows typing in its final state, with instant text, its scro
   await expect(last.locator("[aria-hidden]")).toHaveText(/in a progressive story\.$/, {
     timeout: 1000,
   });
-  const scroller = page.locator(".preview-slot .reader-board");
+  // The text's own frame scrolls on a computer; on a phone, the whole preview does.
+  const board = page.locator(".preview-slot .reader-board");
+  const boardScrolls = await board.evaluate((node) => node.scrollHeight > node.clientHeight + 100);
+  const scroller = boardScrolls ? board : page.locator(".preview-slot .experience-preview");
   await scroller.evaluate((node) => (node.scrollTop = 240));
   const top = await scroller.evaluate((node) => node.scrollTop);
   expect(top).toBeGreaterThan(100);

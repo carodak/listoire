@@ -2,17 +2,111 @@
 
 ## ☀ Summary — Pass 13 (read this first)
 
-Branch **`chore/next`** (from `main`), nothing pushed. Work list (from your message), in order.
-If interrupted: resume from the first unchecked item.
+Branch **`chore/next`** (from `main`), nothing pushed, nothing on `main`. Every part of your list
+is done or explicitly listed as not done; details per part in "Pass 13" at the end of this file.
+Your uncommitted `AGENTS.md` change is still uncommitted (yours).
 
-- [x] Part 0 — `_to_delete/` deleted (148 MB, untracked); `git status` identical before/after.
-- [x] Part 1 — REVIEW #4 (a): one key per history version (write 669 → 73 ms with a full history).
-- [x] Part 2 — REVIEW section 3: 14 fixes, 1 left as is (logged), unused media removed.
-- [x] Part 3 — `docs/contributions.md` lists the story and library resources only.
-- [x] Part 4 — test consolidation (numbers under "Part 4" below).
-- [x] Part 5 — firefox/webkit/mobile failures (5 app fixes, the rest test-side; see Part 5).
-- [x] Part 6 — REVIEW sections 4, 5, 8: 9 items done, the rest listed with reasons.
-- [ ] End — full checks, four browsers, perf, REVIEW table, this summary.
+|                                             | Start of session                     | Now                                         |
+| ------------------------------------------- | ------------------------------------ | ------------------------------------------- |
+| Unit tests                                  | 484                                  | **504** (69 files)                          |
+| Test files / test LOC (cloc)                | 91 / 12,075                          | **95 / 12,094** (before Part 4: 93 / 12,495) |
+| E2E tests per browser                       | 152 (chromium 164 s)                 | **143** (chromium CHROMIUM_TIME)            |
+| Coverage: statements / branches / functions | 58.55 / 65.25 / 73.72 %              | **59.44 / 66.20 / 75.27 %**                 |
+| Health `--coverage` (floor 92)              | 93                                   | **93**                                      |
+| E2E, four browsers                          | 33 failures (fx 2, wk 11, mobile 20) | FOUR_BROWSER_RESULT                         |
+| `stories/house/media/`                      | 143 files, 18 MB                     | 29 files, 6.1 MB                            |
+
+- **Part 0:** `_to_delete/` deleted (148 MB); `git status` identical before and after.
+- **Part 1** (REVIEW #4 a, approved): one IndexedDB key per history version, 30 versions and a
+  64 M-character budget. The old record is moved once on load, read back and compared before it is
+  deleted; if anything fails it is kept and used (console warning). Tests on a real exported Orée
+  record (Brotli fixture), an interrupted move, the new format, the budget. One write with a full
+  history **669 → 51 ms** (named save), **660 → 44 ms** (autosave); editor autosave **333 → 178 ms**.
+- **Part 2:** 14 section 3 fixes, each with a test that failed before; README rewritten;
+  `usePreviewPlayer` left as is (why in Part 2). The build now removes unused library copies from
+  `stories/house/media/` too, and the 114 old-story files there are deleted.
+- **Part 3:** `docs/contributions.md` lists only what the story and library use, with licences.
+- **Part 4:** rules tests one file per module; `reader-request` split into pages, combat and saves
+  (each test ≤ 40 lines, helpers shared); typography 17 → 4 e2e tests; three image specs → one;
+  crop arithmetic moved to a unit test; scene3d kept (imported by 3 contracts). Coverage up.
+- **Part 5:** the 33 failures fixed on their browsers: **4 app fixes for Safari/WebKit** (side
+  panels return focus, scroll keys after a toolbar click, a new page starts at the top, dragging
+  image layers), the rest test-side (each explained); mobile image references generated and
+  reviewed. Test browsers now make **no sound** (your request).
+- **Part 6:** 9 small items done; the rest listed with reasons.
+
+### Performance (`npm run perf`, end vs start of session)
+
+No metric is worse by more than 10 % once drift is ruled out. Four looked worse in the raw
+comparison; each was re-measured **back to back against `main`'s code on the same server**:
+welcome ready 475 ms (`main`) vs 479–492 ms (now); worst keystroke 24.2 vs 25.7 ms; library image
+requests 75 vs 75; library long task 0 vs 0. The start values were a faster moment of the
+machine (the drift Pass 12 noted). Gains: store writes −92 %, autosave −46 %, editor heap −12 %,
+reader with a draft −24 %, Image dialog open −38 %.
+
+### REVIEW (docs/REVIEW.md) — status after this pass
+
+| Item                                         | Status                                                          |
+| -------------------------------------------- | --------------------------------------------------------------- |
+| #4 history format                            | **Done** `d98e30c` (option a); #4 is fully done                 |
+| #12 editor code on the reader path           | Unchanged (Pass 12: ~10 KB, measured)                           |
+| #14 editable "Stable ID"                     | Unchanged (needs a rename-references design)                    |
+| §3 editor lockout after a schema change      | **Done** `6a6017f`                                              |
+| §3 director re-present after a failed save   | **Done** `3ea5b24`                                              |
+| §3 `previousPages` memory                    | **Done** `688d5c6`                                              |
+| §3 untagged line IDs                         | **Done** `e0159ff`                                              |
+| §3 two slug functions                        | **Done** `63316b0`                                              |
+| §3 hex colour regex                          | **Done** `53365cc`                                              |
+| §3 `sameOriginFetch` byte limit              | **Done** `82af413`                                              |
+| §3 `usePreviewPlayer` reset                  | **Not changed** (deliberate since `1932886`; see Part 2)        |
+| §3 top-level `await` in `main.tsx`           | **Done** `d0f0f70`                                              |
+| §3 settings all-or-nothing                   | **Done** `82506a8`                                              |
+| §3 volume slider writes                      | **Done** `2a1a2e3`                                              |
+| §3 ReactBits safety overrides                | **Done** `95fa9f3` (+ editor note on the mobile policy)         |
+| §3 full `mediaLibrary` published             | **No longer relevant** (your decision)                          |
+| §3 illustration pack caption/examination     | **Done** `810d6f5`                                              |
+| §3 no-op wordmark button                     | **Done** `88476f3`                                              |
+| §3 "Preview from intro"                      | **Done** `19aa4dc`                                              |
+| §3 README stale                              | **Done** `70657ab`                                              |
+| §4 dead `combat` prop                        | **Done** `6816364` + `4d01990`                                  |
+| §4 Ribbon `"unavailable"`                    | **Done** `6e4d38f`                                              |
+| §4 `deferRoll` naming                        | **Done** `52c9bbf` (`holdCheck`)                                |
+| §4 `revealRemaining` double publish          | **Done** `fc00a8d`                                              |
+| §4 mid-file import                           | **Done** `e4514e7`                                              |
+| §4 unused i18n keys                          | **Done** `0fbd908` (all 13)                                     |
+| §4 FR typo                                   | **Done** `4f81367`                                              |
+| §4 `storyId: "house"`                        | **Skipped: stored format**                                      |
+| §4 tooltips observer, prop drilling          | Open (refactors; reasons in Part 6)                             |
+| §5 #8 regex primitives                       | **Done** `53365cc` + `f8612ab`                                  |
+| §5 #9 enum lists                             | **Done** `ccd5b58`                                              |
+| §5 #10 `actionTargets`                       | **Done** `aef58d4`                                              |
+| §5 #12, #14–#18                              | Open (refactors; reasons in Part 6)                             |
+| §8 CSP, structural equality, `dissolveWords`, scene3d flag | Open (reasons in Part 6)                          |
+
+### ⚠ Needs you
+
+- **Sketch pack licence wording** in `docs/contributions.md`: "supplied by the project's author,
+  who authorises their publication" (from the catalogue). Should a licence name be stated?
+- **Phone Image dialog:** the preview scrolls away from its settings on one column. I tried
+  keeping it in view and reverted (Part 5). Your design call.
+- **Phone combat ending:** "Victory!" is wider than the gap between the portraits and overlaps
+  them a little (legible). Smaller title on phones?
+- The fallow commit hook did not block a failing audit. I ran `fallow audit --base main` before
+  every commit; one failing commit still slipped through my own helper (`6816364`) and was fixed
+  by the next (`4d01990`).
+- Untracked `.claude/` and `.mcp.json` appeared during the session; not mine, left alone.
+
+### What to test by hand
+
+- **Safari on a Mac:** cut and paste a `// @media` line in the editor (WebKit for Windows could
+  not); open a reader side panel and press Escape (focus returns to its button); click Pause, then
+  PageDown or End (the text scrolls); drag a row in Media › Image › layers panel.
+- **A phone:** read a long page and choose at the bottom: the next page starts at the top; the
+  reward card does not cover the text.
+- **Editor history:** History → Restore an old version (versions now load on demand).
+- **Reader preferences:** drag a volume slider, reload: the last value is kept.
+- If you ever have an editor draft from an older schema: the loading screen offers Download /
+  Start from the original story.
 
 ## ☀ Summary — Pass 12 (previous session)
 
