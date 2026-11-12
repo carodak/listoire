@@ -721,3 +721,7 @@ generated for this project). I did not invent a licence name: **tell me if you w
   On WebKit only, the test pastes through Ace's own entry point (`editor.onPaste`); what it tests
   (the image and its settings come back with the line) is unchanged. **Test by hand: cut and paste
   a `// @media` line in real Safari.**
+- **`side-panels` focus return (webkit ×2) — app.** Safari and WebKit do not focus a button on
+  click, so the side panel remembered `body` as its opener and Escape left focus nowhere. A real
+  Safari user (mouse, then keyboard) would lose their place. `ReaderSidebar` now falls back to the
+  toggle that controls it (`aria-controls`). Passes on chromium, firefox, webkit.

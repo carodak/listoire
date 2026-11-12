@@ -13,7 +13,11 @@ interface ReaderSidebarProps {
 export function ReaderSidebar({ id, label, className, onClose, children }: ReaderSidebarProps) {
   const panel = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
-    const opener = document.activeElement;
+    // Safari does not focus a clicked button: fall back to the toggle that controls this panel.
+    const opener =
+      document.activeElement && document.activeElement !== document.body
+        ? document.activeElement
+        : document.querySelector(`[aria-controls="${id}"]`);
     panel.current?.focus({ preventScroll: true });
     return () => {
       if (opener instanceof HTMLElement && opener.isConnected)
