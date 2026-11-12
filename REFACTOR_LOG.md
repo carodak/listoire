@@ -11,7 +11,7 @@ If interrupted: resume from the first unchecked item.
 - [x] Part 3 — `docs/contributions.md` lists the story and library resources only.
 - [x] Part 4 — test consolidation (numbers under "Part 4" below).
 - [x] Part 5 — firefox/webkit/mobile failures (5 app fixes, the rest test-side; see Part 5).
-- [ ] Part 6 — REVIEW sections 4, 5, 8.
+- [x] Part 6 — REVIEW sections 4, 5, 8: 9 items done, the rest listed with reasons.
 - [ ] End — full checks, four browsers, perf, REVIEW table, this summary.
 
 ## ☀ Summary — Pass 12 (previous session)
@@ -834,3 +834,16 @@ generated for this project). I did not invent a licence name: **tell me if you w
   Lint fix (`fix(reader): …` below): that commit read the panel `id` inside an effect without listing it (I had linted the wrong folder); `[id]` now (the id never changes, so behaviour is the same).
 - **§5 #8 regex primitives:** the identical regexes are one schema each in `contracts/primitives.ts`: `IdSchema` (5 copies), `LocaleSchema` (4), `Sha256Schema` (6), `SixDigitColorSchema` (3), next to `HexColorSchema`. Patterns unchanged, so stored data validates exactly as before; `variableId` and the speech ID (different patterns) stay where they are.
 - **§5 #9 enum lists:** item slots, ability effects, difficulties, enemy profiles, game modes, narration modes, media layouts and cinematic speed/intensity/direction are exported `as const` lists used by both the schemas and the editor (the existing `attributes` pattern); lists keep the order the editor shows.
+- **Not done in Part 6, and why** (all still open in the REVIEW table):
+  - §4 `storyId: "house"` — **skipped: stored format** (save keys, editor keys, published paths).
+  - §4 `tooltips.ts` MutationObserver, §4 `PresentationSession` prop drilling, §5 #12 speech
+    utterance setup (editor preview through `AudioManager.speak`), #14 form dialog, #15 definition
+    editor, #16 shared tabs, #17 effect playback, #18 migrations module — real refactors across
+    many components; each needs its own pass with e2e on four browsers. Not started, rather than
+    half-done at the end of a long session.
+  - §8 CSP — needs a production build checked against every feature (workers, blob/data URLs,
+    WebGL effects, inline styles); §8 structural equality instead of `JSON.stringify` — the
+    compared objects are built and cloned by the same code, so key order is stable today;
+    a change would need a deep-equal helper and its own tests; §8 `dissolveWords` per grapheme
+    on phones — needs a mobile performance measurement first; §8 scene3d behind a flag — a
+    product decision (it is reachable: `presentation.ts`, `story.ts`, `uploaded-media.ts`).
