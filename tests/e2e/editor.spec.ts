@@ -592,3 +592,40 @@ test("backs up a human recording and restores the complete project from history"
   const restored = JSON.parse(await readFile((await (await restoredDownload).path())!, "utf8"));
   expect(restored.languages.en.configuration.embeddedAudio).toBeUndefined();
 });
+
+test("after an editor update that no longer reads the saved draft, keeps it and starts again on request", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await expect(page.locator(".editor-status [role=status]")).toContainText("Saved");
+  // A stored draft from a schema this editor does not know.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open("listoire-editor");
+        request.onsuccess = () => {
+          const projects = request.result
+            .transaction("projects", "readwrite")
+            .objectStore("projects");
+          const record = projects.get("house/record");
+          record.onsuccess = () =>
+            projects.put({ ...record.result, draft: { retired: true } }, "house/record");
+          projects.transaction.oncomplete = () => resolve();
+          projects.transaction.onerror = () => reject(projects.transaction.error);
+        };
+      }),
+  );
+  await page.reload();
+  await expect(page.getByRole("status")).toContainText("does not match this version");
+  const saved = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download the saved project" }).click();
+  const file = await readFile((await (await saved).path())!, "utf8");
+  expect(JSON.parse(file).draft).toEqual({ retired: true });
+  await page.getByRole("button", { name: "Start from the original story" }).click();
+  await expect(page.getByLabel("Story title", { exact: true })).toHaveValue(
+    "The House That Remembered",
+  );
+  await page.getByRole("tab", { name: "Review", exact: true }).click();
+  await page.getByRole("button", { name: "History", exact: true }).click();
+  await expect(page.getByText("Started again: the saved project could not be read")).toBeVisible();
+});

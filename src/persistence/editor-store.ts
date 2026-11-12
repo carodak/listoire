@@ -28,7 +28,8 @@ const RecordSchema = z
   .object({
     revision: z.number().int().nonnegative(),
     draft: StoryProjectSchema,
-    published: PublishedProjectSchema.nullable(),
+    // Derived from the draft: one that no longer reads is dropped, and the editor publishes again.
+    published: PublishedProjectSchema.nullable().catch(null),
     history: z.array(VersionSchema).max(maxVersions),
   })
   .strict();
@@ -51,6 +52,25 @@ const StoredSchema = z.object({
 });
 const store = createStore("listoire-editor", "projects");
 
+/**
+ * The stored draft no longer matches this editor's schema (after an update). It stays stored as
+ * it is: the author can download it, or replace the draft at `revision` (history is kept).
+ */
+export class UnreadableEditorRecord extends Error {
+  readonly revision: number;
+  readonly raw: unknown;
+  constructor(raw: unknown, cause: unknown) {
+    super("The saved project does not match this version of the editor", { cause });
+    this.raw = raw;
+    this.revision = StoredSchema.safeParse(raw).data?.revision ?? 0;
+  }
+}
+function readable<T>(schema: z.ZodType<T>, raw: unknown) {
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) throw new UnreadableEditorRecord(raw, parsed.error);
+  return parsed.data;
+}
+
 export async function readEditorRecord(): Promise<EditorRecord | null> {
   const legacy = await get(legacyKey, store);
   if (legacy !== undefined)
@@ -58,10 +78,10 @@ export async function readEditorRecord(): Promise<EditorRecord | null> {
       await migrate(legacy);
     } catch (error) {
       console.warn("Editor history kept in its previous format:", error);
-      return fromLegacy(LegacyRecordSchema.parse(legacy));
+      return fromLegacy(readable(LegacyRecordSchema, legacy));
     }
   const raw = await get(recordKey, store);
-  return raw === undefined ? null : RecordSchema.parse(raw);
+  return raw === undefined ? null : readable(RecordSchema, raw);
 }
 
 /** A history version's project, validated as it is read. */

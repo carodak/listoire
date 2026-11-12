@@ -8,6 +8,7 @@ import type { EditorView } from "./editor-view.ts";
 import { EditorActions } from "./editor-actions.ts";
 import type { EditorActionContext } from "./editor-actions.ts";
 import { useEditorProject } from "./use-editor-project.ts";
+import { download } from "./downloads.ts";
 import { useEditorTooltips } from "./tooltips.ts";
 import { editorShortcut } from "./editor-shortcuts.ts";
 import { EditorHeader } from "./EditorHeader.tsx";
@@ -43,12 +44,27 @@ const initialView: EditorView = {
 };
 export function StoryEditor({ renderPreview }: StoryEditorProps) {
   const state = useEditorProject();
+  const { t } = useTranslation();
+  const unreadable = state.unreadable;
   return state.project ? (
     <LoadedEditor state={state} project={state.project} renderPreview={renderPreview} />
   ) : (
     <main className="editor-loading">
       <h1>Story Editor</h1>
       <p role="status">{state.status}</p>
+      {unreadable && (
+        <>
+          <p>{t("editor.unreadable.hint")}</p>
+          <button
+            onClick={() => download("listoire-saved-project.json", JSON.stringify(unreadable.raw))}
+          >
+            {t("editor.unreadable.download")}
+          </button>{" "}
+          <button className="primary" onClick={() => void state.startAgain(unreadable.revision)}>
+            {t("editor.unreadable.startAgain")}
+          </button>
+        </>
+      )}
       <a href="/">Return to reader</a>
     </main>
   );

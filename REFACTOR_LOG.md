@@ -503,3 +503,17 @@ checkpoint's project with `readEditorVersion(id)` instead of `history[i].project
 `reader-request.spec.ts` "updates an old active Orée draft…" reads `house/record` and the
 version key instead of `house` (it still seeds an old-format record, so it now also covers the
 migration in a real browser).
+
+### Part 2 — REVIEW section 3
+
+Each fix has a test that fails without it (checked by stashing the fix and running the test).
+
+- **Editor lockout after a schema change.** A stored publication that no longer reads is dropped
+  (it is derived from the draft; the editor publishes again). A draft that no longer reads raises
+  `UnreadableEditorRecord` with the stored revision; the editor's loading screen then explains it
+  and offers **Download the saved project** (the raw record as JSON) and **Start from the
+  original story** (replaces the draft at that revision; history checkpoints stay, each one is
+  validated when restored). Nothing is deleted without the author's click. Tests:
+  `editor-store.test.ts` (2), `editor.spec.ts` "after an editor update that no longer reads…".
+  Limit: an *old-format* record whose history versions no longer read stays unreadable as a whole
+  (the move needs every version); start again replaces only its draft.

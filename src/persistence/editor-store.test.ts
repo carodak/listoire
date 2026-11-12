@@ -4,7 +4,12 @@ import { readFileSync } from "node:fs";
 import { brotliDecompressSync } from "node:zlib";
 import { clear, createStore, get, keys, set } from "idb-keyval";
 import { StoryProjectSchema } from "../contracts/editor-project.ts";
-import { readEditorRecord, readEditorVersion, writeEditorRecord } from "./editor-store.ts";
+import {
+  readEditorRecord,
+  readEditorVersion,
+  UnreadableEditorRecord,
+  writeEditorRecord,
+} from "./editor-store.ts";
 
 const interrupt = vi.hoisted(() => ({ readBack: false }));
 vi.mock("idb-keyval", async (original) => {
@@ -162,4 +167,24 @@ it("reads a record already in the new format as it is", async () => {
   expect(await keys(store)).toEqual(before);
   expect(await get("house", store)).toBeUndefined();
   expect(warn).not.toHaveBeenCalled();
+});
+
+it("after a schema change, reports the stored draft as unreadable and lets the author replace it", async () => {
+  let record = await writeEditorRecord(project, 0, "Original story");
+  record = await writeEditorRecord(edited("Kept"), record.revision, "Save project");
+  const stored = { ...(await get("house/record", store)), draft: { ...project, retired: true } };
+  await set("house/record", stored, store);
+  const error = await readEditorRecord().catch((error: unknown) => error);
+  expect(error).toBeInstanceOf(UnreadableEditorRecord);
+  expect(error).toMatchObject({ revision: record.revision, raw: stored });
+  // Starting again replaces the draft at that revision; the history stays.
+  const fresh = await writeEditorRecord(project, record.revision, "Started again");
+  expect((await readEditorRecord())!.draft).toEqual(project);
+  expect(await readEditorVersion(fresh.history[1]!.id)).toEqual(edited("Kept"));
+});
+
+it("drops a stored publication that no longer reads, so the editor publishes again", async () => {
+  const record = await writeEditorRecord(project, 0, "Original story");
+  await set("house/record", { ...record, published: { revision: 1, bundles: { en: {} } } }, store);
+  expect((await readEditorRecord())!.published).toBeNull();
 });

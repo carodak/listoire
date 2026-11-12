@@ -209,6 +209,11 @@ const en = {
     backup: "The copy of your saved progress could not be downloaded. Nothing was changed.",
   },
   editor: {
+    unreadable: {
+      hint: "Your saved project does not match this version of the editor. It is kept as it is: download a copy, or start from the original story (your history checkpoints stay).",
+      download: "Download the saved project",
+      startAgain: "Start from the original story",
+    },
     text: {
       toolbar: "Text formatting",
       style: "Text style",
@@ -650,6 +655,11 @@ const fr: typeof en = {
     backup: "La copie de votre sauvegarde n’a pas pu être téléchargée. Rien n’a été modifié.",
   },
   editor: {
+    unreadable: {
+      hint: "Votre projet enregistré ne correspond pas à cette version de l’éditeur. Il est conservé tel quel : téléchargez-en une copie, ou repartez de l’histoire d’origine (vos versions de l’historique restent).",
+      download: "Télécharger le projet enregistré",
+      startAgain: "Repartir de l’histoire d’origine",
+    },
     text: {
       toolbar: "Mise en forme du texte",
       style: "Style du texte",
