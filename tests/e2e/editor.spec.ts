@@ -423,7 +423,8 @@ test("edits both languages, undoes metadata, publishes a title and previews the 
   await page.getByLabel("Story language", { exact: true }).selectOption("fr");
   await appendInk(page, "\n// Note en français\n");
   await page.getByLabel("Story language", { exact: true }).selectOption("en");
-  await expect(page.locator(".ace_text-layer")).toContainText("Author note in English");
+  // The note is at the end of the script, maybe out of view: read the script itself.
+  await expect.poll(() => script(page)).toContain("// Author note in English");
   await page.getByLabel("Story title", { exact: true }).fill("The Photograph — edited");
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect(page.getByLabel("Story title", { exact: true })).toHaveValue(
@@ -469,8 +470,8 @@ test("retains the entire Inky Web menu, inserts a tunnel and exposes editable me
   await page.getByLabel("Destination Knot or Stitch").fill("dream_sequence");
   await page.getByLabel("Create destination Knot").check();
   await page.getByRole("button", { name: "Insert Tunnel", exact: true }).click();
-  await expect(page.locator(".ace_text-layer")).toContainText("-> dream_sequence ->");
-  await expect(page.locator(".ace_text-layer")).toContainText("->->");
+  await expect.poll(() => script(page)).toContain("-> dream_sequence ->");
+  await expect.poll(() => script(page)).toContain("->->");
   await page.getByRole("tab", { name: "Story Outline", exact: true }).click();
   await page
     .locator(".editor-outline")

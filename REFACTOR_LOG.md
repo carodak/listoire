@@ -815,6 +815,11 @@ generated for this project). I did not invent a licence name: **tell me if you w
   the 5 reader pictures show the same composition (checked `chemin`, `bibliotheque` side by side).
   Stable: 40/40 with `--repeat-each=2` on mobile and chromium.
 
+- **`editor.spec` "edits both languages…" (chromium, once under load) — test.** Same trap as
+  "Declare Variable": it looked for the appended note in Ace's rendered lines, which hold only what
+  is in view. It and the two tunnel checks of "retains the entire Inky Web menu…" now read the
+  script. 24/24 on four browsers with `--repeat-each=3`. No e2e test reads Ace's rendered text now.
+
 ### Part 6 — REVIEW sections 4, 5, 8
 
 - **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).
