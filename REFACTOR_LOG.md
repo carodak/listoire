@@ -658,3 +658,21 @@ generated for this project). I did not invent a licence name: **tell me if you w
   One check is unchanged but written differently: "plays instant-text illustrations…" still tags
   the running animations and checks the same ones keep running.
   `tools/run-test-coverage.ts` lists the three new specs instead of `reader-request.spec.ts`.
+- **Typography: 17 e2e tests → 3 journeys** (each of the old tests opened the editor and
+  imported the story again). (1) "an author formats words with the toolbar and the keyboard…"
+  runs the old toolbar/keyboard tests as steps on one editor (colours on a dark page, point sizes,
+  one setting keeps the others / presets / Undo, formatting from inside a tag after Undo,
+  shortcuts, shortcut messages, preset → preview → Undo/Redo → save → reload); (2) "in French, on
+  a light page…" (French messages, paragraph alignment, light-page contrast warnings); (3) "the
+  reader renders every style, alignment and size, on a computer and on a phone" renders a bundle
+  compiled in the test, without the editor (styles, letters, handwriting, alignment and drop cap,
+  weights and decorations, 24 pt following the reader's text size, 48 pt fitting a phone). All
+  assertions kept; the logic itself is already unit-tested in `typography.test.ts` (parsing,
+  formatting, patching, caret in markup, colours, point sizes, alignment). Changed: the rendering
+  checks run in the reader instead of the editor's preview (same `StoryPlayer`); the 24 pt ratio
+  is checked with the reader's own Text size control instead of the preview's; the
+  `.fallow/typography-styles.png` screenshot (no assertion) is gone.
+  Moved, unchanged: "the preview follows typing…", "a compile error while typing…" and "starts
+  narration on every following page…" to `editor.spec.ts` (editor preview), "centers the Story
+  Editor label…" to `welcome.spec.ts`. Shared: `typography-story.ts` (test story, opener, script),
+  `speech.ts` (one fake voice instead of two).

@@ -164,3 +164,18 @@ test("typing recording is attempted once at startup and paused when the intro en
   expect(events).toContain("/audio/keyboard-typing.mp3");
   expect(events).toContain("pause");
 });
+
+test("centers the Story Editor label within its landing button", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const link = page.getByRole("link", { name: "Story Editor", exact: true });
+  await expect(link).toBeVisible();
+  const difference = await link.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const text = range.getBoundingClientRect(),
+      button = element.getBoundingClientRect();
+    return Math.abs((text.top + text.bottom) / 2 - (button.top + button.bottom) / 2);
+  });
+  expect(difference).toBeLessThan(2);
+});

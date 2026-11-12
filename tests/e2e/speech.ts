@@ -35,6 +35,9 @@ export async function fakeSpeech(page: Page) {
   });
 }
 
+export const spokenTexts = (page: Page) =>
+  page.evaluate(() => (window as unknown as { spoken: Spoken }).spoken.map(({ text }) => text));
+
 /** The last utterance reaches a word, as a speaking voice reports it. */
 export const speakBoundary = (page: Page, charIndex: number, charLength: number) =>
   page.evaluate(
