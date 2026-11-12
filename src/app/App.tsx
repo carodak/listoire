@@ -89,7 +89,10 @@ function useReaderSettings(saves: SaveManager, initialSettings: ReaderSettings) 
     setSettings(next);
     setSettingsBusy(true);
     setSettingsFailed(false);
-    const write = settingsWrites.current.catch(() => {}).then(() => saves.saveSettings(next));
+    // A write still waiting when newer settings arrive is skipped: a slider drag stores its end.
+    const write = settingsWrites.current
+      .catch(() => {})
+      .then(() => (latestSettings.current === next ? saves.saveSettings(next) : undefined));
     settingsWrites.current = write;
     try {
       await write;

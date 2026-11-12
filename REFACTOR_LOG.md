@@ -567,3 +567,8 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   the sample's picture and direction (image, layout, motion, illustration…) but keeps the author's
   `caption`, `photograph` and `examination` (including their absence). Alt text is on the asset,
   which the pack never replaced. Test: `illustration-pack.test.ts` "replaces a sample's picture…".
+- **Volume slider wrote per `input`.** Every step still applies at once (sound follows the
+  slider), but settings writes are coalesced: a write still waiting when newer settings arrive is
+  skipped (each settings object is complete, so the last one carries everything). A fast drag of
+  20 steps stored 20 times, now at most 2. Test: `side-panels.spec.ts` "dragging a volume slider…"
+  (counts `reader-settings` writes after the last value is stored; checks it after reload).
