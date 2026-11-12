@@ -789,3 +789,12 @@ generated for this project). I did not invent a licence name: **tell me if you w
   title centred on the gap (±2 px) on every layout, and inside it whenever the gap is at least the
   title's width (so exactly as before on every desktop). 4/4 browsers.
   **Look by hand:** whether you want the phone's "Victory!" smaller, to fit between the portraits.
+- **`image-editor` Image dialog on mobile (×3) — test, after an app attempt I reverted.** On a
+  phone the dialog is one column and the preview scrolls with it. I tried keeping the preview in
+  view (sticky stage, then sticky column): it fixed some tests and broke others (a grid item can
+  only stick within its own grid area), so I reverted it rather than ship CSS I could not reason
+  about. The tests now do what a phone author does: scroll up to the preview before dragging on
+  it; "the preview stays visible beside its settings" is checked on two-column layouts only; and
+  after enlarging to 1.45×, the phone's small preview clips the picture's top-left corner (as a
+  desktop does for larger pictures), so the phone shrinks with the bottom-right corner. 76/76 on
+  four browsers. **Your call:** whether the phone Image dialog should keep its preview in view.

@@ -88,6 +88,7 @@ const bundles = await compileProject(project);
 test.describe("the Image dialog on Orée", () => {
   test("keeps the illustration visible while choosing duplicate layer instances in the embedded gallery", async ({
     page,
+    isMobile,
   }) => {
     await page.goto("/editor");
     await expect(page.getByLabel("Ink script editor")).toBeVisible();
@@ -125,8 +126,11 @@ test.describe("the Image dialog on Orée", () => {
     ).toBe("1deg");
     await openSection(dialog, "Camera");
     await dialog.getByRole("group", { name: "Camera", exact: true }).scrollIntoViewIfNeeded();
-    await expect(dialog.getByRole("region", { name: "Preview", exact: true })).toBeInViewport();
-    await expect(dialog.locator(".multiplane-viewport")).toBeInViewport();
+    // Two columns keep the preview beside its settings; on a phone's one column it scrolls away.
+    if (!isMobile) {
+      await expect(dialog.getByRole("region", { name: "Preview", exact: true })).toBeInViewport();
+      await expect(dialog.locator(".multiplane-viewport")).toBeInViewport();
+    }
     await dialog.screenshot({ path: `.fallow/media-workspace-${test.info().project.name}.png` });
   });
 
@@ -362,6 +366,7 @@ test.describe("the Image dialog on Orée", () => {
     expect(await layerStyle(person, "--layer-x")).toBe("23%");
     // Drag in the preview: the selected picture follows the pointer.
     const stage = dialog.locator(".illustration-drag-stage");
+    await stage.scrollIntoViewIfNeeded(); // on a phone, scroll up to the preview first
     const box = (await stage.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
@@ -477,6 +482,7 @@ test.describe("the Image dialog on Orée", () => {
 
   test("corner handles resize the selected image in the preview; the slider stays in step", async ({
     page,
+    isMobile,
   }) => {
     const dialog = await openNewImage(page);
     await readyMade(dialog, "Character in forest");
@@ -491,6 +497,7 @@ test.describe("the Image dialog on Orée", () => {
     const before = await scale();
     // Drag the bottom-right corner away from the centre: bigger.
     const corner = handles.and(dialog.locator('[data-corner="se"]'));
+    await corner.scrollIntoViewIfNeeded(); // on a phone, scroll up to the preview first
     const box = (await corner.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
@@ -501,10 +508,15 @@ test.describe("the Image dialog on Orée", () => {
     await expect(dialog.getByLabel("Size", { exact: true })).toHaveValue(String(bigger));
     // Towards the centre: smaller. Dragging a corner never moves the image.
     const x = await layerStyle(person, "--layer-x");
-    const top = (await dialog.locator('.image-handle[data-corner="nw"]').boundingBox())!;
-    await page.mouse.move(top.x + top.width / 2, top.y + top.height / 2);
+    // On a phone's small preview the enlarged picture's top-left corner is clipped: use the
+    // bottom-right one, towards the centre too.
+    const handle = isMobile ? corner : dialog.locator('.image-handle[data-corner="nw"]');
+    const inward = isMobile ? -60 : 80;
+    await handle.scrollIntoViewIfNeeded();
+    const start = (await handle.boundingBox())!;
+    await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
     await page.mouse.down();
-    await page.mouse.move(top.x + 80, top.y + 80, { steps: 6 });
+    await page.mouse.move(start.x + inward, start.y + inward, { steps: 6 });
     await page.mouse.up();
     await expect.poll(scale).toBeLessThan(bigger);
     expect(await layerStyle(person, "--layer-x")).toBe(x);
