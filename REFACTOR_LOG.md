@@ -578,3 +578,10 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   instead of a blank page. The editor does use these settings (its i18n texts follow the reader's
   language), so it keeps waiting too. Test: `welcome.spec.ts` "the welcome opens even when the
   browser's storage never answers".
+- **`line-${steps}` segment IDs.** An untagged line of an authored story was named after the
+  number of Ink steps before it (blank lines included), so any edit above it renamed it. It is now
+  named from its own text (`<passage>.line-<FNV-1a of the text, base 36>`, `-2`, `-3`… for repeats
+  on the same page). Nothing stored refers to the old IDs: every line of Orée has a
+  `# segment:` tag. Test: `ink-engine.test.ts` "names untagged authored lines from their text…".
+  Docs: `DATA_CONTRACTS.md` (also the Back history size cap from the previous item),
+  `story-editor/implementation.md`.

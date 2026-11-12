@@ -66,7 +66,7 @@ randomness stay in application/domain composition, outside React event handlers.
 | Editing               | Pinned Inky Web Ace editor, Ink syntax mode, search/replace extension and complete command definitions/examples                                               |
 | Undo/redo             | A bounded list stores complete project versions, including metadata and translations; typing is coalesced and capped at 30 transactions. No Ace delta adapter |
 | Compilation           | Existing installed `inkjs/full`, isolated in short-lived workers with a 15-second timeout                                                                     |
-| Progression           | Existing InkNarrativeEngine behind NarrativeEngine and StoryDirector; authored untagged Ink also works                                                        |
+| Progression           | Existing InkNarrativeEngine behind NarrativeEngine and StoryDirector; authored untagged Ink also works (lines are named `<passage>.line-<hash of the text>`)  |
 | Preview               | Existing `createPlayer` and `StoryPlayer`, with isolated SaveManager storage                                                                                  |
 | Presentation          | Existing PresentationSession, EffectsEngine, React Bits registry, AudioManager and NarrationManager                                                           |
 | Authoring persistence | `listoire-editor/projects`, with schema validation, serialized writes and optimistic revision checks                                                          |
