@@ -1,4 +1,4 @@
-import { attributes, GameActionSchema } from "../../contracts/game.ts";
+import { actionTargets, attributes, GameActionSchema } from "../../contracts/game.ts";
 import type { GameAction, GameDefinition } from "../../contracts/game.ts";
 import { Field, SelectField } from "./Fields.tsx";
 interface Props {
@@ -49,15 +49,7 @@ export function GameActionFields({ action, game, onChange }: Props) {
   );
 }
 function ActionReference({ action, game, onChange }: Props) {
-  const lists: Partial<Record<GameAction["kind"], { id: string }[]>> = {
-    combat: game.encounters,
-    "give-item": game.items,
-    "remove-item": game.items,
-    "ability-check": game.abilities,
-    train: game.abilities,
-    learn: game.abilities,
-  };
-  const list = lists[action.kind];
+  const list = actionTargets(game, action.kind);
   return (
     list && (
       <SelectField

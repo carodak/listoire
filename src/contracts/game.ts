@@ -95,15 +95,7 @@ export const GameDefinitionSchema = z
       if (new Set(list.map((item) => item.id)).size !== list.length)
         context.addIssue({ code: "custom", message: "Duplicate game definition ID" });
     for (const action of game.actions) {
-      const targets: Partial<Record<typeof action.kind, { id: string }[]>> = {
-        combat: game.encounters,
-        "give-item": game.items,
-        "remove-item": game.items,
-        "ability-check": game.abilities,
-        train: game.abilities,
-        learn: game.abilities,
-      };
-      const list = targets[action.kind];
+      const list = actionTargets(game, action.kind);
       if (list && !list.some((item) => item.id === action.reference))
         context.addIssue({
           code: "custom",
@@ -221,4 +213,20 @@ export interface CombatOption {
   ranks?: { rank: number; threshold: number; damage: number; probability: number }[];
   rank?: number;
   healing?: number;
+}
+
+/** The definitions an action of this kind refers to (its `reference` is one of their IDs). */
+export function actionTargets(
+  game: Pick<GameDefinition, "encounters" | "items" | "abilities">,
+  kind: GameAction["kind"],
+): { id: string }[] | undefined {
+  const targets: Partial<Record<GameAction["kind"], { id: string }[]>> = {
+    combat: game.encounters,
+    "give-item": game.items,
+    "remove-item": game.items,
+    "ability-check": game.abilities,
+    train: game.abilities,
+    learn: game.abilities,
+  };
+  return targets[kind];
 }
