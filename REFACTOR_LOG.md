@@ -820,3 +820,4 @@ generated for this project). I did not invent a licence name: **tell me if you w
 - **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).
 - **§4 mid-file import** in `text-reveal.ts` moved to the top.
 - **§4 Ribbon `"unavailable"`:** no command uses that action; its title and `disabled` branches are deleted.
+- **§4 unused i18n keys:** the 11 left (`chapterOne`, `replayVoice`, `notesHint`, `xpLabel`, `panLeft`, `panRight`, `resetView`, `storyNotes`, `quiet`, `storyLabel`, top-level `library`) deleted in both languages; none is used (checked by name and as `t("…")`; the editor picker uses its own nested `library`).
