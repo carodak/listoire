@@ -9,7 +9,7 @@ If interrupted: resume from the first unchecked item.
 - [x] Part 1 — REVIEW #4 (a): one key per history version (write 669 → 73 ms with a full history).
 - [x] Part 2 — REVIEW section 3: 14 fixes, 1 left as is (logged), unused media removed.
 - [x] Part 3 — `docs/contributions.md` lists the story and library resources only.
-- [ ] Part 4 — test consolidation.
+- [x] Part 4 — test consolidation (numbers under "Part 4" below).
 - [ ] Part 5 — firefox/webkit/mobile failures.
 - [ ] Part 6 — REVIEW sections 4, 5, 8.
 - [ ] End — full checks, four browsers, perf, REVIEW table, this summary.
@@ -710,3 +710,14 @@ generated for this project). I did not invent a licence name: **tell me if you w
   (`audio-manager.test.ts` "reports device speech unavailable…"). The coverage run also showed my
   Part 1 byte-budget test passing 5 s under instrumentation: it now has a 30 s limit (70 MB of
   real data).
+
+### Part 5 — firefox, webkit, mobile
+
+- **`image-editor` "cutting a // @media line…" (firefox, webkit) — test.** Firefox: the test asked
+  for the `clipboard-read` permission, which only Chromium knows; Ace's keyboard cut and paste
+  need none, so the grant is now Chromium-only. WebKit: the keyboard paste reaches Ace's textarea
+  (probed: `paste` event, not prevented, focus kept) but Ace 1.2.6 inserts nothing, while a plain
+  textarea pastes fine in the same browser: a WebKit-for-Windows/Ace clipboard gap, not our code.
+  On WebKit only, the test pastes through Ace's own entry point (`editor.onPaste`); what it tests
+  (the image and its settings come back with the line) is unchanged. **Test by hand: cut and paste
+  a `// @media` line in real Safari.**
