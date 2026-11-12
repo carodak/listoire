@@ -759,3 +759,10 @@ generated for this project). I did not invent a licence name: **tell me if you w
   first sound plays, music and ambience time advances) is unchanged and now runs on WebKit too.
   12/12 on chromium, firefox, webkit, mobile except one firefox editor-load wait under the
   four-browser load (12/12 alone; watched in the final run).
+- **`rewards` "at 390px the notification…" (webkit) — app.** Probed the boxes: on WebKit at phone
+  width the new page's text started at y = −304 (Chromium: 112): after choosing at the bottom of
+  a page, the next page did not return to the top. The reader relied on focusing the new heading,
+  which scrolls it into view in Chromium but not in WebKit/Safari; a Safari phone reader would
+  land mid-page. A new page now scrolls the window to the top, then focuses its heading without
+  scrolling. `rewards`, `page-frame`, `reader`, `side-panels` pass on all four browsers; the other
+  reader specs on chromium.

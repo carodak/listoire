@@ -100,7 +100,10 @@ function ReaderPassage(props: ReaderPassageProps) {
   const media = useSyncExternalStore(presentation.subscribe, presentation.getSnapshot);
   const className = `reader font-${preferences.fontFamily} text-${preferences.fontSize} lines-${preferences.lineHeight}`;
   useEffect(() => {
-    if (!player.preview) heading.current?.focus();
+    if (player.preview) return;
+    // A new page starts at the top: Safari does not scroll to a focused heading out of view.
+    window.scrollTo({ top: 0 });
+    heading.current?.focus({ preventScroll: true });
   }, [state.occurrenceId, player.preview]);
   // On the document: Safari leaves the focus on the body after a toolbar click.
   useEffect(() => {
