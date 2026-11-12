@@ -356,6 +356,29 @@ it("keeps at most 20 previous pages, dropping the oldest", async () => {
   expect(history.at(-1)!.frame.passageId).toBe("threshold");
 });
 
+it("keeps fewer previous pages when their Ink states are heavy, dropping the oldest", async () => {
+  const director = player();
+  await director.load();
+  const start = (await saves.read(bundle))!;
+  // Trailing spaces keep the JSON valid: 20 pages of 300 KB each.
+  const heavy = start.inkStateJson + " ".repeat(300_000 - start.inkStateJson.length);
+  const pages = Array.from({ length: SAVED_PAGES }, (_, index) => ({
+    inkStateJson: heavy,
+    frame: { ...start.frame, passageId: `page-${index}` },
+  }));
+  await saves.commit(bundle, { ...start, revision: start.revision + 1, history: pages }, start);
+  director.dispose();
+  const reloaded = player();
+  await reloaded.load();
+  await reloaded.choose("listen", reloaded.getSnapshot().occurrenceId!);
+  const history = (await saves.read(bundle))!.history!;
+  const size = history.reduce((sum, page) => sum + page.inkStateJson.length, 0);
+  expect(size).toBeLessThanOrEqual(2_000_000);
+  expect(history.length).toBeGreaterThan(1);
+  expect(history.at(-1)!.frame.passageId).toBe("threshold");
+  expect(history.at(-2)!.frame.passageId).toBe("page-19");
+});
+
 it("a save without history loads without Back; a failed write keeps the pages as they were", async () => {
   const director = player();
   await director.load();

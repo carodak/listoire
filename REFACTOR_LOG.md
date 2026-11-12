@@ -532,3 +532,8 @@ Each fix has a test that fails without it (checked by stashing the fix and runni
   its default (required ones) or is dropped (optional ones); unknown keys are dropped. Before,
   one bad preference reset all of them (and the next save overwrote them). Test:
   `director.test.ts` "keeps every stored preference that still reads…".
+- **`previousPages` memory.** The cap was already 20 pages (not 100 as REVIEW said), but each can
+  hold a 500 KB Ink state, kept in memory and written with every save (10 MB per page turn at
+  worst). Back pages are now also capped at 2 M Ink-state characters in total (oldest dropped,
+  the last page always kept). Orée's state is ~1.3 KB a page, so it keeps all 20. Test:
+  `director.test.ts` "keeps fewer previous pages when their Ink states are heavy…".

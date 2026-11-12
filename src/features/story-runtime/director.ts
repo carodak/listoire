@@ -23,6 +23,12 @@ import type {
   ReaderSnapshot,
 } from "../../contracts/story.ts";
 
+/**
+ * Ink state characters kept for Back, in memory and in every save: a story with a heavy state
+ * keeps fewer than SAVED_PAGES pages.
+ */
+const BACK_BUDGET = 2_000_000;
+
 interface Saves {
   read(bundle: StoryBundle): Promise<SaveData | null>;
   commit(bundle: StoryBundle, next: SaveData, expected: SaveData | null | undefined): Promise<void>;
@@ -313,7 +319,12 @@ export class StoryDirector implements ReaderController {
   private rememberPage(before: SaveData) {
     const { history: _, ...page } = before;
     this.previousPages.push(page);
-    if (this.previousPages.length > SAVED_PAGES) this.previousPages.shift();
+    let size = this.previousPages.reduce((sum, { inkStateJson }) => sum + inkStateJson.length, 0);
+    while (
+      this.previousPages.length > SAVED_PAGES ||
+      (this.previousPages.length > 1 && size > BACK_BUDGET)
+    )
+      size -= this.previousPages.shift()!.inkStateJson.length;
     this.publish({ canGoBack: true });
   }
   private currentSave(occurrenceId: string) {
