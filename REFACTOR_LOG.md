@@ -730,3 +730,14 @@ generated for this project). I did not invent a licence name: **tell me if you w
   which every browser fires when its native picker closes (a Safari user is fine). The test now
   sets the value and fires `input` + `change` itself, the same in every browser. 12/12 on
   chromium, firefox, webkit.
+- **`reader-pages` "after an item, fades the illustration…" (webkit, 4/10 under load) — test.**
+  You asked whether my (now reverted) scroll-key change caused it: no; with the change reverted
+  it still failed 4/10 on webkit with 4 workers. It checked the old heading after a fixed 500 ms
+  wait, by which time a loaded WebKit had finished the whole departure. It now holds the
+  departure (pauses its animations, as "dissolves words upward…" already does), checks the old
+  heading and the 920 ms illustration fade, then lets it play. 15/15 on chromium, firefox,
+  webkit with `--repeat-each=5 --workers=4`.
+- **My first `page-frame` attempt, reverted (your instruction):** letting the reader scroll the
+  text for keys pressed inside it did not make `page-frame` pass on webkit. Investigating again.
+- **Process:** the fallow commit hook did not block a failing audit earlier (Part 1, Part 4); I
+  run `fallow audit --base main` myself before every commit.

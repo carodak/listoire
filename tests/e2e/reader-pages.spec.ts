@@ -156,6 +156,8 @@ test("after an item, fades the illustration and dissolves the heading before the
   await turnPagesAnimated(page);
   await page.locator(".choices button").first().click();
   await expect(page.locator('[data-departure-heading="true"]').first()).toBeAttached();
+  // Held mid-departure: the old page, heading included, is still the one shown.
+  await departures(page, "pause");
   const timing = await page.evaluate(() =>
     document
       .getAnimations()
@@ -168,8 +170,8 @@ test("after an item, fades the illustration and dissolves the heading before the
       .map((animation) => animation.effect!.getTiming().duration),
   );
   expect(timing).toContain(920);
-  await page.waitForTimeout(500);
   await expect(page.locator(".reader-copy h1")).toHaveText("The ninth delivery");
+  await departures(page, "play");
   await expect(page.locator(".reader-copy h1")).toHaveText("A coin suspended in the air");
   await expect(page.locator(".page-word-departure")).toHaveCount(0);
   const arrival = await page
