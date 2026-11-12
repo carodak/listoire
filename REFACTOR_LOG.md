@@ -819,3 +819,4 @@ generated for this project). I did not invent a licence name: **tell me if you w
 
 - **§4 FR typo** "sauvegardees sont conservees" → "sauvegardées sont conservées" (`notesLoadError`).
 - **§4 mid-file import** in `text-reveal.ts` moved to the top.
+- **§4 Ribbon `"unavailable"`:** no command uses that action; its title and `disabled` branches are deleted.
