@@ -772,3 +772,13 @@ generated for this project). I did not invent a licence name: **tell me if you w
   survives. Safari restricts custom drag types the same way, so a Safari author could not reorder
   layers by dragging. The layer row now travels as `text/plain` `listoire-picture:<index>`
   (anything else dropped there is ignored). 6/6 on chromium, firefox, webkit.
+- **Mobile, test-side (typography, house, character, fixture-story):**
+  - `typography` "a preset previews…": at phone width Ace soft-wraps inside `diagonal-up`, and
+    the test read Ace's rendered lines; it now reads the stored script (as the other steps do).
+  - `house` "…preferences persist" expected `font-size: 25px` for Large; phones use 22 px by
+    design (a phone media query). It now checks that Large makes the text bigger than Medium.
+  - `character` and `fixture-story`: on a phone the character panel is a full-width overlay, so
+    the next tap on the story hit the panel (Playwright: "aside … intercepts pointer events") and
+    the tests timed out. They now close the panel first, as a phone reader does; "the panel stays
+    open from page to page" (it sits beside the text on wider screens) is checked off-phone only.
+  All four pass on chromium, firefox, webkit, mobile.

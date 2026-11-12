@@ -5,8 +5,7 @@ import { StoryProjectSchema } from "../../src/contracts/editor-project.ts";
 import { openTypographyStory, script, typographyProject } from "./typography-story.ts";
 test.setTimeout(90_000);
 
-// Ace soft-wraps long lines, which adds spaces to the rendered script.
-const shoutedBoom = /<typo style="shout" direction="diagonal-up" spacing="wide"\s*>BOOM<\/typo>/;
+const shoutedBoom = '<typo style="shout" direction="diagonal-up" spacing="wide">BOOM</typo>';
 
 async function selectBoom(page: Page) {
   await page.getByLabel("Find in Ink", { exact: true }).fill("BOOM");
@@ -226,13 +225,13 @@ async function presetToReload(page: Page) {
   // Each preset previews itself, drawn in its own style; hovering changes nothing in the script.
   await shout.hover();
   await expect(shout.locator(".type-style-shout")).toHaveText("Shout");
-  await expect(page.locator(".ace_content")).not.toContainText("<typo");
+  await expect.poll(() => script(page)).not.toContain("<typo");
   await shout.click();
   // Each change applies at once to the selected words, without an Apply step.
   await page.locator(".text-more summary").click();
   await page.getByLabel("Direction", { exact: true }).selectOption("diagonal-up");
   await page.getByLabel("Spacing", { exact: true }).selectOption("wide");
-  await expect(page.locator(".ace_content")).toContainText(shoutedBoom);
+  await expect.poll(() => script(page)).toContain(shoutedBoom);
   await expect(page.locator(".text-summary")).toHaveText(
     "Shout sets: Huge · Sans-serif · Crimson · Bold. Your changes: Diagonal up · Wide spacing.",
   );
@@ -250,10 +249,10 @@ async function presetToReload(page: Page) {
   // One undo step per change (preset, direction, spacing).
   for (let step = 0; step < 3; step++)
     await page.getByRole("button", { name: "Undo", exact: true }).click();
-  await expect(page.locator(".ace_content")).not.toContainText("<typo");
+  await expect.poll(() => script(page)).not.toContain("<typo");
   for (let step = 0; step < 3; step++)
     await page.getByRole("button", { name: "Redo", exact: true }).click();
-  await expect(page.locator(".ace_content")).toContainText(shoutedBoom);
+  await expect.poll(() => script(page)).toContain(shoutedBoom);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.locator(".editor-status")).toContainText(/Saved|Published/);
   await page.reload();
