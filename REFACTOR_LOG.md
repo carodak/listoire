@@ -889,3 +889,38 @@ version of every file.
   off-centre, a separate layout issue at that width). 320 was not in your list; left as is.
 - `reader-combat.spec.ts` checks 1280, 768, 412 and 360 px (helper `outcomesFit`). It failed on
   the previous CSS at 1280 ("Adversaire charmé") and passes on all four browsers (40/40).
+
+### Item 2 — WebKit "chooses, reloads the resolved passage…": what the error is
+
+**Not fixed: no app change can fix it.** The test is unchanged and still fails on WebKit,
+**7 of 10** runs with `--repeat-each=10`. What I found, with a temporary probe (deleted):
+
+- Orée reads aloud by default, so the reader asks the dev narration server (`/api/narration`)
+  for each paragraph; on the test server it answers 502 within milliseconds. When the test
+  reloads, one or two of these requests are still in flight.
+- WebKit's order on reload: `beforeunload` → it cancels the pending requests ("Load request
+  cancelled"; the fetch rejects with `TypeError: Load failed`) → `pagehide` → `unload`. It then
+  logs `Fetch API cannot load …/api/narration due to access control checks.` with the fetch's
+  stack (`sameOriginFetch` ← `requestLocalNarration` ← `findRecording`). Playwright reports
+  WebKit's log line as a page error. In the app the rejection is handled:
+  `requestLocalNarration` catches it and returns `null`. It is not an uncaught exception.
+- I tried making the app abort its own narration requests first, on `beforeunload`. The fetches
+  then end as an expected `AbortError` (`aborted=true`) before WebKit cancels them, but **WebKit
+  still logs the same line**: it reports any request pending while the document unloads,
+  whoever aborted it. On `pagehide` it is too late anyway (it fires after the cancellation). I
+  removed that code, since it changed nothing observable and would have interfered with the
+  editor's unsaved-changes prompt (also on `beforeunload`).
+- `keepalive` requests survive unload, but they are limited to 64 KB. A custom voice profile
+  carries its reference recording as base64 (up to 5 MB), and stale requests would hold up the
+  one-clip-at-a-time local generator after the reload. I did not use it.
+- **Scope:** `requestLocalNarration` returns `null` at once outside development
+  (`import.meta.env.DEV`). This request, and so this error, exists only on the dev server and
+  in e2e; published readers never send it.
+
+**Options (yours to choose; each changes the e2e test, which you asked to keep unchanged):**
+
+1. In this test, ignore that one WebKit message (`/api\/narration due to access control checks/`)
+   in its page-error list. One line, and it still catches every other error.
+2. In this test, wait until no narration request is pending before `page.reload()`, e.g.
+   `await page.waitForLoadState("networkidle")`, so nothing is in flight.
+3. Turn read-aloud off before the reload, as `enterReader` does.
