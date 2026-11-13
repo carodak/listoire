@@ -25,6 +25,17 @@ export interface SaveStore {
   update(key: string, updater: (previous: unknown) => unknown): Promise<void>;
 }
 
+/** A save store kept in memory only: the editor's preview, and tests. */
+export function memorySaveStore(): SaveStore {
+  const memory = new Map<string, unknown>();
+  return {
+    read: async (key) => memory.get(key),
+    update: async (key, updater) => {
+      memory.set(key, updater(memory.get(key)));
+    },
+  };
+}
+
 export class SaveManager {
   private readonly store: SaveStore;
 

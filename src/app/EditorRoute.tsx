@@ -7,7 +7,7 @@ import type { StoryProject } from "../contracts/editor-project.ts";
 import type { StoryBundle } from "../contracts/story.ts";
 import type { ReadingPreferences } from "../contracts/presentation.ts";
 import { createPlayer } from "./create-player.ts";
-import { SaveManager } from "../persistence/save-manager.ts";
+import { memorySaveStore, SaveManager } from "../persistence/save-manager.ts";
 import { StoryPlayer } from "../features/reader/StoryPlayer.tsx";
 import { message } from "../contracts/error-message.ts";
 
@@ -129,13 +129,7 @@ function usePreviewPlayer(
   useEffect(() => {
     let cancelled = false;
     let director: NonNullable<typeof player>["director"] | undefined;
-    const memory = new Map<string, unknown>();
-    const isolated = new SaveManager({
-      read: async (key) => memory.get(key),
-      update: async (key, updater) => {
-        memory.set(key, updater(memory.get(key)));
-      },
-    });
+    const isolated = new SaveManager(memorySaveStore());
     saves.current = isolated;
     void createPlayer(bundle, isolated, latest.current.preferences, {
       startKnot: knot || undefined,

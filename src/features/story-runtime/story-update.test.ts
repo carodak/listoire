@@ -4,7 +4,7 @@ import { StoryProjectSchema } from "../../contracts/editor-project.ts";
 import { defaultReadingPreferences } from "../../contracts/presentation.ts";
 import { InkNarrativeEngine } from "./ink-engine.ts";
 import { StoryDirector } from "./director.ts";
-import { SaveManager } from "../../persistence/save-manager.ts";
+import { memorySaveStore, SaveManager } from "../../persistence/save-manager.ts";
 import type { StoryBundle } from "../../contracts/story.ts";
 
 const first = `-> rest
@@ -46,13 +46,7 @@ async function bundle(script: string, compatibleInkDigests?: string[]) {
 }
 
 async function savedOn(old: StoryBundle) {
-  const memory = new Map<string, unknown>();
-  const saves = new SaveManager({
-    read: async (key) => memory.get(key),
-    update: async (key, update) => {
-      memory.set(key, update(memory.get(key)));
-    },
-  });
+  const saves = new SaveManager(memorySaveStore());
   const director = new StoryDirector(old, new InkNarrativeEngine(old), saves);
   await director.load();
   return saves;
