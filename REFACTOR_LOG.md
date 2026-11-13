@@ -1,6 +1,31 @@
 # Refactor log
 
-## ☀ Summary — Pass 14 (read this first)
+## ☀ Summary — Pass 15 (read this first)
+
+Branch **`fix/small`**, nothing pushed, nothing on `main`. Your uncommitted `AGENTS.md` change is
+still uncommitted (yours). Details in "Pass 15" at the end of this file.
+
+| Item                                     | Status                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| 1. Combat ending at every width          | **Done** `0d23426`: 360–1920 px on all four browsers; 1280/768 tested |
+| 2. WebKit "chooses, reloads…" page error | **Explained, not fixable in the app** `7dcac63`: see "Needs you"      |
+| End-of-session checks                    | Chromium 128 passed (2.0 min); coverage and health below              |
+
+### ⚠ Needs you
+
+- **WebKit page error (item 2):** it is WebKit's own report of a narration request the reload cut
+  off, and it comes only from the dev narration server (never sent outside development). The app
+  already handles the rejection. Aborting the request first did not stop WebKit's report, so I
+  changed nothing in the app. The test still fails on WebKit, 7 of 10 runs. Three test-side
+  options are in "Pass 15"; pick one and I'll apply it.
+- **320 px combat ending:** "Adversaire charmé" still overflows (91 px in an 86 px gap), and on
+  WebKit every outcome is off-centre at 320 px. 320 px was not in your list, so I left it.
+- **Dev server:** twice, after a while, the editor's Ink compiler worker got a 504 (outdated
+  `inkjs` bundle) and every editor test failed. The cause isn't known (a Vitest run is not it).
+  A restart and warm-up fixed it both times; `node_modules/.vite` holds stale `deps_temp_*`
+  folders from 2026-11-12 and no `deps` folder.
+
+## ☀ Summary — Pass 14 (previous session)
 
 Branch **`fix/small`** (from `main`), nothing pushed, nothing on `main`. Your uncommitted
 `AGENTS.md` change is still uncommitted (yours). Details in "Pass 14" at the end of this file.
@@ -188,199 +213,6 @@ reader with a draft −24 %, Image dialog open −38 %.
 - **Reader preferences:** drag a volume slider, reload: the last value is kept.
 - If you ever have an editor draft from an older schema: the loading screen offers Download /
   Start from the original story.
-
-## ☀ Summary — Pass 12 (previous session)
-
-Two branches, nothing pushed, nothing on `main`: **`chore/cleanup`** (8 commits, from `main`) and
-**`perf/app`** (25 commits, from `chore/cleanup`; this summary is the last one). Part 1's report is
-[docs/cleanup.md](docs/cleanup.md). Details of Part 2 in "Pass 12" at the end of this file.
-
-|                                | Start (`1d88630`) | Now                                                                                                   |
-| ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------- |
-| Health `--coverage` (floor 92) | 93.3              | **93.3**                                                                                              |
-| Unit tests                     | 465 (58 files)    | **484** (65 files)                                                                                    |
-| Test files / test LOC (cloc)   | 84 / 11,669       | **91 / 12,075**                                                                                       |
-| E2E, chromium (full)           | 145/147           | **147/147**                                                                                           |
-| E2E, firefox / webkit / mobile | not run           | **passed / failed / skipped: firefox 135/2/10, webkit 126/11/10, mobile 127/20/0** — none new (below) |
-| Tracked files (Part 1)         | 699, 27.1 MB      | 636, 23.7 MB                                                                                          |
-
-### Firefox, WebKit and mobile (first full run this session)
-
-Full suite, all four projects: 535 passed, 33 failed, 20 skipped (by design: chromium-only
-specs), 44 min. Chromium had no failures. To tell old failures from new ones, the same specs ran
-on firefox/webkit/mobile against the code before Part 2 (`1d88630`, clean worktree, same story
-bundles): **37 failed there**. No test fails now that passed before; 33 fail on both; 4 webkit
-tests fail only on the old code and pass now (the three combat endings and the French magic
-chapter: the combat-ending wait fix helped there too).
-
-The 33 failures that predate this pass, for a later pass:
-
-- **mobile (20):** all 10 `image-references` tests: the spec skips non-Chromium browsers, but
-  "mobile" is Chromium and its references exist only under the desktop project name (test setup,
-  not the app). Also `media-workspace` (3), `typography` (2), `reader-request` (2), `character`,
-  `fixture-story`, `house` (1 each).
-- **webkit (11):** `audio-start` (3), `media-workspace` (3), `side-panels` (2), `page-frame`,
-  `rewards` at 390 px, `typography` colour picker.
-- **firefox (2):** `image-composition` "crops pale borders", `media-workspace` cut/paste of a
-  `// @media` line.
-
-### REVIEW (docs/REVIEW.md) — every item
-
-**Numbered issues**
-
-| #   | Item                                           | Status                                                                                                                                           |
-| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | Fresh checkout cannot build                    | **Done** `73b2223`. Proven: clean `git worktree add --detach`, `npm ci`, `npm run build` ✓, 466/466 unit tests.                                  |
-| 2   | E2E suite tests the old story                  | Done, Pass 6 (`docs/refactor-history.md`, "Task 2").                                                                                             |
-| 3   | Cut/paste of a `// @media` line loses settings | Done, Pass 9 `4509e26`.                                                                                                                          |
-| 4   | Undo history / autosave / compile cost         | **Partly done**: store writes `575d51e` (2386 → 515 ms per write), one worker `9ed4041`. Left: see "Needs you" (history format) and "Tried".     |
-| 5   | French readers see English                     | **Done** `c4e08ad` (last inline pairs, "Story Editor" links, video texts); rules messages were done in Pass 5 `0cce5e7`.                         |
-| 6   | Hand-built asset URLs                          | **Done** `4014b96`: `storyFileUrl()` / `appPath()`; parallax and effect layers now resolve uploads.                                              |
-| 7   | Rule errors reported as "could not be saved"   | **Done** `f150c01`.                                                                                                                              |
-| 8   | Ink line over 50 ms                            | **Done** `f78df23` + `ff5ffb0` (loop the time slices, 1 s cap).                                                                                  |
-| 9   | Skip cinematic drops timers                    | Done, Pass 6 `743031b`.                                                                                                                          |
-| 10  | Examine has no focus ring                      | **Done** `8d1ff55` (also the page heading, `:focus-visible`). No test: only a CSS outline would show it.                                         |
-| 11  | Media re-hashing; library decodes every image  | **Done** `fc8a5a3` (library) + `08c7b8d` (uploads verified once per page).                                                                       |
-| 12  | Editor code on the reader path                 | **Partly done** `cd40ef7` (no recompiling a published draft). Left: migrations still run on reader load; measured cost of the rest is ~10 KB.    |
-| 13  | Narration timeouts                             | Done, Pass 6 `18a938d` (allowance grows with the clip; watchdog instead of a 4 s start limit).                                                   |
-| 14  | Game editor: invalid project, editable IDs     | **Partly done** `5321c31` (character never left without abilities). Left: "Stable ID" fields still free text (needs a rename-references design). |
-| 15  | Export holds every upload in memory            | **Done** `1e1b120` (one upload at a time). The base64 JSON format itself is unchanged (a ZIP would change the backup format).                    |
-
-**Section 3 (bugs beyond the top 15)** — done: combat effects ≤ 2 (`0cce5e7`), `CombatControls` stuck
-`rolling` (Pass 5), media-store fallback path (`4014b96`), "Loading image?" (`fc8a5a3`). **Still
-open** (not reached this pass): editor-store lockout after a schema change; director re-present
-after a failed save; `previousPages` memory; `line-${steps}` segment IDs; two slug functions;
-hex-colour regex `{3,8}`; `sameOriginFetch` byte limit on chunked responses; `usePreviewPlayer`
-reset; top-level `await` in `main.tsx`; settings parsed all-or-nothing; volume slider writes per
-`input`; ReactBits safety overrides; full `mediaLibrary` in the published `project.json`;
-illustration-pack overwrites caption/alt; no-op wordmark button; README stale.
-
-**Section 4** — done: hidden JSON inputs → typed draft (Pass 9), `node.onpointermove` (Pass 9),
-"Auto Compose (future)" removed (Pass 9), BOMs gone. **Still open**: `CharacterSheet` dead `combat`
-prop, Ribbon `"unavailable"`, `deferRoll` naming, `tooltips.ts` MutationObserver, `PresentationSession`
-prop drilling, `revealRemaining` double publish, mid-file import in `text-reveal.ts`, 13 unused i18n
-keys (2 removed: `welcome.create`, `welcome.soon`), FR typo `sauvegardees`, `storyId: "house"`.
-
-**Section 5 (18 patterns)**: done #1 `4014b96`, #2 `625803b`, #3 #4 `1e1b120`, #5 `625803b`,
-#6 `46cbe2b`, #7 `c4e08ad`, #11 `625803b`, #13 Pass 9. **Still open**: #8 regex primitives, #9 enum
-lists, #10 `actionTargets`, #12 speech utterance setup, #14 form dialog, #15 definition editor,
-#16 tabs (a shared `tab-keys.ts` exists; not all bars use it), #17 effect playback, #18 migrations
-module.
-
-**Section 8**: done: one compiler worker `9ed4041`; root clutter (Part 1). Tried, no gain: reveal
-clock sleeping while waiting for narration (below). **Still open**: CSP, JSON.stringify equality,
-`dissolveWords` per grapheme, `scene3d` behind a flag.
-
-### Performance (`node tools/measure-performance.ts`, Chromium, median of 5)
-
-Each change was measured against the code without it, on the same server, back to back (the
-machine's speed drifted during the day, so start/end columns alone mislead):
-
-| Change                        | Metric                                         | Before → after           |
-| ----------------------------- | ---------------------------------------------- | ------------------------ |
-| `3c68dca` narration progress  | main-thread time while text reveals / narrates | 211 → 69 / 177 → 50 ms/s |
-|                               | React commits per second                       | 29 → 15                  |
-| `fc8a5a3` lazy library        | open Media › Image › Library                   | 459 → 56 ms              |
-|                               | image requests / React commits                 | 176 → 75 / 26 → 4        |
-| `575d51e` store writes        | one editor write, Orée 2.1 MB, 30 versions     | 2386 → 515 ms            |
-| `cd40ef7` published bundles   | reader first page with an editor draft         | 582 → 296 ms, no worker  |
-| `9ed4041` one compiler worker | live preview after the last key (600 ms pause) | 844 → 668 ms             |
-|                               | autosave ("Saving" → "Saved")                  | 501 → 298 ms             |
-| `08c7b8d` verified uploads    | 3 components showing a 10 MB upload, per page  | 25 → 0 ms                |
-
-End state (final run): reader first page 159 ms, page turn 45 ms (51 with motion), combat turn
-68 ms, heap after 20 pages 17 MB (+1.9 MB), editor load 1.03 s, keystroke 18 ms painted / 8 ms
-handler, tab switch 32 ms, scene switch 31 ms, Image dialog 52 ms. Bundle: reader initial JS
-574 KB (180 KB gzip, React DOM + zod + i18next), editor route 242 KB and compiler worker 366 KB
-load only on `/editor`; no editor chunk in the reader's initial load.
-
-**Tried, didn't help (reverted or skipped, measured):** Ace loaded in parallel with the project
-(1030 → 1025 ms editor load: noise); reveal clock sleeping while it waits for the voice (42.5 →
-42.5 ms/s); compiling the default language's structure once instead of twice (whole compile is
-126 ms, in a worker); lazy undo-history strings (3 ms per key, typing already paints within two
-frames); moving the ~10 KB of editor code off the reader's start path (needs an extra round trip).
-
-### ⚠ Needs you
-
-- **Editor history format (REVIEW #4, rest).** A write still takes ~515 ms with 30 versions because
-  IndexedDB clones the record with all 30 full projects. Options: (a) one key per history version
-  with a byte budget (biggest win, changes the stored editor format, old records need a one-time
-  move); (b) keep 10 versions instead of 30 (3× less, loses history); (c) leave it. Not done:
-  AGENTS.md says stop before a stored-format change.
-- **Load-dependent e2e failures are now explained twice** (image references, combat endings): both
-  were test waits, not the app. Both fixed and proven with `--repeat-each=5 --workers=4`.
-- `docs/contributions.md` still lists the old house story's resources (from Part 1).
-- `_to_delete/` (147 MB, untracked) waits for you (from Part 1).
-- **33 e2e failures on firefox/webkit/mobile predate this pass** (list above); none is new.
-
-### What to test by hand
-
-- Read Orée with **Read aloud on** and motion allowed: text follows the voice as before.
-- In the editor, type, then open the reader: it opens without delay and shows your change; break
-  the Ink on purpose: the reader shows the error, not an older story.
-- Media › Image › + Add layer › **Library**: scroll; pictures appear as they come into view.
-- A project with an **uploaded** image or video: shows in the reader, parallax layers included.
-- **French**: a check (dice), combat details (ⓘ), inventory Equip/Remove, the welcome "Éditeur
-  d'histoires" link.
-- A combat you lose, and the Game editor: remove both starting abilities, autosave still works.
-
-## Pass 12 — cleanup, REVIEW, performance (branches `chore/cleanup`, `perf/app`)
-
-### How it was measured
-
-`tools/measure-performance.ts` (committed) drives Chromium against the dev server on 4175:
-fresh context per run, median of 5, timings stamped inside the page at the click and taken
-on the frame after the expected state. React commits come from a devtools-hook stub; main-thread
-time from Chromium's own counters (one protocol session per page). Sections: `reader` (reduced
-motion), `readerMotion`, `readerWithDraft`, `combat` (fixture story), `editor` (real Orée project),
-`bundle` (`dist/`). `--only` runs some sections.
-
-Lessons: the machine's speed drifted by up to 2× during the day, so every change was measured
-**back to back with the code stashed** on the same server. The browser "autosave long task" can
-start after the save began; the store write was measured directly in Node with the real project
-instead. Dev-server load times are dominated by unbundled modules.
-
-### Decisions I made myself
-
-- **Reader with an editor draft** (`cd40ef7`): uses the editor's published bundles only when they
-  have the draft's own revision, so the deliberate "an invalid draft shows its errors" behaviour
-  (e2e "retains invalid drafts…") is kept.
-- **Game editor** (`5321c31`): with no starting ability left, the first two defined become the
-  starting ones.
-- **i18n** (`c4e08ad`): check/dice/equipment/combat-help texts now follow the interface language
-  (like the rest of the combat window) instead of the story's locale.
-- **Ink time slices** (`f78df23`, `ff5ffb0`): up to 20 × 50 ms; my first cap (100 slices) froze the
-  editor preview 5 s on an endless loop, caught by `authoring.test.ts`.
-- **Upload cache** (`08c7b8d`): kept until the page closes (`shortcut:` comment says when to evict).
-
-### Changed test code (assertions kept)
-
-- `presentation-session.test.ts`: reads narration progress with `getProgress()` instead of
-  `getSnapshot().progress` (the value moved to its own store); same expectations.
-- `inventory.test.ts`: renders through `I18nextProvider` and sets the language; it relied on the
-  story locale; same expectations.
-- `image-references.spec.ts` (`af66be4`, your request): the "loaded" wait required every layer to
-  have a source, real pixels, three still frames and no running finite animation. References and
-  threshold unchanged. `--repeat-each=5 --workers=4`: 44/50 before, 50/50 twice after.
-- `reader-request.spec.ts` (`9c97462`, your request): the combat-ending wait is one retrying
-  `expect(outcome.or(enabledButton)).toBeVisible()`. Cause (trace): `isEnabled()` waited for the
-  button the last blow had removed, so the 2 s ending closed unseen. With/without `3c68dca`:
-  2/120 vs 1/120 failures (same test, same line); after: 120/120, endings ×15: 60/60. Timeout
-  unchanged (15 s).
-
-### New tests
-
-`app-path.test.ts`, `reduced-motion.test.ts`, `i18n.test.ts` (both languages have the same keys;
-every failure has a text), `editor-store.test.ts` (none existed: revisions, conflict, 30 s
-checkpoint rule, 30-version cap, invalid input refused), `compile-client.test.ts` (one worker,
-answers by id, restart after 15 s), `game-authoring.test.ts`, `project-archive.test.ts`
-(round trip with two uploads, one read at a time), and cases in `publication`, `ink-engine`,
-`game`, `media-store`, `story` tests.
-
-### Not done / limits
-
-Listed in the summary's REVIEW table ("still open"). I prioritised the numbered issues and the
-measured bottlenecks; the remaining section 3–5 items are smaller and untouched.
 
 ## Pass 13 — next steps (branch `chore/next`)
 
