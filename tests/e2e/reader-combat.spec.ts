@@ -199,8 +199,8 @@ async function outcomeBetweenPortraits(combat: Locator) {
   }
 }
 
-/** On a phone, every outcome (English and French) is centred between the portraits and fits. */
-async function outcomesFitOnPhone(combat: Locator) {
+/** Every outcome (English and French) is centred between the portraits and fits in the gap. */
+async function outcomesFit(combat: Locator) {
   const labels = ["en", "fr"].flatMap((locale) =>
     Object.values<string>(i18n.getResourceBundle(locale, "translation").combat.outcome),
   );
@@ -283,10 +283,10 @@ test("reduced motion keeps every combat step and the ending, without animation",
     "0.08",
   );
   expect(await combat.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0);
-  // Still, so measurable: every outcome fits between the portraits on a phone.
-  for (const width of [412, 360]) {
+  // Still, so measurable: every outcome fits between the portraits, desktop to phone.
+  for (const width of [1280, 768, 412, 360]) {
     await page.setViewportSize({ width, height: page.viewportSize()!.height });
-    await outcomesFitOnPhone(combat);
+    await outcomesFit(combat);
   }
   await expect(combat).toHaveCount(0, { timeout: 6000 });
 });

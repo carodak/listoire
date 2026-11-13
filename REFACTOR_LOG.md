@@ -873,3 +873,19 @@ reads, writes, clear — replaces `editor-db.ts` and five inline copies), `speec
 **One commit for items 1–4** (not one per item): merging, moving, renaming and the helpers touch
 the same lines of the same files; separate commits would each have needed an intermediate
 version of every file.
+
+## Pass 15 — combat ending everywhere, WebKit narration error (branch `fix/small`)
+
+### Item 1 — desktop and tablet combat ending
+
+- The gap-based `max-width` (and wrapping) now applies at every width, as proposed. Alone it was
+  not enough just above the phone breakpoint: at 561–600 px the portraits keep their full size
+  and one word of the 22 px title ("Adversaire", 138 px) is wider than the gap (120–139 px). The
+  compact title (15 px, small padding) now applies up to 640 px instead of 560 px; the portrait
+  shrink in the same rule changes nothing above ~540 px (its formula only bites below).
+- Measured with a temporary sweep (deleted), all eight outcomes, centred, inside the gap, no
+  word spilling: 360–1920 px on Chromium, Firefox, WebKit and mobile, heights 640–1200. **320 px
+  still fails** ("Adversaire" is 91 px in an 86 px gap; on WebKit at 320 every label is
+  off-centre, a separate layout issue at that width). 320 was not in your list; left as is.
+- `reader-combat.spec.ts` checks 1280, 768, 412 and 360 px (helper `outcomesFit`). It failed on
+  the previous CSS at 1280 ("Adversaire charmé") and passes on all four browsers (40/40).
