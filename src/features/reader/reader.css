@@ -2997,8 +2997,12 @@
   .reader-combat-modal .combat-summary[data-ending] .combat-ending-title {
     padding: 2px 6px;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: min(15px, 4vw);
     line-height: 1.15;
+  }
+  /* Unwrapped, the stats outgrow a 320px column and push its portrait off centre. */
+  .reader-combat-modal .combatant-stats {
+    white-space: normal;
   }
 }
 .combatant[data-defeated] .combatant-portrait {

@@ -786,3 +786,20 @@ version of every file.
   start narration on its own), then the voice, still on, narrates again. The unit test above
   covers the requests a stopped narration must not make. Both narration and reader specs: 52/52
   on four browsers.
+
+### Item 2 — combat ending at 320 px
+
+- Two causes, both inside the existing narrow-window rule (≤ 640 px), so desktop is unchanged:
+  - "Adversaire" at 15 px (79 px) was wider than the title's 68 px of text room. The title is now
+    `min(15px, 4vw)`: 15 px from 375 px up, 12.8 px at 320.
+  - The player's stat line ("STR 18 / DEX 18 / WIL 18", `nowrap`) was wider than its 118 px
+    column (122 px on Chromium, 128 on WebKit). It widened the player's whole column box, so its
+    portrait was not centred in the column, and the gap's middle moved: on WebKit enough to put
+    every outcome off centre. The line may now wrap there, between stats only (a no-break space
+    joins each attribute to its value, `CombatControls.tsx`).
+- Measured (temporary sweep, deleted): all eight outcomes centred, inside the gap, no word
+  spilling, at 320, 340, 360, 375, 412, 500, 600, 640, 641, 768 and 1280 px on Chromium,
+  Firefox, WebKit and mobile.
+- `reader-combat.spec.ts` checks 1280, 768, 412, 360 and **320** px. On the previous code it
+  fails at 320 (Chromium: "Adversaire charmé"; WebKit: every outcome); now 40/40 on four
+  browsers. Screenshot: `review-screenshots/combat-ending-320.png`.

@@ -284,7 +284,7 @@ test("reduced motion keeps every combat step and the ending, without animation",
   );
   expect(await combat.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0);
   // Still, so measurable: every outcome fits between the portraits, desktop to phone.
-  for (const width of [1280, 768, 412, 360]) {
+  for (const width of [1280, 768, 412, 360, 320]) {
     await page.setViewportSize({ width, height: page.viewportSize()!.height });
     await outcomesFit(combat);
   }

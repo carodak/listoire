@@ -235,7 +235,8 @@ function CombatSummary(props: SummaryProps) {
         stats={(["STR", "DEX", "WIL"] as const)
           .map(
             (key) =>
-              `${key} ${state.attributeDetails?.[key].total ?? character.attributes[key].current}`,
+              // A no-break space: on a narrow screen the line wraps between stats, not inside one.
+              `${key} ${state.attributeDetails?.[key].total ?? character.attributes[key].current}`,
           )
           .join(" / ")}
       />
