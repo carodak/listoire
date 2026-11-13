@@ -14,12 +14,13 @@ test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
-test("chooses, reloads the resolved passage, downloads, and restarts a paused story on request", async ({
+test("chooses, reloads the resolved passage, downloads and explicitly restarts", async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await openOree(page);
+  await page.goto("/");
+  await playStory(page);
   await onPage(page, "matin-ville");
   await expect(firstChoice(page)).toBeVisible();
   if (["chromium", "mobile"].includes(testInfo.project.name)) {
@@ -33,13 +34,28 @@ test("chooses, reloads the resolved passage, downloads, and restarts a paused st
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download saved progress" }).click();
   expect((await download).suggestedFilename()).toBe("listoire-house-en.json");
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
   page.once("dialog", (dialog) => dialog.dismiss());
   await page.getByRole("button", { name: "Read from the beginning" }).click();
   await onPage(page, "etabli");
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Read from the beginning" }).click();
-  // A clean first page: not paused, its text shown, and reading goes on.
+  await onPage(page, "matin-ville");
+  await expect(firstChoice(page)).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("resetting a paused story resumes a clean first page and allows reading again", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await playStory(page);
+  await firstChoice(page).click();
+  await onPage(page, "etabli");
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Read from the beginning", exact: true }).click();
   await onPage(page, "matin-ville");
   await expect(page.locator('[data-segment="matin-ville.p1"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);

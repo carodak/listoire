@@ -2,26 +2,79 @@
 
 ## ☀ Summary — Pass 14 (read this first)
 
-Branch **`fix/small`** (from `main`), nothing pushed. In progress; details in "Pass 14" at the
-end of this file. Resume from the first item not marked done.
+Branch **`fix/small`** (from `main`), nothing pushed, nothing on `main`. Your uncommitted
+`AGENTS.md` change is still uncommitted (yours). Details in "Pass 14" at the end of this file.
 
-| Item                                              | Status                          |
-| ------------------------------------------------- | ------------------------------- |
-| 1. "Waits for Fight" starts from a save           | **Done** `e922f49`              |
-| (your commit `3d49890`: AGENTS.md + item 2 start) | Kept as is; item 2 builds on it |
-| 2. Phone combat ending                            | **Done** `2ce064d`              |
-| 3. `docs/contributions.md` images wording         | **Done** (this commit)          |
-| Part 2: tidy the tests (1–4)                      | To do                           |
-| End-of-session checks                             | To do                           |
+| Item                                                | Status                                                                 |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| 1. "Waits for Fight" starts from a save             | **Done** `e922f49` (Pass 13's WebKit timeout)                          |
+| (your commit `3d49890`: AGENTS.md + item 2's start) | Kept; item 2 builds on it, the probe it added is deleted               |
+| 2. Phone combat ending                              | **Done** `2ce064d`                                                     |
+| 3. `docs/contributions.md` images wording           | **Done** `9dcacfb` (Pass 13's "sketch pack licence wording")           |
+| Part 2: tidy the tests                              | **Done** `01b61bc`, `f952f43`, and the last commit (log, reader tests) |
+| End-of-session checks                               | Done, results below                                                    |
+
+### Part 2, before → after
+
+|                                                   | Before (`9dcacfb`)                                                                                                                                                                                                                  | After                                                                                                                                                                                                                                                  |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Test files / code lines (cloc, `src` + `tests`)   | 95 / 12,174                                                                                                                                                                                                                         | **94 / 11,747** (−3.5 %)                                                                                                                                                                                                                               |
+| E2e TypeScript, specs + helpers (cloc)            | 33 / 5,407                                                                                                                                                                                                                          | **31 / 5,061** (−6.4 %)                                                                                                                                                                                                                                |
+| E2e spec files only (cloc)                        | 26 / 4,937                                                                                                                                                                                                                          | **23 / 4,490** (−9.1 %)                                                                                                                                                                                                                                |
+| E2e tests per browser                             | 143                                                                                                                                                                                                                                 | **128**                                                                                                                                                                                                                                                |
+| Chromium e2e, 4 workers                           | 2.4 min (147 s wall)                                                                                                                                                                                                                | **2.1 min (127 s wall)**                                                                                                                                                                                                                               |
+| Coverage: statements / branches / functions       | 59.44 / 66.14 / 75.25 %                                                                                                                                                                                                             | **59.80 / 66.60 / 76.04 %**                                                                                                                                                                                                                            |
+| `fallow dupes` groups in tests (default)          | 1 (6 lines)                                                                                                                                                                                                                         | **0**                                                                                                                                                                                                                                                  |
+| `fallow dupes --mode weak --min-tokens 30`, tests | 5 groups, 63 lines                                                                                                                                                                                                                  | **1 group, 8 lines**                                                                                                                                                                                                                                   |
+| Health `--coverage` (floor 92)                    | 93                                                                                                                                                                                                                                  | **93**                                                                                                                                                                                                                                                 |
+| Largest test files                                | image-editor.spec 1,358; editor.spec 710; authoring.test 629; presentation-session.test 580; typography.spec 417; director.test 414; reader-pages.spec 382; typography.test 348; reader-combat.spec 327; narration-manager.test 308 | typography.spec 416; director.test 414; media-authoring.test 410; reader-combat.spec 349; typography.test 348; image-layers.spec 344; presentation-session.test 315; editor-workspace.spec 313; image-composition.spec 309; narration-manager.test 308 |
+
+Coverage after was measured once the specs were final, except for the last change (two reader
+tests split apart again), which can only add. The coverage runner lists the new specs that hold
+the former list's tests. That set includes a few tests merged in, so it is slightly larger.
+
+**Targets:** coverage not lower ✔, chromium time not higher ✔, fewer test dupes ✔, one obvious
+file per feature ✔. **Not met: e2e code −25 %** (−6.4 % for all e2e code, −9.1 % for specs).
+Most e2e tests are distinct journeys; merging them removed setup, not assertions, and I did not
+drop behaviours to reach a number. **~400 lines:** three files are slightly over
+(typography.spec 416, director.test 414, media-authoring.test 410); I left them.
+
+### End of session
+
+- Chromium: 127 passed. Firefox, WebKit, mobile: 360 passed, 20 skipped (reference images are
+  Chromium-only), **1 failed**: WebKit, see below. Unit: 504 passed. Typecheck, lint, format,
+  `fallow audit --base main` verdict `warn` before each commit (never `fail`).
 
 ### ⚠ Needs you
 
-- **Desktop and tablet combat ending** (you said desktop unchanged, so I left it): the longest
-  outcomes are wider than the gap between the portraits, measured on Chromium: 1280 px, gap 337,
-  "Adversaire charmé" 381; 800 px, gap 237, 295; 600 px, gap 139, "Fuite réussie" 174; 561 px,
-  gap 120, "Victoire !" 133. One-line fix if you want it: give the desktop title the phone's
+- **WebKit, intermittent (it predates this pass):** "chooses, reloads the resolved passage…"
+  sometimes fails on WebKit because the page reports
+  `…/api/narration due to access control checks.` after `page.reload()`. The unchanged
+  pre-Part-2 test also fails, 1 run in 4. It looks like WebKit reporting the narration request
+  that the reload cut short. The app's own fetch code catches its errors, so I did not change it.
+  My merge with "resetting a paused story" made it fail more often (2 in 3), so I put both
+  original tests back. Your call: accept, or ignore that one message on WebKit in this test.
+- **The 25 % e2e target** would need deleting behaviours or turning e2e checks into unit tests.
+  One candidate: the effects engine e2e test (92 lines) has unit tests with fake animations, but
+  it checks real browser styles. Say if you want that.
+- **Desktop and tablet combat ending** (you said desktop unchanged, so I left it). The longest
+  outcomes are wider than the gap between the portraits, measured on Chromium:
+  - 1280 px: gap 337, "Adversaire charmé" 381;
+  - 800 px: gap 237, "Adversaire charmé" 295;
+  - 600 px: gap 139, "Fuite réussie" 174;
+  - 561 px: gap 120, "Victoire !" 133.
+
+  One-line fix if you want it: give the desktop title the phone's
   `max-width: calc(50% - var(--combat-portrait-size) + 5px)` and `white-space: normal` (only
   labels that do not fit would wrap).
+
+- **Dev server:** the first baseline run had 55 editor failures because Vite had re-optimised
+  `inkjs` mid-session ("Ink compiler could not start"). A restart fixed it.
+
+### What to look at
+
+- `review-screenshots/combat-ending-360.png` and `…-412.png`: "Adversaire charmé" between
+  the portraits on a phone.
 
 ## ☀ Summary — Pass 13 (previous session)
 
@@ -270,266 +323,6 @@ frames); moving the ~10 KB of editor code off the reader's start path (needs an 
 - **French**: a check (dice), combat details (ⓘ), inventory Equip/Remove, the welcome "Éditeur
   d'histoires" link.
 - A combat you lose, and the Game editor: remove both starting abilities, autosave still works.
-
-## ☀ Summary — Pass 11 (previous session)
-
-Branch `features/editor-ux`, 17 commits on top of your WIP commit `43dfdd3`, the last one being this summary (nothing pushed,
-nothing on `main`). **All nine Media → Image items are done, each in its own commit with an e2e
-test; your four follow-ups too; and your "sync story.json after deleting Ink scenes" e2e passes**
-(one small fix, its assertions untouched). Details in "Pass 11" at the end of this file.
-
-|                                       | Pass 10 end | Now                                                  |
-| ------------------------------------- | ----------- | ---------------------------------------------------- |
-| Health `--coverage` (floor 92)        | 93.5        | **93.3** (unit-size penalty 4.1 → 4.3; nothing else) |
-| Unit tests                            | 464         | **465** (+ `movePicture`)                            |
-| E2E, chromium (full)                  | 136/137     | **147/147** (your sync test passes)                  |
-| `fallow security` / dupes / dead code | 0 / 0 / 0   | 0 / 0 / 0 (one Pass 10 dead export removed)          |
-
-### What was done
-
-- **11-1** `a128c6b`: **"Choose an image"** is in the "Start with an image" area, only while
-  there is no image; then more images come from **"+ Add layer"**. The selected image has
-  **"Replace image"** (keeps its place and size).
-- **11-2** `f68f9e1`: **"Ready-made scenes"** is a toggle in the start area, closed by default;
-  the copy at the bottom is gone.
-- **11-3** `cfce2dc`: the picker has two tabs, **In this story / Library**, visible at once,
-  each with **All / Foreground / Middleground / Background**.
-- **11-4** `52e8e10`: a **layers panel** like an image editor's: one row per layer, front to
-  back, with an **eye** (this preview only), thumbnail, name, depth and ×; click to select, drag
-  (or Alt+↑/↓) to reorder or change depth, Delete to remove.
-- **11-5…11-8** `c642195` `c7ba7bb` `0c87f9a` `d657f2a`: no "More options": every category is
-  its own folded section; **"Description & caption"** with plain labels; **"Interactivity"**
-  for image examination; **Camera settings** folded under the camera.
-- **11-9** `013e0ff`: camera and entrance presets are **cards with a thumbnail of the image**
-  that plays the movement on hover / focus (still under reduced motion).
-- **Your follow-ups** `0cb899c` `894293d` `4899581`: "On the page" inside **Look on the page**;
-  **Camera** folded with its settings inside; order **Look on the page → Camera → When to
-  display the media → Interactivity → Description & caption**.
-- **Your story.json sync** `c4c01b5`: the sync worked; the test couldn't find the "Properties
-  JSON" field because a textarea's initial text became part of its label. Text areas are now
-  named by their label.
-- Also: `e3726d9` picker cards no longer squash in a long list; `a4d6ec5` a Pass 10 export
-  nobody used.
-
-### ⚠ Needs you
-
-- **Check plan changed mid-pass (yours):** fast checks per commit, coverage once at the end.
-  Logged under "Pass 11 → How checks run".
-- **Start the dev server from PowerShell** (as you said): from Git Bash the drive letter is
-  lowercase and both Vitest (every suite fails) and Vite (dynamic imports fail) break.
-- `site_changes.patch` shows as **deleted** in the working tree; not me, left as is.
-- One full e2e run (of three) had 2 reference-image failures (`image-references.spec.ts`,
-  cours-air and bibliotheque); that spec then passed 10/10 twice alone and the next full run was
-  147/147 on the same commit, so I treat it as a flake under load. Worth watching.
-
-### Decisions I made myself (Pass 11)
-
-- Changing a picture after the first: **"Replace image"** on the selected image (the per-layer
-  "Choose" buttons went, per item 1).
-- Depths read **Foreground / Middleground / Background** everywhere (French: Premier plan / Plan
-  intermédiaire / Arrière-plan), like the picker's filters.
-- A search with no match in the open tab but matches in the other **switches tab**.
-- The **main picture stays at the back of its depth** (it is drawn first and owns the
-  description); dragging it only changes its depth.
-- Hidden layers (eye) are **not stored** and are forgotten when the dialog closes.
-- The Entrance cards stay in "When to display the media"; **Interactivity** goes before
-  Description & caption (your last message); "Quand afficher le **média**" with the accent.
-- Section summaries show the current choice ("Look on the page · Wide", "Camera · Gentle
-  depth") and what is set inside.
-
-### Screenshots and recordings (untracked, `review-screenshots/`)
-
-- **Before** (Pass 10): `pass10-after/image-new.png`, `image-choose.png`, `image-single.png`,
-  `image-three-layers-handles.png`, `image-flow.webm`.
-- **After** (Pass 11): `pass11-after/image-new.png` (start area), `image-new-scenes.png`
-  (scenes open), `image-picker-in-story.png`, `image-picker-library-background.png` (tabs and
-  filters), `image-single.png`, `image-layers-eye.png` (layers panel, fern hidden),
-  `image-sections-closed.png`, `image-look-on-the-page.png`, `image-camera.png` (camera and its
-  settings), `image-interactivity-description.png`, `image-preset-hover-a.png` / `-b.png` (a
-  card mid-movement), `image-sections-fr.png` (French), and the recording `video/*.webm` (drag a
-  layer, Alt+↓, eye, hover three camera cards). Spec: `review-screenshots/pass11-image.spec.ts`.
-
-### How to try it
-
-`npm run dev` (from PowerShell), open `/editor`, Media → Image:
-
-- **Start:** "Choose an image" in the middle; "Ready-made scenes ▸" opens the five scenes.
-- **Picker:** "In this story" / "Library" tabs, then All / Foreground / Middleground / Background.
-- **Layers:** apply "Character in forest"; click an eye; drag the woman's row onto the fern's
-  top half; focus a row and press Alt+↓; Delete on a row, then Undo.
-- **Settings:** each section opens on its own; Camera → hover a card (it moves; with reduced
-  motion on, it doesn't); Camera settings inside it.
-- **French:** choose Français on the home page, then open the editor.
-
-## Pass 11 — Media → Image: start area, picker tabs, layers panel, sections, preset previews (branch `features/editor-ux`)
-
-Your nine Image-dialog items, one commit each with an e2e test (added to the existing image
-spec files), then your "sync story.json after deleting Ink scenes" work (committed by you as
-`43dfdd3` at the start of this pass).
-
-### How checks run this pass (your change of plan, mid-pass)
-
-- **Per commit** (fast but complete): typecheck + lint, all unit tests (`npx vitest --run`), the
-  e2e spec(s) the item touches (chromium), `npx fallow health --score` (no `--coverage`),
-  `npx fallow security --gate new --changed-since main`, `npx fallow dupes`. Anything failing is
-  fixed before the next item.
-- **Once, at the end:** full e2e on chromium, then `npm run test:coverage` and
-  `fallow health --coverage` (score ≥ 92), then the before/after screenshots. A failure there is
-  bisected over this pass's commits and fixed in a new commit.
-- **Dev server:** started once from **PowerShell** on 4175 and kept running, warmed before e2e.
-  Why: from Git Bash the drive letter is lowercase (`c:/Users/…`). Vitest then loads two copies
-  of itself (every suite fails with "Cannot read properties of undefined (reading 'config')"),
-  and the Vite dev server served modules under both casings: dynamic imports (`DiceModel.tsx`,
-  `RippleDistortion.jsx`) failed and 14 reader/react-bits e2e failed. From PowerShell: 464/464
-  unit tests, and those e2e pass.
-- Commits 1–2 also got the earlier full block (coverage + health `--coverage` 93.5, security 0,
-  dupes 0). The coverage runner stops before its merge when any e2e fails (your WIP test does),
-  so the merge was run by hand; the second time it hit a captured entry without source code,
-  left for the final run.
-
-### 11-1. "Choose an image" lives in the start area — `a128c6b`
-
-- While the composition has no image, the preview's "Start with an image" area holds **"Choose
-  an image"** (the only "Choose" button). The left panel then just says "No image yet", with
-  "+ Add layer" disabled. Once there is an image, the start area is gone and more images come
-  from **"+ Add layer"** ("+ Ajouter un calque").
-- **Decision:** the per-layer "Choose image" buttons are gone (item 1: "Choose" only while
-  empty). To change a layer's picture without losing its place and size, the selected image has
-  **"Replace image"** next to Duplicate / Reset (same `changePicture` as before).
-- Picker titles: "Choose an image" (first), "Add a layer", "Replace image".
-- **Changed assertions** (`media-workspace.spec.ts`): an empty composition has 0 layer rows
-  (was 1, the empty row with its button); the start area's hint check now clicks its "Choose an
-  image" button; "no Choose/Change once there is an image" is 0 (was 1 / 3: one per layer) and
-  "Replace" is 1; "Choose image for Fern fronds / Curly-haired…" became select the row, then
-  "Replace image". Selector only: "Choose image" → "Choose an image" (`editor.spec.ts` ×2,
-  `image-composition.spec.ts`).
-- Test: "the start area holds Choose an image while there is none; then + Add layer adds more".
-
-### 11-2. Ready-made scenes: a toggle in the start area — `f68f9e1`
-
-"Ready-made scenes ▸" (closed by default, `aria-expanded`) under the start button shows the five
-scenes; the second copy at the bottom of More options is removed. The arrow is an `aria-hidden`
-span (a CSS `::after` arrow became part of the button's name). Selector change: tests that apply
-"Character in forest" open the toggle first (`readyMade()` helper). Test: "ready-made scenes are
-a closed toggle in the start area, and only there".
-
-### 11-3. Picker: two tabs, four depth filters — `cfce2dc`
-
-- **"In this story" / "Library"** are tabs (`tablist`, arrow keys via the shared
-  `arrowKeyTabs`), under the search field and above the pictures, so the library no longer needs
-  scrolling. It opens on "In this story" when the story uses pictures, else on "Library".
-- Each tab has **All / Foreground / Middleground / Background** ("Filter by depth"), using the
-  library's existing depth match (`matchesLibraryAsset`): a picture without depth information
-  shows under every depth, as in the Library panel.
-- **Decision:** a search that matches nothing in the open tab but something in the other opens
-  that tab (otherwise a search could look empty while the library has the picture).
-- **Decision:** the depths are named **Foreground / Middleground / Background** everywhere (were
-  Front / Middle / Back), in French **Premier plan / Plan intermédiaire / Arrière-plan**, so the
-  filters and the layers read the same. Selector change: group names in `media-workspace.spec.ts`.
-- Test: "the picker shows In this story and Library as tabs, each filtered by depth".
-
-### 11-4. A layers panel like an image editor's — `52e8e10`
-
-- One row per layer, **front to back**, under Foreground / Middleground / Background: an **eye**,
-  the **thumbnail**, the **name** and its **depth**, and the **×**. Click selects; **Delete** on
-  a row removes it (Delete in the preview still works; Undo as before).
-- **Eye:** hides the layer in the dialog's preview only, through a small style rule on its
-  plane: nothing is stored, the reader never sees it. Hidden layers follow their layer when
-  rows move or one is removed, and come back with Undo.
-- **Drag** a row onto another row's upper / lower half to put it in front of / behind it (a line
-  shows where); onto a depth's free space: the front of that depth. **Alt+↑ / Alt+↓** do the
-  same from the keyboard (focus stays on the row).
-- **Decision (data):** the main picture (the one the description belongs to) is drawn first, so
-  it stays at the back of its depth; dragging it only changes its depth, and nothing goes behind
-  it. Making another picture the main one would rewrite the description.
-- Model: `movePicture` (unit test). Test: "the layers panel: one row per layer, front to back,
-  with an eye, depth, drag and keys".
-
-### 11-5 to 11-8. Settings as folded sections — `c642195`, `c7ba7bb`, `0c87f9a`, `d657f2a`
-
-- **11-5:** no "More options": each category is its own closed `<details>`, whose summary says
-  what is set inside ("· set: caption"). Changed assertion: `.image-more` not open → no
-  `.image-section` open. Selector change: tests open the section they need.
-- **11-6:** **"Description & caption"** ("Description et légende"): "Description (not shown,
-  read aloud by screen readers)" (the alt text, moved in from the top of the dialog) and "Caption
-  (shown under the image)". Selector change: "Caption", "Alt text" → the new labels.
-- **11-7:** **"Interactivity"** ("Interactivité") holds image examination (gameplay on an
-  image). Like before, a cinematic image has none, so no section.
-- **11-8:** **"Camera settings"** folds right under the camera choice.
-- Tests: "no More options…", "Description & caption: each label says where its text goes"
-  (description = the picture's alt in the reader, caption shown), "Interactivity: …", "the
-  camera is a folded section…".
-
-### 11-9. Camera and entrance presets preview their movement — `013e0ff`
-
-The camera presets and a single image's entrances (None / Fade in / Fade out) are **cards** with
-a thumbnail of the current image. **Hover or focus** plays the preset's movement (the reader's
-own `cinematicFrames`, at the chosen speed and intensity; the fades for entrances); leaving
-stops it; under **reduced motion** it stays still. Cards are compact (two rows of eight) so the
-preview stays in view. Selector change: "Camera" / "Entrance" selects → their groups' buttons.
-Test: "camera and entrance presets preview their movement on hover or focus, still under reduced
-motion".
-
-### Your follow-ups during the pass — `0cb899c`, `894293d`, `4899581`
-
-- **"On the page"** is inside **"Look on the page"** ("Aspect sur la page"); the **Camera** is a
-  folded section with **Camera settings** folded inside. Order: Look on the page → Camera → **When
-  to display the media** ("Quand afficher le média") → **Interactivity** → Description & caption.
-  The layout and the camera preset show next to their section's title ("Camera · Gentle depth").
-- Inside the Camera section, the presets' own "Camera" heading is kept for screen readers only
-  (it repeated the title).
-- **Decision:** "Quand afficher le média" with the accent (your message had "media").
-- Changed assertion (mine, this pass): the section count in "no More options…" is 6 (Camera and
-  its nested settings are both sections). Selector changes: camera checks look for the Camera
-  section's summary (the presets sit inside a closed section, so "no camera" is asserted on the
-  section, not on hidden buttons). Test: "settings order: …".
-
-### Also fixed
-
-- `e3726d9`: in a long picker list (the Library), every row shrank to fit the grid's height and
-  the names disappeared; rows keep their size and the grid scrolls (the new assertion fails
-  without the fix).
-- `a4d6ec5`: `drawnBox` (Pass 10) was exported with no consumer (`fallow dead-code`: 1).
-
-### Your "sync story.json after deleting Ink scenes" — `c4c01b5`
-
-Your sync (`43dfdd3`) already worked: the test stalled on its first step because
-`getByLabel("Properties JSON")` found nothing. React writes a textarea's initial value as its
-text, so the wrapping label's text was "Properties JSON" + the whole JSON. Fix: `TextareaField`
-names its textarea with `aria-label={label}` (screen readers already got the right name; now
-every tool does). The test's assertions are untouched and it passes, with undo / redo, save,
-reload and export. Checked: `update()` never short-circuited on `next === latest` before your
-change either (`withMediaReferences` always returned a new object), so nothing regressed there.
-
-### Not done / limits
-
-- The examination fields and the camera's fine settings (duration, speed…) keep their old
-  English-only labels (not new text, so left as they were).
-- A layer hidden with the eye is forgotten when the dialog closes (by design: preview only).
-- `site_changes.patch` shows as deleted in the working tree; not by me, left untouched.
-
-### Pass 11 checks
-
-| Commit                | Item                                     | Health (no coverage) |
-| --------------------- | ---------------------------------------- | -------------------- |
-| `a128c6b`             | 11-1 start area                          | 93.5                 |
-| `f68f9e1`             | 11-2 ready-made toggle                   | 93.5                 |
-| `cfce2dc`             | 11-3 picker tabs                         | 93.5                 |
-| `52e8e10`             | 11-4 layers panel                        | 93.4                 |
-| `c642195`             | 11-5 folded sections                     | 93.4                 |
-| `c7ba7bb`             | 11-6 Description & caption               | 93.4                 |
-| `0c87f9a`             | 11-7 Interactivity                       | 93.4                 |
-| `d657f2a`             | 11-8 camera settings                     | 93.4                 |
-| `013e0ff`             | 11-9 preset previews                     | 93.3                 |
-| `c4c01b5`             | story.json sync test                     | 93.3                 |
-| `0cb899c`             | order, Look on the page, Camera folded   | 93.3                 |
-| `894293d`             | When to display the media; Interactivity | 93.3                 |
-| `a4d6ec5` … `e3726d9` | dead export, camera heading, picker rows | 93.3                 |
-
-After every commit: typecheck, lint, unit tests, the touched e2e specs, `fallow security` (0
-items) and `fallow dupes` (none) passed (the only e2e failure until `c4c01b5` was your WIP
-test). At the end: full chromium e2e, the coverage run and `fallow health --coverage` (summary
-at the top); `fallow architecture` 0 issues, `fallow dead-code` 0 after `a4d6ec5`.
 
 ## Pass 12 — cleanup, REVIEW, performance (branches `chore/cleanup`, `perf/app`)
 
@@ -1027,29 +820,29 @@ editor suddenly reports "Ink compiler could not start" during a session, restart
 **Deleted or merged e2e tests, and where each behaviour is still covered** (no assertion
 removed unless listed as covered elsewhere):
 
-| Former test (file)                                                     | Now                                                                                                             |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| magnifier: pointer/touch coordinates, keys (`magnifier`)               | Merged into `examination` "examination: under its image…" (all its checks)                                      |
-| examination keyboard, turning, details, reload (`house`)               | Same merged test                                                                                                |
-| examined image dimensions, zoom from centre, reverse (`reader-polish`) | Same merged test                                                                                                |
-| Examine under its image, zoom, no Reset view (`reader-pages`)          | Same merged test; "no Turn over without a reverse" moved to the cropped-image test                              |
-| photograph magnification and focus after Escape (`editor`)             | Moved to `editor-media`. I first deleted it as covered by the examination test, but coverage showed it is the only covered test that draws a photograph hotspot, so it stays |
-| text complete on arrival; Show all text from the keyboard (`typewriter`) | Merged into `reading-preferences` "text display…" (default instant, Enter on Show all text)                   |
-| text reaches its media before choices; toolbar follows (`reader-polish`) | Same merged test                                                                                              |
-| progressive text revealed, preferences persist (`house`)               | Same merged test                                                                                                |
-| both side panels share one close control (`side-panels`)               | Merged into `reading-preferences` "side panels take focus…"                                                     |
-| character details and notes (`reader-data`)                            | Merged into `character` "character: starts collapsed…" (stats, inventory tabs, abilities, encounters, notes)    |
-| English/French saves (`reader`) and progress/inventory/art (`house`)    | Merged into `reader-language` "English and French keep separate…"                                               |
-| resetting a paused story (`reader`)                                    | Merged into `reader` "chooses, reloads…, and restarts a paused story"                                           |
-| music and ambience really play (`audio-start`)                         | Merged into `audio` "Play starts audio in its click…" (same recorder, same page)                                |
-| typing recording tried once and paused (`welcome`)                      | Merged into `welcome` "blocked audio: the typing recording…" (its stub now records, as the other did)          |
-| the wordmark is not a button (`welcome`)                               | Merged into the welcome test                                                                                    |
-| authors a combat action, enables game mode (`image-editor`)            | Merged into `editor-workspace` "edits game rules, definitions and a combat action…" (Game Mode check added)     |
-| the editor opens on the story's first passage (`editor-tabs`)          | Merged into `editor-workspace` "opens on the story's first passage; … ARIA tab pattern"                         |
-| start area holds Choose an image (`image-editor`)                      | **Deleted**: no image yet / + Add layer disabled / one Choose / no Choose after: `image-dialog` "a new image is one image"; + Add layer and Replace: `image-layers` "+ Add layer…"; start area gone: "ready-made scenes…" |
-| no More options, each category its own section (`image-editor`)        | **Deleted**: section titles and order, all closed, "More options" absent, summaries "set: …": `image-dialog` "settings: folded sections…", "Interactivity…" |
-| camera folded section + settings order (`image-editor`, two tests)     | Merged into `image-dialog` "settings: folded sections in order…"                                                |
-| ready-made scene names (`image-editor` "a new image…")                 | Moved to `image-dialog` "ready-made scenes are a closed toggle…" (the toggle's own test)                        |
+| Former test (file)                                                       | Now                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| magnifier: pointer/touch coordinates, keys (`magnifier`)                 | Merged into `examination` "examination: under its image…" (all its checks)                                                                                                                                                |
+| examination keyboard, turning, details, reload (`house`)                 | Same merged test                                                                                                                                                                                                          |
+| examined image dimensions, zoom from centre, reverse (`reader-polish`)   | Same merged test                                                                                                                                                                                                          |
+| Examine under its image, zoom, no Reset view (`reader-pages`)            | Same merged test; "no Turn over without a reverse" moved to the cropped-image test                                                                                                                                        |
+| photograph magnification and focus after Escape (`editor`)               | Moved to `editor-media`. I first deleted it as covered by the examination test, but coverage showed it is the only covered test that draws a photograph hotspot, so it stays                                              |
+| text complete on arrival; Show all text from the keyboard (`typewriter`) | Merged into `reading-preferences` "text display…" (default instant, Enter on Show all text)                                                                                                                               |
+| text reaches its media before choices; toolbar follows (`reader-polish`) | Same merged test                                                                                                                                                                                                          |
+| progressive text revealed, preferences persist (`house`)                 | Same merged test                                                                                                                                                                                                          |
+| both side panels share one close control (`side-panels`)                 | Merged into `reading-preferences` "side panels take focus…"                                                                                                                                                               |
+| character details and notes (`reader-data`)                              | Merged into `character` "character: starts collapsed…" (stats, inventory tabs, abilities, encounters, notes)                                                                                                              |
+| English/French saves (`reader`) and progress/inventory/art (`house`)     | Merged into `reader-language` "English and French keep separate…"                                                                                                                                                         |
+| resetting a paused story (`reader`)                                      | Kept separate: merged, it failed more often on WebKit (see "Needs you"), so both original tests stay as they were                                                                                                         |
+| music and ambience really play (`audio-start`)                           | Merged into `audio` "Play starts audio in its click…" (same recorder, same page)                                                                                                                                          |
+| typing recording tried once and paused (`welcome`)                       | Merged into `welcome` "blocked audio: the typing recording…" (its stub now records, as the other did)                                                                                                                     |
+| the wordmark is not a button (`welcome`)                                 | Merged into the welcome test                                                                                                                                                                                              |
+| authors a combat action, enables game mode (`image-editor`)              | Merged into `editor-workspace` "edits game rules, definitions and a combat action…" (Game Mode check added)                                                                                                               |
+| the editor opens on the story's first passage (`editor-tabs`)            | Merged into `editor-workspace` "opens on the story's first passage; … ARIA tab pattern"                                                                                                                                   |
+| start area holds Choose an image (`image-editor`)                        | **Deleted**: no image yet / + Add layer disabled / one Choose / no Choose after: `image-dialog` "a new image is one image"; + Add layer and Replace: `image-layers` "+ Add layer…"; start area gone: "ready-made scenes…" |
+| no More options, each category its own section (`image-editor`)          | **Deleted**: section titles and order, all closed, "More options" absent, summaries "set: …": `image-dialog` "settings: folded sections…", "Interactivity…"                                                               |
+| camera folded section + settings order (`image-editor`, two tests)       | Merged into `image-dialog` "settings: folded sections in order…"                                                                                                                                                          |
+| ready-made scene names (`image-editor` "a new image…")                   | Moved to `image-dialog` "ready-made scenes are a closed toggle…" (the toggle's own test)                                                                                                                                  |
 
 Moved unchanged (by feature): `page-frame` → `reader-layout`; reader layout tests from `reader`
 and `reader-pages` → `reader-layout`; illustration and page-turn tests from `reader-pages`,
@@ -1073,8 +866,9 @@ reads, writes, clear — replaces `editor-db.ts` and five inline copies), `speec
 `save-manager.ts` (`01b61bc`), and `tools/measure-performance.ts` imports `caretTo`.
 
 **Unit files over 400 lines split by area:** `authoring.test.ts` (629) → script authoring (241)
-+ `media-authoring.test.ts` (410); `presentation-session.test.ts` (580) → visuals (306) +
-`presentation-sound.test.ts` (276). Same 504 unit tests.
+
+- `media-authoring.test.ts` (410); `presentation-session.test.ts` (580) → visuals (306) +
+  `presentation-sound.test.ts` (276). Same 504 unit tests.
 
 **One commit for items 1–4** (not one per item): merging, moving, renaming and the helpers touch
 the same lines of the same files; separate commits would each have needed an intermediate
