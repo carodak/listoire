@@ -31,7 +31,7 @@ clips, requests local generation during development, and supports optional devic
 Generated demonstration recordings are explicitly marked preview. Restore displays
 the saved resolved frame, without replaying transient effects or narration.
 
-Illustrations come from the author's sketch pack, sounds from the Sonniss GDC 2026 bundles
+Illustrations come from the sketch pack (temporary ChatGPT placeholders), sounds from the Sonniss GDC 2026 bundles
 (see [contributions.md](contributions.md)). Every file the story uses, narration clips
 included, is hash- and rights-checked at build time; source libraries stay offline. Scene events, character portraits, examination and
 narration references all participate in publication allowlisting. Source libraries

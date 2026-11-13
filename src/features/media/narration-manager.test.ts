@@ -76,6 +76,35 @@ it("requests the next local paragraph while the first recording is still playing
   expect(await playing).toBe("aborted");
   audio.dispose();
 });
+it("stops asking for the page's clips once narration has ended, even early", async () => {
+  // The local generator is down: the first paragraph has no clip, so narration ends there.
+  const live: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_url: unknown, options?: RequestInit) => {
+      if (!options?.signal?.aborted) live.push(JSON.parse(options!.body as string).segmentId);
+      return new Response("{}", { status: 503 });
+    }),
+  );
+  const bundle = { ...fixtureBundle(), narrationMode: "ai-live" as const, narration: [] };
+  const audio = new AudioManager();
+  const result = await new NarrationManager(audio).play(
+    {
+      passageId: "threshold",
+      segments: ["one", "two", "three"].map((id) => ({ id, text: `${id}.` })),
+      choices: [],
+    },
+    bundle,
+    { rate: 1, deviceVoice: false, settings: () => ({ rate: 1, voiceId: "nano-default" }) },
+    new AbortController().signal,
+    vi.fn(),
+  );
+  expect(result).toBe("unavailable");
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  // Only the first paragraph was asked for: no request outlives the narration.
+  expect(live).toEqual(["one"]);
+  audio.dispose();
+});
 it("reads device paragraphs in one utterance and maps boundaries back to their segments", async () => {
   const audio = new AudioManager();
   const speak = vi

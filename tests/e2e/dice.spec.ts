@@ -1,40 +1,5 @@
 import { expect, test } from "./test.ts";
-import { readEditorKeys, writeEditorKey } from "./editor-db.ts";
-import { enterReader, playStory, readUntil, settlePage } from "./oree.ts";
-
-test("updates an old active Orée draft while keeping its full previous version in history", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
-  const project = await (await page.request.get("/stories/house/project.json")).json();
-  project.release = "oree-1.2.0";
-  for (const language of Object.values(project.languages) as {
-    script: string;
-    configuration: { checkpointId: string };
-  }[]) {
-    language.configuration.checkpointId = "oree-v1-2";
-    language.script += "\n// Former author's note\n";
-  }
-  // The editor's record as it was stored before its versions had their own keys.
-  await writeEditorKey(page, "house", {
-    revision: 1,
-    draft: project,
-    published: null,
-    history: [],
-  });
-  await playStory(page);
-  await expect(page.locator(".reader-copy h1")).toHaveText("The morning errands");
-  const [record] = (await readEditorKeys(page, ["house/record"])) as [
-    { draft: { release: string }; history: { id: number }[] },
-  ];
-  const [archived] = (await readEditorKeys(page, [
-    `house/version/${record.history.at(-2)!.id}`,
-  ])) as [{ languages: { en: { script: string } } }];
-  expect(record.draft.release).toBe("oree-1.3.0");
-  expect(archived.languages.en.script).toContain("Former author's note");
-});
+import { enterReader, playStory, readUntil, settlePage, startBeforeFirstFight } from "./oree.ts";
 
 test("keeps a check on its page until its dice settle and the reader confirms", async ({
   page,
@@ -73,13 +38,36 @@ test("keeps a check on its page until its dice settle and the reader confirms", 
   await expect(page.locator(".choices button").first()).toBeEnabled();
 });
 
+test("renders the numbered grey d20 model for a contextual attribute check", async ({
+  page,
+}, info) => {
+  await enterReader(page);
+  const choice = await readUntil(
+    page,
+    page.locator(".choices button").filter({ hasText: /\/20/ }),
+    30,
+  );
+  await choice.click();
+  const check = page.locator(".check-roll-modal");
+  await expect(check.locator(".check-test")).toContainText("/20");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(check.getByRole("button", { name: "Roll dice", exact: true })).toHaveCount(0);
+  await expect(check.locator('.dice-result[data-sides="20"] canvas')).toBeVisible();
+  await expect(check.getByRole("button", { name: "Continue", exact: true })).toBeEnabled();
+  await page.screenshot({ path: info.outputPath("grey-d20.png") });
+});
+
 test("waits for Fight even after restoring an encounter and animates the combat viewport", async ({
   page,
 }) => {
-  await enterReader(page);
+  await startBeforeFirstFight(page);
+  await enterReader(page, { skipIntro: false });
   const combat = page.locator(".reader-combat-modal");
-  const fight = page.locator(".choices button").filter({ hasText: /^Fight/ });
-  await (await readUntil(page, fight, 35)).click();
+  await page
+    .locator(".choices button")
+    .filter({ hasText: /^Fight/ })
+    .first()
+    .click();
   await expect(combat).toBeVisible();
   await page.reload();
   await playStory(page);

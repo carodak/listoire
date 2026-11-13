@@ -2,15 +2,15 @@ import { expect, test } from "./test.ts";
 import type { Locator, Page } from "@playwright/test";
 import { compileProject } from "../../src/features/editor/compiler.ts";
 import { StoryProjectSchema } from "../../src/contracts/editor-project.ts";
-import { openTypographyStory, script, typographyProject } from "./typography-story.ts";
+import { findInInk, script } from "./editor.ts";
+import { chooseLanguage, playStory } from "./oree.ts";
+import { openTypographyStory, typographyProject } from "./typography-story.ts";
 test.setTimeout(90_000);
 
 const shoutedBoom = '<typo style="shout" direction="diagonal-up" spacing="wide">BOOM</typo>';
 
 async function selectBoom(page: Page) {
-  await page.getByLabel("Find in Ink", { exact: true }).fill("BOOM");
-  await page.getByLabel("Find in Ink", { exact: true }).press("Enter");
-  await page.getByLabel("Close search", { exact: true }).click();
+  await findInInk(page, "BOOM");
   await page.getByRole("tab", { name: "Text", exact: true }).click();
 }
 
@@ -284,8 +284,7 @@ test("in French, on a light page: messages, paragraph alignment and contrast war
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Language: English", exact: true }).click();
-  await page.getByRole("button", { name: "Français", exact: true }).click();
+  await chooseLanguage(page, "fr");
   await openTypographyStory(page, false, "", "instant", "#f4ecd8");
   await selectBoom(page);
   const input = page.locator(".ace_text-input");
@@ -355,7 +354,7 @@ test("the reader renders every style, alignment and size, on a computer and on a
   await page.route("**/stories/house/en.json", (route) => route.fulfill({ json: bundle }));
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.getByRole("button", { name: "Play an existing story", exact: true }).click();
+  await playStory(page);
   const prose = page.locator(".prose");
   const paragraph = (text: string) => prose.locator("p").filter({ hasText: text });
   const word = (text: string) =>

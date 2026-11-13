@@ -1,13 +1,9 @@
 import { expect, test } from "./test.ts";
 import type { Page } from "@playwright/test";
-import { onPage, playStory, readTo } from "./oree.ts";
+import { editBundle, onPage, openOree, readTo } from "./oree.ts";
 
 async function acceptLetter(page: Page, french = false) {
-  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
-  if (french) await page.getByRole("button", { name: /^Language/ }).click();
-  if (french) await page.getByRole("button", { name: "Français", exact: true }).click();
-  await playStory(page, french);
+  await openOree(page, french);
   await readTo(page, "messagere");
   await page
     .locator('.choices button:has-text("letter"), .choices button:has-text("lettre")')
@@ -70,14 +66,11 @@ test("on a page with art on the right, a 1440px screen keeps the card off the ar
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   // Fixture: page "preuve" (after the letter) gets Nour's side illustration.
-  await page.route("**/stories/house/en.json", async (route) => {
-    const response = await route.fetch();
-    const bundle = await response.json();
+  await editBundle(page, (bundle) => {
     const art = bundle.scenes.messagere.blocks.find(
       (block: { kind: string }) => block.kind === "media",
     );
     bundle.scenes.preuve.blocks.splice(1, 0, { ...art, id: "preuve.art", examination: undefined });
-    await route.fulfill({ response, json: bundle });
   });
   await acceptLetter(page);
   await expect(page.locator(".media-right")).toBeVisible();

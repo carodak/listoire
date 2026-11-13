@@ -1,10 +1,13 @@
 import { expect, test } from "./test.ts";
 import type { Locator, Page } from "@playwright/test";
+import { i18n } from "../../src/i18n/i18n.ts";
+import { withFixtureStory } from "./fixture-story.ts";
 import {
   enterReader,
   fightToEnd,
   fixDice,
   next,
+  playStory,
   reachCombat,
   readUntil,
   settlePage,
@@ -189,11 +192,35 @@ async function outcomeBetweenPortraits(combat: Locator) {
   const gap = { left: enemy!.x + enemy!.width, right: player!.x };
   const centre = middle!.x + middle!.width / 2;
   expect(Math.abs(centre - (gap.left + gap.right) / 2)).toBeLessThan(2);
-  // Inside the gap whenever it fits (a phone's gap is narrower than the title).
+  // Inside the gap whenever it fits (mid-animation, a phone's portraits are still shrinking).
   if (gap.right - gap.left >= middle!.width) {
     expect(middle!.x).toBeGreaterThanOrEqual(gap.left - 1);
     expect(middle!.x + middle!.width).toBeLessThanOrEqual(gap.right + 1);
   }
+}
+
+/** Every outcome (English and French) is centred between the portraits and fits in the gap. */
+async function outcomesFit(combat: Locator) {
+  const labels = ["en", "fr"].flatMap((locale) =>
+    Object.values<string>(i18n.getResourceBundle(locale, "translation").combat.outcome),
+  );
+  const misfits = await combat.evaluate((node, labels) => {
+    const box = (selector: string) => node.querySelector(selector)!.getBoundingClientRect();
+    const title = node.querySelector<HTMLElement>(".combat-ending-title")!;
+    const shown = title.textContent;
+    const misfits = labels.filter((label) => {
+      title.textContent = label;
+      const left = box('[data-side="enemy"] .combatant-portrait').right;
+      const right = box('[data-side="player"] .combatant-portrait').left;
+      const middle = title.getBoundingClientRect();
+      const offCentre = Math.abs(middle.left + middle.width / 2 - (left + right) / 2) >= 2;
+      const spills = title.scrollWidth > title.clientWidth;
+      return offCentre || spills || middle.left < left - 1 || middle.right > right + 1;
+    });
+    title.textContent = shown;
+    return misfits;
+  }, labels);
+  expect(misfits).toEqual([]);
 }
 
 /** Records whether the combat window took its closing (fade-out) class. */
@@ -256,6 +283,11 @@ test("reduced motion keeps every combat step and the ending, without animation",
     "0.08",
   );
   expect(await combat.evaluate((node) => node.getAnimations({ subtree: true }).length)).toBe(0);
+  // Still, so measurable: every outcome fits between the portraits, desktop to phone.
+  for (const width of [1280, 768, 412, 360, 320]) {
+    await page.setViewportSize({ width, height: page.viewportSize()!.height });
+    await outcomesFit(combat);
+  }
   await expect(combat).toHaveCount(0, { timeout: 6000 });
 });
 
@@ -294,4 +326,24 @@ test("aligns unnamed heroes with long opponent names, shows gallery portraits an
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(page.viewportSize()!.height);
   }
   await page.screenshot({ path: info.outputPath("compact-combat.png") });
+});
+
+test("a combat effect that ends fades out", async ({ page }) => {
+  await fixDice(page, 19); // Dawn stuns the guardian for one turn; the next attack ends the stun.
+  await withFixtureStory(page);
+  await page.goto("/");
+  await playStory(page);
+  await page.getByRole("button", { name: "Walk to the gate" }).click();
+  await page.getByRole("button", { name: "Fight the guardian" }).click();
+  const combat = page.locator(".reader-combat-modal");
+  await combat.getByRole("button", { name: "Use an ability" }).click();
+  await combat.getByRole("button", { name: /^Dawn/ }).click();
+  const effect = combat.locator(".combat-effect");
+  await expect(effect).toHaveText("Stunned (1)");
+  await combat.getByRole("button", { name: "Basic attack" }).click();
+  const ended = combat.locator(".combat-effect-ended");
+  await expect(ended).toHaveText("Stunned (1)");
+  await expect(ended).toHaveAttribute("aria-hidden", "true");
+  expect(await ended.evaluate((element) => element.getAnimations().length)).toBe(1);
+  await expect(effect).toHaveCount(0);
 });

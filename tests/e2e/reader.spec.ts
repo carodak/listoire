@@ -1,54 +1,92 @@
 import { expect, test } from "./test.ts";
-import type { Page } from "@playwright/test";
-import { chooseFirst, firstChoice, onPage, readTo, sceneTitle } from "./oree.ts";
+import { readKeys, writeKey } from "./idb.ts";
+import {
+  chooseFirst,
+  dismissNotice,
+  firstChoice,
+  onPage,
+  openOree,
+  playStory,
+  saveKey,
+} from "./oree.ts";
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
 });
-async function enterStory(page: Page) {
-  await page.getByRole("button", { name: /Play an existing story|Jouer/ }).click();
-}
 
-async function chooseLanguage(page: Page, language: "en" | "fr") {
-  await page.getByRole("button", { name: /^(Language|Langue):/ }).click();
-  await page
-    .getByRole("button", { name: language === "en" ? "English" : "Français", exact: true })
-    .click();
-}
-
-test("an unavailable translation keeps its available story and save while localizing the interface", async ({
+test("chooses, reloads the resolved passage, downloads and explicitly restarts", async ({
   page,
-}) => {
-  await page.route("**/stories/house/manifest.json", (route) =>
-    route.fulfill({
-      json: {
-        schemaVersion: 1,
-        storyId: "house",
-        defaultLocale: "en",
-        locales: ["en"],
-      },
-    }),
-  );
-  const requestedFrench: string[] = [];
-  page.on("request", (request) => {
-    if (request.url().endsWith("/fr.json")) requestedFrench.push(request.url());
-  });
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  await enterStory(page);
+  await playStory(page);
+  await onPage(page, "matin-ville");
+  // Read-aloud off once the story is open, as the other reader tests: no narration request is in
+  // flight at the reload (WebKit reports one the reload cuts off). Across a reload: narration.spec.
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Read aloud", exact: true }).uncheck();
+  await page.locator(".reading-sidebar header button").click();
+  await expect(firstChoice(page)).toBeVisible();
+  if (["chromium", "mobile"].includes(testInfo.project.name)) {
+    await page.screenshot({ path: testInfo.outputPath("opening.png"), fullPage: true });
+  }
   await firstChoice(page).click();
   await onPage(page, "etabli");
-  await chooseLanguage(page, "fr");
-  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-  await expect(page.locator(".language-note")).toContainText(
-    "Cette histoire est disponible en anglais",
-  );
-  await expect(page.locator(".reader-copy h1")).toHaveText(await sceneTitle(page, "en", "etabli"));
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Entrez dans l’histoire." })).toBeVisible();
-  await enterStory(page);
+  await playStory(page);
   await onPage(page, "etabli");
-  await expect(page.locator(".reader-copy h1")).toHaveText(await sceneTitle(page, "en", "etabli"));
-  expect(requestedFrench).toEqual([]);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download saved progress" }).click();
+  expect((await download).suggestedFilename()).toBe("listoire-house-en.json");
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page.getByRole("button", { name: "Read from the beginning" }).click();
+  await onPage(page, "etabli");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Read from the beginning" }).click();
+  await onPage(page, "matin-ville");
+  await expect(firstChoice(page)).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("resetting a paused story resumes a clean first page and allows reading again", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await playStory(page);
+  await firstChoice(page).click();
+  await onPage(page, "etabli");
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Read from the beginning", exact: true }).click();
+  await onPage(page, "matin-ville");
+  await expect(page.locator('[data-segment="matin-ville.p1"]')).toBeVisible();
+  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
+  await firstChoice(page).click();
+  await onPage(page, "etabli");
+  expect(errors).toEqual([]);
+});
+
+test("Back still works after a reload, through the saved previous pages", async ({ page }) => {
+  await openOree(page);
+  await onPage(page, "matin-ville");
+  await chooseFirst(page);
+  await onPage(page, "etabli");
+  await chooseFirst(page);
+  const third = await page.locator(".reader-copy").getAttribute("data-passage");
+  expect(third).not.toBe("etabli");
+  await page.reload();
+  await playStory(page);
+  await onPage(page, third!);
+  const back = page.getByRole("button", { name: "Previous page", exact: true });
+  await expect(back).toBeEnabled();
+  await back.click();
+  await onPage(page, "etabli");
+  await back.click();
+  await onPage(page, "matin-ville");
+  await expect(back).toBeDisabled();
 });
 
 test("recovers from unavailable browser storage without losing the first passage", async ({
@@ -65,8 +103,7 @@ test("recovers from unavailable browser storage without losing the first passage
       throw new DOMException("Unavailable", "SecurityError");
     };
   });
-  await page.goto("/");
-  await enterStory(page);
+  await openOree(page);
   await expect(page.getByRole("alert")).toContainText("could not be saved");
   await page.evaluate(() =>
     (window as unknown as { restoreDatabase: () => void }).restoreDatabase(),
@@ -77,87 +114,13 @@ test("recovers from unavailable browser storage without losing the first passage
   await onPage(page, "etabli");
 });
 
-test("chooses, reloads the resolved passage, downloads and explicitly restarts", async ({
-  page,
-}, testInfo) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await enterStory(page);
-  await onPage(page, "matin-ville");
-  await expect(firstChoice(page)).toBeVisible();
-  if (["chromium", "mobile"].includes(testInfo.project.name)) {
-    await page.screenshot({ path: testInfo.outputPath("opening.png"), fullPage: true });
-  }
-  await firstChoice(page).click();
-  await onPage(page, "etabli");
-  await page.reload();
-  await enterStory(page);
-  await onPage(page, "etabli");
-  const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download saved progress" }).click();
-  expect((await download).suggestedFilename()).toBe("listoire-house-en.json");
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Read from the beginning" }).click();
-  await onPage(page, "etabli");
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Read from the beginning" }).click();
-  await onPage(page, "matin-ville");
-  await expect(firstChoice(page)).toBeVisible();
-  expect(errors).toEqual([]);
-});
-
-test("Back still works after a reload, through the saved previous pages", async ({ page }) => {
-  await page.goto("/");
-  await enterStory(page);
-  await onPage(page, "matin-ville");
-  await chooseFirst(page);
-  await onPage(page, "etabli");
-  await chooseFirst(page);
-  const third = await page.locator(".reader-copy").getAttribute("data-passage");
-  expect(third).not.toBe("etabli");
-  await page.reload();
-  await enterStory(page);
-  await onPage(page, third!);
-  const back = page.getByRole("button", { name: "Previous page", exact: true });
-  await expect(back).toBeEnabled();
-  await back.click();
-  await onPage(page, "etabli");
-  await back.click();
-  await onPage(page, "matin-ville");
-  await expect(back).toBeDisabled();
-});
-
-test("unifies language selection while preserving each localized save", async ({ page }) => {
-  await page.goto("/");
-  await enterStory(page);
-  await firstChoice(page).click();
-  await onPage(page, "etabli");
-  await chooseLanguage(page, "fr");
-  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-  await onPage(page, "matin-ville"); // the French save starts on its own
-  await firstChoice(page).click();
-  const french = await sceneTitle(page, "fr", "etabli");
-  await expect(page.locator(".reader-copy h1")).toHaveText(french);
-  await page.reload();
-  await enterStory(page);
-  await expect(page.locator(".reader-copy h1")).toHaveText(french);
-  await chooseLanguage(page, "en");
-  await onPage(page, "etabli");
-  await expect(page.locator(".reader-copy h1")).toHaveText(await sceneTitle(page, "en", "etabli"));
-  // The story's own page color (#f5ead7) on the reader; the site keeps its background.
-  await expect(page.locator(".reader")).toHaveCSS("background-color", "rgb(245, 234, 215)");
-  await expect(page.locator("html")).toHaveCSS("background-color", "rgb(245, 245, 245)");
-});
-
 test("recovers from unavailable story data and supports keyboard and narrow layouts", async ({
   page,
 }) => {
   await page.route("**/stories/house/en.json", (route) =>
     route.fulfill({ status: 503, body: "Unavailable" }),
   );
-  await page.goto("/");
-  await enterStory(page);
+  await openOree(page);
   await expect(page.getByRole("alert")).toContainText("could not be opened");
   await page.unroute("**/stories/house/en.json");
   await page.getByRole("button", { name: "Reload your saved place" }).click();
@@ -174,114 +137,78 @@ test("recovers from unavailable story data and supports keyboard and narrow layo
 });
 
 test("preserves an incompatible save and offers a recovery download", async ({ page }) => {
-  await page.goto("/");
-  await enterStory(page);
+  await openOree(page);
   await expect(firstChoice(page)).toBeVisible();
-  await page.evaluate(async () => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("listoire");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction("records", "readwrite");
-      const store = transaction.objectStore("records");
-      // Saves are keyed by checkpoint and locale (save:<checkpoint>:en).
-      const keys = store.getAllKeys();
-      keys.onsuccess = () => {
-        const key = keys.result.find((key) => /^save:.+:en$/.test(String(key)))!;
-        const get = store.get(key);
-        get.onsuccess = () => store.put({ ...get.result, release: "old-release" }, key);
-      };
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
-    db.close();
-  });
+  const key = await saveKey(page);
+  const [save] = (await readKeys(page, "reader", [key])) as [object];
+  await writeKey(page, "reader", key, { ...save, release: "old-release" });
   await page.reload();
-  await enterStory(page);
+  await playStory(page);
   await expect(page.getByRole("alert")).toContainText("another story version");
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download saved progress" }).click();
   await download;
   await page.reload();
-  await enterStory(page);
+  await playStory(page);
   await expect(page.getByRole("alert")).toContainText("another story version");
 });
 
-test("reader keeps a wide cinematic canvas and a centered readable text column", async ({
+test("initial reader requests only its scene resources and no source catalogs", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
-  await enterStory(page);
-  await readTo(page, "messagere"); // a page with right-page artwork
-  const toolbar = (await page.locator(".reader-toolbar").boundingBox())!;
-  // Pass 7: the board scrolls and spans the window; the canvas is its content box.
-  const board = page.locator(".reader-board");
-  const inner = await board.evaluate((element) =>
-    parseFloat(getComputedStyle(element).paddingLeft),
+  const requested: string[] = [];
+  page.on("request", (request) => requested.push(new URL(request.url()).pathname));
+  await openOree(page);
+  await onPage(page, "matin-ville");
+  await expect(page.locator('[data-block="matin-ville.illustration"]')).toBeVisible();
+  await dismissNotice(page);
+  expect(
+    requested.some((path) =>
+      /assets\/catalog|heritage-library|GameAudioBundle|\.wav$|\.zip$/.test(path),
+    ),
+  ).toBe(false);
+  // Only media that the first page itself references (its illustration and layers).
+  const bundle = await (await page.request.get("/stories/house/en.json")).json();
+  const scene = JSON.stringify(bundle.scenes["matin-ville"]);
+  const own = new Set<string>(
+    bundle.assets
+      .filter((asset: { id: string }) => scene.includes(`"${asset.id}"`))
+      .map((asset: { path: string }) => `/stories/house/${asset.path}`),
   );
-  const box = (await board.boundingBox())!;
-  const canvas = { ...box, width: box.width - 2 * inner };
-  expect(toolbar.y).toBeLessThan(25);
-  expect(canvas.y).toBeGreaterThanOrEqual(toolbar.y + toolbar.height - 1);
-  const hero = (await page.locator(".story-scene-heading").boundingBox())!;
-  const heading = (await page.locator(".reader-copy h1").boundingBox())!;
-  expect(hero.height).toBeLessThan(200);
-  expect(heading.y).toBeGreaterThanOrEqual(hero.y);
-  expect(heading.y + heading.height).toBeLessThan(hero.y + hero.height);
-  const art = page.locator('.story-art [data-block="messagere.illustration"] img').first();
-  await expect
-    .poll(() => art.evaluate((image: HTMLImageElement) => image.naturalWidth))
-    .toBeGreaterThan(0);
-  const prose = (await page.locator(".prose > p").first().boundingBox())!;
-  expect(canvas.width / 1440).toBeGreaterThanOrEqual(0.9);
-  expect(canvas.width / 1440).toBeLessThanOrEqual(0.95);
-  // A readable measure: a large share of the canvas, but never wider than 800px.
-  expect(prose.width).toBeGreaterThan(canvas.width * 0.4);
-  expect(prose.width).toBeLessThanOrEqual(800);
-  expect((await page.locator(".story-art").boundingBox())!.x).toBeGreaterThan(
-    prose.x + prose.width - 80,
-  );
-  expect(prose.x).toBeCloseTo((await page.locator(".reader-copy").boundingBox())!.x, 0);
-  expect(toolbar.height).toBeLessThanOrEqual(72);
+  const media = [...new Set(requested.filter((path) => path.includes("/stories/house/media/")))];
+  expect(media.length).toBeGreaterThan(0);
+  expect(media.filter((path) => !own.has(path))).toEqual([]);
 });
 
-test("right-page artwork changes with the story and returns on Back and Replay", async ({
+test("updates an old active Orée draft while keeping its full previous version in history", async ({
   page,
 }) => {
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
   await page.goto("/");
-  await enterStory(page);
-  await readTo(page, "messagere");
-  const artwork = page.locator('.story-art [data-block="messagere.illustration"]');
-  await expect(artwork).toBeVisible();
-  await chooseFirst(page);
-  await onPage(page, "preuve");
-  await expect(artwork).toHaveCount(0);
-  await page.getByRole("button", { name: "Previous page", exact: true }).click();
-  await onPage(page, "messagere");
-  await expect(artwork).toBeVisible();
-  await page.getByRole("button", { name: "Replay page", exact: true }).click();
-  await expect(artwork).toBeVisible();
-  await expect(artwork).toHaveCount(1);
-});
-test("resetting a paused story resumes a clean first page and allows reading again", async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await enterStory(page);
-  await firstChoice(page).click();
-  await onPage(page, "etabli");
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Read from the beginning", exact: true }).click();
-  await onPage(page, "matin-ville");
-  await expect(page.locator('[data-segment="matin-ville.p1"]')).toBeVisible();
-  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(0);
-  await firstChoice(page).click();
-  await onPage(page, "etabli");
-  expect(errors).toEqual([]);
+  const project = await (await page.request.get("/stories/house/project.json")).json();
+  project.release = "oree-1.2.0";
+  for (const language of Object.values(project.languages) as {
+    script: string;
+    configuration: { checkpointId: string };
+  }[]) {
+    language.configuration.checkpointId = "oree-v1-2";
+    language.script += "\n// Former author's note\n";
+  }
+  // The editor's record as it was stored before its versions had their own keys.
+  await writeKey(page, "editor", "house", {
+    revision: 1,
+    draft: project,
+    published: null,
+    history: [],
+  });
+  await playStory(page);
+  await expect(page.locator(".reader-copy h1")).toHaveText("The morning errands");
+  const [record] = (await readKeys(page, "editor", ["house/record"])) as [
+    { draft: { release: string }; history: { id: number }[] },
+  ];
+  const [archived] = (await readKeys(page, "editor", [
+    `house/version/${record.history.at(-2)!.id}`,
+  ])) as [{ languages: { en: { script: string } } }];
+  expect(record.draft.release).toBe("oree-1.3.0");
+  expect(archived.languages.en.script).toContain("Former author's note");
 });

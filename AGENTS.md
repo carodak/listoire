@@ -21,8 +21,9 @@ still required.
   app composition stay outside features. Same validated contracts for
   manual stories and the editor.
 - assets/ source libraries stay local and unchanged. Library images
-  are freely licensed and may be published, catalog included. Keep
-  each asset's license and attribution in docs/contributions.md.
+  are temporary ChatGPT placeholders, to be replaced by the author's
+  own artwork; they may be published meanwhile, catalog included.
+  Keep each asset's source in docs/contributions.md.
 - Generated narration clips remain previews until a human listens.
 - Update the affected doc in docs/ when a contract or boundary changes.
 
@@ -38,6 +39,11 @@ still required.
   playwright.local.config.ts (4173 and 4180 are off-limits). Start it
   once, warm it (editor page and a page with dice), keep it running,
   stop it when done.
+- If the editor says "Ink compiler could not start" or many editor
+  tests fail at once, Vite re-bundled a dependency mid-session: save
+  the server output, restart it with DEBUG=vite:deps, note in
+  REFACTOR_LOG.md what triggered the re-bundle, then continue. Once
+  the trigger is known, fix it.
 
 ## Code
 - Read .agents/skills/ponytail/SKILL.md before coding and follow its
@@ -48,17 +54,25 @@ still required.
 - No artificial splits or one-liner cramming.
 - Before adding CSS, reuse an existing rule if one fits.
 - Only format the files you change.
+- When you change a function fallow flags as complex, simplify it in
+  the same change if you can do so safely.
 
 ## Tests
 - Never weaken an assertion or drop coverage of a behavior. Moved code
   keeps its tests. Log any changed or removed assertion with the
   reason and where the behavior is still covered.
-- Extend the existing test file for a module; create a new file only
-  when none exists.
+- Extend the existing test file for a feature; create a new file only
+  when none exists. Name each file after the feature it tests.
+- Keep test files under ~400 lines; split by feature area when one
+  grows past it. Shared setup goes in one helper file per feature.
 - Logic (computations, validation, rules) → unit test. E2E only for
   full user journeys, never for what a unit test already covers.
 - No assertions on CSS values, pixel positions or DOM structure;
-  assert user-visible behavior.
+  assert user-visible behavior, on every layout (desktop and phone).
+- Read stored data (the script, the project), not what the screen
+  happens to render.
+- Start long journeys from a prepared save instead of walking through
+  many pages.
 
 ## Checks
 After each commit (~1-2 min):
@@ -66,7 +80,9 @@ After each commit (~1-2 min):
 - all unit tests: npx vitest --run
 - the e2e spec(s) you touched, chromium only
 - fallow audit runs automatically before each commit (hook); fix what
-  it reports.
+  it reports. If the hook didn't run, run
+  `fallow audit --base main` yourself and don't commit on a failing
+  verdict.
 - Run e2e with 4 workers (--workers=4), except when measuring
   performance.
 - Run npm run perf only when a change targets performance.

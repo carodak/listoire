@@ -2966,7 +2966,8 @@
   display: none;
 }
 /* The ending: the defeated side fades away, the outcome stands between the portraits. */
-/* Centred between the two portraits at their mid-height, on every screen width. */
+/* Centred between the two portraits at their mid-height, on every screen width; a long outcome
+   wraps inside the gap (50% - one portrait + half the 18px column gap, keeping 2px clear). */
 .reader-combat-modal .combat-summary[data-ending] {
   position: relative;
 }
@@ -2976,13 +2977,33 @@
   top: calc(var(--combat-portrait-size) / 2);
   left: 50%;
   translate: -50% -50%;
+  max-width: calc(50% - var(--combat-portrait-size) + 5px);
   margin: 0;
   padding: 2px 14px;
   border-radius: 999px;
   background: var(--paper);
-  white-space: nowrap;
   font-size: clamp(22px, 3.4vw, 36px);
   animation: combat-outcome 500ms ease-out both;
+}
+/* A narrow window leaves little room for the outcome: a smaller title, and below ~540px the
+   portraits shrink to open a ~100 px gap (the summary is about 100vw - 66px wide). */
+@media (max-width: 640px) {
+  .reader-combat-modal .combatant-portrait {
+    transition: width 300ms ease-out;
+  }
+  .reader-combat-modal .combat-summary[data-ending] {
+    --combat-portrait-size: max(52px, min(clamp(80px, 19dvh, 146px), 50vw - 124px));
+  }
+  .reader-combat-modal .combat-summary[data-ending] .combat-ending-title {
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: min(15px, 4vw);
+    line-height: 1.15;
+  }
+  /* Unwrapped, the stats outgrow a 320px column and push its portrait off centre. */
+  .reader-combat-modal .combatant-stats {
+    white-space: normal;
+  }
 }
 .combatant[data-defeated] .combatant-portrait {
   animation: combatant-defeated 800ms ease-in forwards;
@@ -3009,6 +3030,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .reader-combat-modal .combatant-portrait {
+    transition: none;
+  }
   .reader-combat-modal .combat-summary[data-ending] .combat-ending-title,
   .reader-combat-modal.combat-closing,
   .reader-combat-modal.combat-closing::backdrop {
