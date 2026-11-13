@@ -39,6 +39,11 @@ still required.
   playwright.local.config.ts (4173 and 4180 are off-limits). Start it
   once, warm it (editor page and a page with dice), keep it running,
   stop it when done.
+- If the editor says "Ink compiler could not start" or many editor
+  tests fail at once, Vite re-bundled a dependency mid-session: save
+  the server output, restart it with DEBUG=vite:deps, note in
+  REFACTOR_LOG.md what triggered the re-bundle, then continue. Once
+  the trigger is known, fix it.
 
 ## Code
 - Read .agents/skills/ponytail/SKILL.md before coding and follow its
@@ -49,6 +54,8 @@ still required.
 - No artificial splits or one-liner cramming.
 - Before adding CSS, reuse an existing rule if one fits.
 - Only format the files you change.
+- When you change a function fallow flags as complex, simplify it in
+  the same change if you can do so safely.
 
 ## Tests
 - Never weaken an assertion or drop coverage of a behavior. Moved code
@@ -73,7 +80,9 @@ After each commit (~1-2 min):
 - all unit tests: npx vitest --run
 - the e2e spec(s) you touched, chromium only
 - fallow audit runs automatically before each commit (hook); fix what
-  it reports.
+  it reports. If the hook didn't run, run
+  `fallow audit --base main` yourself and don't commit on a failing
+  verdict.
 - Run e2e with 4 workers (--workers=4), except when measuring
   performance.
 - Run npm run perf only when a change targets performance.
