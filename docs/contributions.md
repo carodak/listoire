@@ -8,16 +8,17 @@ the library's catalogue (titles, categories, themes).
 
 ## Story and library
 
-| Resource                                                                                              | Used by                                | Licence / rights                                                                                          | Attribution required   |
-| ----------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Sketch pack (graphite sketch illustrations)                                                           | 18 images in the story; 181 in library | Supplied by the project's author, who authorises their publication (catalogue `rights.userAuthorization`) | No                     |
-| Sonniss #GameAudioGDC 2026 bundles (sound effects)                                                    | 8 sounds in the story; 344 in library  | Sonniss GDC bundle licence: royalty-free, commercial use, no attribution                                  | No (credited below)    |
-| Original score: _Tomorrow there will be a lesson_, _The missing note_ (`oree.wonder`, `oree.silence`) | Story and library                      | Made for Listoire by `tools/compose-magic-score.py`                                                       | No                     |
-| Generated narration (1 English clip, `matin-ville.p1`)                                                | Story, read aloud                      | Resemble AI Chatterbox Nano, MIT                                                                          | Licence notice (below) |
+| Resource                                                                                              | Used by                                | Licence / rights                                                                                                      | Attribution required   |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Sketch pack (graphite sketch illustrations)                                                           | 18 images in the story; 181 in library | Temporary placeholders generated with ChatGPT (OpenAI), to be replaced by the author's own artwork before publication | —                      |
+| Sonniss #GameAudioGDC 2026 bundles (sound effects)                                                    | 8 sounds in the story; 344 in library  | Sonniss GDC bundle licence: royalty-free, commercial use, no attribution                                              | No (credited below)    |
+| Original score: _Tomorrow there will be a lesson_, _The missing note_ (`oree.wonder`, `oree.silence`) | Story and library                      | Made for Listoire by `tools/compose-magic-score.py`                                                                   | No                     |
+| Generated narration (1 English clip, `matin-ville.p1`)                                                | Story, read aloud                      | Resemble AI Chatterbox Nano, MIT                                                                                      | Licence notice (below) |
 
-**Sketch pack.** Images generated for this project from the author's own references
-(`assets/images/sketch-pack/catalog/generation_manifest.json`) and supplied by the author. The
-optimised copies the story uses are in `stories/house/media/`.
+**Sketch pack.** Temporary placeholders generated with ChatGPT (OpenAI) from the author's own
+references (`assets/images/sketch-pack/catalog/generation_manifest.json`), to be replaced by the
+author's own artwork before publication. The optimised copies the story uses are in
+`stories/house/media/`.
 
 **Sonniss.** From the five Sonniss.com GDC 2026 Game Audio Bundles. The bundles' licence
 (`License - GDC Game Audio.pdf` and `Readme.txt` in each bundle, and the

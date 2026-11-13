@@ -9,8 +9,8 @@ end of this file. Resume from the first item not marked done.
 | ------------------------------------------------- | ------------------------------- |
 | 1. "Waits for Fight" starts from a save           | **Done** `e922f49`              |
 | (your commit `3d49890`: AGENTS.md + item 2 start) | Kept as is; item 2 builds on it |
-| 2. Phone combat ending                            | **Done** (this commit)          |
-| 3. `docs/contributions.md` images wording         | To do                           |
+| 2. Phone combat ending                            | **Done** `2ce064d`              |
+| 3. `docs/contributions.md` images wording         | **Done** (this commit)          |
 | Part 2: tidy the tests (1–4)                      | To do                           |
 | End-of-session checks                             | To do                           |
 
@@ -1005,3 +1005,13 @@ generated for this project). I did not invent a licence name: **tell me if you w
 - Audit: verdict `warn`. Two CSS duplicate-block warnings at `reader.css` lines 570 and 1107 are
   marked "introduced" but those lines are identical to `HEAD` (fallow attributes them to the
   touched file); not changed.
+
+### Item 3 — images wording in `docs/contributions.md`
+
+- The sketch pack row and paragraph now say: temporary placeholders generated with ChatGPT
+  (OpenAI), to be replaced by the author's own artwork before publication. Removed: "supplied by
+  the project's author, who authorises their publication (catalogue `rights.userAuthorization`)"
+  and "Attribution required: No" (now "—"). This answers Pass 13's "Sketch pack licence wording".
+- `docs/ARCHITECTURE.md` said "the author's sketch pack"; now "the sketch pack (temporary ChatGPT
+  placeholders)". The catalogue under `assets/` is unchanged (AGENTS.md: source libraries stay
+  unchanged).
