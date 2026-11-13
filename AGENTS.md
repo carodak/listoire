@@ -54,12 +54,18 @@ still required.
 - Never weaken an assertion or drop coverage of a behavior. Moved code
   keeps its tests. Log any changed or removed assertion with the
   reason and where the behavior is still covered.
-- Extend the existing test file for a module; create a new file only
-  when none exists.
+- Extend the existing test file for a feature; create a new file only
+  when none exists. Name each file after the feature it tests.
+- Keep test files under ~400 lines; split by feature area when one
+  grows past it. Shared setup goes in one helper file per feature.
 - Logic (computations, validation, rules) → unit test. E2E only for
   full user journeys, never for what a unit test already covers.
 - No assertions on CSS values, pixel positions or DOM structure;
-  assert user-visible behavior.
+  assert user-visible behavior, on every layout (desktop and phone).
+- Read stored data (the script, the project), not what the screen
+  happens to render.
+- Start long journeys from a prepared save instead of walking through
+  many pages.
 
 ## Checks
 After each commit (~1-2 min):
