@@ -1,4 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { BundleSchema } from "../../src/contracts/story.ts";
+import { createCharacter } from "../../src/features/character/create-character.ts";
+import { InkNarrativeEngine } from "../../src/features/story-runtime/ink-engine.ts";
+import { StoryDirector } from "../../src/features/story-runtime/director.ts";
+import { memorySaveStore, SaveManager } from "../../src/persistence/save-manager.ts";
+import { writeKey } from "./idb.ts";
 
 /** Helpers for the published Orée story, keyed by passage IDs instead of prose. */
 
@@ -7,6 +14,22 @@ export async function playStory(page: Page, french = false) {
     .getByRole("button", {
       name: french ? "Jouer à une histoire existante" : "Play an existing story",
     })
+    .click();
+}
+
+/** Opens Orée on its first page, with the narration server unavailable. */
+export async function openOree(page: Page, french = false) {
+  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.goto("/");
+  if (french) await chooseLanguage(page, "fr");
+  await playStory(page, french);
+}
+
+/** Chooses the interface and story language from the toolbar's language menu. */
+export async function chooseLanguage(page: Page, language: "en" | "fr") {
+  await page.getByRole("button", { name: /^(Language|Langue):/ }).click();
+  await page
+    .getByRole("button", { name: language === "en" ? "English" : "Français", exact: true })
     .click();
 }
 
@@ -45,27 +68,34 @@ export async function sceneTitle(page: Page, locale: "en" | "fr", passageId: str
   return bundle.scenes[passageId].title as string;
 }
 
-/** Fixture: gives Nour's examination (page "messagere") a handwritten reverse side. */
-export async function withExaminationReverse(page: Page, reverse: string) {
-  await page.route("**/stories/house/*.json", async (route) => {
+/** Changes a published bundle ("en", "fr", or "*" for both) before the reader loads it. */
+export const editBundle = (
+  page: Page,
+  edit: (bundle: Record<string, any>) => void,
+  locale = "en",
+) =>
+  page.route(`**/stories/house/${locale}.json`, async (route) => {
     const response = await route.fetch();
     const bundle = await response.json();
-    for (const block of bundle.scenes?.messagere?.blocks ?? [])
-      if (block.examination) block.examination.reverse = reverse;
+    edit(bundle);
     await route.fulfill({ response, json: bundle });
   });
-}
+
+/** Fixture: gives Nour's examination (page "messagere") a handwritten reverse side. */
+export const withExaminationReverse = (page: Page, reverse: string) =>
+  editBundle(
+    page,
+    (bundle) => {
+      for (const block of bundle.scenes?.messagere?.blocks ?? [])
+        if (block.examination) block.examination.reverse = reverse;
+    },
+    "*",
+  );
 
 /** Opens Orée with instant text and no narration; by default past the three opening pages. */
 export async function enterReader(page: Page, { french = false, skipIntro = true } = {}) {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await page.goto("/");
-  if (french) {
-    await page.getByRole("button", { name: "Language: English", exact: true }).click();
-    await page.getByRole("button", { name: "Français", exact: true }).click();
-  }
-  await playStory(page, french);
+  await openOree(page, french);
   await expect(page.locator(".reader-copy h1")).toBeVisible();
   await page.getByRole("button", { name: /Reading preferences|Préférences de lecture/ }).click();
   await page
@@ -148,3 +178,38 @@ export const animationsOn = (page: Page, selector: string) =>
         ).length,
     selector,
   );
+
+/** The reader's save key for the published English Orée. */
+export async function saveKey(page: Page) {
+  const bundle = await (await page.request.get("/stories/house/en.json")).json();
+  return `save:${bundle.checkpointId ?? bundle.storyId}:en`;
+}
+
+/**
+ * Puts the reader's save on the first page that offers "Fight"; open the story afterwards. The
+ * save is made in Node by the app's director on the published English bundle (first choices,
+ * checks rolled and confirmed, notices closed), as a reader would: milliseconds, not 35 pages.
+ */
+export async function startBeforeFirstFight(page: Page) {
+  const bundle = BundleSchema.parse(
+    JSON.parse(readFileSync("public/stories/house/en.json", "utf8")),
+  );
+  const saves = new SaveManager(memorySaveStore());
+  const abilities = bundle.character!.abilities.map((ability) => ability.id);
+  const director = new StoryDirector(bundle, new InkNarrativeEngine(bundle), saves, () =>
+    createCharacter(abilities, () => 4),
+  );
+  await director.load();
+  for (let step = 0; step < 60; step++) {
+    const { frame, game, occurrenceId } = director.getSnapshot();
+    if (frame!.choices.some((choice) => /^Fight/.test(choice.text))) {
+      await page.goto("/");
+      return writeKey(page, "reader", await saveKey(page), await saves.read(bundle));
+    }
+    if (game?.pendingCheck) await director.finishCheck(occurrenceId!);
+    else if (game?.pendingEvent) await director.finishEvent(occurrenceId!);
+    else await director.choose(frame!.choices[0]!.id, occurrenceId!);
+    if (director.getSnapshot().failure) throw new Error(`Story walk failed at step ${step}`);
+  }
+  throw new Error("No Fight choice within 60 steps");
+}

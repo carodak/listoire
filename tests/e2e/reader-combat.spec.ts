@@ -1,11 +1,13 @@
 import { expect, test } from "./test.ts";
 import type { Locator, Page } from "@playwright/test";
 import { i18n } from "../../src/i18n/i18n.ts";
+import { withFixtureStory } from "./fixture-story.ts";
 import {
   enterReader,
   fightToEnd,
   fixDice,
   next,
+  playStory,
   reachCombat,
   readUntil,
   settlePage,
@@ -324,4 +326,24 @@ test("aligns unnamed heroes with long opponent names, shows gallery portraits an
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(page.viewportSize()!.height);
   }
   await page.screenshot({ path: info.outputPath("compact-combat.png") });
+});
+
+test("a combat effect that ends fades out", async ({ page }) => {
+  await fixDice(page, 19); // Dawn stuns the guardian for one turn; the next attack ends the stun.
+  await withFixtureStory(page);
+  await page.goto("/");
+  await playStory(page);
+  await page.getByRole("button", { name: "Walk to the gate" }).click();
+  await page.getByRole("button", { name: "Fight the guardian" }).click();
+  const combat = page.locator(".reader-combat-modal");
+  await combat.getByRole("button", { name: "Use an ability" }).click();
+  await combat.getByRole("button", { name: /^Dawn/ }).click();
+  const effect = combat.locator(".combat-effect");
+  await expect(effect).toHaveText("Stunned (1)");
+  await combat.getByRole("button", { name: "Basic attack" }).click();
+  const ended = combat.locator(".combat-effect-ended");
+  await expect(ended).toHaveText("Stunned (1)");
+  await expect(ended).toHaveAttribute("aria-hidden", "true");
+  expect(await ended.evaluate((element) => element.getAnimations().length)).toBe(1);
+  await expect(effect).toHaveCount(0);
 });

@@ -12,6 +12,7 @@ import { chromium } from "@playwright/test";
 import type { Browser, CDPSession, Page } from "@playwright/test";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
+import { caretTo } from "../tests/e2e/editor.ts";
 import { withFixtureStory } from "../tests/e2e/fixture-story.ts";
 
 const option = (name: string, fallback: string) => {
@@ -284,26 +285,7 @@ async function combat(browser: Browser): Promise<Metrics> {
   return { combatTurn: turn, combatTurnCommits: after.commits - before.commits };
 }
 
-type Ace = {
-  getValue(): string;
-  insert(text: string): void;
-  gotoLine(row: number, column: number): void;
-  clearSelection(): void;
-  focus(): void;
-};
-const caretTo = (page: Page, text: string, offset = 0) =>
-  page.locator(".ink-editor").evaluate(
-    (node, [text, offset]) => {
-      const editor = (node as unknown as { env: { editor: Ace } }).env.editor;
-      const rows = editor.getValue().split("\n");
-      const row = rows.findIndex((line) => line.includes(text as string));
-      if (row < 0) throw new Error(`No line contains ${text}`);
-      editor.clearSelection();
-      editor.gotoLine(row + 1 + (offset as number), 0);
-      editor.focus();
-    },
-    [text, offset] as const,
-  );
+type Ace = { insert(text: string): void };
 
 async function editor(browser: Browser): Promise<Metrics> {
   const { context, page, requests } = await newPage(browser, "reduce");

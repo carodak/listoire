@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { defaultReadingPreferences } from "../../src/contracts/presentation.ts";
+import { importProject } from "./editor.ts";
 
 /** The small test story: "A BOOM, then silence.", then `extra` lines, then two more pages. */
 export function typographyProject(
@@ -53,20 +54,7 @@ export async function openTypographyStory(
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/editor");
   await expect(page.locator(".ace_text-input")).toHaveCount(1, { timeout: 20_000 });
-  await page.getByRole("button", { name: "Load / Import", exact: true }).click();
-  await page.locator('input[type=file][accept=".ink,.json"]').setInputFiles({
-    name: "type.json",
-    mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify(typographyProject(...options))),
-  });
+  await importProject(page, typographyProject(...options), "type.json");
   await page.getByRole("button", { name: "▷ Preview", exact: true }).click();
   await expect(page.locator(".preview-slot .prose")).toContainText("A BOOM, then silence.");
 }
-
-/** The script as stored, not as Ace renders it (soft wrap adds spaces). */
-export const script = (page: Page) =>
-  page
-    .locator(".ink-editor")
-    .evaluate((node) =>
-      (node as unknown as { env: { editor: { getValue(): string } } }).env.editor.getValue(),
-    );

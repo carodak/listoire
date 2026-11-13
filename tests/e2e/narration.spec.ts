@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { expect, test } from "./test.ts";
+import { houseBundles } from "../fixtures/house-project.ts";
+import { readKeys } from "./idb.ts";
+import { chooseLanguage, enterReader } from "./oree.ts";
+import { fakeSpeech, speakBoundary } from "./speech.ts";
 
 /** Orée narrates live (ai-live): answer the local narration server with a real MP3 and its digest. */
 async function serveNarration(page: Page, delays = { generateMs: 0, downloadMs: 0 }) {
@@ -87,10 +91,7 @@ for (const locale of ["en", "fr"])
         requested.push(request.url());
     });
     await page.goto("/");
-    if (locale === "fr") {
-      await page.getByRole("button", { name: "Language: English", exact: true }).click();
-      await page.getByRole("button", { name: "Français", exact: true }).click();
-    }
+    if (locale === "fr") await chooseLanguage(page, "fr");
     await page
       .getByRole("button", {
         name: locale === "fr" ? "Jouer à une histoire existante" : "Play an existing story",
@@ -172,4 +173,125 @@ test("live narration says it is preparing, then plays a clip that downloads slow
       { timeout: 15000 },
     )
     .toHaveLength(1);
+});
+
+test("voice playback, pause and voice-off leave the committed passage unchanged", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.route("**/api/narration", (route) => route.fulfill({ status: 503, body: "{}" }));
+  await page.route("**/stories/house/en.json", async (route) => {
+    const bundle = structuredClone(houseBundles.en!);
+    bundle.narration = [];
+    await route.fulfill({ json: bundle });
+  });
+  await page.addInitScript(() => {
+    const state = { calls: 0, cancels: 0, pauses: 0, resumes: 0, utterance: null as unknown };
+    Object.assign(window, { voiceTest: state });
+    Object.defineProperty(window, "speechSynthesis", {
+      value: Object.assign(new EventTarget(), {
+        getVoices: () => [{ lang: "en-GB", localService: true, voiceURI: "test", name: "Test" }],
+        speak: (utterance: unknown) => {
+          state.calls++;
+          state.utterance = utterance;
+        },
+        cancel: () => {
+          state.cancels++;
+        },
+        pause: () => {
+          state.pauses++;
+        },
+        resume: () => {
+          state.resumes++;
+        },
+      }),
+    });
+    Object.defineProperty(window, "SpeechSynthesisUtterance", {
+      value: class {
+        text: string;
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    });
+  });
+  type Voice = {
+    calls: number;
+    cancels: number;
+    pauses: number;
+    resumes: number;
+    utterance: { onboundary: (event: unknown) => void };
+  };
+  const voice = () => page.evaluate(() => (window as unknown as { voiceTest: Voice }).voiceTest);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play an existing story" }).click();
+  const heading = page.getByRole("heading", { name: "The Girl in the Photograph" });
+  await expect(heading).toBeVisible();
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByLabel("Narrator", { exact: true }).selectOption("device:test");
+  await page.getByLabel("Read aloud", { exact: true }).check();
+  await expect.poll(async () => (await voice()).calls).toBe(1);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  await page.evaluate(() =>
+    (window as unknown as { voiceTest: Voice }).voiceTest.utterance.onboundary({
+      charIndex: 40,
+      charLength: 3,
+    }),
+  );
+  await expect(page.locator(".prose p").first()).toContainText("The first time");
+  await page.getByLabel("Read aloud", { exact: true }).uncheck();
+  await expect(page.getByRole("button", { name: "Continue reading", exact: true })).toBeEnabled();
+  await expect(heading).toBeVisible();
+  const [save] = (await readKeys(page, "reader", ["save:house:en"])) as [{ revision: number }];
+  expect(save.revision).toBe(1);
+  const { cancels, pauses, resumes } = await voice();
+  expect(cancels).toBeGreaterThan(0);
+  expect(pauses).toBeGreaterThan(0);
+  expect(resumes).toBeGreaterThan(0);
+});
+
+/** The voice reaches "On"; the visible text's length, sampled on every frame for 400 ms. */
+const revealAfterFirstWord = (page: Page) =>
+  page.evaluate(async () => {
+    type Spoken = { onboundary?: (event: unknown) => void }[];
+    (window as unknown as { spoken: Spoken }).spoken
+      .at(-1)!
+      .onboundary?.({ charIndex: 0, charLength: 2 });
+    const lengths: number[] = [];
+    const until = performance.now() + 400;
+    const text = () => document.querySelector('.prose p > span[aria-hidden="true"]');
+    await new Promise<void>((resolve) => {
+      const sample = () => {
+        lengths.push(text()?.textContent?.length ?? 0);
+        if (performance.now() < until) requestAnimationFrame(sample);
+        else resolve();
+      };
+      requestAnimationFrame(sample);
+    });
+    return lengths;
+  });
+
+test("types graphemes smoothly while staying just one word ahead of narrated boundaries", async ({
+  page,
+}) => {
+  await fakeSpeech(page);
+  await enterReader(page, { skipIntro: false });
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page
+    .getByRole("combobox", { name: "Text display", exact: true })
+    .selectOption("progressive");
+  await page.getByRole("combobox", { name: "Narrator", exact: true }).selectOption("device:test");
+  await page.getByRole("checkbox", { name: "Read aloud", exact: true }).check();
+  await page.locator(".reading-sidebar header button").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.getByRole("button", { name: "Replay page", exact: true }).click();
+  const visible = page.locator('.prose p > span[aria-hidden="true"]').first();
+  await expect(visible).toHaveText("On");
+  const samples = await revealAfterFirstWord(page);
+  expect(samples.some((length) => length > 3 && length < 13)).toBe(true);
+  expect(samples.every((length, index) => !index || length - samples[index - 1]! <= 5)).toBe(true);
+  await expect(visible).toHaveText("On Wednesdays,");
+  await speakBoundary(page, 3, 11);
+  await expect(visible).toHaveText("On Wednesdays, you");
 });

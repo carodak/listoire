@@ -1015,3 +1015,67 @@ generated for this project). I did not invent a licence name: **tell me if you w
 - `docs/ARCHITECTURE.md` said "the author's sketch pack"; now "the sketch pack (temporary ChatGPT
   placeholders)". The catalogue under `assets/` is unchanged (AGENTS.md: source libraries stay
   unchanged).
+
+### Part 2 — tidy the tests
+
+**Measured on the dev server warmed as AGENTS.md says.** The first baseline run had 55 editor
+failures: Vite had re-optimised its dependencies mid-session and the editor's Ink compiler worker
+still asked for the old `inkjs` bundle (504 "Outdated Optimize Dep", "Ink compiler could not
+start"). Restarting and warming the server fixed it; nothing in the code was involved. If the
+editor suddenly reports "Ink compiler could not start" during a session, restart the server.
+
+**Deleted or merged e2e tests, and where each behaviour is still covered** (no assertion
+removed unless listed as covered elsewhere):
+
+| Former test (file)                                                     | Now                                                                                                             |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| magnifier: pointer/touch coordinates, keys (`magnifier`)               | Merged into `examination` "examination: under its image…" (all its checks)                                      |
+| examination keyboard, turning, details, reload (`house`)               | Same merged test                                                                                                |
+| examined image dimensions, zoom from centre, reverse (`reader-polish`) | Same merged test                                                                                                |
+| Examine under its image, zoom, no Reset view (`reader-pages`)          | Same merged test; "no Turn over without a reverse" moved to the cropped-image test                              |
+| photograph magnification and focus after Escape (`editor`)             | Moved to `editor-media`. I first deleted it as covered by the examination test, but coverage showed it is the only covered test that draws a photograph hotspot, so it stays |
+| text complete on arrival; Show all text from the keyboard (`typewriter`) | Merged into `reading-preferences` "text display…" (default instant, Enter on Show all text)                   |
+| text reaches its media before choices; toolbar follows (`reader-polish`) | Same merged test                                                                                              |
+| progressive text revealed, preferences persist (`house`)               | Same merged test                                                                                                |
+| both side panels share one close control (`side-panels`)               | Merged into `reading-preferences` "side panels take focus…"                                                     |
+| character details and notes (`reader-data`)                            | Merged into `character` "character: starts collapsed…" (stats, inventory tabs, abilities, encounters, notes)    |
+| English/French saves (`reader`) and progress/inventory/art (`house`)    | Merged into `reader-language` "English and French keep separate…"                                               |
+| resetting a paused story (`reader`)                                    | Merged into `reader` "chooses, reloads…, and restarts a paused story"                                           |
+| music and ambience really play (`audio-start`)                         | Merged into `audio` "Play starts audio in its click…" (same recorder, same page)                                |
+| typing recording tried once and paused (`welcome`)                      | Merged into `welcome` "blocked audio: the typing recording…" (its stub now records, as the other did)          |
+| the wordmark is not a button (`welcome`)                               | Merged into the welcome test                                                                                    |
+| authors a combat action, enables game mode (`image-editor`)            | Merged into `editor-workspace` "edits game rules, definitions and a combat action…" (Game Mode check added)     |
+| the editor opens on the story's first passage (`editor-tabs`)          | Merged into `editor-workspace` "opens on the story's first passage; … ARIA tab pattern"                         |
+| start area holds Choose an image (`image-editor`)                      | **Deleted**: no image yet / + Add layer disabled / one Choose / no Choose after: `image-dialog` "a new image is one image"; + Add layer and Replace: `image-layers` "+ Add layer…"; start area gone: "ready-made scenes…" |
+| no More options, each category its own section (`image-editor`)        | **Deleted**: section titles and order, all closed, "More options" absent, summaries "set: …": `image-dialog` "settings: folded sections…", "Interactivity…" |
+| camera folded section + settings order (`image-editor`, two tests)     | Merged into `image-dialog` "settings: folded sections in order…"                                                |
+| ready-made scene names (`image-editor` "a new image…")                 | Moved to `image-dialog` "ready-made scenes are a closed toggle…" (the toggle's own test)                        |
+
+Moved unchanged (by feature): `page-frame` → `reader-layout`; reader layout tests from `reader`
+and `reader-pages` → `reader-layout`; illustration and page-turn tests from `reader-pages`,
+`reader` and `presentation` → `illustrations`; checks and dice from `reader-saves` and
+`reader-pages` → `dice`; device voice from `presentation` and narrated typing from
+`reader-pages` → `narration`; notes rejection, eyedropper, icons, portrait colour → `character`
+/ `reading-preferences`; fixture-story tests → `examination` and `reader-combat`; `react-bits` →
+`effects`; `editor` → `editor-project`, `editor-workspace`, `editor-media`, `editor-narration`;
+`image-editor` → `image-dialog`, `image-layers`, `image-composition`, `image-references` (its
+snapshot folder moved with it); `game-authoring` → `editor-workspace` / `editor-narration`.
+
+**Changed assertions:** none weakened. Three became stricter or wider: the phone outcome check
+(item 2); "ready-made scenes" now names three scenes; the incompatible-save test finds the save
+by the bundle's key instead of a regular expression over all keys (same key).
+
+**Shared helpers, one per feature:** `oree.ts` (reader: open Orée, change a bundle, language,
+save before the first fight — `oree-saves.ts` merged in), `editor.ts` (find in Ink, backup,
+import, caret, script, house project), `image-editor.ts` (Image dialog), `idb.ts` (IndexedDB
+reads, writes, clear — replaces `editor-db.ts` and five inline copies), `speech.ts`,
+`typography-story.ts`, `fixture-story.ts`. Outside tests: `memorySaveStore()` in
+`save-manager.ts` (`01b61bc`), and `tools/measure-performance.ts` imports `caretTo`.
+
+**Unit files over 400 lines split by area:** `authoring.test.ts` (629) → script authoring (241)
++ `media-authoring.test.ts` (410); `presentation-session.test.ts` (580) → visuals (306) +
+`presentation-sound.test.ts` (276). Same 504 unit tests.
+
+**One commit for items 1–4** (not one per item): merging, moving, renaming and the helpers touch
+the same lines of the same files; separate commits would each have needed an intermediate
+version of every file.

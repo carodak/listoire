@@ -23,12 +23,6 @@ test("language choices display flags and support keyboard selection and Escape",
   await expect(page.getByRole("heading", { name: "Entrez dans l’histoire." })).toBeVisible();
 });
 
-test("the wordmark is the site's name, not a button that does nothing", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.locator(".site-header").getByText("listoire.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Listoire home" })).toHaveCount(0);
-});
-
 test("the welcome opens even when the browser's storage never answers", async ({ page }) => {
   // A blocked database upgrade: open() never succeeds nor fails.
   await page.addInitScript(() => {
@@ -45,6 +39,9 @@ test("the original welcome reveals its subtitle and offers stories within three 
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Step inside the story." })).toBeVisible();
+  // The wordmark is the site's name, not a button that does nothing.
+  await expect(page.locator(".site-header").getByText("listoire.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Listoire home" })).toHaveCount(0);
   const play = page.getByRole("button", { name: "Play an existing story" });
   await expect(page.getByText("A quiet place for stories", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Typing sound")).toHaveCount(0);
@@ -109,31 +106,7 @@ test("story access is bounded even when animation frames are throttled", async (
   );
 });
 
-test("blocked audio leaves the visual intro and story access working", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.addInitScript(() => {
-    Object.defineProperty(window, "Audio", {
-      value: class {
-        play() {
-          return Promise.reject(new DOMException("Autoplay blocked", "NotAllowedError"));
-        }
-        pause() {}
-      },
-    });
-  });
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
-  await page.getByRole("heading", { name: "Step inside the story." }).click();
-  await page.getByRole("button", { name: "Play an existing story" }).click();
-  await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Get back before the kettle boils over" }),
-  ).toBeVisible();
-  expect(errors).toEqual([]);
-});
-
-test("typing recording is attempted once at startup and paused when the intro ends", async ({
+test("blocked audio: the typing recording is tried once, paused, and the intro and story work", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -147,7 +120,7 @@ test("typing recording is attempted once at startup and paused when the intro en
         }
         play() {
           events.push("play");
-          return Promise.resolve();
+          return Promise.reject(new DOMException("Autoplay blocked", "NotAllowedError"));
         }
         pause() {
           events.push("pause");
@@ -155,7 +128,10 @@ test("typing recording is attempted once at startup and paused when the intro en
       },
     });
   });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
+  await page.getByRole("heading", { name: "Step inside the story." }).click();
   await expect(page.getByRole("button", { name: "Play an existing story" })).toBeEnabled();
   const events = await page.evaluate(
     () => (window as unknown as { typingEvents: string[] }).typingEvents,
@@ -163,6 +139,12 @@ test("typing recording is attempted once at startup and paused when the intro en
   expect(events.filter((event) => event === "play")).toHaveLength(1);
   expect(events).toContain("/audio/keyboard-typing.mp3");
   expect(events).toContain("pause");
+  await page.getByRole("button", { name: "Play an existing story" }).click();
+  await expect(page.getByRole("button", { name: "Show all text", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Get back before the kettle boils over" }),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
 });
 
 test("centers the Story Editor label within its landing button", async ({ page }) => {

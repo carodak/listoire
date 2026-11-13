@@ -1,6 +1,6 @@
 import { expect, test } from "./test.ts";
 import type { Page } from "@playwright/test";
-import { playStory, readTo } from "./oree.ts";
+import { chooseFirst, firstChoice, onPage, openOree, playStory, readTo } from "./oree.ts";
 
 /** Records Web Audio contexts and every media play() without changing what they do. */
 async function recordAudio(page: Page) {
@@ -50,7 +50,7 @@ const audioLog = (page: Page) =>
       ).audioLog,
   );
 
-test("Play starts audio in its click, and story sound plays without enabling it by hand", async ({
+test("Play starts audio in its click; story sound plays by default, and its time advances", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -69,15 +69,7 @@ test("Play starts audio in its click, and story sound plays without enabling it 
       (await audioLog(page)).played.some((src) => src.endsWith("audio.5ed3276af9fe4c73edaa.mp3")),
     )
     .toBe(true);
-});
-
-test("music and ambience really play: their time advances", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.route("**/api/narration**", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await recordAudio(page);
-  await page.goto("/");
-  await playStory(page);
-  await readTo(page, "atelier");
+  // Music and ambience really play: their time advances.
   const playing = () =>
     page.evaluate(() =>
       (window as unknown as { audioLog: { elements: HTMLMediaElement[] } }).audioLog.elements
@@ -87,6 +79,51 @@ test("music and ambience really play: their time advances", async ({ page }) => 
   await expect
     .poll(playing, { timeout: 15000 })
     .toEqual(expect.arrayContaining(["audio.5ed3276af9fe4c73edaa.mp3", "oree.wonder.mp3"]));
+});
+
+test("failed story audio never blocks progression and departing cancels presentation", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    const events: string[] = [];
+    Object.assign(window, { storyAudioEvents: events });
+    Object.defineProperty(window, "Audio", {
+      value: class extends EventTarget {
+        volume = 1;
+        constructor(source: string) {
+          super();
+          events.push(source);
+        }
+        play() {
+          events.push("play");
+          return Promise.reject(new DOMException("Blocked", "NotAllowedError"));
+        }
+        pause() {
+          events.push("pause");
+        }
+      },
+    });
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await openOree(page);
+  await onPage(page, "matin-ville");
+  const preferences = page.getByRole("button", { name: "Reading preferences", exact: true });
+  await preferences.click();
+  await page.getByLabel("Story sound effects", { exact: true }).check();
+  await preferences.click();
+  await readTo(page, "atelier"); // this page starts a sound effect and music
+  await expect(firstChoice(page)).toBeEnabled();
+  await chooseFirst(page);
+  await onPage(page, "messagere");
+  await page.getByRole("button", { name: "Listoire home" }).click();
+  expect(errors).toEqual([]);
+  const events = await page.evaluate(
+    () => (window as unknown as { storyAudioEvents: string[] }).storyAudioEvents,
+  );
+  expect(events.some((event) => event.endsWith("audio.5ed3276af9fe4c73edaa.mp3"))).toBe(true);
+  expect(events).toContain("pause");
 });
 
 test("the Story Editor starts audio on its first click", async ({ page }) => {
