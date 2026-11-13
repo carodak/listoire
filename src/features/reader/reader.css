@@ -2984,6 +2984,24 @@
   font-size: clamp(22px, 3.4vw, 36px);
   animation: combat-outcome 500ms ease-out both;
 }
+/* A phone's portraits leave no room for the outcome: when it shows, they shrink to open a
+   ~100 px gap (the summary is about 100vw - 66px wide) and the outcome wraps inside it. */
+@media (max-width: 560px) {
+  .reader-combat-modal .combatant-portrait {
+    transition: width 300ms ease-out;
+  }
+  .reader-combat-modal .combat-summary[data-ending] {
+    --combat-portrait-size: max(52px, min(clamp(80px, 19dvh, 146px), 50vw - 124px));
+  }
+  .reader-combat-modal .combat-summary[data-ending] .combat-ending-title {
+    max-width: 104px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    white-space: normal;
+    font-size: 15px;
+    line-height: 1.15;
+  }
+}
 .combatant[data-defeated] .combatant-portrait {
   animation: combatant-defeated 800ms ease-in forwards;
 }
@@ -3009,6 +3027,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .reader-combat-modal .combatant-portrait {
+    transition: none;
+  }
   .reader-combat-modal .combat-summary[data-ending] .combat-ending-title,
   .reader-combat-modal.combat-closing,
   .reader-combat-modal.combat-closing::backdrop {

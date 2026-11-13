@@ -495,7 +495,7 @@ const fr: typeof en = {
     title: "Combat",
     fight: "Combattre",
     outcome: {
-      victory: "Victoire !",
+      victory: "Victoire !",
       escaped: "Fuite réussie",
       defeat: "Défaite",
       charmed: "Adversaire charmé",

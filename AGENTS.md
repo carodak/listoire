@@ -21,8 +21,9 @@ still required.
   app composition stay outside features. Same validated contracts for
   manual stories and the editor.
 - assets/ source libraries stay local and unchanged. Library images
-  are freely licensed and may be published, catalog included. Keep
-  each asset's license and attribution in docs/contributions.md.
+  are temporary ChatGPT placeholders, to be replaced by the author's
+  own artwork; they may be published meanwhile, catalog included.
+  Keep each asset's source in docs/contributions.md.
 - Generated narration clips remain previews until a human listens.
 - Update the affected doc in docs/ when a contract or boundary changes.
 

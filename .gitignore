@@ -7,6 +7,7 @@ coverage/
 *.log
 _to_delete/
 .fallow/
+.claude/
 .npm-cache/
 *.tsbuildinfo
 .env
