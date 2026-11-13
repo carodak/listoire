@@ -5,11 +5,15 @@
 Branch **`fix/small`**, nothing pushed, nothing on `main`. Your uncommitted `AGENTS.md` change is
 still uncommitted (yours). Details in "Pass 15" at the end of this file.
 
-| Item                                     | Status                                                                |
-| ---------------------------------------- | --------------------------------------------------------------------- |
-| 1. Combat ending at every width          | **Done** `0d23426`: 360–1920 px on all four browsers; 1280/768 tested |
-| 2. WebKit "chooses, reloads…" page error | **Explained, not fixable in the app** `7dcac63`: see "Needs you"      |
-| End-of-session checks                    | Chromium 128 passed (2.0 min); coverage and health below              |
+| Item                                     | Status                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| 1. Combat ending at every width          | **Done** `0d23426`: 360–1920 px on all four browsers; 1280/768 tested     |
+| 2. WebKit "chooses, reloads…" page error | **Explained, not fixable in the app** `7dcac63`: see "Needs you"          |
+| End-of-session checks                    | Chromium 128 passed (2.0 min); unit 504 passed; health 93; coverage below |
+
+Coverage (statements / branches / functions): 59.77 / 66.54 / 76.04 % (end of Pass 14: 59.80 /
+66.60 / 76.04 %; start of Pass 14: 59.44 / 66.14 / 75.25 %). There was no JS change since Pass 14
+(item 1 is CSS and test widths), so I read the 4-statement difference as run-to-run timing.
 
 ### ⚠ Needs you
 
