@@ -760,3 +760,29 @@ version of every file.
 2. In this test, wait until no narration request is pending before `page.reload()`, e.g.
    `await page.waitForLoadState("networkidle")`, so nothing is in flight.
 3. Turn read-aloud off before the reload, as `enterReader` does.
+
+## Pass 16 — WebKit reload test, combat ending at 320 px, dev server (branch `fix/small`)
+
+### Item 1 — WebKit "chooses, reloads…": read-aloud off, and the bug it uncovered
+
+- Option 3 as asked: the test turns read-aloud off once the first page shows, as `enterReader`
+  does. Turning it off right after Play is not enough: the story's own defaults (read-aloud on)
+  are applied when it loads, over the change.
+- **That alone still failed 2 of 10 on WebKit**, and a probe showed why: **an app bug.** Narration
+  asks the local generator for the page's clips one after another, in the background. When
+  playback ended early (here: the first paragraph has no clip, the generator is down),
+  `NarrationManager.play` dropped its scope without aborting it. So the background queue kept
+  asking for every remaining paragraph, even after read-aloud was turned off (`stop()` no longer
+  reached it). The reload cut the last of these requests off, and WebKit reported it.
+  **Fix:** `play` aborts its scope when it returns (one line, `narration-manager.ts`). New unit
+  test in `narration-manager.test.ts`, "stops asking for the page's clips once narration has
+  ended, even early": it failed before the fix (paragraphs two and three were still requested)
+  and passes now.
+- **Proof:** `--repeat-each=10` on WebKit: 10 of 10 pass (it failed 7 of 10 before).
+- **Narration across a reload is covered by** `narration.spec.ts`, "generated en narration uses
+  verified MP3s and responds to playback controls" and its "fr" twin. Until now no spec
+  reloaded with the voice on, so I added the step there: a reload in the middle of a clip. The
+  restored page stays silent until the reader replays it (by design, a restored page does not
+  start narration on its own), then the voice, still on, narrates again. The unit test above
+  covers the requests a stopped narration must not make. Both narration and reader specs: 52/52
+  on four browsers.

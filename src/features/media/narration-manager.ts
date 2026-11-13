@@ -56,6 +56,8 @@ export class NarrationManager {
       }
       return await this.playSegments(frame, bundle, options, scope.signal, onProgress);
     } finally {
+      // Playback can end before the page's clips are all requested: cancel the rest.
+      scope.abort();
       signal.removeEventListener("abort", stop);
       if (this.scope === scope) {
         this.audio.setDucking(false);

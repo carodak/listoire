@@ -22,6 +22,11 @@ test("chooses, reloads the resolved passage, downloads and explicitly restarts",
   await page.goto("/");
   await playStory(page);
   await onPage(page, "matin-ville");
+  // Read-aloud off once the story is open, as the other reader tests: no narration request is in
+  // flight at the reload (WebKit reports one the reload cuts off). Across a reload: narration.spec.
+  await page.getByRole("button", { name: "Reading preferences", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Read aloud", exact: true }).uncheck();
+  await page.locator(".reading-sidebar header button").click();
   await expect(firstChoice(page)).toBeVisible();
   if (["chromium", "mobile"].includes(testInfo.project.name)) {
     await page.screenshot({ path: testInfo.outputPath("opening.png"), fullPage: true });

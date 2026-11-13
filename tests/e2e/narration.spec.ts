@@ -92,12 +92,11 @@ for (const locale of ["en", "fr"])
     });
     await page.goto("/");
     if (locale === "fr") await chooseLanguage(page, "fr");
-    await page
-      .getByRole("button", {
-        name: locale === "fr" ? "Jouer à une histoire existante" : "Play an existing story",
-        exact: true,
-      })
-      .click();
+    const play = page.getByRole("button", {
+      name: locale === "fr" ? "Jouer à une histoire existante" : "Play an existing story",
+      exact: true,
+    });
+    await play.click();
     const preferences = page.getByRole("button", {
       name: locale === "fr" ? "Préférences de lecture" : "Reading preferences",
       exact: true,
@@ -123,6 +122,18 @@ for (const locale of ["en", "fr"])
       );
     await expect.poll(async () => (await recordings()).length).toBe(1);
     expect(requested.length).toBeGreaterThan(0);
+    // A reload in the middle of a clip: the restored page is silent until the reader replays it,
+    // and the voice, still on, narrates it again.
+    await page.reload();
+    await play.click();
+    await page
+      .getByRole("button", {
+        name: locale === "fr" ? "Rejouer la page" : "Replay page",
+        exact: true,
+      })
+      .click();
+    await expect.poll(async () => (await recordings()).length).toBe(1);
+    await preferences.click();
     await page.getByRole("button", { name: "Pause", exact: true }).click();
     await page
       .getByRole("button", { name: locale === "fr" ? "Reprendre" : "Resume", exact: true })
