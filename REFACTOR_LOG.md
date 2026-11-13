@@ -1,6 +1,29 @@
 # Refactor log
 
-## ☀ Summary — Pass 13 (read this first)
+## ☀ Summary — Pass 14 (read this first)
+
+Branch **`fix/small`** (from `main`), nothing pushed. In progress; details in "Pass 14" at the
+end of this file. Resume from the first item not marked done.
+
+| Item                                              | Status                          |
+| ------------------------------------------------- | ------------------------------- |
+| 1. "Waits for Fight" starts from a save           | **Done** `e922f49`              |
+| (your commit `3d49890`: AGENTS.md + item 2 start) | Kept as is; item 2 builds on it |
+| 2. Phone combat ending                            | **Done** (this commit)          |
+| 3. `docs/contributions.md` images wording         | To do                           |
+| Part 2: tidy the tests (1–4)                      | To do                           |
+| End-of-session checks                             | To do                           |
+
+### ⚠ Needs you
+
+- **Desktop and tablet combat ending** (you said desktop unchanged, so I left it): the longest
+  outcomes are wider than the gap between the portraits, measured on Chromium: 1280 px, gap 337,
+  "Adversaire charmé" 381; 800 px, gap 237, 295; 600 px, gap 139, "Fuite réussie" 174; 561 px,
+  gap 120, "Victoire !" 133. One-line fix if you want it: give the desktop title the phone's
+  `max-width: calc(50% - var(--combat-portrait-size) + 5px)` and `white-space: normal` (only
+  labels that do not fit would wrap).
+
+## ☀ Summary — Pass 13 (previous session)
 
 Branch **`chore/next`** (from `main`), nothing pushed, nothing on `main`. Every part of your list
 is done or explicitly listed as not done; details per part in "Pass 13" at the end of this file.
@@ -960,3 +983,25 @@ generated for this project). I did not invent a licence name: **tell me if you w
     a change would need a deep-equal helper and its own tests; §8 `dissolveWords` per grapheme
     on phones — needs a mobile performance measurement first; §8 scene3d behind a flag — a
     product decision (it is reachable: `presentation.ts`, `story.ts`, `uploaded-media.ts`).
+
+## Pass 14 — small fixes, then tidy the tests (branch `fix/small`)
+
+### Item 2 — phone combat ending
+
+- State found: your commit `3d49890` holds the previous session's leftovers (phone rules for the
+  ending, the no-break space, the probe). The no-break space in "Victoire !" is there (U+00A0).
+- Measured at 360 and 412 px: the gap between the portraits is 100 px, the title was capped at
+  104 px, so "Fuite réussie" and "Adversaire charmé" overlapped by 2 px a side. The cap is now
+  the gap itself minus 4 px (`calc(50% - var(--combat-portrait-size) + 5px)`, percentages of the
+  summary), so it follows the real gap, scrollbar or not. Desktop rules untouched.
+- Test (`reader-combat.spec.ts`, "reduced motion keeps every combat step…"): with no animation the
+  layout is still, so it now checks all eight outcomes (en + fr, read from `src/i18n/i18n.ts`) at
+  412 and 360 px: centred, inside the gap, no word spilling. It failed on the old 104 px (both
+  long French labels) and passes now on chromium, firefox, webkit and mobile (36/36 in the spec).
+  The lenient "inside the gap if it fits" check of the animated test is unchanged.
+- Screenshots ("Adversaire charmé", mobile project): `review-screenshots/combat-ending-360.png`
+  and `review-screenshots/combat-ending-412.png`.
+- The probe `tests/e2e/zz-ending.spec.ts` is deleted.
+- Audit: verdict `warn`. Two CSS duplicate-block warnings at `reader.css` lines 570 and 1107 are
+  marked "introduced" but those lines are identical to `HEAD` (fallow attributes them to the
+  touched file); not changed.

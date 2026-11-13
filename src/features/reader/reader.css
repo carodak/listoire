@@ -2985,7 +2985,8 @@
   animation: combat-outcome 500ms ease-out both;
 }
 /* A phone's portraits leave no room for the outcome: when it shows, they shrink to open a
-   ~100 px gap (the summary is about 100vw - 66px wide) and the outcome wraps inside it. */
+   ~100 px gap (the summary is about 100vw - 66px wide) and the outcome wraps inside it.
+   The gap is 50% - one portrait + half the 18px column gap; the title keeps 2px clear. */
 @media (max-width: 560px) {
   .reader-combat-modal .combatant-portrait {
     transition: width 300ms ease-out;
@@ -2994,7 +2995,7 @@
     --combat-portrait-size: max(52px, min(clamp(80px, 19dvh, 146px), 50vw - 124px));
   }
   .reader-combat-modal .combat-summary[data-ending] .combat-ending-title {
-    max-width: 104px;
+    max-width: calc(50% - var(--combat-portrait-size) + 5px);
     padding: 2px 6px;
     border-radius: 12px;
     white-space: normal;
